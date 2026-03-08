@@ -2,44 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\SubscriptionStatus;
-use App\Http\Requests\PaymentRequest;
-use App\Models\Chat\UserTokenSubscription;
-use App\Models\Payment;
-use App\Models\Subscription;
-use App\Models\BookSubscription;
-use App\Events\SubscriptionUpdated;
 use App\Enums\PaymentStatus;
+use App\Enums\SubscriptionStatus;
+use App\Events\SubscriptionUpdated;
+use App\Http\Requests\PaymentRequest;
 use App\Models\AcademicFeeStructure;
+use App\Models\BookSubscription;
+use App\Models\Payment;
+use App\Models\School;
+use App\Models\SchoolFee;
+use App\Models\Student;
+use App\Models\Subaccount;
+use App\Models\Subscription;
+use App\Services\PaystackService;
+use App\Services\SubaccountPaymentService;
 use App\Services\TokenSubscriptionService;
 use App\Traits\HandlesPayments;
 use Brick\Money\Money;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Exception;
-use Illuminate\Support\Facades\DB;
-use App\Services\PaystackService;
-use App\Models\Student;
-use App\Models\StudentPayment;
-use App\Models\SchoolFee;
-use App\Models\School;
-use App\Models\Subaccount;
-use Illuminate\Support\Facades\Auth;
-
 
 class PaymentController extends Controller
 {
     use HandlesPayments;
 
     protected $paystack;
+
     protected $subscriptionService;
 
     public function __construct(PaystackService $paystack, TokenSubscriptionService $subscriptionService)
     {
         $this->paystack = $paystack;
         $this->subscriptionService = $subscriptionService;
+
+        // Prevent caching of payment pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['initialize', 'initializeBook', 'callback', 'bookCallback']);
     }
 
     /**
@@ -125,6 +133,7 @@ class PaymentController extends Controller
 
             if ($bookSubscription) {
                 $this->payForBookSubscription($request, $bookSubscription); // $this->processBookSubscriptionPayment($request, $bookSubscription);
+
                 return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
             } else {
                 throw ValidationException::withMessages([
@@ -138,6 +147,7 @@ class PaymentController extends Controller
 
         if ($subscription) {
             $this->payForSubscription($request, $subscription);
+
             return to_route('payments.index')->with('success', 'Payment for book subscription has been manually recorded.');
         } else {
             throw ValidationException::withMessages([
@@ -149,8 +159,6 @@ class PaymentController extends Controller
     /**
      * Process the payment for a book subscription.
      *
-     * @param PaymentRequest $request
-     * @param BookSubscription $bookSubscription
      * @return RedirectResponse
      */
     public function processBookSubscriptionPayment(PaymentRequest $request, BookSubscription $bookSubscription)
@@ -160,7 +168,7 @@ class PaymentController extends Controller
                 $amount = Money::of($request->validated('amount'), 'GHS');
                 $payment = new Payment([
                     'reference' => $request->validated('reference'),
-                    'amount' => (string)$amount->getAmount(),
+                    'amount' => (string) $amount->getAmount(),
                     'status' => PaymentStatus::SUCCEEDED,
                     'currency' => 'GHS',
                     'book_subscription_id' => $bookSubscription->id,
@@ -180,9 +188,8 @@ class PaymentController extends Controller
     /**
      * Process the payment for a regular subscription.
      *
-     * @param PaymentRequest $request
-     * @param Subscription $subscription
      * @return RedirectResponse
+     *
      * @throws ValidationException|\Throwable
      */
     private function processSubscriptionPayment(PaymentRequest $request, Subscription $subscription)
@@ -200,7 +207,7 @@ class PaymentController extends Controller
                 $amount = Money::of($request->validated('amount'), 'GHS');
                 $payment = new Payment([
                     'reference' => $request->validated('reference'),
-                    'amount' => (string)$amount->getAmount(),
+                    'amount' => (string) $amount->getAmount(),
                     'status' => PaymentStatus::SUCCEEDED,
                     'currency' => 'GHS',
                 ]);
@@ -220,9 +227,6 @@ class PaymentController extends Controller
         return to_route('payments.index')->with('success', 'Payment for subscription has been manually recorded.');
     }
 
-
-
-
     public function initialize(Request $request)
     {
 
@@ -235,6 +239,7 @@ class PaymentController extends Controller
                 'subscription_id' => $subscription->id,
                 'name' => auth()->user()->name,
                 'phone' => auth()->user()->phone ?? '0000000000',
+                'cancel_action' => route('subscriptions.payment.show', $subscription),
             ],
             'callback_url' => route('payment.callback'),
         ];
@@ -243,8 +248,6 @@ class PaymentController extends Controller
 
         return redirect($response['data']['authorization_url']);
     }
-
-
 
     /**
      * Initialize book subscription payment with split payment to author
@@ -278,25 +281,19 @@ class PaymentController extends Controller
                 'author_name' => $author->name,
                 'name' => auth()->user()->name,
                 'phone' => auth()->user()->phone ?? '0000000000',
+                'cancel_action' => route('books.show', $book),
             ],
             'callback_url' => route('payment.book.callback'),
         ];
 
         // Add subaccount for revenue split if author has one configured
         if ($authorSubaccount && $authorSubaccount->subaccount_code) {
-            $paymentData['subaccount'] = $authorSubaccount->subaccount_code;
-
-            // Add bearer information for transaction charges
-            // 'account' means subaccount bears the charge
-            // 'subaccount' means the main account bears the charge
-            $paymentData['bearer'] = 'account';
-
-            // Add metadata about revenue split
-            $paymentData['metadata']['revenue_split'] = [
-                'platform_percentage' => $authorSubaccount->percentage_charge,
-                'author_percentage' => 100 - $authorSubaccount->percentage_charge,
-                'subaccount_code' => $authorSubaccount->subaccount_code,
-            ];
+            $subaccountService = app(SubaccountPaymentService::class);
+            $paymentData = $subaccountService->preparePaymentDataWithSubaccount(
+                $paymentData,
+                $authorSubaccount,
+                'account'
+            );
         } else {
             // Log warning if author doesn't have subaccount for paid book
             \Log::warning('Author does not have subaccount configured for paid book', [
@@ -421,17 +418,17 @@ class PaymentController extends Controller
 
                 // 2. Record payment
                 Payment::create([
-                    'reference'       => $paymentDetails['reference'],
-                    'amount'          => $subscription->amount,  //$paymentDetails['amount'],
-                    'currency'        => $paymentDetails['currency'] ?? 'GHS',
-                    'status'          => 'succeeded',
+                    'reference' => $paymentDetails['reference'],
+                    'amount' => $subscription->amount,  // $paymentDetails['amount'],
+                    'currency' => $paymentDetails['currency'] ?? 'GHS',
+                    'status' => 'succeeded',
                     'subscription_id' => $subscription->id,
                 ]);
             });
 
             return redirect()
                 ->route('subscriptions.index')
-                ->with('success', 'Subscription paid successfully! Ref: ' . $subscription->reference);
+                ->with('success', 'Subscription paid successfully! Ref: '.$subscription->reference);
         }
 
         return redirect()
@@ -439,7 +436,7 @@ class PaymentController extends Controller
             ->with('error', 'Payment failed or was cancelled.');
     }
 
-    //Sub Account
+    // Sub Account
     public function initializeSubAccount(Request $request)
     {
         $data = [
@@ -452,139 +449,6 @@ class PaymentController extends Controller
             ],
             'callback_url' => route('payment.callback'),
         ];
-    }
-
-
-    /**
-     * Initialize token subscription payment
-     */
-    public function initializeTokenSubscription($subscriptionId)
-    {
-        $subscription = UserTokenSubscription::findOrFail($subscriptionId);
-
-        // Check if it's a free package - this should NOT reach here for free packages
-        if ($subscription->package->isFree()) {
-            \Log::warning('Free package reached payment initialization', [
-                'subscription_id' => $subscription->id,
-                'user_id' => auth()->id()
-            ]);
-
-            return redirect()
-                ->route('token-subscriptions.index')
-                ->with('error', 'Free trials do not require payment. Please contact support if you see this message.');
-        }
-
-        // Check if reference already exists in a completed payment
-        $existingPayment = Payment::where('reference', $subscription->reference)
-            ->where('status', 'succeeded')
-            ->first();
-
-        if ($existingPayment) {
-            \Log::warning('Duplicate payment attempt', [
-                'subscription_id' => $subscription->id,
-                'reference' => $subscription->reference,
-                'user_id' => auth()->id()
-            ]);
-
-            return redirect()
-                ->route('token-subscriptions.index')
-                ->with('error', 'This subscription has already been paid for.');
-        }
-
-        // Generate a fresh unique reference for Paystack
-        $paystackReference = 'TOKEN-' . $subscription->id . '-' . time() . '-' . strtoupper(Str::random(6));
-
-        $data = [
-            'email' => auth()->user()->email,
-            'amount' => (int) ($subscription->package->price * 100), // convert to kobo
-            'reference' => $paystackReference, // Use fresh reference
-            'metadata' => [
-                'subscription_id' => $subscription->id,
-                'type' => 'token_subscription',
-                'package_name' => $subscription->package->name,
-                'name' => auth()->user()->name,
-                'phone' => auth()->user()->phone ?? '0000000000',
-            ],
-            'callback_url' => route('payment.token.callback'),
-        ];
-
-        try {
-            $response = $this->paystack->initializeTransaction($data);
-
-            // Store the Paystack reference for verification later
-            $subscription->update(['reference' => $paystackReference]);
-
-            return redirect($response['data']['authorization_url']);
-        } catch (\Exception $e) {
-            \Log::error('Paystack initialization failed', [
-                'subscription_id' => $subscription->id,
-                'error' => $e->getMessage(),
-                'data' => $data
-            ]);
-
-            return redirect()
-                ->route('token-subscriptions.index')
-                ->with('error', 'Failed to initialize payment. Please try again or contact support.');
-        }
-    }
-    public function tokenCallback(Request $request)
-    {
-        $reference = $request->query('reference');
-        $response = $this->paystack->verifyTransaction($reference);
-
-        if ($response['status'] && $response['data']['status'] === 'success') {
-            $paymentDetails = $response['data'];
-            $subscriptionId = $paymentDetails['metadata']['subscription_id'];
-
-            $subscription = UserTokenSubscription::findOrFail($subscriptionId);
-
-            DB::transaction(function () use ($subscription, $paymentDetails) {
-                // 1. Record payment
-                Payment::create([
-                    'reference' => $paymentDetails['reference'],
-                    'amount' => $subscription->package->price,
-                    'currency' => $paymentDetails['currency'] ?? 'GHS',
-                    'status' => 'succeeded',
-                    'token_subscription_id' => $subscription->id,
-                ]);
-
-                // 2. Activate subscription (handles both top-ups and regular subscriptions)
-                $this->subscriptionService->activateSubscription($subscription);
-            });
-
-            // Check if it was a top-up (linked to another active subscription)
-            if ($subscription->replaced_by_id) {
-                // Refresh the main subscription to get updated token counts
-                $mainSubscription = UserTokenSubscription::find($subscription->replaced_by_id);
-
-                if ($mainSubscription && $mainSubscription->status === 'active') {
-                    // Refresh to get the latest data from database
-                    $mainSubscription->refresh();
-
-                    return redirect()
-                        ->route('token-subscriptions.show', $mainSubscription)
-                        ->with('success', 'Tokens added successfully! New balance: ' . number_format($mainSubscription->tokens_remaining) . ' tokens');
-                }
-            }
-
-            // For regular subscriptions (not top-ups), refresh the subscription
-            $subscription->refresh();
-
-            return redirect()
-                ->route('token-subscriptions.show', $subscription)
-                ->with('success', 'Token subscription activated successfully! Ref: ' . $subscription->reference);
-        }
-
-        return redirect()
-            ->route('token-subscriptions.index')
-            ->with('error', 'Token subscription payment failed or was cancelled.');
-    }
-
-
-    public function showPaymentForm_old(Student $student)
-    {
-        // Load any related data you need for the view, e.g. school, fees, etc.
-        return view('payments.school-fees.feepayment', compact('student'));
     }
 
     public function showPaymentForm(Student $student)
@@ -608,34 +472,32 @@ class PaymentController extends Controller
         ]);
     }
 
-
-
     public function processPayment(Request $request, PaystackService $paystack)
     {
         // 1️⃣ Validate request input
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'amount'     => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1',
         ]);
 
         // 2️⃣ Get student and related school
         $student = Student::with(['school', 'academicGroup', 'academicLevel'])->findOrFail($validated['student_id']);
-        $school  = $student->school;
+        $school = $student->school;
 
-        if (!$school) {
+        if (! $school) {
             return back()->withErrors(['school' => 'Student is not linked to any school.']);
         }
 
         // 3️⃣ Get school’s Paystack subaccount info
         $subaccount = Subaccount::where('school_id', $school->id)->first();
 
-        if (!$subaccount || !$subaccount->subaccount_code) {
+        if (! $subaccount || ! $subaccount->subaccount_code) {
             return back()->withErrors(['payment' => 'This school does not have a registered Paystack subaccount.']);
         }
 
         // 4️⃣ Determine payer info (student or parent)
         $payer = Auth::user();
-        $payer_id   = $payer->id ?? null;
+        $payer_id = $payer->id ?? null;
         $payer_type = $payer ? get_class($payer) : null;
 
         // 5️⃣ Get the current term (academic period)
@@ -656,17 +518,24 @@ class PaymentController extends Controller
 
         // 8️⃣ Prepare Paystack transaction payload
         $paymentData = [
-            'email'        => $payer->email ?? 'guest@example.com',
-            'amount'       => $validated['amount'] * 100, // Paystack expects amount in pesewas
-            'currency'     => 'GHS',
+            'email' => $payer->email ?? 'guest@example.com',
+            'amount' => $validated['amount'] * 100, // Paystack expects amount in pesewas
+            'currency' => 'GHS',
             'callback_url' => $callbackUrl,
-            'subaccount'   => $subaccount->subaccount_code,
         ];
+
+        // Prepare payment data with subaccount information
+        $subaccountService = app(SubaccountPaymentService::class);
+        $paymentData = $subaccountService->preparePaymentDataWithSubaccount(
+            $paymentData,
+            $subaccount,
+            'account'
+        );
 
         // 9️⃣ Initialize transaction via Paystack API
         $response = $paystack->initializeTransaction($paymentData);
 
-        if (empty($response['status']) || !$response['status'] || empty($response['data']['authorization_url'])) {
+        if (empty($response['status']) || ! $response['status'] || empty($response['data']['authorization_url'])) {
             return back()->withErrors(['payment' => 'Unable to initialize payment. Please try again.']);
         }
 
@@ -675,33 +544,30 @@ class PaymentController extends Controller
 
         // 🔟 Record payment in DB (now includes term_total_amount and current_term_id)
         SchoolFee::create([
-            'school_id'          => $school->id,
-            'student_id'         => $student->id,
-            'payer_id'           => $payer_id,
-            'payer_type'         => $payer_type,
-            'school_name'        => $school->name,
-            'amount'             => $validated['amount'],
-            'term_total_amount'  => $termTotalAmount,
-            'term_id'    => $currentTermId,
-            'currency'           => 'GHS',
-            'status'             => 'pending',
-            'reference'          => $reference,
-            'authorization_url'  => $response['data']['authorization_url'],
-            'paystack_response'  => json_encode($response),
+            'school_id' => $school->id,
+            'student_id' => $student->id,
+            'payer_id' => $payer_id,
+            'payer_type' => $payer_type,
+            'school_name' => $school->name,
+            'amount' => $validated['amount'],
+            'term_total_amount' => $termTotalAmount,
+            'term_id' => $currentTermId,
+            'currency' => 'GHS',
+            'status' => 'pending',
+            'reference' => $reference,
+            'authorization_url' => $response['data']['authorization_url'],
+            'paystack_response' => json_encode($response),
         ]);
 
         // 1️⃣1️⃣ Redirect user to Paystack for payment
         return redirect($response['data']['authorization_url']);
     }
 
-
-
-
     public function paymentCallback(Request $request, PaystackService $paystack, Student $student)
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('feepayment.form')
                 ->withErrors(['payment' => 'Missing payment reference.']);
         }
@@ -709,7 +575,7 @@ class PaymentController extends Controller
         // ✅ Verify transaction with Paystack
         $response = $paystack->verifyTransaction($reference);
 
-        if (empty($response['status']) || !$response['status']) {
+        if (empty($response['status']) || ! $response['status']) {
             return redirect()->route('feepayment.form')
                 ->withErrors(['payment' => 'Payment verification failed.']);
         }
@@ -731,7 +597,6 @@ class PaymentController extends Controller
             ->route('feepayment.thankyou', ['student' => $student->id])
             ->with('success', 'Payment successful!');
     }
-
 
     public function thankYou(Student $student)
     {

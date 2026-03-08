@@ -237,7 +237,7 @@
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Type</label>
                                             <select wire:model.live="paymentType" name="payment_type" required
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                                 <option value="school_fee">School Fee</option>
                                                 <option value="school_payment">School Payment</option>
                                             </select>
@@ -246,7 +246,7 @@
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (GHS)</label>
                                             <input type="number" wire:model="amount" name="amount" step="0.01" min="1" required
-                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                                    placeholder="Enter amount">
                                             @error('amount')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

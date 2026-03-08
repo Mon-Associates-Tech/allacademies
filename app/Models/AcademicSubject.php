@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\AcademicGroupLogs;
+use App\Traits\ActivityLoggable;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,10 +12,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AcademicSubject extends Model
 {
+    use AcademicGroupLogs;
+    use ActivityLoggable;
     use HasFactory;
     use SoftDeletes;
     use Trackable;
-    use AcademicGroupLogs;
 
     /**
      * @var array<int, string>
@@ -23,7 +25,7 @@ class AcademicSubject extends Model
         'name',
         'code',
         'academic_level_id',
-        'description'
+        'description',
     ];
 
     public function academicLevel()
@@ -75,7 +77,6 @@ class AcademicSubject extends Model
         });
     }
 
-
     public function mcqQuestions()
     {
         return $this->hasManyThrough(
@@ -89,7 +90,6 @@ class AcademicSubject extends Model
             $q->whereColumn('academic_topics.academic_subject_id', 'id');
         });
     }
-
 
     public function trueFalseQuestions()
     {
@@ -165,7 +165,7 @@ class AcademicSubject extends Model
         return route('quizzes.create', [
             'academic_group' => $this->academicLevel->academicGroup->id,
             'academic_level' => $this->academicLevel->id,
-            'academic_subject' => $this->id
+            'academic_subject' => $this->id,
         ]);
     }
 

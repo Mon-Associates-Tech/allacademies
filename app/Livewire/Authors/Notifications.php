@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Auth;
 class Notifications extends AppComponent
 {
     public $notifications;
+
     public $unreadCount = 0;
+
     public $showAll = false;
+
     public $filterType = 'unread';
 
     public function mount()
@@ -52,7 +55,7 @@ class Notifications extends AppComponent
 
     public function toggleShowAll()
     {
-        $this->showAll = !$this->showAll;
+        $this->showAll = ! $this->showAll;
         $this->loadNotifications();
     }
 
@@ -61,7 +64,18 @@ class Notifications extends AppComponent
         $notification = Auth::user()->notifications()->find($notificationId);
 
         if ($notification) {
+            $notificationType = $notification->type;
+            $notificationId = $notification->id;
+
             $notification->delete();
+
+            // Log activity
+            Auth::user()->logActivity('delete', 'Notification Deleted', 'notification', [
+                'notification_id' => $notificationId,
+                'notification_type' => $notificationType,
+                'deleted_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+
             $this->loadNotifications();
 
             $this->dispatch('notification-deleted');

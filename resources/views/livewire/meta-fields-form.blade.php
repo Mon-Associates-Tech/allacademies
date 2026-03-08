@@ -4,7 +4,7 @@
     @foreach ($metafields_options as $key => $label)
         <div class="flex items-center space-x-2">
             <input type="checkbox" wire:model.live="selectedOptions" value="{{ $key }}" id="option-{{ $key }}"
-                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
+                   class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 focus:ring-indigo-600" />
             <label for="option-{{ $key }}" class="text-sm text-gray-800">{{ $label }}</label>
         </div>
     @endforeach

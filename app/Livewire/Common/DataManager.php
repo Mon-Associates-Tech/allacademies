@@ -2,36 +2,77 @@
 
 namespace App\Livewire\Common;
 
+use App\Models\School;
 use App\Services\ImportExportService;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Validate;
-use Illuminate\Support\Facades\Storage;
 
 class DataManager extends Component
 {
     use WithFileUploads;
 
     public $activeOperation = 'import'; // 'import' or 'export'
+
     public $selectedModel = '';
+
     public $importFile;
+
     public $exportFormat = 'csv';
+
     public $includeRelations = false;
+
     public $exportFilters = [];
+
     public $importOptions = [];
+
     public $isProcessing = false;
+
     public $processingMessage = '';
+
     public $lastResult = null;
+
     public $showAdvancedOptions = false;
 
     #[Validate('required|file|mimes:csv,xlsx|max:10240')] // 10MB max
     public $uploadedFile;
+
+    public $selectedSchoolId;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
 
     public function mount()
     {
         $this->resetState();
+        $this->initializeSchoolSelection();
+    }
+
+    public function initializeSchoolSelection()
+    {
+        $user = auth()->user();
+        // If admin, auto-set to their school
+        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+            $this->selectedSchoolId = null; // Owners need to select
+        } else {
+            $this->selectedSchoolId = $user->school_id; // Admins use their school
+        }
+    }
+
+    public function isOwnerOrSuperAdmin(): bool
+    {
+        $user = auth()->user();
+
+        return $user->isSuperAdmin() || $user->hasRole('owner');
+    }
+
+    public function getAvailableSchools()
+    {
+        $user = auth()->user();
+        if ($this->isOwnerOrSuperAdmin()) {
+            return School::all()->pluck('name', 'id')->toArray();
+        }
+
+        return [];
     }
 
     public function updatedActiveOperation()
@@ -197,8 +238,9 @@ class DataManager extends Component
     {
         $this->validate();
 
-        if (!$this->uploadedFile) {
+        if (! $this->uploadedFile) {
             $this->addError('uploadedFile', 'Please select a file to upload.');
+
             return;
         }
 
@@ -206,14 +248,14 @@ class DataManager extends Component
         $this->isProcessing = true;
 
         try {
-            $service = new ImportExportService();
+            $service = new ImportExportService;
             $result = $service->validateImportFile($this->uploadedFile, $this->selectedModel);
 
             if ($result['valid']) {
                 $this->lastResult = [
                     'type' => 'validation_success',
                     'message' => $result['message'],
-                    'details' => $result
+                    'details' => $result,
                 ];
                 session()->flash('success', 'File validation successful! Ready to import.');
             } else {
@@ -221,11 +263,11 @@ class DataManager extends Component
                 $this->lastResult = [
                     'type' => 'validation_error',
                     'message' => $result['message'],
-                    'details' => $result
+                    'details' => $result,
                 ];
             }
         } catch (\Exception $e) {
-            $this->addError('uploadedFile', 'File validation failed: ' . $e->getMessage());
+            $this->addError('uploadedFile', 'File validation failed: '.$e->getMessage());
         } finally {
             $this->isProcessing = false;
         }
@@ -235,8 +277,16 @@ class DataManager extends Component
     {
         $this->validate();
 
-        if (!$this->uploadedFile) {
+        if (! $this->uploadedFile) {
             $this->addError('uploadedFile', 'Please select a file to upload.');
+
+            return;
+        }
+
+        // Validate that owners/superadmins select a school
+        if ($this->isOwnerOrSuperAdmin() && ! $this->selectedSchoolId) {
+            $this->addError('selectedSchoolId', 'Please select a school for this import.');
+
             return;
         }
 
@@ -244,18 +294,19 @@ class DataManager extends Component
         $this->isProcessing = true;
 
         try {
-            $service = new ImportExportService();
+            $service = new ImportExportService;
             $result = $service->performImport(
                 $this->uploadedFile,
                 $this->selectedModel,
-                $this->importOptions
+                $this->importOptions,
+                ['school_id' => $this->selectedSchoolId]
             );
 
             if ($result['success']) {
                 $this->lastResult = [
                     'type' => 'import_success',
                     'message' => $result['message'],
-                    'stats' => $result['stats']
+                    'stats' => $result['stats'],
                 ];
                 session()->flash('success', 'Import completed successfully!');
                 $this->uploadedFile = null;
@@ -263,13 +314,13 @@ class DataManager extends Component
                 $this->lastResult = [
                     'type' => 'import_error',
                     'message' => $result['message'],
-                    'details' => $result['details'] ?? []
+                    'details' => $result['details'] ?? [],
                 ];
-                session()->flash('error', 'Import failed: ' . $result['message']);
+                session()->flash('error', 'Import failed: '.$result['message']);
             }
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Import failed: ' . $e->getMessage());
+            session()->flash('error', 'Import failed: '.$e->getMessage());
         } finally {
             $this->isProcessing = false;
         }
@@ -277,8 +328,9 @@ class DataManager extends Component
 
     public function performExport()
     {
-        if (!$this->selectedModel) {
+        if (! $this->selectedModel) {
             session()->flash('error', 'Please select a model to export.');
+
             return;
         }
 
@@ -286,13 +338,13 @@ class DataManager extends Component
         $this->isProcessing = true;
 
         try {
-            $service = new ImportExportService();
+            $service = new ImportExportService;
             $result = $service->performExport(
                 $this->selectedModel,
                 $this->exportFormat,
                 $this->exportFilters,
                 [
-                    'include_relations' => $this->includeRelations
+                    'include_relations' => $this->includeRelations,
                 ]
             );
 
@@ -301,18 +353,18 @@ class DataManager extends Component
                     'type' => 'export_success',
                     'message' => $result['message'],
                     'filename' => $result['filename'],
-                    'download_url' => $result['download_url']
+                    'download_url' => $result['download_url'],
                 ];
                 session()->flash('success', 'Export completed successfully!');
 
                 // Trigger download
                 return redirect($result['download_url']);
             } else {
-                session()->flash('error', 'Export failed: ' . $result['message']);
+                session()->flash('error', 'Export failed: '.$result['message']);
             }
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Export failed: ' . $e->getMessage());
+            session()->flash('error', 'Export failed: '.$e->getMessage());
         } finally {
             $this->isProcessing = false;
         }
@@ -320,13 +372,14 @@ class DataManager extends Component
 
     public function downloadSampleFile()
     {
-        if (!$this->selectedModel) {
+        if (! $this->selectedModel) {
             session()->flash('error', 'Please select a model first.');
+
             return;
         }
 
         try {
-            $service = new ImportExportService();
+            $service = new ImportExportService;
             $result = $service->generateSampleFile($this->selectedModel);
 
             if ($result['success']) {
@@ -335,13 +388,13 @@ class DataManager extends Component
                 session()->flash('error', 'Failed to generate sample file.');
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Error generating sample file: ' . $e->getMessage());
+            session()->flash('error', 'Error generating sample file: '.$e->getMessage());
         }
     }
 
     public function toggleAdvancedOptions()
     {
-        $this->showAdvancedOptions = !$this->showAdvancedOptions;
+        $this->showAdvancedOptions = ! $this->showAdvancedOptions;
     }
 
     public function clearResults()
@@ -355,6 +408,8 @@ class DataManager extends Component
             'availableModels' => $this->getAvailableModels(),
             'modelFilters' => $this->getModelFilters(),
             'importOptions' => $this->getImportOptions(),
+            'availableSchools' => $this->getAvailableSchools(),
+            'isOwnerOrSuperAdmin' => $this->isOwnerOrSuperAdmin(),
         ]);
     }
 }

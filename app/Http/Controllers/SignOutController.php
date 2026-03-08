@@ -14,6 +14,6 @@ class SignOutController extends Controller
 
         $request->session()->regenerateToken();
 
-        return to_route('sign-in');
+        return to_route('login');
     }
 }

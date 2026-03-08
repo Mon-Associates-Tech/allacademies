@@ -10,13 +10,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Exception\CommonMarkException;
-use League\CommonMark\Output\RenderedContentInterface;
 
-if (!function_exists('fisher_yates_shuffle')) {
+if (! function_exists('fisher_yates_shuffle')) {
     function fisher_yates_shuffle($array, $seed)
     {
         @mt_srand($seed);
-        for ($i = count($array) - 1; $i > 0; --$i) {
+        for ($i = count($array) - 1; $i > 0; $i--) {
             $j = @mt_rand(0, $i);
             $tmp = $array[$i];
             $array[$i] = $array[$j];
@@ -31,9 +30,9 @@ if (!function_exists('fisher_yates_shuffle')) {
 function convertMinutesToHoursMinutes($minutes): string
 {
     // Ensure input is a non-negative integer
-    $minutes = (int)$minutes;
+    $minutes = (int) $minutes;
     if ($minutes < 0) {
-        return "Invalid duration";
+        return 'Invalid duration';
     }
 
     $hours = intdiv($minutes, 60);
@@ -41,10 +40,10 @@ function convertMinutesToHoursMinutes($minutes): string
 
     $result = [];
     if ($hours > 0) {
-        $result[] = $hours . ' Hour' . ($hours > 1 ? 's' : '');
+        $result[] = $hours.' Hour'.($hours > 1 ? 's' : '');
     }
     if ($remainingMinutes > 0 || $hours === 0) {
-        $result[] = $remainingMinutes . ' Minute' . ($remainingMinutes != 1 ? 's' : '');
+        $result[] = $remainingMinutes.' Minute'.($remainingMinutes != 1 ? 's' : '');
     }
 
     return implode(' ', $result);
@@ -56,7 +55,7 @@ function getTopicQuestionCount($topicId)
         ->withCount([
             'essayQuestions',
             'multipleChoiceQuestions',
-            'trueOrFalseQuestions'
+            'trueOrFalseQuestions',
         ])
         ->get();
 
@@ -72,10 +71,10 @@ function getSubtopicQuestionCount($subtopicId)
     $subtopic = AcademicSubtopic::withCount([
         'essayQuestions',
         'multipleChoiceQuestions',
-        'trueOrFalseQuestions'
+        'trueOrFalseQuestions',
     ])->find($subtopicId);
 
-    if (!$subtopic) {
+    if (! $subtopic) {
         return 0;
     }
 
@@ -84,26 +83,23 @@ function getSubtopicQuestionCount($subtopicId)
         + $subtopic->true_or_false_questions_count;
 }
 
-
 function greetUser($name): string
 {
     // Get the current hour (0-23)
-    $hour = (int)date('H');
-
+    $hour = (int) date('H');
 
     if ($hour >= 5 && $hour < 12) {
-        $greeting = "Good Morning";
+        $greeting = 'Good Morning';
     } elseif ($hour >= 12 && $hour < 17) {
-        $greeting = "Good Afternoon";
+        $greeting = 'Good Afternoon';
     } elseif ($hour >= 17 && $hour < 21) {
-        $greeting = "Good Evening";
+        $greeting = 'Good Evening';
     } else {
-        $greeting = "Good Night";
+        $greeting = 'Good Night';
     }
 
     return "$greeting, $name";
 }
-
 
 /**
  * @throws CommonMarkException
@@ -129,9 +125,9 @@ function parsedMarkdown($markdown): string
     }
 }
 
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\IOFactory;
 use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Shared\Html;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -141,10 +137,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 function exportToWord(): BinaryFileResponse
 {
-    $phpWord = new PhpWord();
+    $phpWord = new PhpWord;
     $section = $phpWord->addSection();
     $examination = Examination::find(request()->examination_id);
-    //$sections = Examiner::createSections($examination);
+    // $sections = Examiner::createSections($examination);
 
     $controller = app(ExaminationController::class);
 
@@ -160,7 +156,6 @@ function exportToWord(): BinaryFileResponse
     return response()->download($filePath)->deleteFileAfterSend();
 }
 
-
 function exportToPdf(): \Illuminate\Http\Response
 {
     $examination = Examination::find(request()->examination_id);
@@ -168,14 +163,13 @@ function exportToPdf(): \Illuminate\Http\Response
 
     $pdf = Pdf::loadView('exports.examination', ['examination' => $examination, 'sections' => $sections]);
 
-    return $pdf->download($examination->title . '.pdf');
+    return $pdf->download($examination->title.'.pdf');
 }
 
 function getRouteParameter($name = 'id'): object|string|null
 {
     return Route::getCurrentRoute()?->parameter($name);
 }
-
 
 function logInfo(string $message, array $context = []): void
 {
@@ -201,14 +195,14 @@ function logError(string $message, array $context = []): void
 
 use App\Models\SchoolSetting;
 
-if (!function_exists('school_setting')) {
+if (! function_exists('school_setting')) {
     function school_setting($key, $default = null)
     {
         return SchoolSetting::get($key, $default);
     }
 }
 
-if (!function_exists('set_school_setting')) {
+if (! function_exists('set_school_setting')) {
     function set_school_setting($key, $value)
     {
         return SchoolSetting::set($key, $value);
@@ -218,9 +212,9 @@ if (!function_exists('set_school_setting')) {
 /**
  * Generate a route with academic hierarchy parameters
  *
- * @param string $routeName The route name
- * @param array $parameters Route parameters (e.g., ['essay_question' => $model])
- * @param array $overrides Override specific academic parameters
+ * @param  string  $routeName  The route name
+ * @param  array  $parameters  Route parameters (e.g., ['essay_question' => $model])
+ * @param  array  $overrides  Override specific academic parameters
  * @return string The generated route URL
  */
 function academicRoute(string $routeName, array $parameters = [], array $overrides = []): string
@@ -245,13 +239,11 @@ function academicRoute(string $routeName, array $parameters = [], array $overrid
     return route($routeName, $allParams);
 }
 
-
-if (!function_exists('getTimeRemaining')) {
+if (! function_exists('getTimeRemaining')) {
     /**
      * Calculates the remaining days, hours, and minutes from now until a future timestamp.
      *
-     * @param string|Carbon|\DateTimeInterface $futureTimestamp The future date.
-     * @return string
+     * @param  string|Carbon|\DateTimeInterface  $futureTimestamp  The future date.
      */
     function getTimeRemaining($futureTimestamp): string
     {
@@ -271,17 +263,17 @@ if (!function_exists('getTimeRemaining')) {
 
         // Add days to the output string if there are any
         if ($diff->d > 0) {
-            $parts[] = $diff->d . ' ' . Str::plural('day', $diff->d);
+            $parts[] = $diff->d.' '.Str::plural('day', $diff->d);
         }
 
         // Add hours if there are any
         if ($diff->h > 0) {
-            $parts[] = $diff->h . ' ' . Str::plural('hour', $diff->h);
+            $parts[] = $diff->h.' '.Str::plural('hour', $diff->h);
         }
 
         // Add minutes if there are any
         if ($diff->i > 0) {
-            $parts[] = $diff->i . ' ' . Str::plural('minute', $diff->i);
+            $parts[] = $diff->i.' '.Str::plural('minute', $diff->i);
         }
 
         // If the difference is less than a minute, provide a specific message
@@ -289,31 +281,34 @@ if (!function_exists('getTimeRemaining')) {
             return 'Less than a minute remaining';
         }
 
-        return implode(', ', $parts) . ' remaining';
+        return implode(', ', $parts).' remaining';
     }
 
-    if (!function_exists('special_access_emails')) {
+    if (! function_exists('special_access_emails')) {
         function special_access_emails(): array
         {
             $emails = config('access.owner.special_access_emails', '');
+
             return array_map('trim', explode(',', $emails));
         }
     }
 
-    if(!function_exists('impersonateUser')){
-         function impersonateUser($userId)
+    if (! function_exists('impersonateUser')) {
+        function impersonateUser($userId)
         {
             $user = User::findOrFail($userId);
 
             // Check if current user can impersonate
-            if (!Auth::user()->canImpersonate()) {
+            if (! Auth::user()->canImpersonate()) {
                 session()->flash('error', 'You do not have permission to impersonate users.');
+
                 return;
             }
 
             // Check if target user can be impersonated
-            if (!$user->canBeImpersonated()) {
+            if (! $user->canBeImpersonated()) {
                 session()->flash('error', 'This user cannot be impersonated.');
+
                 return;
             }
 
@@ -324,11 +319,11 @@ if (!function_exists('getTimeRemaining')) {
         }
     }
 
-     function getSchoolId(): ?int
+    function getSchoolId(): ?int
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -349,6 +344,7 @@ if (!function_exists('getTimeRemaining')) {
             // Check if current_school is bound
             if (app()->bound('current_school')) {
                 $school = app('current_school');
+
                 return $school ? $school->id : null;
             }
 
@@ -360,16 +356,96 @@ if (!function_exists('getTimeRemaining')) {
         return $user->school_id;
     }
 
+    if (! function_exists('getCurrentSchoolContext')) {
+        /**
+         * Get the current school context for the authenticated user
+         *
+         * Handles school switching for owners/super admins
+         * Returns the user's school for regular users
+         */
+        function getCurrentSchoolContext(): ?\App\Models\School
+        {
+            $user = Auth::user();
+
+            if (! $user) {
+                return null;
+            }
+
+            // For owners/super admins, check for switched school context
+            if ($user->hasRole('owner') || $user->isSuperAdmin()) {
+                // Check if a specific school is bound in the app container
+                if (app()->bound('current_school')) {
+                    try {
+                        $school = app('current_school');
+                        if ($school instanceof \App\Models\School) {
+                            return $school;
+                        }
+                    } catch (\Exception $e) {
+                        // Fall through to next check
+                    }
+                }
+
+                // Check session for switched school ID
+                $sessionSchoolId = session('current_school_id');
+                if ($sessionSchoolId) {
+                    try {
+                        $school = \App\Models\School::find($sessionSchoolId);
+                        if ($school) {
+                            return $school;
+                        }
+                    } catch (\Exception $e) {
+                        // Fall through to user's default school
+                    }
+                }
+
+                // If viewing "all schools" or no context set, return null
+                if (session()->has('current_school_id') && session('current_school_id') === null) {
+                    return null;
+                }
+
+                // Default to user's own school if they have one
+                return $user->school ?? null;
+            }
+
+            // For regular users, return their assigned school
+            return $user->school ?? null;
+        }
+    }
+
+    if (! function_exists('isViewingAllSchools')) {
+        /**
+         * Check if the user is viewing all schools context
+         */
+        function isViewingAllSchools(): bool
+        {
+            $user = Auth::user();
+
+            if (! $user || (! $user->hasRole('owner') && ! $user->isSuperAdmin())) {
+                return false;
+            }
+
+            // Check if current_school_id is explicitly set to null in session
+            if (session()->has('current_school_id') && session('current_school_id') === null) {
+                return true;
+            }
+
+            // Check if no school context is bound
+            $currentSchool = getCurrentSchoolContext();
+
+            return $currentSchool === null;
+        }
+    }
+
     /**
      * Get a student based on provided parameters
      *
-     * @param int|null $user_id The user ID to search by
-     * @param int|null $student_id The student's database ID to search by
-     * @param int|null $school_id The school ID to filter by
-     * @param bool $withoutScopes Whether to bypass global scopes
+     * @param  int|null  $user_id  The user ID to search by
+     * @param  int|null  $student_id  The student's database ID to search by
+     * @param  int|null  $school_id  The school ID to filter by
+     * @param  bool  $withoutScopes  Whether to bypass global scopes
      * @return \App\Models\Student|null
      */
-    function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = false)
+    function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = true): ?Student
     {
         // Start with the base query
         $query = $withoutScopes
@@ -410,7 +486,7 @@ if (!function_exists('getTimeRemaining')) {
             $student = Auth::user()->student;
 
             // If student not found via relationship, try direct query
-            if (!$student) {
+            if (! $student) {
                 $student = \App\Models\Student::withoutGlobalScopes()
                     ->where('user_id', Auth::id())
                     ->first();
@@ -422,4 +498,5 @@ if (!function_exists('getTimeRemaining')) {
         // No parameters and no authenticated user
         return null;
     }
+
 }

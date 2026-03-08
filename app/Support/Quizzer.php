@@ -25,7 +25,7 @@ class Quizzer
 
     private static function durationElapsed(Quiz $quiz, Worksheet $worksheet): bool
     {
-        return !$worksheet->ended_at &&
+        return ! $worksheet->ended_at &&
             now() > $worksheet->started_at->addMinutes($quiz->duration_in_minutes);
     }
 
@@ -39,7 +39,7 @@ class Quizzer
 
     public static function shouldStopWork(Quiz $quiz, Worksheet $worksheet): bool
     {
-        return !$worksheet->ended_at && (
+        return ! $worksheet->ended_at && (
             static::durationElapsed($quiz, $worksheet) ||
             static::questionOutOfBounds($quiz, $worksheet)
         );
@@ -63,7 +63,7 @@ class Quizzer
 
     public static function markAnswer(Quiz $quiz, Worksheet $worksheet, string|bool $answer): void
     {
-        [$sectionIndex,] = $worksheet->cursor;
+        [$sectionIndex] = $worksheet->cursor;
 
         if (
             static::questionOutOfBounds($quiz, $worksheet)

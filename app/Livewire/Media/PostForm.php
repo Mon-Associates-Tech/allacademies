@@ -2,30 +2,37 @@
 
 namespace App\Livewire\Media;
 
-use Livewire\Component;
-use App\Models\Post;
 use App\Models\Media\MediaFile;
+use App\Models\Post;
+use Livewire\Component;
 
 class PostForm extends Component
 {
     public $postId = null;
+
     public $title = '';
+
     public $content = '';
+
     public $excerpt = '';
+
     public $featuredImageId = null;
+
     public $featuredImage = null;
+
     public $galleryImageIds = [];
+
     public $galleryImages = [];
 
     protected $listeners = [
         'featuredImageSelected' => 'setFeaturedImage',
-        'galleryImagesSelected' => 'setGalleryImages'
+        'galleryImagesSelected' => 'setGalleryImages',
     ];
 
     protected $rules = [
         'title' => 'required|string|max:255',
         'content' => 'required|string',
-        'excerpt' => 'nullable|string|max:500'
+        'excerpt' => 'nullable|string|max:500',
     ];
 
     public function mount($postId = null)
@@ -77,8 +84,8 @@ class PostForm extends Component
 
     public function removeGalleryImage($mediaId)
     {
-        $this->galleryImageIds = array_filter($this->galleryImageIds, fn($id) => $id !== $mediaId);
-        $this->galleryImages = array_filter($this->galleryImages, fn($media) => $media['id'] !== $mediaId);
+        $this->galleryImageIds = array_filter($this->galleryImageIds, fn ($id) => $id !== $mediaId);
+        $this->galleryImages = array_filter($this->galleryImages, fn ($media) => $media['id'] !== $mediaId);
         $this->galleryImages = array_values($this->galleryImages); // Re-index array
     }
 
@@ -86,13 +93,14 @@ class PostForm extends Component
     {
         $this->validate();
 
-        $post = $this->postId ? Post::find($this->postId) : new Post();
+        $isCreating = ! $this->postId;
+        $post = $this->postId ? Post::find($this->postId) : new Post;
 
         $post->fill([
             'title' => $this->title,
             'content' => $this->content,
             'excerpt' => $this->excerpt,
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
 
         $post->save();
@@ -117,9 +125,26 @@ class PostForm extends Component
             $post->attachMedia($mediaId, 'gallery', ['sort_order' => $index]);
         }
 
+        // Log activity
+        if ($isCreating) {
+            $post->logActivity('create', 'Post Created', 'post', [
+                'post_title' => $this->title,
+                'has_featured_image' => ! empty($this->featuredImageId),
+                'gallery_image_count' => count($this->galleryImageIds),
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        } else {
+            $post->logActivity('update', 'Post Updated', 'post', [
+                'post_title' => $this->title,
+                'has_featured_image' => ! empty($this->featuredImageId),
+                'gallery_image_count' => count($this->galleryImageIds),
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
+
         $this->emit('notify', 'Post saved successfully!', 'success');
 
-        if (!$this->postId) {
+        if (! $this->postId) {
             return redirect()->route('posts.edit', $post);
         }
     }

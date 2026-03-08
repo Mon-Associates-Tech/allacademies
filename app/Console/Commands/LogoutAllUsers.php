@@ -3,10 +3,10 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class LogoutAllUsers extends Command
 {
@@ -57,7 +57,7 @@ class LogoutAllUsers extends Command
 
         // Clear all cache that might contain session data
         Cache::flush();
-        $this->info("Cache cleared");
+        $this->info('Cache cleared');
 
         // Update all users' remember_token to invalidate "remember me" sessions
         $this->clearRememberTokens($currentUserId, $exceptCurrent);
@@ -67,7 +67,7 @@ class LogoutAllUsers extends Command
 
         $message = $exceptCurrent && $currentUserId
             ? "All users logged out except current user (ID: {$currentUserId})"
-            : "All users have been logged out successfully";
+            : 'All users have been logged out successfully';
 
         $this->info($message);
         $this->info("Processed {$deletedSessions} session records");
@@ -86,7 +86,8 @@ class LogoutAllUsers extends Command
                 return DB::table('sessions')->delete();
             }
         } catch (\Exception $e) {
-            $this->error("Database sessions error: " . $e->getMessage());
+            $this->error('Database sessions error: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -95,8 +96,9 @@ class LogoutAllUsers extends Command
     {
         $sessionPath = storage_path('framework/sessions');
 
-        if (!File::exists($sessionPath)) {
+        if (! File::exists($sessionPath)) {
             $this->warn("Session directory not found: {$sessionPath}");
+
             return 0;
         }
 
@@ -125,8 +127,8 @@ class LogoutAllUsers extends Command
                     }
 
                     // Try to extract user ID from session data
-                    if (isset($data['login_web_' . sha1('web')])) {
-                        $sessionUserId = $data['login_web_' . sha1('web')];
+                    if (isset($data['login_web_'.sha1('web')])) {
+                        $sessionUserId = $data['login_web_'.sha1('web')];
                         if ($sessionUserId == $currentUserId) {
                             continue;
                         }
@@ -139,7 +141,8 @@ class LogoutAllUsers extends Command
                 }
 
             } catch (\Exception $e) {
-                $this->warn("Could not process session file {$file->getFilename()}: " . $e->getMessage());
+                $this->warn("Could not process session file {$file->getFilename()}: ".$e->getMessage());
+
                 continue;
             }
         }
@@ -151,7 +154,7 @@ class LogoutAllUsers extends Command
     {
         try {
             $redis = app('redis');
-            $prefix = Config::get('session.cookie') . ':*';
+            $prefix = Config::get('session.cookie').':*';
             $keys = $redis->keys($prefix);
 
             $deletedCount = 0;
@@ -171,7 +174,8 @@ class LogoutAllUsers extends Command
 
             return $deletedCount;
         } catch (\Exception $e) {
-            $this->error("Redis sessions error: " . $e->getMessage());
+            $this->error('Redis sessions error: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -189,7 +193,7 @@ class LogoutAllUsers extends Command
 
             $this->info("Cleared remember tokens for {$updated} users");
         } catch (\Exception $e) {
-            $this->error("Error clearing remember tokens: " . $e->getMessage());
+            $this->error('Error clearing remember tokens: '.$e->getMessage());
         }
     }
 
@@ -201,18 +205,18 @@ class LogoutAllUsers extends Command
                     ->where('id', '!=', $currentUserId)
                     ->update([
                         'is_online' => false,
-                        'last_seen_at' => now()
+                        'last_seen_at' => now(),
                     ]);
             } else {
                 $updated = DB::table('users')->update([
                     'is_online' => false,
-                    'last_seen_at' => now()
+                    'last_seen_at' => now(),
                 ]);
             }
 
             $this->info("Updated online status for {$updated} users");
         } catch (\Exception $e) {
-            $this->error("Error updating online status: " . $e->getMessage());
+            $this->error('Error updating online status: '.$e->getMessage());
         }
     }
 
@@ -222,11 +226,11 @@ class LogoutAllUsers extends Command
         $offset = 0;
 
         while ($offset < strlen($sessionData)) {
-            if (!strstr(substr($sessionData, $offset), "|")) {
+            if (! strstr(substr($sessionData, $offset), '|')) {
                 break;
             }
 
-            $pos = strpos($sessionData, "|", $offset);
+            $pos = strpos($sessionData, '|', $offset);
             $num = $pos - $offset;
             $varname = substr($sessionData, $offset, $num);
             $offset += $num + 1;

@@ -27,7 +27,7 @@ class QuizSession extends Model
         'time_taken',
         'status',
         'started_at',
-        'completed_at'
+        'completed_at',
     ];
 
     protected $casts = [
@@ -36,7 +36,7 @@ class QuizSession extends Model
         'results' => 'array',
         'context' => 'array',
         'started_at' => 'datetime',
-        'completed_at' => 'datetime'
+        'completed_at' => 'datetime',
     ];
 
     /**

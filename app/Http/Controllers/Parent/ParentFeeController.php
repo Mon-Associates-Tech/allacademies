@@ -13,7 +13,6 @@ use App\Models\StudentParent;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ParentFeeController extends Controller
@@ -23,6 +22,15 @@ class ParentFeeController extends Controller
     public function __construct(PaystackService $paystack)
     {
         $this->paystack = $paystack;
+
+        // Prevent caching of payment pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['initializePayment', 'callback']);
     }
 
     /**
@@ -34,7 +42,7 @@ class ParentFeeController extends Controller
             $user = Auth::user();
             $schoolId = getSchoolId();
 
-            if (!$schoolId) {
+            if (! $schoolId) {
                 return redirect()->route('parent.dashboard')
                     ->with('error', 'School context not found. Please contact your administrator.');
             }
@@ -44,7 +52,7 @@ class ParentFeeController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$parent) {
+            if (! $parent) {
                 return redirect()->route('parent.dashboard')
                     ->with('error', 'Parent profile not found. Please contact your administrator.');
             }
@@ -102,7 +110,7 @@ class ParentFeeController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in ParentFeeController@index', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->route('parent.dashboard')
@@ -118,7 +126,7 @@ class ParentFeeController extends Controller
         $user = Auth::user();
         $schoolId = getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             return redirect()->route('parent.dashboard')
                 ->with('error', 'School context not found.');
         }
@@ -127,7 +135,7 @@ class ParentFeeController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$parent) {
+        if (! $parent) {
             return redirect()->route('parent.dashboard')
                 ->with('error', 'Parent profile not found.');
         }
@@ -173,7 +181,7 @@ class ParentFeeController extends Controller
                     ->where('status', 'succeeded')
                     ->sum('amount');
 
-//                $totalPaid += $schoolPaymentsPaid;
+                //                $totalPaid += $schoolPaymentsPaid;
                 $termTotalAmount = $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0;
                 $remainingAmount = max($termTotalAmount - $totalPaid, 0);
             }
@@ -207,7 +215,7 @@ class ParentFeeController extends Controller
         $user = Auth::user();
         $schoolId = getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             return back()->withErrors(['error' => 'School context not found.']);
         }
 
@@ -215,7 +223,7 @@ class ParentFeeController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$parent) {
+        if (! $parent) {
             return back()->withErrors(['error' => 'Parent profile not found.']);
         }
 
@@ -224,7 +232,7 @@ class ParentFeeController extends Controller
             ->where('students.id', $validated['student_id'])
             ->first();
 
-        if (!$student) {
+        if (! $student) {
             return back()->withErrors(['error' => 'Student not found or not associated with your account.']);
         }
 
@@ -257,6 +265,7 @@ class ParentFeeController extends Controller
                 'payer_type' => 'parent',
                 'payment_type' => $validated['payment_type'],
                 'payment_structure_id' => $validated['payment_structure_id'] ?? null,
+                'cancel_action' => route('parent.fees.index'),
             ],
         ];
 
@@ -266,7 +275,7 @@ class ParentFeeController extends Controller
 
         $response = $this->paystack->initializeTransaction($paymentData);
 
-        if (empty($response['status']) || !$response['status']) {
+        if (empty($response['status']) || ! $response['status']) {
             return back()->withErrors(['error' => 'Unable to initialize payment. Please try again.']);
         }
 
@@ -283,8 +292,8 @@ class ParentFeeController extends Controller
             SchoolFee::create([
                 'school_id' => $schoolId,
                 'student_id' => $student->id,
-                'payer_id' => $user->id,
-                'payer_type' => get_class($user),
+                'payer_id' => $parent->id,
+                'payer_type' => 'parent',
                 'school_name' => $school->name,
                 'amount' => $validated['amount'],
                 'term_total_amount' => $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0,
@@ -307,9 +316,9 @@ class ParentFeeController extends Controller
                 'amount' => $validated['amount'],
                 'currency' => 'GHS',
                 'payer_type' => 'parent',
-                'payer_id' => $user->id,
-                'payer_name' => $user->name,
-                'payer_email' => $user->email,
+                'payer_id' => $parent->id,
+                'payer_name' => $parent->user->name,
+                'payer_email' => $parent->user->email,
                 'status' => 'pending',
                 'reference' => $reference,
                 'gateway' => 'paystack',
@@ -321,6 +330,7 @@ class ParentFeeController extends Controller
 
         return redirect($response['data']['authorization_url']);
     }
+
     /**
      * Payment callback
      */
@@ -328,7 +338,7 @@ class ParentFeeController extends Controller
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('parent.fees.index')
                 ->with('error', 'Payment reference not found.');
         }
@@ -340,13 +350,13 @@ class ParentFeeController extends Controller
         $isSchoolFee = true;
 
         // If not found, try SchoolPayment
-        if (!$payment) {
+        if (! $payment) {
             $payment = SchoolPayment::where('reference', $reference)->first();
             $isSchoolFee = false;
         }
 
         if ($payment) {
-            if (!empty($response['status']) && $response['status'] && $response['data']['status'] === 'success') {
+            if (! empty($response['status']) && $response['status'] && $response['data']['status'] === 'success') {
                 $payment->update([
                     'status' => 'succeeded',
                     'paystack_response' => $isSchoolFee ? json_encode($response) : $response,
@@ -386,14 +396,13 @@ class ParentFeeController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$parent) {
+        if (! $parent) {
             abort(403);
         }
 
-
         $studentIds = $parent->students()->withoutGlobalScopes()->pluck('students.id');
 
-        if (!$studentIds->contains($payment->student_id)) {
+        if (! $studentIds->contains($payment->student_id)) {
             abort(403);
         }
 
@@ -401,6 +410,7 @@ class ParentFeeController extends Controller
         $payment->student = Student::withoutGlobalScopes()
             ->with(['academicGroup', 'academicLevel', 'user', 'school'])
             ->find($payment->student_id);
+
         return view('livewire.parent.fees.receipt', compact('payment', 'type'));
     }
 
@@ -413,7 +423,7 @@ class ParentFeeController extends Controller
             $user = Auth::user();
             $schoolId = getSchoolId();
 
-            if (!$schoolId) {
+            if (! $schoolId) {
                 return redirect()->route('parent.dashboard')
                     ->with('error', 'School context not found.');
             }
@@ -423,7 +433,7 @@ class ParentFeeController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$parent) {
+            if (! $parent) {
                 return redirect()->route('parent.dashboard')
                     ->with('error', 'Parent profile not found.');
             }
@@ -452,9 +462,9 @@ class ParentFeeController extends Controller
                 ->with([
                     'payer',
                     'academicPeriod',
-                    'student' => function($query) {
+                    'student' => function ($query) {
                         $query->withoutGlobalScopes()->with(['user', 'academicLevel', 'academicGroup']);
-                    }
+                    },
                 ]);
 
             if ($selectedStudentId) {
@@ -473,6 +483,7 @@ class ParentFeeController extends Controller
             $schoolFees = $schoolFeesQuery->get()->map(function ($fee) {
                 $fee->payment_category = 'School Fee';
                 $fee->payment_model = 'school_fee';
+
                 return $fee;
             });
 
@@ -481,9 +492,9 @@ class ParentFeeController extends Controller
                 ->with([
                     'payer',
                     'academicPeriod',
-                    'student' => function($query) {
+                    'student' => function ($query) {
                         $query->withoutGlobalScopes()->with(['user', 'academicLevel', 'academicGroup']);
-                    }
+                    },
                 ]);
 
             if ($selectedStudentId) {
@@ -502,6 +513,7 @@ class ParentFeeController extends Controller
             $schoolPayments = $schoolPaymentsQuery->get()->map(function ($payment) {
                 $payment->payment_category = 'School Payment';
                 $payment->payment_model = 'school_payment';
+
                 return $payment;
             });
 
@@ -541,14 +553,14 @@ class ParentFeeController extends Controller
                     return [
                         'student' => $group->first()->student,
                         'total' => $group->sum('amount'),
-                        'count' => $group->count()
+                        'count' => $group->count(),
                     ];
                 }),
                 'by_payer' => $allTransactions->where('status', 'succeeded')->groupBy('payer_id')->map(function ($group) {
                     return [
                         'payer' => $group->first()->payer,
                         'total' => $group->sum('amount'),
-                        'count' => $group->count()
+                        'count' => $group->count(),
                     ];
                 }),
             ];
@@ -572,7 +584,7 @@ class ParentFeeController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in ParentFeeController@transactions', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->route('parent.dashboard')

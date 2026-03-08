@@ -2,16 +2,18 @@
 
 namespace App\Traits;
 
-use Livewire\WithFileUploads;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Livewire\WithFileUploads;
 
 trait MessageAttachments
 {
     use WithFileUploads;
 
     public array $attachments = [];
+
     public array $tempAttachments = [];
+
     private array $fileCache = [];
 
     protected function handleNewAttachments(): void
@@ -21,12 +23,12 @@ trait MessageAttachments
         }
 
         $this->validate([
-            'attachments.*' => 'file|max:10240'
+            'attachments.*' => 'file|max:10240',
         ]);
 
         foreach ($this->attachments as $attachment) {
             $tempId = (string) Str::uuid();
-            $tempFilename = $tempId . '.' . $attachment->getClientOriginalExtension();
+            $tempFilename = $tempId.'.'.$attachment->getClientOriginalExtension();
             $tempPath = $attachment->storeAs('temp-message-attachments', $tempFilename, 'public');
 
             $this->tempAttachments[] = [
@@ -46,11 +48,11 @@ trait MessageAttachments
     protected function formatFileSize($bytes)
     {
         if ($bytes < 1024) {
-            return $bytes . ' B';
+            return $bytes.' B';
         } elseif ($bytes < 1048576) {
-            return round($bytes / 1024, 1) . ' KB';
+            return round($bytes / 1024, 1).' KB';
         } else {
-            return round($bytes / 1048576, 1) . ' MB';
+            return round($bytes / 1048576, 1).' MB';
         }
     }
 
@@ -67,7 +69,7 @@ trait MessageAttachments
 
         $this->tempAttachments = array_filter(
             $this->tempAttachments,
-            fn($att) => (string) $att['id'] !== $attachmentId
+            fn ($att) => (string) $att['id'] !== $attachmentId
         );
 
         if (isset($this->fileCache[$attachmentId])) {
@@ -80,14 +82,14 @@ trait MessageAttachments
     protected function saveAttachments($message)
     {
         foreach ($this->tempAttachments as $attachment) {
-            if (!isset($attachment['temp_path']) ||
-                !Storage::disk('public')->exists($attachment['temp_path'])) {
+            if (! isset($attachment['temp_path']) ||
+                ! Storage::disk('public')->exists($attachment['temp_path'])) {
                 continue;
             }
 
-            $filename = (string) Str::uuid() . '.' .
+            $filename = (string) Str::uuid().'.'.
                        pathinfo($attachment['original_filename'], PATHINFO_EXTENSION);
-            $finalPath = 'message-attachments/' . $filename;
+            $finalPath = 'message-attachments/'.$filename;
 
             Storage::disk('public')->move($attachment['temp_path'], $finalPath);
 

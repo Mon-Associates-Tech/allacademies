@@ -52,7 +52,7 @@
                     @if($activeTab === 'results')
                         <!-- Back button when viewing results -->
                         <button wire:click="backToHistory"
-                                class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm flex items-center">
+                                class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -62,7 +62,7 @@
                     @else
                         <!-- Regular tabs -->
                         <button wire:click="$set('activeTab', 'new')"
-                                :class="$wire.activeTab === 'new' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                :class="$wire.activeTab === 'new' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300'"
                                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -71,7 +71,7 @@
                             New Quiz
                         </button>
                         <button wire:click="$set('activeTab', 'history')"
-                                :class="$wire.activeTab === 'history' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                                :class="$wire.activeTab === 'history' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300'"
                                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -90,7 +90,6 @@
             <!-- Token Warning Banner -->
             @if(!$canGenerateQuiz)
                 <div class="mb-6">
-                    @if($tokenWarningMessage === 'no_subscription')
                         <div
                             class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">
@@ -101,10 +100,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-blue-800 dark:text-blue-200 mb-1">
-                                        🎁 Get Started with Free AI Tokens!
+                                        🎁 Get Started with  AI Messengers!
                                     </h3>
                                     <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                                        You don't have any active token subscription. Activate your free trial
+                                        You don't have any active messenger subscription. Activate a
                                         package to start generating quizzes with AI assistance!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -113,12 +112,12 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                         </svg>
-                                        Get Free Tokens
+                                        Get Messengers
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    @elseif($tokenWarningMessage === 'depleted')
+                    @if($tokenWarningMessage === 'depleted')
                         <div
                             class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow-sm">
                             <div class="flex items-start">
@@ -130,10 +129,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-red-800 dark:text-red-200 mb-1">
-                                        😔 Tokens Exhausted
+                                        😔 Messengers Exhausted
                                     </h3>
                                     <p class="text-sm text-red-700 dark:text-red-300 mb-3">
-                                        Your token balance is fully depleted. Top up now to continue generating quizzes
+                                        Your Messenger balance is fully depleted. Top up now to continue generating quizzes
                                         and resume your learning journey!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -142,7 +141,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Buy More Tokens
+                                        Buy More Messengers
                                     </a>
                                 </div>
                             </div>
@@ -162,7 +161,7 @@
                                         ⏰ Subscription Expired
                                     </h3>
                                     <p class="text-sm text-orange-700 dark:text-orange-300 mb-3">
-                                        Your token subscription has expired. Purchase a new package to continue
+                                        Your Messenger subscription has expired. Purchase a new package to continue
                                         generating quizzes with AI assistance.
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -188,10 +187,10 @@
                                 </svg>
                                 <div class="flex-1">
                                     <h3 class="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">
-                                        ⚠️ Insufficient Tokens
+                                        ⚠️ Insufficient Messengers
                                     </h3>
                                     <p class="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                                        You don't have enough tokens to generate a quiz. Top up now to keep learning
+                                        You don't have enough messengers to generate a quiz. Top up now to keep learning
                                         without interruption!
                                     </p>
                                     <a href="{{ route('token-subscriptions.create') }}"
@@ -200,7 +199,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Top Up Tokens
+                                        Top Up Messengers
                                     </a>
                                 </div>
                             </div>
@@ -218,17 +217,17 @@
                             <div class="bg-white dark:bg-gray-800 rounded-b-xl shadow-lg p-6">
                                 <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
                                     <div class="mb-6">
-                                        <div class="border-b border-gray-200">
+                                        <div class="border-b border-gray-200 dark:border-gray-700">
                                             <nav class="-mb-px flex space-x-8">
                                                 <button type="button"
                                                         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                   {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                   {{ $contentSourceTab === 'book' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400' }}"
                                                         wire:click="$set('contentSourceTab', 'book')">
                                                     Select Book
                                                 </button>
                                                 <button type="button"
                                                         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                   {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                   {{ $contentSourceTab === 'upload' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400' }}"
                                                         wire:click="$set('contentSourceTab', 'upload')">
                                                     Upload Content
                                                 </button>
@@ -236,16 +235,16 @@
                                         </div>
 
                                         <!-- Content Selection -->
-                                        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+                                        <div class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-900/20 sm:rounded-lg mb-6">
                                             <div class="px-4 py-5 sm:p-6">
                                                 @if($contentSourceTab === 'book')
                                                     <div class="space-y-4">
                                                         <!-- Book Selection -->
                                                         <div>
-                                                            <label class="block text-sm font-medium text-gray-700 mb-1">Select
+                                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select
                                                                 Book</label>
                                                             <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                 wire:model="selectedBookId">
                                                                 <option value="">Choose a book...</option>
                                                                 @foreach($availableBooks as $book)
@@ -255,46 +254,46 @@
                                                                 @endforeach
                                                             </select>
                                                             @error('selectedBookId') <p
-                                                                class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                                class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                                                         </div>
 
                                                         <!-- Subject Selection - REQUIRED -->
                                                         <div>
-                                                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject
+                                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject
                                                                 *</label>
-                                                            <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                                wire:model="selectedSubjectId">
-                                                                <option value="">Choose a subject...</option>
-                                                                @foreach($availableSubjects as $subject)
-                                                                    <option value="{{ $subject->id }}">
-                                                                        {{ $subject->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                            <livewire:common.searchable-multi-select
+                                                                :items="$availableSubjects"
+                                                                :selected="$selectedSubjectId ? [$selectedSubjectId] : []"
+                                                                placeholder="Search and select a subject..."
+                                                                :multiple="false"
+                                                                name="selectedSubjectId"
+                                                                value-key="id"
+                                                                label-key="display_name"
+                                                                wire:key="subject-select-book"
+                                                            />
                                                             @error('selectedSubjectId') <p
-                                                                class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                                            <p class="mt-1 text-xs text-gray-500">Select the subject
+                                                                class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select the subject
                                                                 this quiz is related to</p>
                                                         </div>
 
                                                         <!-- Book Details (if selected) -->
                                                         @if($selectedBook)
-                                                            <div class="bg-gray-50 rounded-lg p-4">
-                                                                <h4 class="font-medium text-gray-900">{{ $selectedBook->title }}</h4>
+                                                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                                                <h4 class="font-medium text-gray-900 dark:text-white">{{ $selectedBook->title }}</h4>
                                                                 <div
                                                                     class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                                                                     <div>
-                                                                        <p class="text-gray-500">Author</p>
-                                                                        <p class="font-medium">{{ $selectedBook->author_name }}</p>
+                                                                        <p class="text-gray-500 dark:text-gray-400">Author</p>
+                                                                        <p class="font-medium text-gray-900 dark:text-white">{{ $selectedBook->author_name }}</p>
                                                                     </div>
                                                                     <div>
-                                                                        <p class="text-gray-500">Genre</p>
-                                                                        <p class="font-medium">{{ $selectedBook->genre ?? 'N/A' }}</p>
+                                                                        <p class="text-gray-500 dark:text-gray-400">Genre</p>
+                                                                        <p class="font-medium text-gray-900 dark:text-white">{{ $selectedBook->genre ?? 'N/A' }}</p>
                                                                     </div>
                                                                     <div>
-                                                                        <p class="text-gray-500">Pages</p>
-                                                                        <p class="font-medium">{{ $selectedBook->pages ?? 'N/A' }}</p>
+                                                                        <p class="text-gray-500 dark:text-gray-400">Pages</p>
+                                                                        <p class="font-medium text-gray-900 dark:text-white">{{ $selectedBook->pages ?? 'N/A' }}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -303,10 +302,10 @@
                                                             @if(!empty($bookChapters))
                                                                 <div>
                                                                     <label
-                                                                        class="block text-sm font-medium text-gray-700 mb-1">Chapter
+                                                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chapter
                                                                         (Optional)</label>
                                                                     <select
-                                                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                        class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                         wire:model="selectedChapterId">
                                                                         <option value="">All chapters</option>
                                                                         @foreach($bookChapters as $chapter)
@@ -323,18 +322,18 @@
                                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                 <div>
                                                                     <label
-                                                                        class="block text-sm font-medium text-gray-700 mb-1">Start
+                                                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start
                                                                         Page (Optional)</label>
                                                                     <input type="number" min="1"
-                                                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                            wire:model="pageStart" placeholder="e.g., 1">
                                                                 </div>
                                                                 <div>
                                                                     <label
-                                                                        class="block text-sm font-medium text-gray-700 mb-1">End
+                                                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End
                                                                         Page (Optional)</label>
                                                                     <input type="number" min="1"
-                                                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
                                                                            wire:model="pageEnd" placeholder="e.g., 50">
                                                                 </div>
                                                             </div>
@@ -344,55 +343,55 @@
                                                     <div class="space-y-4">
                                                         <!-- Subject Selection - REQUIRED -->
                                                         <div>
-                                                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject
+                                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject
                                                                 *</label>
-                                                            <select
-                                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                                wire:model="selectedSubjectId">
-                                                                <option value="">Choose a subject...</option>
-                                                                @foreach($availableSubjects as $subject)
-                                                                    <option value="{{ $subject->id }}">
-                                                                        {{ $subject->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                            <livewire:common.searchable-multi-select
+                                                                :items="$availableSubjects"
+                                                                :selected="$selectedSubjectId ? [$selectedSubjectId] : []"
+                                                                placeholder="Search and select a subject..."
+                                                                :multiple="false"
+                                                                name="selectedSubjectId"
+                                                                value-key="id"
+                                                                label-key="display_name"
+                                                                wire:key="subject-select-upload"
+                                                            />
                                                             @error('selectedSubjectId') <p
-                                                                class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                                            <p class="mt-1 text-xs text-gray-500">Select the subject
+                                                                class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select the subject
                                                                 this quiz is related to</p>
                                                         </div>
 
                                                         <!-- File Upload -->
                                                         <div>
-                                                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload
+                                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload
                                                                 Content File</label>
                                                             <div
-                                                                class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                                                class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md dark:bg-gray-700/30">
                                                                 <div class="space-y-1 text-center">
-                                                                    <div class="flex text-sm text-gray-600">
+                                                                    <div class="flex text-sm text-gray-600 dark:text-gray-400">
                                                                         <label
-                                                                            class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                                                                            class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                                                                             <span>Upload a file</span>
                                                                             <input type="file" class="sr-only"
                                                                                    wire:model="uploadedFile"
                                                                                    accept=".pdf,.doc,.docx,.txt">
                                                                         </label>
-                                                                        <p class="pl-1">or drag and drop</p>
+                                                                        <p class="pl-1 text-gray-600 dark:text-gray-400">or drag and drop</p>
                                                                     </div>
-                                                                    <p class="text-xs text-gray-500">PDF, DOC, DOCX, TXT
+                                                                    <p class="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX, TXT
                                                                         up to 10MB</p>
                                                                 </div>
                                                             </div>
                                                             @error('uploadedFile') <p
-                                                                class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                                class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                                                         </div>
 
                                                         <!-- File Info (if uploaded) -->
                                                         @if($fileName)
-                                                            <div class="rounded-md bg-blue-50 p-4">
+                                                            <div class="rounded-md bg-blue-50 dark:bg-blue-900/30 p-4">
                                                                 <div class="flex">
                                                                     <div class="flex-shrink-0">
-                                                                        <svg class="h-5 w-5 text-blue-400"
+                                                                        <svg class="h-5 w-5 text-blue-400 dark:text-blue-300"
                                                                              xmlns="http://www.w3.org/2000/svg"
                                                                              viewBox="0 0 20 20" fill="currentColor">
                                                                             <path fill-rule="evenodd"
@@ -401,12 +400,12 @@
                                                                         </svg>
                                                                     </div>
                                                                     <div class="ml-3 flex-1">
-                                                                        <h3 class="text-sm font-medium text-blue-800">
+                                                                        <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">
                                                                             File uploaded successfully</h3>
-                                                                        <div class="mt-2 text-sm text-blue-700">
+                                                                        <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
                                                                             <p>{{ $fileName }}</p>
                                                                             @if($fileContent)
-                                                                                <p class="text-xs mt-1">Content
+                                                                                <p class="text-xs mt-1 text-blue-600 dark:text-blue-400">Content
                                                                                     extracted
                                                                                     ({{ strlen($fileContent) }}
                                                                                     characters)</p>
@@ -523,7 +522,7 @@
                                                 :disabled="$wire.isGenerating || !{{ $canGenerateQuiz ? 'true' : 'false' }}"
                                                 class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                                                 <span wire:loading.remove wire:target="generateQuiz">
-                                                    {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Tokens' }}
+                                                    {{ $canGenerateQuiz ? 'Generate Quiz' : 'Insufficient Messengers' }}
                                                 </span>
                                                 <span wire:loading wire:target="generateQuiz">
                                                     Generating Quiz...
@@ -566,7 +565,7 @@
                         <div x-data="{
                             currentQuestion: 0,
                             answers: {},
-                            timeRemaining: null,
+                            elapsedSeconds: 0,
                             quizTimer: null,
                             showExplanations: false,
                             quizData: @js($quizData),
@@ -577,7 +576,48 @@
                                 if (savedAnswers) {
                                     this.answers = JSON.parse(savedAnswers);
                                 }
+
+                                // Restore elapsed time if any
+                                const savedTime = sessionStorage.getItem('quizElapsedTime');
+                                if (savedTime) {
+                                    this.elapsedSeconds = parseInt(savedTime, 10);
+                                }
+
+                                // Start the timer
+                                this.startTimer();
+
                                 console.log('Quiz initialized with data:', this.quizData);
+                            },
+
+                            startTimer() {
+                                // Clear any existing timer
+                                if (this.quizTimer) {
+                                    clearInterval(this.quizTimer);
+                                }
+
+                                // Start counting elapsed time
+                                this.quizTimer = setInterval(() => {
+                                    this.elapsedSeconds++;
+                                    sessionStorage.setItem('quizElapsedTime', this.elapsedSeconds.toString());
+                                }, 1000);
+                            },
+
+                            stopTimer() {
+                                if (this.quizTimer) {
+                                    clearInterval(this.quizTimer);
+                                    this.quizTimer = null;
+                                }
+                            },
+
+                            formatTime(seconds) {
+                                const hrs = Math.floor(seconds / 3600);
+                                const mins = Math.floor((seconds % 3600) / 60);
+                                const secs = seconds % 60;
+
+                                if (hrs > 0) {
+                                    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                                }
+                                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
                             },
 
                             selectAnswer(questionIndex, option) {
@@ -611,8 +651,10 @@
                             },
 
                             submitQuiz() {
-                                $wire.submitQuizAnswers(this.answers);
+                                this.stopTimer();
+                                $wire.submitQuizAnswers(this.answers, this.elapsedSeconds);
                                 sessionStorage.removeItem('quizAnswers');
+                                sessionStorage.removeItem('quizElapsedTime');
                             }
                         }"
                              x-transition
@@ -629,11 +671,24 @@
                                         by {{ $selectedBook?->author_name ?? 'User Content' }}
                                     </p>
                                 </div>
-                                <div class="mt-4 md:mt-0 text-right">
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">Question</div>
-                                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                        <span x-text="currentQuestion + 1"></span>
-                                        of {{ count($quizData['questions']) }}
+                                <div class="flex items-center gap-6 mt-4 md:mt-0">
+                                    {{-- Timer Display --}}
+                                    <div class="text-center">
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">Time Elapsed</div>
+                                        <div class="timer-display text-lg font-bold text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span x-text="formatTime(elapsedSeconds)">00:00</span>
+                                        </div>
+                                    </div>
+                                    {{-- Question Counter --}}
+                                    <div class="text-right">
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">Question</div>
+                                        <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                            <span x-text="currentQuestion + 1"></span>
+                                            of {{ count($quizData['questions']) }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1446,6 +1501,19 @@
 
     <script>
         document.addEventListener('livewire:init', function () {
+            // Handle URL updates for quiz persistence
+            Livewire.on('update-url', (params) => {
+                const url = new URL(window.location);
+
+                if (params[0].quiz) {
+                    url.searchParams.set('quiz', params[0].quiz);
+                } else {
+                    url.searchParams.delete('quiz');
+                }
+
+                window.history.pushState({}, '', url);
+            });
+
             Livewire.on('download-results', (data) => {
                 let content = `Quiz Results Report\n==================\n\n`;
                 content += `Book: ${data[0].book}\n`;

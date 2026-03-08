@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Teachers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Assignment;
-use App\Models\AcademicSubject;
-use App\Models\AssignmentNotification;
 use App\Events\AssignmentCreated;
+use App\Http\Controllers\Controller;
+use App\Models\AcademicSubject;
+use App\Models\Assignment;
+use App\Models\AssignmentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -56,6 +56,15 @@ class AssignmentController extends Controller
     {
         $teacher = auth()->user()->teacher;
 
+        // NEW: Check school has active content subscription before allowing assignment creation
+        $school = auth()->user()->school;
+        if (! $school || ! $school->hasActiveContentSubscription()) {
+            return redirect()->back()->with('error',
+                'Your school must have an active subscription to create assignments. '.
+                'Please contact your school administrator.'
+            );
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -78,7 +87,7 @@ class AssignmentController extends Controller
             'sections.*.marks_per_question' => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($validated, $teacher, $request) {
+        DB::transaction(function () use ($validated, $teacher) {
             // Create assignment
             $assignment = Assignment::create([
                 'title' => $validated['title'],
@@ -130,7 +139,7 @@ class AssignmentController extends Controller
             }
 
             // Attach topics if provided
-            if (!empty($validated['topics'])) {
+            if (! empty($validated['topics'])) {
                 $assignment->topics()->attach($validated['topics']);
             }
 
@@ -170,7 +179,7 @@ class AssignmentController extends Controller
             'academicLevels',
             'studentGroups',
             'students.user',
-            'submissions.student.user'
+            'submissions.student.user',
         ]);
 
         $submissionStats = [

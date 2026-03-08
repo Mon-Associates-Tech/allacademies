@@ -13,7 +13,7 @@ class MessageShow extends Component
     {
         // Check if user is authorized to view this message
         if ($message->sender_id !== auth()->id() &&
-            !$message->recipients->contains('id', auth()->id())) {
+            ! $message->recipients->contains('id', auth()->id())) {
             abort(403);
         }
 

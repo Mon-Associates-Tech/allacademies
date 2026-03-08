@@ -13,13 +13,19 @@ class Books extends Component
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = '';
+
     public $categoryFilter = '';
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $viewType = 'grid'; // New: grid or list view
 
     public $showDeleteModal = false;
+
     public $bookToDelete = null;
 
     protected $queryString = [
@@ -111,7 +117,7 @@ class Books extends Component
     {
         $book = Book::findOrFail($bookId);
         $newBook = $book->replicate();
-        $newBook->title = $book->title . ' (Copy)';
+        $newBook->title = $book->title.' (Copy)';
         $newBook->status = 'draft';
         $newBook->save();
 
@@ -121,13 +127,15 @@ class Books extends Component
     public function getBookPerformanceData()
     {
         $author = Auth::user()->author;
-        if (!$author) return [];
+        if (! $author) {
+            return [];
+        }
 
         return $author->books()
             ->with(['bookCategory'])
             ->withCount(['subscriptions', 'borrowings'])
             ->get()
-            ->map(function($book) {
+            ->map(function ($book) {
                 return [
                     'id' => $book->id,
                     'title' => $book->title,
@@ -165,10 +173,10 @@ class Books extends Component
                 ->withCount(['subscriptions', 'borrowings']);
 
             if ($this->search) {
-                $query->where(function($q) {
-                    $q->where('title', 'like', '%' . $this->search . '%')
-                      ->orWhere('publisher', 'like', '%' . $this->search . '%')
-                      ->orWhere('additional_info', 'like', '%' . $this->search . '%');
+                $query->where(function ($q) {
+                    $q->where('title', 'like', '%'.$this->search.'%')
+                        ->orWhere('publisher', 'like', '%'.$this->search.'%')
+                        ->orWhere('additional_info', 'like', '%'.$this->search.'%');
                 });
             }
 
@@ -181,7 +189,7 @@ class Books extends Component
             }
 
             $books = $query->orderBy($this->sortBy, $this->sortDirection)
-                          ->paginate(12);
+                ->paginate(12);
         }
 
         return view('livewire.authors.books', [

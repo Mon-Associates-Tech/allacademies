@@ -16,7 +16,7 @@ class LessonNote extends Model
         'topic_id',
         'title',
         'content',
-        'file_path'
+        'file_path',
     ];
 
     public function teacher()

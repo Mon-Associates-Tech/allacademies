@@ -19,23 +19,31 @@ class UserTokenSubscription extends Model
     use SoftDeletes;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_DEPLETED = 'depleted';
 
     // Define valid status values
     public const STATUS_REPLACED = 'replaced';
+
     public static array $validStatuses = [
         self::STATUS_ACTIVE,
         self::STATUS_PENDING,
         self::STATUS_EXPIRED,
         self::STATUS_DEPLETED,
-        self::STATUS_REPLACED
+        self::STATUS_REPLACED,
     ];
+
     protected $table = 'user_token_subscriptions';
+
     protected $fillable = [
         'user_id',
         'package_id',
+        'pricing_tier_id',
+        'amount',
         'reference',
         'tokens_purchased',
         'tokens_used',
@@ -48,7 +56,9 @@ class UserTokenSubscription extends Model
         'action_type',
         'replaced_by_id',
     ];
+
     protected $casts = [
+        'amount' => 'decimal:2',
         'tokens_purchased' => 'integer',
         'tokens_used' => 'integer',
         'tokens_remaining' => 'integer',
@@ -58,6 +68,7 @@ class UserTokenSubscription extends Model
         'deactivated_at' => 'datetime',
         'status' => TokenSubscriptionStatus::class,
     ];
+
     protected $appends = [
         'usage_percentage',
         'remaining_percentage',
@@ -69,7 +80,7 @@ class UserTokenSubscription extends Model
 
         static::creating(function ($subscription) {
             if (empty($subscription->reference)) {
-                $subscription->reference = 'TOKEN-' . strtoupper(Str::random(10)) . '-' . time();
+                $subscription->reference = 'TOKEN-'.strtoupper(Str::random(10)).'-'.time();
             }
         });
     }
@@ -82,6 +93,11 @@ class UserTokenSubscription extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(OpenAiTokenPackage::class, 'package_id');
+    }
+
+    public function pricingTier(): BelongsTo
+    {
+        return $this->belongsTo(PricingTier::class);
     }
 
     public function usageLogs(): HasMany
@@ -117,7 +133,7 @@ class UserTokenSubscription extends Model
      */
     public function deductTokens(int $tokens): bool
     {
-        if (!$this->hasTokens($tokens)) {
+        if (! $this->hasTokens($tokens)) {
             return false;
         }
 

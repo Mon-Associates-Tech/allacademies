@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AcademicTopicRequest;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Models\AcademicTopic;
 use App\Models\AcademicSubject;
-use App\Http\Requests\AcademicTopicRequest;
+use App\Models\AcademicTopic;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class AcademicTopicController extends Controller
 {
@@ -22,7 +20,6 @@ class AcademicTopicController extends Controller
      * @return Application|Factory|View|\Illuminate\View\View
      */
     public function index(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject)
-
     {
         $academicTopics = $academicSubject->academicTopics()->latest('id')->paginate();
 
@@ -52,12 +49,6 @@ class AcademicTopicController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopicRequest $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopicRequest $request): RedirectResponse
     {
@@ -72,16 +63,11 @@ class AcademicTopicController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('moderate');
-
 
         $academicTopic->load('academicSubject.academicLevel.academicGroup')
             ->loadCount('multipleChoiceQuestions', 'trueOrFalseQuestions', 'essayQuestions');
@@ -94,13 +80,9 @@ class AcademicTopicController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
      * @return Application|Factory|\Illuminate\View\View|View
      */
-    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject,  AcademicTopic $academicTopic)
+    public function edit(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic)
     {
         $this->authorize('administrate');
 
@@ -113,13 +95,6 @@ class AcademicTopicController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopicRequest $request
-     * @param AcademicTopic $academicTopic
-     * @return RedirectResponse
      */
     public function update(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopicRequest $request, AcademicTopic $academicTopic): RedirectResponse
     {
@@ -127,18 +102,12 @@ class AcademicTopicController extends Controller
 
         $academicTopic->update($request->validated());
 
-        return to_route('academic-topics.show', ['academic_topic' =>  $academicTopic, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
+        return to_route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.updated', ['name' => $academicTopic->name]));
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param AcademicTopic $academicTopic
-     * @return RedirectResponse
      */
     public function destroy(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic): RedirectResponse
     {

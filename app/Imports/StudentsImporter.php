@@ -19,13 +19,18 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading
+class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReading, WithHeadingRow, WithValidation
 {
     protected int $importedCount = 0;
+
     protected int $skippedCount = 0;
+
     protected int $errorCount = 0;
+
     protected array $errors = [];
+
     protected mixed $defaultSchoolId;
+
     protected mixed $defaultPassword;
 
     public function __construct($defaultSchoolId = null, $defaultPassword = 'password123')
@@ -40,12 +45,35 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         }
     }
 
-    /**
-     * @param Collection $collection
-     */
     public function collection(Collection $collection): void
     {
-        logInfo('data: '. json_encode($collection));
+        // NEW: Check if school has active subscription
+        $school = School::find($this->defaultSchoolId);
+
+        if (! $school) {
+            throw new Exception('School not found');
+        }
+
+        if (! $school->hasActiveContentSubscription()) {
+            throw new Exception(
+                'Your school does not have an active content subscription. '
+                .'Please purchase a subscription before importing students.'
+            );
+        }
+
+        // Check if enough capacity for all students in file
+        $totalToImport = count($collection);
+        $remainingCapacity = $school->getRemainingStudentCapacity();
+
+        if ($totalToImport > $remainingCapacity) {
+            throw new Exception(
+                "Cannot import {$totalToImport} students. "
+                ."Remaining capacity: {$remainingCapacity}. "
+                ."Your subscription allows {$school->getActiveSubscription()->beneficiaries} students total."
+            );
+        }
+
+        logInfo('data: '.json_encode($collection));
         foreach ($collection as $row) {
 
             try {
@@ -55,7 +83,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
                 $this->errorCount++;
                 $this->errors[] = [
                     'row' => $row->toArray(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -71,10 +99,10 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         // Check if user already exists
         $user = User::where('email', $studentData['email'])->first();
 
-        if (!$user) {
+        if (! $user) {
             // Create new user
             $user = User::create([
-                'name' => trim($studentData['first_name'] . ' ' . $studentData['last_name']),
+                'name' => trim($studentData['first_name'].' '.$studentData['last_name']),
                 'email' => $studentData['email'],
                 'password' => Hash::make($studentData['password'] ?? $this->defaultPassword),
                 'role' => UserRole::STUDENT,
@@ -87,6 +115,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
 
         if ($existingStudent) {
             $this->skippedCount++;
+
             return;
         }
 
@@ -94,16 +123,16 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         $academicLevel = null;
         $academicGroup = null;
 
-        if (!empty($studentData['academic_level_id'])) {
+        if (! empty($studentData['academic_level_id'])) {
             $academicLevel = AcademicLevel::find($studentData['academic_level_id']);
-            if (!$academicLevel) {
+            if (! $academicLevel) {
                 throw new Exception("Academic level with ID {$studentData['academic_level_id']} not found");
             }
         }
 
-        if (!empty($studentData['academic_group_id'])) {
+        if (! empty($studentData['academic_group_id'])) {
             $academicGroup = AcademicGroup::find($studentData['academic_group_id']);
-            if (!$academicGroup) {
+            if (! $academicGroup) {
                 throw new Exception("Academic group with ID {$studentData['academic_group_id']} not found");
             }
         }
@@ -112,7 +141,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         $school = $this->findOrCreateSchool($studentData);
 
         // Find or create student group
-//        $studentGroup = $this->findOrCreateStudentGroup($studentData);
+        //        $studentGroup = $this->findOrCreateStudentGroup($studentData);
 
         // Create student record
         $student = Student::create([
@@ -168,7 +197,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
 
     protected function findOrCreateSchool(array $studentData): ?School
     {
-        if (empty($studentData['school_name']) && !$this->defaultSchoolId) {
+        if (empty($studentData['school_name']) && ! $this->defaultSchoolId) {
             return null;
         }
 
@@ -199,7 +228,6 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
             ]
         );
     }
-
 
     protected function handleAdditionalRelationships(Student $student, array $studentData): void
     {
@@ -235,7 +263,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
                 'is_active' => true,
                 'assigned_by' => auth()->id() ?? null,
                 'assigned_at' => now(),
-                'notes' => 'Auto-assigned from academic level during import'
+                'notes' => 'Auto-assigned from academic level during import',
             ];
         }
 
@@ -257,12 +285,12 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
                 'start_date' => $studentData['admission_date'] ?? now(),
                 'end_date' => null, // Will be set when they graduate or move levels
                 'status' => 'current',
-                'remarks' => 'Initial assignment during import'
+                'remarks' => 'Initial assignment during import',
             ]);
 
             \Log::info("Created academic progression for student {$student->student_id}");
         } catch (\Exception $e) {
-            \Log::warning("Could not create academic progression: " . $e->getMessage());
+            \Log::warning('Could not create academic progression: '.$e->getMessage());
         }
     }
 
@@ -271,7 +299,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
      */
     protected function assignLevelTeachersToStudent(Student $student): void
     {
-        if (!$student->academicLevel) {
+        if (! $student->academicLevel) {
             return;
         }
 
@@ -287,7 +315,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
         foreach ($teachers as $teacher) {
             $teacherData[$teacher->id] = [
                 'is_primary' => false, // You can set logic for primary teacher
-                'notes' => 'Auto-assigned during import'
+                'notes' => 'Auto-assigned during import',
             ];
         }
 
@@ -314,7 +342,7 @@ class StudentsImporter implements ToCollection, WithHeadingRow, WithValidation, 
 
     public function prepareForValidation($data, $index)
     {
-     //   \Log::info("Row {$index} before validation:", $data);
+        //   \Log::info("Row {$index} before validation:", $data);
         return $data;
     }
 

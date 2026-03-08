@@ -31,7 +31,7 @@ class StudentPolicy
 
     public function update(User $user, Student $student)
     {
-        if (!$this->view($user, $student)) {
+        if (! $this->view($user, $student)) {
             return false;
         }
 
@@ -40,7 +40,7 @@ class StudentPolicy
 
     public function delete(User $user, Student $student)
     {
-        if (!$this->view($user, $student)) {
+        if (! $this->view($user, $student)) {
             return false;
         }
 

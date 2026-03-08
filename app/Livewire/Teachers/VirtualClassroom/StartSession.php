@@ -10,9 +10,13 @@ use Livewire\Component;
 class StartSession extends Component
 {
     public VirtualSession $session;
+
     public $isCreating = false;
+
     public $error = null;
+
     public $joinUrl = null;
+
     public $meetingInfo = null;
 
     public function mount(VirtualSession $session)
@@ -61,7 +65,7 @@ class StartSession extends Component
                 $this->error = $result['message'] ?? 'Failed to create meeting';
             }
         } catch (\Exception $e) {
-            $this->error = 'Error: ' . $e->getMessage();
+            $this->error = 'Error: '.$e->getMessage();
         } finally {
             $this->isCreating = false;
         }
@@ -69,7 +73,7 @@ class StartSession extends Component
 
     public function joinMeeting()
     {
-        if (!$this->joinUrl) {
+        if (! $this->joinUrl) {
             $bbbService = app(BigBlueButtonService::class);
             $this->joinUrl = $bbbService->getModeratorJoinUrl($this->session);
         }
@@ -89,12 +93,13 @@ class StartSession extends Component
                 ]);
 
                 session()->flash('success', 'Meeting ended successfully.');
+
                 return redirect()->route('teachers.classroom');
             } else {
                 $this->error = 'Failed to end meeting';
             }
         } catch (\Exception $e) {
-            $this->error = 'Error: ' . $e->getMessage();
+            $this->error = 'Error: '.$e->getMessage();
         }
     }
 
@@ -118,7 +123,7 @@ class StartSession extends Component
                 }
             }
         } catch (\Exception $e) {
-            $this->error = 'Error checking meeting status: ' . $e->getMessage();
+            $this->error = 'Error checking meeting status: '.$e->getMessage();
         }
     }
 

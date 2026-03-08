@@ -3,12 +3,12 @@
 namespace App\Livewire\UserBooks;
 
 use App\Jobs\NotifyUsersAboutBookShareJob;
-use App\Models\UserBook;
-use App\Models\UserBookShare;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\StudentGroup;
 use App\Models\User;
+use App\Models\UserBook;
+use App\Models\UserBookShare;
 use App\Notifications\UserBookSharedNotification;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -22,25 +22,36 @@ class ManageShares extends Component
 
     // Share form properties
     public $shareType = 'academic_level';
+
     public $selectedAcademicGroupId = null;
+
     public $selectedAcademicLevelId = null;
+
     public $selectedStudentGroupId = null;
+
     public $individualEmail = '';
+
     public $expiresAt = null;
+
     public $notes = '';
+
     public $sendNotification = true; // New property for notification checkbox
 
     // UI state
     public $showShareModal = false;
+
     public $activeTab = 'shares';
 
     // Search and Filter for Access List
     public $searchTerm = '';
+
     public $filterShareType = '';
 
     // Available options
     public $academicGroups = [];
+
     public $academicLevels = [];
+
     public $studentGroups = [];
 
     protected $rules = [
@@ -85,7 +96,7 @@ class ManageShares extends Component
         $this->validate();
 
         // Additional validation based on share type
-        $additionalRules = match($this->shareType) {
+        $additionalRules = match ($this->shareType) {
             'academic_group' => ['selectedAcademicGroupId' => 'required|exists:academic_groups,id'],
             'academic_level' => ['selectedAcademicLevelId' => 'required|exists:academic_levels,id'],
             'student_group' => ['selectedStudentGroupId' => 'required|exists:student_groups,id'],
@@ -97,6 +108,7 @@ class ManageShares extends Component
 
         if ($this->isDuplicateShare()) {
             $this->addError('shareType', 'This target is already shared with.');
+
             return;
         }
 
@@ -113,19 +125,26 @@ class ManageShares extends Component
             ];
 
             // Add type-specific data
-            match($this->shareType) {
+            match ($this->shareType) {
                 'academic_group' => $shareData['academic_group_id'] = $this->selectedAcademicGroupId,
                 'academic_level' => $shareData['academic_level_id'] = $this->selectedAcademicLevelId,
                 'student_group' => $shareData['student_group_id'] = $this->selectedStudentGroupId,
                 'individual' => $this->addIndividualShareData($shareData),
             };
 
-            if($this->selectedAcademicLevelId){
+            if ($this->selectedAcademicLevelId) {
                 $this->selectedAcademicGroupId = AcademicLevel::find($this->selectedAcademicLevelId)?->academic_group_id;
                 $shareData['academic_group_id'] = $this->selectedAcademicGroupId;
             }
 
             $share = UserBookShare::create($shareData);
+
+            // Log activity
+            $share->logActivity('create', 'Book Share Created', 'user_book_share', [
+                'book_title' => $this->userBook->name ?? 'Unknown Book',
+                'share_type' => $this->shareType,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
 
             // Send notifications if enabled
             if ($this->sendNotification) {
@@ -147,7 +166,7 @@ class ManageShares extends Component
         } catch (\Exception $e) {
             \Log::error('Failed to create share', [
                 'user_book_id' => $this->userBook->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $this->addError('general', 'Failed to share book. Please try again.');
@@ -183,7 +202,7 @@ class ManageShares extends Component
         $query = UserBookShare::where('user_book_id', $this->userBook->id)
             ->where('share_type', $this->shareType);
 
-        match($this->shareType) {
+        match ($this->shareType) {
             'academic_group' => $query->where('academic_group_id', $this->selectedAcademicGroupId),
             'academic_level' => $query->where('academic_level_id', $this->selectedAcademicLevelId),
             'student_group' => $query->where('student_group_id', $this->selectedStudentGroupId),
@@ -215,7 +234,6 @@ class ManageShares extends Component
             ->paginate(10);
     }
 
-
     public function getAccessListProperty()
     {
         $shares = UserBookShare::where('user_book_id', $this->userBook->id)
@@ -244,6 +262,7 @@ class ManageShares extends Component
         if ($this->searchTerm) {
             $uniqueUsers = $uniqueUsers->filter(function ($item) {
                 $searchLower = strtolower($this->searchTerm);
+
                 return str_contains(strtolower($item['user']->name), $searchLower) ||
                     str_contains(strtolower($item['user']->email), $searchLower);
             });
@@ -258,6 +277,7 @@ class ManageShares extends Component
 
         return $uniqueUsers;
     }
+
     public function render()
     {
         return view('livewire.user-books.manage-shares', [

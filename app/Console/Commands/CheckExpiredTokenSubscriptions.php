@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class CheckExpiredTokenSubscriptions extends Command
 {
     protected $signature = 'tokens:check-expired';
+
     protected $description = 'Check and expire token subscriptions that have passed their expiry date';
 
     protected $subscriptionService;

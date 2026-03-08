@@ -7,6 +7,7 @@ use Livewire\Component;
 class SubscriptionFeaturesBanner extends Component
 {
     public bool $showBanner = true;
+
     public string $placement = 'dashboard'; // 'dashboard' or 'subscription'
 
     public function mount(string $placement = 'dashboard')
@@ -17,13 +18,13 @@ class SubscriptionFeaturesBanner extends Component
     public function dismissBanner()
     {
         $this->showBanner = false;
-        session()->put('subscription_banner_dismissed_' . $this->placement, true);
+        session()->put('subscription_banner_dismissed_'.$this->placement, true);
     }
 
     public function render()
     {
         // Check if banner was previously dismissed
-        if (session()->get('subscription_banner_dismissed_' . $this->placement, false)) {
+        if (session()->get('subscription_banner_dismissed_'.$this->placement, false)) {
             $this->showBanner = false;
         }
 

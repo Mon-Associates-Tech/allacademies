@@ -8,11 +8,12 @@ use Livewire\Component;
 class SchoolDetails extends Component
 {
     public School $school;
+
     public $stats = [];
 
     public function mount($schoolId)
     {
-        if (!auth()->user()->canAccessCrossSchool()) {
+        if (! auth()->user()->canAccessCrossSchool()) {
             abort(403);
         }
 
@@ -30,4 +31,3 @@ class SchoolDetails extends Component
         return view('livewire.school.school-details');
     }
 }
-

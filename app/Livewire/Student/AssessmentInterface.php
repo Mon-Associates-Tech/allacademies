@@ -19,19 +19,26 @@ class AssessmentInterface extends Component
     use StartsAssessment;
 
     public $step = 'setup'; // setup, assessment, results
+
     public $assessmentMode = 'self'; // 'self' or 'assignment'
 
     // Setup phase - Self Assessment
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $difficulty = 'all';
+
     public $timeLimitMinutes = null;
 
     // Setup phase - Assignment
@@ -39,18 +46,28 @@ class AssessmentInterface extends Component
 
     // Assessment phase
     public $currentQuestionIndex = 0;
+
     public $questions = [];
+
     public $responses = [];
+
     public $assessment = null;
+
     public $timeRemaining = null;
+
     public $timeLimitSeconds = 0;
+
     public $startTime = null;
 
     // Results phase
     public $assessmentResult = null;
+
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
+
     public $availableAssignments = [];
 
     protected $rules = [
@@ -64,9 +81,10 @@ class AssessmentInterface extends Component
         $this->assessmentMode = $mode;
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $this->subjects = collect();
             $this->availableAssignments = collect();
+
             return;
         }
 
@@ -79,7 +97,7 @@ class AssessmentInterface extends Component
             ->withProperties([
                 'action' => 'accessed_assessment_interface',
                 'mode' => $this->assessmentMode,
-                'page' => 'assessment-interface'
+                'page' => 'assessment-interface',
             ])
             ->log('Student accessed assessment interface');
     }
@@ -104,7 +122,7 @@ class AssessmentInterface extends Component
 
         // Merge individual subjects, removing duplicates
         foreach ($individualSubjects as $subject) {
-            if (!$this->subjects->contains('id', $subject->id)) {
+            if (! $this->subjects->contains('id', $subject->id)) {
                 $this->subjects->push($subject);
             }
         }
@@ -118,8 +136,8 @@ class AssessmentInterface extends Component
             return $removedSubjects->contains($subject->id);
         });
 
-        if(count($this->subjects) === 0) {
-           $this->subjects = Subject::get();
+        if (count($this->subjects) === 0) {
+            $this->subjects = Subject::get();
         }
     }
 
@@ -184,6 +202,7 @@ class AssessmentInterface extends Component
             $this->currentQuestionIndex = $index;
         }
     }
+
     public function startAssessment(): void
     {
         if ($this->assessmentMode === 'assignment') {
@@ -198,14 +217,16 @@ class AssessmentInterface extends Component
         $this->validate(['selectedAssignment' => 'required']);
 
         $assignment = Assignment::find($this->selectedAssignment);
-        if (!$assignment) {
+        if (! $assignment) {
             session()->flash('error', 'Assignment not found.');
+
             return;
         }
 
         // Check if student can start this assignment
-        if (!$this->canStartAssignment($assignment)) {
+        if (! $this->canStartAssignment($assignment)) {
             session()->flash('error', 'You are not eligible to start this assignment or it is not available.');
+
             return;
         }
 
@@ -215,7 +236,7 @@ class AssessmentInterface extends Component
             Log::error('Failed to start assignment practice', [
                 'assignment_id' => $assignment->id,
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to start assignment practice. Please try again.');
@@ -230,7 +251,7 @@ class AssessmentInterface extends Component
         ]);
 
         // Validate question type combinations
-        if (!$this->validateQuestionTypeCombinations()) {
+        if (! $this->validateQuestionTypeCombinations()) {
             return;
         }
 
@@ -240,7 +261,7 @@ class AssessmentInterface extends Component
             Log::error('Failed to start self-assessment', [
                 'config' => $this->getConfigurationArray(),
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to start self-assessment. Please try again.');
@@ -253,12 +274,14 @@ class AssessmentInterface extends Component
 
         if (empty($selectedTypes)) {
             session()->flash('error', 'Please select at least one question type.');
+
             return false;
         }
 
         // If essay is selected, it must be the only type
         if ($this->questionTypes['essay_question'] && count($selectedTypes) > 1) {
             session()->flash('error', 'Essay questions cannot be combined with other question types.');
+
             return false;
         }
 
@@ -328,7 +351,7 @@ class AssessmentInterface extends Component
         Log::info('Generated questions from assignment', [
             'assignment_id' => $assignment->id,
             'assessment_id' => $this->assessment->id,
-            'question_count' => count($this->questions)
+            'question_count' => count($this->questions),
         ]);
     }
 
@@ -336,7 +359,7 @@ class AssessmentInterface extends Component
     {
         Log::info('Generating questions from configuration', [
             'config' => $config,
-            'student_id' => auth()->user()->student->id
+            'student_id' => auth()->user()->student->id,
         ]);
 
         $allQuestions = collect();
@@ -364,10 +387,10 @@ class AssessmentInterface extends Component
                 // Limit to requested count for this type
                 $typeQuestions = $typeQuestions->take($count);
 
-                Log::info('Questions for type: ' . $type, [
+                Log::info('Questions for type: '.$type, [
                     'requested_count' => $count,
                     'actual_count' => $typeQuestions->count(),
-                    'subject_id' => $config['subject_id']
+                    'subject_id' => $config['subject_id'],
                 ]);
 
                 $allQuestions = $allQuestions->merge($typeQuestions);
@@ -377,10 +400,11 @@ class AssessmentInterface extends Component
         if ($allQuestions->isEmpty()) {
             Log::warning('No questions found for configuration', [
                 'config' => $config,
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'No questions found matching your criteria. Please try different settings.');
+
             return;
         }
 
@@ -408,7 +432,7 @@ class AssessmentInterface extends Component
             'question_types' => $selectedTypes,
             'subject_id' => $config['subject_id'],
             'topic_id' => $config['topic_id'],
-            'subtopic_id' => $config['subtopic_id']
+            'subtopic_id' => $config['subtopic_id'],
         ]);
     }
 
@@ -428,7 +452,7 @@ class AssessmentInterface extends Component
                 break;
         }
 
-        if (!$query) {
+        if (! $query) {
             return collect();
         }
 
@@ -454,7 +478,7 @@ class AssessmentInterface extends Component
             $query->where('academic_subtopic_id', $config['subtopic_id']);
         }
 
-        return $query->get()->map(fn($q) => ['type' => $type, 'model' => $q]);
+        return $query->get()->map(fn ($q) => ['type' => $type, 'model' => $q]);
     }
 
     private function formatQuestionForAssessment($questionModel, string $type): array
@@ -495,7 +519,7 @@ class AssessmentInterface extends Component
                 'question_count' => count($this->questions),
                 'time_limit_minutes' => $this->assessment->time_limit_minutes,
             ])
-            ->log('Student started ' . ($mode === 'assignment' ? 'assignment' : 'self assessment'));
+            ->log('Student started '.($mode === 'assignment' ? 'assignment' : 'self assessment'));
     }
 
     private function getConfigurationArray(): array

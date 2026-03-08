@@ -4,9 +4,9 @@ namespace Database\Factories;
 
 use App\Models\AcademicSubject;
 use App\Models\AcademicTopic;
+use App\Models\Lesson;
 use App\Models\LessonNote;
 use App\Models\Teacher;
-use App\Models\Lesson;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class LessonNoteFactory extends Factory

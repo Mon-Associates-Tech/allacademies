@@ -21,7 +21,6 @@ class Handler extends ExceptionHandler
     /**
      * Report or log an exception.
      *
-     * @param  \Throwable  $exception
      * @return void
      *
      * @throws \Exception
@@ -29,13 +28,14 @@ class Handler extends ExceptionHandler
     public function report(Throwable $exception)
     {
         // Log memory usage for debugging
-      //  \Log::debug('Memory usage in Handler::report', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
+        //  \Log::debug('Memory usage in Handler::report', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
 
         // Prevent recursive notifications
         static $notificationSent = false;
 
         if ($notificationSent) {
             \Log::debug('Skipping notification due to previous send');
+
             return;
         }
 
@@ -44,11 +44,12 @@ class Handler extends ExceptionHandler
 
             if ($statusCode >= 500) {
                 // Rate limit to 1 notification per minute per exception type
-                $key = 'error-notification:' . get_class($exception);
+                $key = 'error-notification:'.get_class($exception);
                 if (RateLimiter::tooManyAttempts($key, 1)) {
                     \Log::warning('Rate limit exceeded for error notification', [
                         'exception' => get_class($exception),
                     ]);
+
                     return;
                 }
 
@@ -84,7 +85,6 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @throws \Throwable

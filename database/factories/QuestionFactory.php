@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class QuestionFactory extends Factory
 {
     protected $model = \App\Models\Question::class;
+
     /**
      * Define the model's default state.
      *
@@ -19,7 +20,7 @@ class QuestionFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory()//
+            'user_id' => User::factory(), //
         ];
     }
 }

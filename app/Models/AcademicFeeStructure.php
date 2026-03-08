@@ -47,7 +47,7 @@ class AcademicFeeStructure extends Model
      */
     public function getFormattedAmountAttribute()
     {
-        return '₵' . number_format($this->amount, 2);
+        return '₵'.number_format($this->amount, 2);
     }
 
     public function getFormattedDueDateAttribute()

@@ -29,7 +29,7 @@ class ExaminationRequest extends FormRequest
             'sections.*.instructions' => ['string', 'min:2', 'max:255'],
             'team_id' => ['required', 'numeric', 'exists:teams,id'],
             'creator_id' => ['required', 'numeric', 'exists:users,id'],
-            'sections.*.metafields' => ['array']
+            'sections.*.metafields' => ['array'],
         ];
     }
 }

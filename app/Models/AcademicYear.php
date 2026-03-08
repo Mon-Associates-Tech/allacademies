@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 class AcademicYear extends Model
 {
@@ -95,6 +95,7 @@ class AcademicYear extends Model
     public function isActive(): bool
     {
         $now = Carbon::now();
+
         return $this->status === 'active' &&
             $now->between($this->start_date, $this->end_date);
     }

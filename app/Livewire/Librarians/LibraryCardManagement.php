@@ -2,36 +2,44 @@
 
 namespace App\Livewire\Librarians;
 
+use App\Models\AcademicLevel;
 use App\Models\LibraryCard;
 use App\Models\Student;
-use App\Models\AcademicLevel;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class LibraryCardManagement extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = 'all';
+
     public $academicLevelFilter = 'all';
 
     // Modal states
     public $showCreateModal = false;
+
     public $showBulkActionModal = false;
+
     public $showRenewModal = false;
 
     // Form data
     public $selectedStudent = null;
+
     public $cardType = 'student';
+
     public $expiryDate = null;
+
     public $notes = '';
+
     public $renewCardId = null;
 
     // Bulk actions
     public $selectedCards = [];
+
     public $bulkAction = '';
 
     protected $rules = [
@@ -52,11 +60,11 @@ class LibraryCardManagement extends Component
             ->with(['student.user', 'student.academicLevel'])
             ->when($this->search, function ($query) {
                 $query->whereHas('student.user', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%');
                 })
-                ->orWhere('card_number', 'like', '%' . $this->search . '%')
-                ->orWhere('barcode', 'like', '%' . $this->search . '%');
+                    ->orWhere('card_number', 'like', '%'.$this->search.'%')
+                    ->orWhere('barcode', 'like', '%'.$this->search.'%');
             })
             ->when($this->statusFilter !== 'all', function ($query) {
                 $query->where('status', $this->statusFilter);
@@ -110,15 +118,16 @@ class LibraryCardManagement extends Component
 
         if ($existingCard) {
             session()->flash('error', 'Student already has an active library card.');
+
             return;
         }
 
         // Generate unique card number and barcode
         do {
-            $cardNumber = 'LC' . str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
+            $cardNumber = 'LC'.str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
         } while (LibraryCard::where('card_number', $cardNumber)->exists());
 
-        $barcode = 'BC' . Str::random(10);
+        $barcode = 'BC'.Str::random(10);
 
         LibraryCard::create([
             'student_id' => $student->id,
@@ -223,8 +232,9 @@ class LibraryCardManagement extends Component
 
     public function processBulkAction()
     {
-        if (empty($this->selectedCards) || !$this->bulkAction) {
+        if (empty($this->selectedCards) || ! $this->bulkAction) {
             session()->flash('error', 'Please select cards and an action.');
+
             return;
         }
 

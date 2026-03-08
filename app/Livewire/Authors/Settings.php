@@ -4,14 +4,12 @@ namespace App\Livewire\Authors;
 
 use App\Livewire\AppComponent;
 use App\Models\Payment;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\UploadedFile;
-use Carbon\Carbon;
 
 class Settings extends AppComponent
 {
@@ -19,67 +17,111 @@ class Settings extends AppComponent
 
     // Profile Settings
     public $name = '';
+
     public $email = '';
+
     public $pen_name = '';
+
     public $biography = '';
+
     public $website = '';
+
     public $social_links = [];
+
     public $writing_experience = '';
+
     public $education = '';
+
     public $awards = '';
+
     public $author_statement = '';
+
     public $avatar = '';
+
     public $phone = '';
+
     public $location = '';
+
     public $birth_date = '';
+
     public $genres = [];
+
     public $languages = [];
 
     // Security Settings
     public $current_password = '';
+
     public $new_password = '';
+
     public $new_password_confirmation = '';
+
     public $two_factor_enabled = false;
+
     public $backup_codes = [];
+
     public $active_sessions = [];
 
     // Notification Settings
     public $email_notifications = [];
+
     public $push_notifications = [];
+
     public $sms_notifications = [];
+
     public $notification_schedule = [];
 
     // Privacy Settings
     public $profile_visibility = 'public';
+
     public $show_email = false;
+
     public $show_phone = false;
+
     public $show_location = false;
+
     public $allow_contact = true;
+
     public $data_sharing = [];
 
     // Publishing Settings
     public $default_book_visibility = 'public';
+
     public $auto_publish = false;
+
     public $review_required = true;
+
     public $royalty_rate = 70;
+
     public $payment_method = 'bank_transfer';
+
     public $payment_details = [];
+
     public $tax_information = [];
 
     // Marketing Settings
     public $marketing_consent = true;
+
     public $author_newsletter = true;
+
     public $promotional_emails = true;
+
     public $social_media_sharing = true;
+
     public $analytics_tracking = true;
 
     // Account Settings
     public $account_status = 'active';
+
     public $subscription_tier = 'basic';
+
     public $subscription_expires = null;
+
     public $storage_used = 0;
+
     public $storage_limit = 1000; // MB
+
     public $api_access = false;
+
     public $api_key = '';
 
     // Temporary file upload
@@ -120,7 +162,7 @@ class Settings extends AppComponent
     {
         $author = Auth::user()->author;
 
-        if (!$author) {
+        if (! $author) {
             return [
                 'this_month_revenue' => 0,
                 'this_month_payments' => 0,
@@ -140,7 +182,7 @@ class Settings extends AppComponent
             ->get();
 
         // Calculate total revenue (98% author share)
-        $totalRevenue = $allPayments->sum(function($payment) {
+        $totalRevenue = $allPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -154,7 +196,7 @@ class Settings extends AppComponent
             ->whereYear('created_at', Carbon::now()->year)
             ->get();
 
-        $thisMonthRevenue = $thisMonthPayments->sum(function($payment) {
+        $thisMonthRevenue = $thisMonthPayments->sum(function ($payment) {
             return $payment->author_amount ?: ($payment->amount * 0.98);
         });
 
@@ -171,7 +213,6 @@ class Settings extends AppComponent
             'has_subaccount' => $author->subaccount !== null,
         ];
     }
-
 
     private function loadCurrentSettings(): void
     {
@@ -205,7 +246,7 @@ class Settings extends AppComponent
                 'youtube' => '',
                 'tiktok' => '',
                 'goodreads' => '',
-                'amazon' => ''
+                'amazon' => '',
             ];
         }
 
@@ -216,14 +257,14 @@ class Settings extends AppComponent
             'payment_received' => true,
             'monthly_report' => true,
             'system_updates' => false,
-            'promotional' => false
+            'promotional' => false,
         ];
 
         $this->push_notifications = [
             'new_review' => true,
             'new_order' => true,
             'payment_received' => false,
-            'system_updates' => false
+            'system_updates' => false,
         ];
 
         // Load privacy settings
@@ -261,7 +302,7 @@ class Settings extends AppComponent
             'Fiction', 'Non-Fiction', 'Mystery', 'Thriller', 'Romance', 'Fantasy',
             'Science Fiction', 'Biography', 'History', 'Self-Help', 'Business',
             'Children\'s Books', 'Young Adult', 'Poetry', 'Drama', 'Comedy',
-            'Horror', 'Adventure', 'Crime', 'Educational', 'Health', 'Travel'
+            'Horror', 'Adventure', 'Crime', 'Educational', 'Health', 'Travel',
         ];
     }
 
@@ -270,7 +311,7 @@ class Settings extends AppComponent
         return [
             'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese',
             'Chinese', 'Japanese', 'Korean', 'Arabic', 'Russian', 'Hindi',
-            'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish', 'Polish'
+            'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish', 'Polish',
         ];
     }
 
@@ -288,7 +329,7 @@ class Settings extends AppComponent
             'member_since' => '2023-01-15',
             'last_login' => now()->subHours(2),
             'books_published_this_month' => 2,
-            'revenue_this_month' => 2340.75
+            'revenue_this_month' => 2340.75,
         ];
     }
 
@@ -301,7 +342,7 @@ class Settings extends AppComponent
                 'ip_address' => '192.168.1.100',
                 'device' => 'Chrome on Windows',
                 'location' => 'New York, NY',
-                'status' => 'success'
+                'status' => 'success',
             ],
             [
                 'action' => 'Login',
@@ -309,7 +350,7 @@ class Settings extends AppComponent
                 'ip_address' => '192.168.1.100',
                 'device' => 'Chrome on Windows',
                 'location' => 'New York, NY',
-                'status' => 'success'
+                'status' => 'success',
             ],
             [
                 'action' => 'Failed Login Attempt',
@@ -317,7 +358,7 @@ class Settings extends AppComponent
                 'ip_address' => '203.0.113.42',
                 'device' => 'Unknown',
                 'location' => 'Unknown',
-                'status' => 'failed'
+                'status' => 'failed',
             ],
             [
                 'action' => 'Profile Updated',
@@ -325,8 +366,8 @@ class Settings extends AppComponent
                 'ip_address' => '192.168.1.100',
                 'device' => 'Safari on iPhone',
                 'location' => 'New York, NY',
-                'status' => 'success'
-            ]
+                'status' => 'success',
+            ],
         ]);
     }
 
@@ -339,8 +380,8 @@ class Settings extends AppComponent
                 'books' => ['size' => 150, 'count' => 12],
                 'images' => ['size' => 75, 'count' => 45],
                 'documents' => ['size' => 20, 'count' => 8],
-                'other' => ['size' => 5, 'count' => 3]
-            ]
+                'other' => ['size' => 5, 'count' => 3],
+            ],
         ];
     }
 
@@ -352,22 +393,22 @@ class Settings extends AppComponent
                 'amount' => 1250.00,
                 'type' => 'Royalty Payment',
                 'status' => 'completed',
-                'transaction_id' => 'TXN123456'
+                'transaction_id' => 'TXN123456',
             ],
             [
                 'date' => now()->subDays(60),
                 'amount' => 890.50,
                 'type' => 'Royalty Payment',
                 'status' => 'completed',
-                'transaction_id' => 'TXN123455'
+                'transaction_id' => 'TXN123455',
             ],
             [
                 'date' => now()->subDays(90),
                 'amount' => 1560.75,
                 'type' => 'Royalty Payment',
                 'status' => 'completed',
-                'transaction_id' => 'TXN123454'
-            ]
+                'transaction_id' => 'TXN123454',
+            ],
         ]);
     }
 
@@ -378,20 +419,20 @@ class Settings extends AppComponent
                 'name' => 'Basic',
                 'price' => 0,
                 'features' => ['Up to 5 books', '1GB storage', 'Basic analytics'],
-                'current' => true
+                'current' => true,
             ],
             [
                 'name' => 'Professional',
                 'price' => 29.99,
                 'features' => ['Unlimited books', '10GB storage', 'Advanced analytics', 'Priority support'],
-                'current' => false
+                'current' => false,
             ],
             [
                 'name' => 'Enterprise',
                 'price' => 99.99,
                 'features' => ['All Professional features', '100GB storage', 'Custom branding', 'API access'],
-                'current' => false
-            ]
+                'current' => false,
+            ],
         ]);
     }
 
@@ -402,7 +443,7 @@ class Settings extends AppComponent
             'requests_this_month' => 340,
             'rate_limit' => 1000,
             'remaining' => 660,
-            'endpoints_used' => ['books', 'analytics', 'reviews']
+            'endpoints_used' => ['books', 'analytics', 'reviews'],
         ];
     }
 
@@ -413,7 +454,7 @@ class Settings extends AppComponent
             'books_data' => 'Export all books and manuscripts',
             'analytics_data' => 'Export sales and analytics data',
             'reviews_data' => 'Export reviews and ratings',
-            'financial_data' => 'Export payment and financial records'
+            'financial_data' => 'Export payment and financial records',
         ];
     }
 
@@ -425,29 +466,29 @@ class Settings extends AppComponent
                 'description' => 'Track website and book page analytics',
                 'connected' => true,
                 'icon' => 'google',
-                'color' => 'blue'
+                'color' => 'blue',
             ],
             [
                 'name' => 'Mailchimp',
                 'description' => 'Email marketing and newsletters',
                 'connected' => false,
                 'icon' => 'mail',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ],
             [
                 'name' => 'Social Media',
                 'description' => 'Auto-share to social platforms',
                 'connected' => true,
                 'icon' => 'share',
-                'color' => 'purple'
+                'color' => 'purple',
             ],
             [
                 'name' => 'PayPal',
                 'description' => 'Payment processing',
                 'connected' => false,
                 'icon' => 'credit-card',
-                'color' => 'green'
-            ]
+                'color' => 'green',
+            ],
         ]);
     }
 
@@ -456,7 +497,7 @@ class Settings extends AppComponent
         return collect([
             ['name' => 'Light', 'active' => true],
             ['name' => 'Dark', 'active' => false],
-            ['name' => 'Auto', 'active' => false]
+            ['name' => 'Auto', 'active' => false],
         ]);
     }
 
@@ -468,15 +509,15 @@ class Settings extends AppComponent
                 'subject' => 'Payment Issue',
                 'status' => 'open',
                 'created_at' => now()->subDays(2),
-                'priority' => 'high'
+                'priority' => 'high',
             ],
             [
                 'id' => 'TIC-002',
                 'subject' => 'Book Upload Problem',
                 'status' => 'resolved',
                 'created_at' => now()->subDays(7),
-                'priority' => 'medium'
-            ]
+                'priority' => 'medium',
+            ],
         ]);
     }
 
@@ -489,7 +530,7 @@ class Settings extends AppComponent
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . Auth::id(),
+            'email' => 'required|email|unique:users,email,'.Auth::id(),
             'pen_name' => 'nullable|string|max:255',
             'biography' => 'nullable|string|max:1000',
             'website' => 'nullable|url|max:255',
@@ -501,6 +542,10 @@ class Settings extends AppComponent
 
         $user = Auth::user();
         $author = $user->author;
+
+        // Capture original data
+        $originalUserData = $user->only(['name', 'email']);
+        $originalAuthorData = $author ? $author->only(['pen_name', 'biography', 'website', 'writing_experience', 'education', 'awards', 'author_statement']) : [];
 
         // Update user data
         $user->update([
@@ -520,6 +565,25 @@ class Settings extends AppComponent
                 'awards' => $this->awards,
                 'author_statement' => $this->author_statement,
             ]);
+
+            // Log activity
+            $author->logActivity('update', 'Author Profile Updated', 'author', [
+                'author_name' => $this->name,
+                'author_pen_name' => $this->pen_name,
+                'changes' => [
+                    'user' => [
+                        'name' => ['old' => $originalUserData['name'] ?? null, 'new' => $this->name],
+                        'email' => ['old' => $originalUserData['email'] ?? null, 'new' => $this->email],
+                    ],
+                    'author' => [
+                        'pen_name' => ['old' => $originalAuthorData['pen_name'] ?? null, 'new' => $this->pen_name],
+                        'biography' => ['old' => $originalAuthorData['biography'] ?? null, 'new' => $this->biography],
+                        'website' => ['old' => $originalAuthorData['website'] ?? null, 'new' => $this->website],
+                        'writing_experience' => ['old' => $originalAuthorData['writing_experience'] ?? null, 'new' => $this->writing_experience],
+                    ],
+                ],
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
         }
 
         session()->flash('profile-updated', 'Profile updated successfully!');
@@ -534,6 +598,13 @@ class Settings extends AppComponent
 
         Auth::user()->update([
             'password' => Hash::make($this->new_password),
+        ]);
+
+        // Log activity
+        Auth::user()->logActivity('update', 'Password Changed', 'user', [
+            'user_name' => auth()->user()?->name ?? 'Unknown',
+            'password_changed' => true,
+            'changed_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
@@ -633,7 +704,7 @@ class Settings extends AppComponent
 
     public function generateApiKey()
     {
-        $this->api_key = 'ak_' . bin2hex(random_bytes(32));
+        $this->api_key = 'ak_'.bin2hex(random_bytes(32));
         session()->flash('api-key-generated', 'API key generated successfully!');
     }
 
@@ -651,6 +722,19 @@ class Settings extends AppComponent
 
     public function deleteAccount()
     {
+        $user = Auth::user();
+        $author = $user->author;
+
+        // Log activity before deletion
+        if ($author) {
+            $author->logActivity('delete', 'Author Account Deletion Initiated', 'author', [
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'author_pen_name' => $author->pen_name,
+                'initiated_by' => $user->name,
+            ]);
+        }
+
         // Handle account deletion
         session()->flash('account-deletion-initiated', 'Account deletion initiated. You will receive a confirmation email.');
     }
@@ -658,37 +742,37 @@ class Settings extends AppComponent
     public function connectIntegration($integration)
     {
         // Connect to external integration
-        session()->flash('integration-connected', ucfirst($integration) . ' connected successfully!');
+        session()->flash('integration-connected', ucfirst($integration).' connected successfully!');
     }
 
     public function disconnectIntegration($integration)
     {
         // Disconnect from external integration
-        session()->flash('integration-disconnected', ucfirst($integration) . ' disconnected successfully!');
+        session()->flash('integration-disconnected', ucfirst($integration).' disconnected successfully!');
     }
 
     public function addGenre($genre)
     {
-        if (!in_array($genre, $this->genres)) {
+        if (! in_array($genre, $this->genres)) {
             $this->genres[] = $genre;
         }
     }
 
     public function removeGenre($genre)
     {
-        $this->genres = array_filter($this->genres, fn($g) => $g !== $genre);
+        $this->genres = array_filter($this->genres, fn ($g) => $g !== $genre);
     }
 
     public function addLanguage($language)
     {
-        if (!in_array($language, $this->languages)) {
+        if (! in_array($language, $this->languages)) {
             $this->languages[] = $language;
         }
     }
 
     public function removeLanguage($language)
     {
-        $this->languages = array_filter($this->languages, fn($l) => $l !== $language);
+        $this->languages = array_filter($this->languages, fn ($l) => $l !== $language);
     }
 
     public function upgradePlan($plan)

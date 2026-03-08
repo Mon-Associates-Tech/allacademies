@@ -43,8 +43,8 @@
     @elseif($primaryRole === 'parent')
         @livewire('parent.dashboard')
 
-    @elseif($primaryRole === 'subscriber')
-        @livewire('subscribers.subscriber-dashboard')
+    @elseif($primaryRole === 'guest')
+        @livewire('guests.guest-dashboard')
 
     @else
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -76,7 +76,7 @@
         <livewire:subscription-features-banner placement="dashboard"/>
     </div>
 
-    @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'subscriber', 'teacher']) && Route::is('dashboard'))
+    @if( in_array(auth()->user()->role->value, ['admin', 'owner', 'moderator', 'guest', 'teacher']) && Route::is('dashboard'))
 
         <section>
             @if ($academicSubjects->count() || request()->hasAny(['search', 'academic_group', 'academic_level']))
@@ -338,7 +338,8 @@
             {{ $academicSubject->academicLevel->academicGroup->name }}
         </span>
                                                     <span class="mx-1">•</span>
-                                                    <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-2 py-1 rounded text-xs">
+                                                    <span
+                                                        class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-2 py-1 rounded text-xs">
             {{ $academicSubject->academicLevel->name }}
         </span>
                                                 </div>
@@ -437,7 +438,8 @@
                                         </th>
                                     </tr>
                                     </thead>
-                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tbody
+                                        class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     @foreach ($academicSubjects as $academicSubject)
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                             <td class="px-6 py-4">
@@ -453,7 +455,8 @@
                                                         </div>
                                                     </div>
                                                     <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        <div
+                                                            class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                             {{ $academicSubject->name }}
                                                         </div>
                                                         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -476,7 +479,8 @@
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                                                <div
+                                                    class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                                                     <div class="flex items-center">
                                                         <svg class="w-4 h-4 mr-1" fill="currentColor"
                                                              viewBox="0 0 20 20">

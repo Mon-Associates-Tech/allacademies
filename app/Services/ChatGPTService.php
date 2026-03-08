@@ -2,152 +2,203 @@
 
 namespace App\Services;
 
+use App\Services\Traits\ResponseExtraction;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ChatGPTService
 {
+    use ResponseExtraction;
+
     protected mixed $apiKey;
+
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
+
     protected string $imageEndpoint = 'https://api.openai.com/v1/images/generations';
 
-    public function __construct()
+    protected TokenUsageService $tokenUsageService;
+
+    public function __construct(TokenUsageService $tokenUsageService)
     {
-        $this->apiKey = config('services.openai.key');
+        $this->apiKey = config('services.openai.key') ?? config('openai.openai.api_key');
+        $this->tokenUsageService = $tokenUsageService;
     }
 
     /**
-     * @throws ConnectionException
+     * Unified Chat method with retry logic and usage logging
+     * Supports both simple message arrays and complex request data
      */
-    public function chat($messages, $model = 'gpt-4'): string
+    public function chat($messages, $model = 'gpt-4', array $options = []): array
     {
-        $requestData = [
+        $requestData = array_merge([
             'model' => $model,
             'input' => $messages,
-        ];
+        ], $options);
 
-        Log::info('ChatGPTService request', [
-            'model' => $model,
-            'message_count' => count($messages),
-            'first_message_preview' => isset($messages[0]['content']) ? substr($messages[0]['content'], 0, 150) : 'none'
-        ]);
-
-        $response = Http::withToken($this->apiKey)
-            ->post($this->textEndpoint, $requestData);
-
-        if ($response->successful()) {
-            $responseData = $response->json();
-
-            Log::info('ChatGPTService response', [
-                'has_output' => isset($responseData['output']),
-                'response_keys' => array_keys($responseData),
-            ]);
-
-            // Extract content from v1/responses format
-            $content = $this->extractContent($responseData);
-
-            if (empty($content)) {
-                Log::error('Empty content extracted from response', [
-                    'full_response' => json_encode($responseData)
-                ]);
-                throw new \RuntimeException("Empty response from OpenAI API");
-            }
-
-            return $content;
-        }
-
-        throw new \RuntimeException("OpenAI API Error: " . $response->body());
+        return $this->sendChatRequest($requestData, $options);
     }
 
     /**
-     * Extract content from the response data
+     * Central HTTP request handler with retry logic
+     * This method is used by both ChatGPTService and AcademicChatService
      */
-    private function extractContent(array $responseData): string
+    protected function sendChatRequest(array $requestData, array $options = []): array
     {
-        if (!isset($responseData['output'])) {
-            return '';
-        }
+        $user = auth()->user();
+        $timeout = config('openai.openai.timeout', 90);
+        $maxRetries = 3;
+        $retryDelay = 2;
 
-        $output = $responseData['output'];
+        // Extract request_type before sending to API (it's for internal use only)
+        $requestType = $options['request_type'] ?? 'chat';
+        unset($requestData['request_type']);
 
-        // Handle direct string
-        if (is_string($output)) {
-            return $output;
-        }
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $response = Http::withToken($this->apiKey)
+                    ->timeout($timeout)
+                    ->connectTimeout(10)
+                    ->retry(2, 1000)
+                    ->post($this->textEndpoint, $requestData);
 
-        // Handle array
-        if (is_array($output)) {
-            // Array of strings
-            if (isset($output[0]) && is_string($output[0])) {
-                return implode("\n", $output);
-            }
+                if ($response->successful()) {
+                    $responseData = $response->json();
+                    $usage = $responseData['usage'] ?? null;
 
-            // Nested content structure with output_text type
-            if (isset($output[0]['content']) && is_array($output[0]['content'])) {
-                $content = $output[0]['content'];
-
-                if (is_string($content)) {
-                    return $content;
-                }
-
-                if (is_array($content)) {
-                    $parts = [];
-                    foreach ($content as $item) {
-                        if (is_string($item)) {
-                            $parts[] = $item;
-                        } elseif (isset($item['type']) && $item['type'] === 'output_text' && isset($item['text'])) {
-                            // Handle output_text type from v1/responses API
-                            $parts[] = $item['text'];
-                        } elseif (isset($item['text'])) {
-                            $parts[] = $item['text'];
-                        }
+                    // Handle usage logging
+                    if ($user && $usage) {
+                        $this->tokenUsageService->logUsage(
+                            $user,
+                            $usage,
+                            $requestType,
+                            $requestData['model'] ?? 'gpt-4'
+                        );
                     }
-                    return implode("\n", array_filter($parts));
+
+                    return [
+                        'success' => true,
+                        'content' => $this->extractContent($responseData),
+                        'usage' => $usage,
+                        'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-4',
+                    ];
                 }
-            }
 
-            // Direct text field
-            if (isset($output[0]['text'])) {
-                return $output[0]['text'];
+                if (in_array($response->status(), [429, 503, 502])) {
+                    if ($attempt < $maxRetries) {
+                        $waitTime = $retryDelay * $attempt;
+                        Log::warning('OpenAI API rate limit or unavailable, retrying', [
+                            'status' => $response->status(),
+                            'attempt' => $attempt,
+                            'wait_time' => $waitTime,
+                        ]);
+                        sleep($waitTime);
+
+                        continue;
+                    }
+                }
+
+                Log::error('OpenAI API Error', [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                    'attempt' => $attempt,
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'API Error: '.$response->body(),
+                ];
+
+            } catch (ConnectionException $e) {
+                Log::error('OpenAI Connection Error', [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt < $maxRetries) {
+                    $waitTime = $retryDelay * $attempt;
+                    sleep($waitTime);
+
+                    continue;
+                }
+
+                return [
+                    'success' => false,
+                    'error' => 'Connection timeout. Please try again.',
+                ];
+
+            } catch (\Exception $e) {
+                Log::error('ChatGPTService Error', [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                ]);
+
+                if ($attempt < $maxRetries) {
+                    $waitTime = $retryDelay * $attempt;
+                    sleep($waitTime);
+
+                    continue;
+                }
+
+                return [
+                    'success' => false,
+                    'error' => 'Service temporarily unavailable. Please try again.',
+                ];
             }
         }
 
-        return '';
-    }
-    public function generateImage($prompt, $model = 'dall-e-3', $n = 1, $size = '1024x1024')
-    {
-
-        $response = Http::withToken($this->apiKey)
-            ->post($this->imageEndpoint, [
-                'model' => $model,
-                'prompt' => $prompt,
-                'n' => $n,
-                'size' => $size,
-            ]);
-        logInfo("Let generate some image". $response);
-        if ($response->successful()) {
-            return $response->json()['data'];
-        }
-        logInfo("Let generate some image". $response->json());
-
-        throw new \Exception("OpenAI API Error: " . $response->body());
+        return [
+            'success' => false,
+            'error' => 'Service temporarily unavailable after multiple attempts. Please try again later.',
+        ];
     }
 
     /**
-     * Format messages array into a single prompt string for responses API
+     * Unified Image Generation method
      */
-    private function formatMessagesForResponses($messages): string
+    public function generateImage($prompt, $model = 'dall-e-3', array $options = []): array
     {
-        $prompt = '';
+        $user = auth()->user();
 
-        foreach ($messages as $message) {
-            $role = $message['role'] ?? 'user';
-            $content = $message['content'] ?? '';
+        try {
+            $response = Http::withToken($this->apiKey)
+                ->post($this->imageEndpoint, array_merge([
+                    'model' => $model,
+                    'prompt' => $prompt,
+                    'n' => 1,
+                    'size' => '1024x1024',
+                ], $options));
 
-            $prompt .= ucfirst($role) . ': ' . $content . "\n\n";
+            if (! $response->successful()) {
+                throw new \RuntimeException('OpenAI API Error: '.$response->body());
+            }
+
+            $responseData = $response->json();
+            $images = $responseData['data'] ?? [];
+
+            // Log usage if present in the image response
+            if ($user && ! empty($images[0]['usage'])) {
+                $this->tokenUsageService->logUsage($user, $images[0]['usage'], 'image', $model);
+            }
+
+            return [
+                'success' => true,
+                'images' => $images,
+                'model' => $model,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Image Generation Error', ['error' => $e->getMessage()]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
 
-        return trim($prompt);
+    /**
+     * Extract content from response data
+     * For enhanced extraction with educational context, use AcademicChatService
+     */
+    public function extractContent(array $responseData): string
+    {
+        return $this->extractContentFromResponsesAPI($responseData);
     }
 }

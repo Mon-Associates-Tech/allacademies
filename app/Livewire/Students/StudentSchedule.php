@@ -17,24 +17,31 @@ class StudentSchedule extends Component
     use WithPagination;
 
     public Student $student;
+
     public $selectedDate;
+
     public $viewMode = 'calendar'; // 'calendar', 'list', 'week'
+
     public $filterType = 'all'; // 'all', 'assessments', 'assignments', 'reading', 'lessons'
+
     public $currentMonth;
+
     public $currentYear;
+
     public $selectedActivity = null;
+
     public $showActivityModal = false;
 
     protected $paginationTheme = 'bootstrap';
+
     protected $authorized = false;
 
     public function mount(?Student $student, $date = null)
     {
 
-        if(!$student?->id) {
+        if (! $student?->id) {
             $this->student = auth()->user()->student ?: Student::withoutGlobalScopes()->where('user_id', auth()->user()->id)->first();
-        }
-        else{
+        } else {
             $this->authorized = true;
         }
 
@@ -95,35 +102,36 @@ class StudentSchedule extends Component
             $activities = $activities->merge($assessments);
         }
 
-// Get assignments (if Assignment model exists)
-if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
-    $assignments = Assignment::whereHas('students', function ($query) {
-            $query->where('students.id', $this->student->id);
-        })
-        ->with(['academicSubject', 'submissions' => function ($query) {
-            $query->where('assignment_submissions.student_id', $this->student->id);
-        }])
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->get()
-        ->map(function ($assignment) {
-            $submission = $assignment->submissions->first();
-            return [
-                'id' => $assignment->id,
-                'type' => 'assignment',
-                'title' => $assignment->title,
-                'subject' => $assignment->academicSubject?->name,
-                'date' => $assignment->ends_at ?? $assignment->created_at,
-                'status' => $submission ? $submission->status : 'not_submitted',
-                'submitted_at' => $submission?->submitted_at,
-                'grade' => $submission?->grade,
-                'model' => $assignment,
-                'submission' => $submission,
-                'icon' => 'fas fa-tasks',
-                'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
-            ];
-        });
-    $activities = $activities->merge($assignments);
-}
+        // Get assignments (if Assignment model exists)
+        if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->filterType === 'assignments')) {
+            $assignments = Assignment::whereHas('students', function ($query) {
+                $query->where('students.id', $this->student->id);
+            })
+                ->with(['academicSubject', 'submissions' => function ($query) {
+                    $query->where('assignment_submissions.student_id', $this->student->id);
+                }])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+                ->map(function ($assignment) {
+                    $submission = $assignment->submissions->first();
+
+                    return [
+                        'id' => $assignment->id,
+                        'type' => 'assignment',
+                        'title' => $assignment->title,
+                        'subject' => $assignment->academicSubject?->name,
+                        'date' => $assignment->ends_at ?? $assignment->created_at,
+                        'status' => $submission ? $submission->status : 'not_submitted',
+                        'submitted_at' => $submission?->submitted_at,
+                        'grade' => $submission?->grade,
+                        'model' => $assignment,
+                        'submission' => $submission,
+                        'icon' => 'fas fa-tasks',
+                        'color' => $this->getStatusColor($submission?->status ?? 'not_submitted', 'assignment'),
+                    ];
+                });
+            $activities = $activities->merge($assignments);
+        }
 
         // Get reading progress
         if ($this->filterType === 'all' || $this->filterType === 'reading') {
@@ -135,7 +143,7 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
                     return [
                         'id' => $progress->id,
                         'type' => 'reading',
-                        'title' => "Reading: " . $progress->book->title,
+                        'title' => 'Reading: '.$progress->book->title,
                         'subject' => $progress->book->subject?->name,
                         'date' => $progress->updated_at,
                         'status' => $progress->status,
@@ -185,9 +193,10 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
 
     private function calculateDuration($startTime, $endTime)
     {
-        if (!$startTime || !$endTime) {
+        if (! $startTime || ! $endTime) {
             return null;
         }
+
         return Carbon::parse($startTime)->diffForHumans(Carbon::parse($endTime), true);
     }
 
@@ -214,9 +223,16 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
 
     private function getProgressColor($percentage)
     {
-        if ($percentage >= 80) return 'green';
-        if ($percentage >= 60) return 'blue';
-        if ($percentage >= 40) return 'yellow';
+        if ($percentage >= 80) {
+            return 'green';
+        }
+        if ($percentage >= 60) {
+            return 'blue';
+        }
+        if ($percentage >= 40) {
+            return 'yellow';
+        }
+
         return 'red';
     }
 
@@ -237,7 +253,6 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
 
         $calendar = [];
         $currentDate = $startOfMonth->copy()->startOfWeek(Carbon::SUNDAY);
-
 
         for ($week = 0; $week < 6; $week++) {
             for ($day = 0; $day < 7; $day++) {
@@ -317,6 +332,7 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
         $this->currentMonth = $this->selectedDate->month;
         $this->currentYear = $this->selectedDate->year;
     }
+
     public function setViewMode($mode)
     {
         $this->viewMode = $mode;
@@ -350,6 +366,7 @@ if (class_exists(Assignment::class) && ($this->filterType === 'all' || $this->fi
             case 'reading':
                 return BookReadingProgress::with(['book', 'book.subject'])->find($id);
         }
+
         return null;
     }
 

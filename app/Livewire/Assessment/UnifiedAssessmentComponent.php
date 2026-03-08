@@ -2,65 +2,88 @@
 
 namespace App\Livewire\Assessment;
 
-use App\Models\AssessmentResponse;
-use Illuminate\Support\Facades\DB;
-use Livewire\Component;
 use App\Models\Assessment;
+use App\Models\AssessmentResponse;
 use App\Models\Assignment;
-use App\Models\Student;
 use App\Services\AssessmentConfigurationService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class UnifiedAssessmentComponent extends Component
 {
     // Component state
     public $step = 'selection'; // selection, configuration, assessment, results
+
     public $assessmentMode = 'self'; // 'self' or 'assignment'
 
     // Subject selection
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
 
     // Question configuration
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $difficulty = 'all';
+
     public $timeLimitMinutes = null;
+
     public $questionCounts = [];
 
     // Assessment phase
     public $assessment = null;
+
     public $questions = [];
+
     public $responses = [];
+
     public $currentQuestionIndex = 0;
+
     public $timeRemaining = null;
+
     public $assessmentResponse = null;
+
     public $startTime = null;
+
     public $isTimerActive = false;
 
     // Results phase
     public $assessmentResult = null;
+
     public $performance = [];
+
     public $gradingComplete = false;
 
     // Assignment mode
     public $selectedAssignment = null;
+
     public $availableAssignments = [];
 
     // Services
     protected SubjectSelectionService $subjectService;
+
     protected RandomQuestionSelectionService $questionService;
+
     protected AssessmentConfigurationService $assessmentService;
+
     protected AssessmentGradingService $gradingService;
+
     protected StudentAssessmentService $studentAssessmentService;
 
     protected $rules = [
@@ -96,9 +119,9 @@ class UnifiedAssessmentComponent extends Component
         $this->subjects = $this->subjectService->getAvailableSubjects();
         $this->availableAssignments = $this->getAvailableAssignments();
 
-        if (!empty($this->questions)) {
+        if (! empty($this->questions)) {
             foreach (array_keys($this->questions) as $index) {
-                if (!isset($this->responses[$index])) {
+                if (! isset($this->responses[$index])) {
                     $this->responses[$index] = ['answer' => null];
                 }
             }
@@ -106,143 +129,143 @@ class UnifiedAssessmentComponent extends Component
     }
 
     public function updatedResponses($value, $key)
-{
-    // Extract question index from key (e.g., '0.answer')
-    preg_match('/^(\d+)(?:\.|$)/', $key, $matches);
-    $questionIndex = isset($matches[1]) ? (int)$matches[1] : null;
+    {
+        // Extract question index from key (e.g., '0.answer')
+        preg_match('/^(\d+)(?:\.|$)/', $key, $matches);
+        $questionIndex = isset($matches[1]) ? (int) $matches[1] : null;
 
-    if ($questionIndex !== null) {
-        // Ensure response has correct structure
-        if (!isset($this->responses[$questionIndex])) {
-            $this->responses[$questionIndex] = ['answer' => null];
-        }
+        if ($questionIndex !== null) {
+            // Ensure response has correct structure
+            if (! isset($this->responses[$questionIndex])) {
+                $this->responses[$questionIndex] = ['answer' => null];
+            }
 
-        // Update local state
-        $responseValue = $value ?? $this->responses[$questionIndex]['answer'] ?? null;
+            // Update local state
+            $responseValue = $value ?? $this->responses[$questionIndex]['answer'] ?? null;
 
-        // Save to database
-        $this->handleResponseUpdate($questionIndex, $responseValue);
-    }
-}
-
-public function isQuestionAnswered($index): bool
-{
-    $response = $this->responses[$index] ?? null;
-
-    if (is_array($response) && isset($response['answer'])) {
-        return $response['answer'] !== null && $response['answer'] !== '';
-    }
-
-    return false;
-}
-
-
-
-
-public function getAnsweredCount(): int
-{
-    $count = 0;
-    foreach ($this->responses as $response) {
-        if (is_array($response) &&
-            isset($response['answer']) &&
-            $response['answer'] !== null &&
-            $response['answer'] !== '') {
-            $count++;
+            // Save to database
+            $this->handleResponseUpdate($questionIndex, $responseValue);
         }
     }
-    return $count;
-}
 
+    public function isQuestionAnswered($index): bool
+    {
+        $response = $this->responses[$index] ?? null;
+
+        if (is_array($response) && isset($response['answer'])) {
+            return $response['answer'] !== null && $response['answer'] !== '';
+        }
+
+        return false;
+    }
+
+    public function getAnsweredCount(): int
+    {
+        $count = 0;
+        foreach ($this->responses as $response) {
+            if (is_array($response) &&
+                isset($response['answer']) &&
+                $response['answer'] !== null &&
+                $response['answer'] !== '') {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
 
     public function getCanSubmitProperty(): bool
     {
-        return $this->getAnsweredCount() > 1 ;
+        return $this->getAnsweredCount() > 1;
     }
 
-public function updatedResponsesAnswer($value, $key)
-{
-    $questionIndex = (int)$key;
+    public function updatedResponsesAnswer($value, $key)
+    {
+        $questionIndex = (int) $key;
 
-    // Ensure we have the correct response structure
-    if (!isset($this->responses[$questionIndex])) {
+        // Ensure we have the correct response structure
+        if (! isset($this->responses[$questionIndex])) {
+            $this->responses[$questionIndex] = [
+                'answer' => null,
+                'type' => $this->questions[$questionIndex]['type'] ?? null,
+            ];
+        }
+
+        // Store the answer with its type information
         $this->responses[$questionIndex] = [
-            'answer' => null,
+            'answer' => $value,
             'type' => $this->questions[$questionIndex]['type'] ?? null,
-        ];
-    }
-
-    // Store the answer with its type information
-    $this->responses[$questionIndex] = [
-        'answer' => $value,
-        'type' => $this->questions[$questionIndex]['type'] ?? null,
-        'answered_at' => now()
-    ];
-
-    // Save to database
-    $this->handleResponseUpdate($questionIndex, $value);
-}
-
-/**
- * Handle individual response updates
- */
-public function handleResponseUpdate(int $questionIndex, $responseValue = null): void
-{
-    if (!$this->assessment || !$this->assessmentResponse) {
-        Log::warning('Cannot save response - assessment not initialized');
-        $this->dispatch('showError');
-        return;
-    }
-
-    try {
-        $question = $this->questions[$questionIndex] ?? null;
-        if (!$question) {
-            Log::warning("Question not found for index: {$questionIndex}");
-            $this->dispatch('showError');
-            return;
-        }
-
-        // Validate response
-        if ($responseValue === null && (!isset($this->responses[$questionIndex]) || $this->responses[$questionIndex]['answer'] === null)) {
-            Log::info('No change in response, skipping save');
-            return;
-        }
-
-        // Format response based on question type
-        $formattedResponse = $this->formatResponseForStorage($question, $responseValue);
-
-        // Get current responses data
-        $responsesData = $this->assessmentResponse->responses_data ?? [];
-
-        // Update the specific response
-        $responsesData[$questionIndex] = [
-            'question_id' => $question['id'],
-            'question_type' => $question['type'],
-            'response' => $formattedResponse,
-            'answered_at' => now()->toDateTimeString(),
+            'answered_at' => now(),
         ];
 
         // Save to database
-        $this->assessmentResponse->update([
-            'responses_data' => $responsesData,
-            'updated_at' => now(),
-        ]);
-
-        Log::info('Response saved successfully', [
-            'question_index' => $questionIndex,
-            'question_id' => $question['id'] ?? 'unknown',
-            'assessment_id' => $this->assessment->id ?? 'unknown'
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error('Failed to save response', [
-            'question_index' => $questionIndex,
-            'error' => $e->getMessage(),
-            'assessment_id' => $this->assessment->id ?? 'unknown'
-        ]);
-
-        $this->dispatch('showError');
+        $this->handleResponseUpdate($questionIndex, $value);
     }
-}
+
+    /**
+     * Handle individual response updates
+     */
+    public function handleResponseUpdate(int $questionIndex, $responseValue = null): void
+    {
+        if (! $this->assessment || ! $this->assessmentResponse) {
+            Log::warning('Cannot save response - assessment not initialized');
+            $this->dispatch('showError');
+
+            return;
+        }
+
+        try {
+            $question = $this->questions[$questionIndex] ?? null;
+            if (! $question) {
+                Log::warning("Question not found for index: {$questionIndex}");
+                $this->dispatch('showError');
+
+                return;
+            }
+
+            // Validate response
+            if ($responseValue === null && (! isset($this->responses[$questionIndex]) || $this->responses[$questionIndex]['answer'] === null)) {
+                Log::info('No change in response, skipping save');
+
+                return;
+            }
+
+            // Format response based on question type
+            $formattedResponse = $this->formatResponseForStorage($question, $responseValue);
+
+            // Get current responses data
+            $responsesData = $this->assessmentResponse->responses_data ?? [];
+
+            // Update the specific response
+            $responsesData[$questionIndex] = [
+                'question_id' => $question['id'],
+                'question_type' => $question['type'],
+                'response' => $formattedResponse,
+                'answered_at' => now()->toDateTimeString(),
+            ];
+
+            // Save to database
+            $this->assessmentResponse->update([
+                'responses_data' => $responsesData,
+                'updated_at' => now(),
+            ]);
+
+            Log::info('Response saved successfully', [
+                'question_index' => $questionIndex,
+                'question_id' => $question['id'] ?? 'unknown',
+                'assessment_id' => $this->assessment->id ?? 'unknown',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to save response', [
+                'question_index' => $questionIndex,
+                'error' => $e->getMessage(),
+                'assessment_id' => $this->assessment->id ?? 'unknown',
+            ]);
+
+            $this->dispatch('showError');
+        }
+    }
 
     /**
      * Save individual response to database
@@ -250,15 +273,17 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
     private function saveResponse(int $questionIndex, $responseValue): void
     {
         // Check if assessmentResponse exists
-        if (!$this->assessmentResponse) {
+        if (! $this->assessmentResponse) {
             Log::warning('Assessment response not found, cannot save response');
+
             return;
         }
 
         try {
             $question = $this->questions[$questionIndex] ?? null;
-            if (!$question) {
+            if (! $question) {
                 Log::warning("Question not found for index: {$questionIndex}");
+
                 return;
             }
 
@@ -285,14 +310,14 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             Log::info('Response saved successfully', [
                 'question_index' => $questionIndex,
                 'question_id' => $question['id'],
-                'assessment_id' => $this->assessment->id
+                'assessment_id' => $this->assessment->id,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to save response', [
                 'question_index' => $questionIndex,
                 'error' => $e->getMessage(),
-                'assessment_id' => $this->assessment->id ?? 'unknown'
+                'assessment_id' => $this->assessment->id ?? 'unknown',
             ]);
         }
     }
@@ -305,16 +330,16 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
         return match ($question['type']) {
             'multiple_choice_question' => [
                 'selected_option' => $responseValue,
-                'options' => $question['options'] ?? []
+                'options' => $question['options'] ?? [],
             ],
             'true_or_false_question' => [
                 'selected_answer' => $responseValue,
-                'answer_boolean' => $responseValue === 'true' || $responseValue === true
+                'answer_boolean' => $responseValue === 'true' || $responseValue === true,
             ],
             'essay_question' => [
                 'essay_text' => $responseValue,
                 'word_count' => str_word_count($responseValue ?? ''),
-                'character_count' => strlen($responseValue ?? '')
+                'character_count' => strlen($responseValue ?? ''),
             ],
             default => $responseValue,
         };
@@ -398,7 +423,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             Log::error('Failed to start assessment', [
                 'error' => $e->getMessage(),
                 'mode' => $this->assessmentMode,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             session()->flash('error', 'Failed to start assessment. Please try again.');
@@ -409,14 +434,15 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
     {
         $this->validate([
             'selectedSubject' => 'required',
-            'questionCount' => 'required|integer|min:1|max:50'
+            'questionCount' => 'required|integer|min:1|max:50',
         ]);
 
         $config = $this->buildAssessmentConfig();
         $student = Auth::user()->student;
 
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
+
             return;
         }
 
@@ -435,7 +461,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
                 $this->responses[$index] = [
                     'answer' => null,
                     'type' => $question['type'],
-                    'answered_at' => null
+                    'answered_at' => null,
                 ];
             }
 
@@ -466,25 +492,23 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             // Error handling
         }
 
-
     }
 
     private function validateResponseStructure()
-{
-    foreach ($this->questions as $index => $question) {
-        if (!isset($this->responses[$index]) ||
-            !is_array($this->responses[$index]) ||
-            !array_key_exists('answer', $this->responses[$index])) {
+    {
+        foreach ($this->questions as $index => $question) {
+            if (! isset($this->responses[$index]) ||
+                ! is_array($this->responses[$index]) ||
+                ! array_key_exists('answer', $this->responses[$index])) {
 
-            $this->responses[$index] = [
-                'answer' => null,
-                'type' => $question['type'],
-                'answered_at' => null
-            ];
+                $this->responses[$index] = [
+                    'answer' => null,
+                    'type' => $question['type'],
+                    'answered_at' => null,
+                ];
+            }
         }
     }
-}
-
 
     // Add this property to enable watching
     public function getListeners()
@@ -494,7 +518,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
         ];
     }
 
-// Add this method for debugging purposes
+    // Add this method for debugging purposes
     public function debugResponses()
     {
         Log::info('Current responses:', $this->responses);
@@ -505,8 +529,9 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
     {
         $assignment = Assignment::find($this->selectedAssignment);
 
-        if (!$assignment || !$this->canStartAssignment($assignment)) {
+        if (! $assignment || ! $this->canStartAssignment($assignment)) {
             session()->flash('error', 'Assignment not available or you are not eligible.');
+
             return;
         }
 
@@ -572,17 +597,17 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
         $this->step = 'assessment';
     }
 
-
     // Assessment Submission
     /**
      * Submit assessment for grading
      */
     public function submitAssessment(): void
     {
-        if (!$this->assessment || !$this->assessmentResponse) {
+        if (! $this->assessment || ! $this->assessmentResponse) {
             session()->flash('error', 'Assessment not found.');
             logError('Assessment is empty');
-              return;
+
+            return;
         }
 
         DB::beginTransaction();
@@ -596,9 +621,9 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
                         'submitted_at' => now()->toDateTimeString(),
                         'time_taken' => $this->startTime ? now()->diffInMinutes($this->startTime) : null,
                         'answered_questions' => $this->getAnsweredCount(),
-                        'total_questions' => count($this->questions)
+                        'total_questions' => count($this->questions),
                     ]
-                )
+                ),
             ]);
 
             // Grade the assessment
@@ -620,13 +645,13 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             // Save grading results to assessment response
             $this->assessmentResponse->update([
                 'grading_data' => $gradingResult,
-                'is_graded' => !$gradingResult['needs_manual_grading'],
-                'graded_at' => !$gradingResult['needs_manual_grading'] ? now() : null,
+                'is_graded' => ! $gradingResult['needs_manual_grading'],
+                'graded_at' => ! $gradingResult['needs_manual_grading'] ? now() : null,
             ]);
 
             $this->assessmentResult = $gradingResult;
             $this->performance = $this->calculatePerformance();
-            $this->gradingComplete = !$gradingResult['needs_manual_grading'];
+            $this->gradingComplete = ! $gradingResult['needs_manual_grading'];
 
             DB::commit();
 
@@ -637,7 +662,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             DB::rollBack();
             Log::error('Failed to submit assessment', [
                 'error' => $e->getMessage(),
-                'assessment_id' => $this->assessment->id
+                'assessment_id' => $this->assessment->id,
             ]);
             session()->flash('error', 'Failed to submit assessment. Please try again.');
         }
@@ -673,7 +698,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
                     'score_earned' => 0,
                     'feedback' => 'Question not answered',
                     'question_id' => $question['id'],
-                    'question_type' => $question['type']
+                    'question_type' => $question['type'],
                 ];
             }
         }
@@ -683,12 +708,12 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             'max_score' => $maxScore,
             'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0,
             'answered_questions' => count(array_filter($responsesData)),
-            'correct_answers' => count(array_filter($gradedResponses, fn($r) => $r['is_correct'] ?? false)),
+            'correct_answers' => count(array_filter($gradedResponses, fn ($r) => $r['is_correct'] ?? false)),
             'completion_rate' => count($this->questions) > 0 ?
                 round((count(array_filter($responsesData)) / count($this->questions)) * 100, 2) : 0,
             'graded_responses' => $gradedResponses,
             'needs_manual_grading' => $needsManualGrading,
-            'graded_at' => now()->toDateTimeString()
+            'graded_at' => now()->toDateTimeString(),
         ];
     }
 
@@ -706,7 +731,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
                 'score_earned' => 0,
                 'feedback' => 'Unknown question type',
                 'question_id' => $question['id'],
-                'question_type' => $question['type']
+                'question_type' => $question['type'],
             ],
         };
     }
@@ -722,11 +747,11 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
         return [
             'is_correct' => $isCorrect,
             'score_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
-            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was ' . $correctAnswer,
+            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was '.$correctAnswer,
             'question_id' => $question['id'],
             'question_type' => $question['type'],
             'selected_option' => $selectedOption,
-            'correct_answer' => $correctAnswer
+            'correct_answer' => $correctAnswer,
         ];
     }
 
@@ -740,11 +765,11 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
         return [
             'is_correct' => $isCorrect,
             'score_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
-            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was ' . ($correctAnswer ? 'True' : 'False'),
+            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was '.($correctAnswer ? 'True' : 'False'),
             'question_id' => $question['id'],
             'question_type' => $question['type'],
             'selected_answer' => $selectedAnswer,
-            'correct_answer' => $correctAnswer
+            'correct_answer' => $correctAnswer,
         ];
     }
 
@@ -761,7 +786,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             'question_type' => $question['type'],
             'essay_text' => $essayText,
             'word_count' => $response['word_count'] ?? 0,
-            'character_count' => $response['character_count'] ?? 0
+            'character_count' => $response['character_count'] ?? 0,
         ];
     }
 
@@ -770,7 +795,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
      */
     private function calculatePerformance(): array
     {
-        if (!$this->assessmentResult) {
+        if (! $this->assessmentResult) {
             return [];
         }
 
@@ -815,7 +840,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             'isTimerActive',
             'assessmentResult',
             'performance',
-            'gradingComplete'
+            'gradingComplete',
         ]);
 
         $this->step = 'selection';
@@ -935,10 +960,19 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
 
     private function getGradeFromPercentage($percentage): string
     {
-        if ($percentage >= 90) return 'A';
-        if ($percentage >= 80) return 'B';
-        if ($percentage >= 70) return 'C';
-        if ($percentage >= 60) return 'D';
+        if ($percentage >= 90) {
+            return 'A';
+        }
+        if ($percentage >= 80) {
+            return 'B';
+        }
+        if ($percentage >= 70) {
+            return 'C';
+        }
+        if ($percentage >= 60) {
+            return 'D';
+        }
+
         return 'F';
     }
 
@@ -967,7 +1001,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
         }
 
         $eligibleStudents = $assignment->getEligibleStudents();
-        if (!$eligibleStudents->contains('id', $student->id)) {
+        if (! $eligibleStudents->contains('id', $student->id)) {
             return false;
         }
 
@@ -975,7 +1009,7 @@ public function handleResponseUpdate(int $questionIndex, $responseValue = null):
             ->where('student_id', $student->id)
             ->exists();
 
-        return !$existingSubmission;
+        return ! $existingSubmission;
     }
 
     private function prepareQuestionsFromAssignment($assignment): array

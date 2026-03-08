@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\Assessment;
 use App\Livewire\Assessment\AssessmentService;
+use App\Models\Assessment;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,9 +12,13 @@ class EssayGrader extends Component
     use WithPagination;
 
     public $selectedAssessment = null;
+
     public $essayQuestions = [];
+
     public $currentQuestionIndex = 0;
+
     public $points = null;
+
     public $feedback = '';
 
     protected $rules = [
@@ -31,7 +35,7 @@ class EssayGrader extends Component
             $this->essayQuestions = $this->selectedAssessment->assessmentResponse->getEssayQuestionsForGrading();
             $this->currentQuestionIndex = 0;
 
-            if (!empty($this->essayQuestions)) {
+            if (! empty($this->essayQuestions)) {
                 $this->points = $this->essayQuestions[0]['points_possible'];
             }
         }
@@ -41,7 +45,7 @@ class EssayGrader extends Component
     {
         $this->validate();
 
-        if (!empty($this->essayQuestions) && isset($this->essayQuestions[$this->currentQuestionIndex])) {
+        if (! empty($this->essayQuestions) && isset($this->essayQuestions[$this->currentQuestionIndex])) {
             $questionData = $this->essayQuestions[$this->currentQuestionIndex];
 
             $assessmentService = app(AssessmentService::class);
@@ -63,7 +67,7 @@ class EssayGrader extends Component
             $this->feedback = '';
 
             // Set up next question or finish
-            if (!empty($this->essayQuestions)) {
+            if (! empty($this->essayQuestions)) {
                 $this->points = $this->essayQuestions[0]['points_possible'];
             } else {
                 $this->selectedAssessment = null;

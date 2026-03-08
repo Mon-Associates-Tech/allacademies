@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Attendance\Attendance;
-use App\Traits\BelongsToSchool;
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use App\Traits\HasStudents;
 use App\Traits\ShouldScopeSchool;
@@ -14,22 +14,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Teacher extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
     use HasStudents;
-//    use BelongsToSchoolEnhanced;
-    use ShouldScopeSchool;
+    use BelongsToSchoolEnhanced;
+//    use ShouldScopeSchool;
 
     protected $fillable = [
         'school_id', 'user_id', 'employee_id', 'department',
         'hire_date', 'termination_date', 'salary',
-        'employment_type', 'status', 'qualifications', 'specialization'
+        'employment_type', 'status', 'qualifications', 'specialization',
     ];
 
     protected $casts = [
         'hire_date' => 'date',
         'termination_date' => 'date',
         'salary' => 'decimal:2',
-        'qualifications' => 'array'
+        'qualifications' => 'array',
     ];
 
     public function user()
@@ -208,9 +209,8 @@ class Teacher extends Model
             ->first();
 
         $sequence = $lastTeacher ?
-            (int)substr($lastTeacher->employee_id, -4) + 1 : 1;
+            (int) substr($lastTeacher->employee_id, -4) + 1 : 1;
 
-        return $school->code . 'T' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $school->code.'T'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
-
 }

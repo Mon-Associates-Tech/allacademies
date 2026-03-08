@@ -2,25 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\QuizRequest;
+use App\Jobs\GenerateQuizJob;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Models\AcademicTopic;
-use App\Models\EssayQuestion;
+use App\Models\AcademicSubject;
+use App\Models\Quiz;
 use App\Models\Team;
 use App\Models\User;
-use App\Models\Quiz;
 use App\Support\Quizzer;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Jobs\GenerateQuizJob;
-use App\Models\AcademicSubject;
-use App\Http\Requests\QuizRequest;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
 
 class QuizController extends Controller
 {
@@ -70,12 +66,6 @@ class QuizController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param QuizRequest $request
-     * @return RedirectResponse
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, QuizRequest $request): RedirectResponse
     {
@@ -83,6 +73,16 @@ class QuizController extends Controller
 
         $this->authorize('subscribed', $academicSubject);
         $this->authorize('privileged', $currentTeam);
+
+        // NEW: Check school has active content subscription before allowing quiz creation
+        $school = auth()->user()->school;
+        if (! $school || ! $school->hasActiveContentSubscription()) {
+            return to_route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
+                ->with('error',
+                    'Your school must have an active subscription to create quizzes. '.
+                    'Please contact your school administrator.'
+                );
+        }
 
         dispatch(new GenerateQuizJob(
             $academicSubject,
@@ -95,22 +95,17 @@ class QuizController extends Controller
             $request->validated('sections')
         ));
 
-        return to_route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group') ])
+        return to_route('quizzes.index', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.quiz.generating'));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Quiz $quiz
      * @return Application|Factory|\Illuminate\View\View|object|RedirectResponse|View
      */
     public function start(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
     {
-
 
         $this->authorize('subscribed', [$quiz->academicSubject]);
 
@@ -132,11 +127,6 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Quiz $quiz
-     * @param Request $request
      * @return Application|Factory|\Illuminate\View\View|object|RedirectResponse|View
      */
     public function take(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz, Request $request)
@@ -180,10 +170,6 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Quiz $quiz
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function stop(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
@@ -208,10 +194,6 @@ class QuizController extends Controller
     /**
      * get results for a quiz
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Quiz $quiz
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
     public function scores(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
@@ -242,10 +224,6 @@ class QuizController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Quiz $quiz
      * @return Application|Factory|\Illuminate\View\View|object|RedirectResponse|View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Quiz $quiz)
@@ -257,7 +235,7 @@ class QuizController extends Controller
 
         $worksheet = $quiz->worksheets()->where('user_id', auth()->id())->first();
 
-        if (!$worksheet || !$worksheet->ended_at) {
+        if (! $worksheet || ! $worksheet->ended_at) {
             return to_route('quizzes.take', ['quiz' => $quiz]);
         }
 

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Services\ActivityLogHelper;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
 {
@@ -21,7 +21,7 @@ class ActivityLogController extends Controller
         return response()->json([
             'success' => true,
             'data' => $formattedActivities,
-            'count' => count($formattedActivities)
+            'count' => count($formattedActivities),
         ]);
     }
 
@@ -32,14 +32,14 @@ class ActivityLogController extends Controller
     {
         $validModels = [
             'academicgroup', 'academiclevel', 'academicsubject',
-            'academictopic', 'academicsubtopic'
+            'academictopic', 'academicsubtopic',
         ];
 
-        if (!in_array(strtolower($modelType), $validModels)) {
+        if (! in_array(strtolower($modelType), $validModels)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid model type',
-                'valid_models' => $validModels
+                'valid_models' => $validModels,
             ], 400);
         }
 
@@ -51,7 +51,7 @@ class ActivityLogController extends Controller
             'success' => true,
             'data' => $formattedActivities,
             'count' => count($formattedActivities),
-            'model_type' => ucfirst($modelType)
+            'model_type' => ucfirst($modelType),
         ]);
     }
 
@@ -68,7 +68,7 @@ class ActivityLogController extends Controller
             'success' => true,
             'data' => $formattedActivities,
             'count' => count($formattedActivities),
-            'user_id' => $userId
+            'user_id' => $userId,
         ]);
     }
 
@@ -80,7 +80,7 @@ class ActivityLogController extends Controller
         $request->validate([
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'limit' => 'integer|min:1|max:1000'
+            'limit' => 'integer|min:1|max:1000',
         ]);
 
         $startDate = Carbon::parse($request->start_date)->startOfDay();
@@ -96,8 +96,8 @@ class ActivityLogController extends Controller
             'count' => count($formattedActivities),
             'date_range' => [
                 'start' => $startDate->format('Y-m-d H:i:s'),
-                'end' => $endDate->format('Y-m-d H:i:s')
-            ]
+                'end' => $endDate->format('Y-m-d H:i:s'),
+            ],
         ]);
     }
 
@@ -117,7 +117,7 @@ class ActivityLogController extends Controller
             'date_range' => [
                 'start' => $startDate?->format('Y-m-d'),
                 'end' => $endDate?->format('Y-m-d'),
-            ]
+            ],
         ]);
     }
 
@@ -128,7 +128,7 @@ class ActivityLogController extends Controller
     {
         $request->validate([
             'keyword' => 'required|string|min:2',
-            'limit' => 'integer|min:1|max:500'
+            'limit' => 'integer|min:1|max:500',
         ]);
 
         $keyword = $request->keyword;
@@ -141,7 +141,7 @@ class ActivityLogController extends Controller
             'success' => true,
             'data' => $formattedActivities,
             'count' => count($formattedActivities),
-            'keyword' => $keyword
+            'keyword' => $keyword,
         ]);
     }
 
@@ -160,21 +160,21 @@ class ActivityLogController extends Controller
 
         $modelType = strtolower($modelType);
 
-        if (!isset($modelClasses[$modelType])) {
+        if (! isset($modelClasses[$modelType])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid model type',
-                'valid_models' => array_keys($modelClasses)
+                'valid_models' => array_keys($modelClasses),
             ], 400);
         }
 
         $modelClass = $modelClasses[$modelType];
         $model = $modelClass::find($modelId);
 
-        if (!$model) {
+        if (! $model) {
             return response()->json([
                 'success' => false,
-                'message' => ucfirst($modelType) . ' not found'
+                'message' => ucfirst($modelType).' not found',
             ], 404);
         }
 
@@ -188,8 +188,8 @@ class ActivityLogController extends Controller
             'model' => [
                 'type' => ucfirst($modelType),
                 'id' => $modelId,
-                'identifier' => $model->name ?? $model->label ?? $model->code ?? "ID: {$modelId}"
-            ]
+                'identifier' => $model->name ?? $model->label ?? $model->code ?? "ID: {$modelId}",
+            ],
         ]);
     }
 }

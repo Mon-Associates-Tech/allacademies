@@ -22,13 +22,14 @@ class ContentHelper
         // Convert line breaks with list markers to actual HTML lists
         $content = preg_replace_callback(
             '/(<p>)?(\s*-\s+(.+?)(<\/p>)?)\n?/s',
-            function($matches) {
+            function ($matches) {
                 static $inList = false;
-                $item = '<li>' . trim($matches[3]) . '</li>';
+                $item = '<li>'.trim($matches[3]).'</li>';
 
-                if (!$inList) {
+                if (! $inList) {
                     $inList = true;
-                    return '<ul>' . $item;
+
+                    return '<ul>'.$item;
                 } else {
                     return $item;
                 }

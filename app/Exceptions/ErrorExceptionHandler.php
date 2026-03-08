@@ -21,7 +21,6 @@ class ErrorExceptionHandler extends ExceptionHandler
     /**
      * Report or log an exception.
      *
-     * @param  \Throwable  $exception
      * @return void
      *
      * @throws \Exception
@@ -29,13 +28,14 @@ class ErrorExceptionHandler extends ExceptionHandler
     public function report(Throwable $exception)
     {
         // Log memory usage for debugging
-        \Log::debug('Memory usage in Handler::report', ['memory' => memory_get_usage(true) / 1024 / 1024 . ' MB']);
+        \Log::debug('Memory usage in Handler::report', ['memory' => memory_get_usage(true) / 1024 / 1024 .' MB']);
 
         // Prevent recursive notifications
         static $notificationSent = false;
 
         if ($notificationSent) {
             \Log::debug('Skipping notification due to previous send');
+
             return;
         }
 
@@ -44,11 +44,12 @@ class ErrorExceptionHandler extends ExceptionHandler
 
             if ($statusCode >= 500) {
                 // Rate limit to 1 notification per minute per exception type
-                $key = 'error-notification:' . get_class($exception);
+                $key = 'error-notification:'.get_class($exception);
                 if (RateLimiter::tooManyAttempts($key, 1)) {
                     \Log::warning('Rate limit exceeded for error notification', [
                         'exception' => get_class($exception),
                     ]);
+
                     return;
                 }
 
@@ -56,6 +57,7 @@ class ErrorExceptionHandler extends ExceptionHandler
 
                 try {
                     $errorService = app(ErrorNotificationService::class);
+                    $user = auth()->user();
                     $errorService->sendErrorNotification(
                         substr($exception->getMessage(), 0, 500), // Truncate message
                         [
@@ -63,7 +65,14 @@ class ErrorExceptionHandler extends ExceptionHandler
                             'line' => $exception->getLine(),
                             'url' => substr(request()->fullUrl(), 0, 255),
                             'method' => request()->method(),
-                            'user_id' => auth()->id() ?? 'Guest',
+                            'user_id' => $user ? $user->id : 'Guest',
+                            'user_name' => $user ? $user->name : 'Guest',
+                            'trace' => collect($exception->getTrace())->take(5)->map(fn($t) => [
+                                'file' => isset($t['file']) ? basename($t['file']) : 'unknown',
+                                'line' => $t['line'] ?? 0,
+                                'class' => $t['class'] ?? '',
+                                'function' => $t['function'] ?? '',
+                            ])->toArray(),
                         ]
                     );
                     $notificationSent = true;
@@ -84,7 +93,6 @@ class ErrorExceptionHandler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @throws \Throwable

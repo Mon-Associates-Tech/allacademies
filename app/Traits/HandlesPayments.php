@@ -34,11 +34,11 @@ trait HandlesPayments
 
             DB::transaction(function () use ($validatedData, $bookSubscription) {
                 $money = Money::of($validatedData['amount'], $validatedData['currency'] ?? 'GHS');
-               // dd($money->getAmount()->getIntegralPart());
+                // dd($money->getAmount()->getIntegralPart());
 
                 $payment = new Payment([
                     'reference' => $validatedData['reference'],
-                    'amount' => (string)$money->getAmount(),
+                    'amount' => (string) $money->getAmount(),
                     'status' => PaymentStatus::from($validatedData['status'] ?? 'succeeded'),
                     'currency' => $validatedData['currency'] ?? 'GHS',
                     'book_subscription_id' => $bookSubscription->id,
@@ -48,7 +48,7 @@ trait HandlesPayments
                 $payment->save();
 
                 $bookSubscription->status = SubscriptionStatus::PAID;
-                $bookSubscription->annual_fee = (float)$bookSubscription->annual_fee += (float)$money->getAmount()->getIntegralPart();
+                $bookSubscription->annual_fee = (float) $bookSubscription->annual_fee += (float) $money->getAmount()->getIntegralPart();
                 $bookSubscription->payment_completed_at = now();
                 $bookSubscription->save();
             });
@@ -56,9 +56,9 @@ trait HandlesPayments
             throw $e;
         } catch (Exception $e) {
             logError($e);
+
             return back()->with('error', 'An error occurred while processing the payment. Please try again.');
         }
-
 
         return [
             'payment' => $payment,
@@ -84,7 +84,7 @@ trait HandlesPayments
 
                 $payment = new Payment([
                     'reference' => $validatedData['reference'],
-                    'amount' => (string)$amount->getAmount(),
+                    'amount' => (string) $amount->getAmount(),
                     'status' => PaymentStatus::from($validatedData['status'] ?? 'succeeded'),
                     'currency' => $validatedData['currency'] ?? 'GHS',
                     'gateway_reference' => $validatedData['gateway_reference'] ?? null,
@@ -113,8 +113,6 @@ trait HandlesPayments
     /**
      * Extract and validate payment data from different request types
      *
-     * @param FormRequest|Request|array|PaymentRequest $request
-     * @return array
      * @throws ValidationException|Exception
      */
     private function extractAndValidatePaymentData(FormRequest|Request|array|PaymentRequest $request): array
@@ -145,8 +143,6 @@ trait HandlesPayments
     /**
      * Validate payment data from array
      *
-     * @param array $data
-     * @return array
      * @throws ValidationException
      */
     private function validatePaymentArray(array $data): array
@@ -163,8 +159,6 @@ trait HandlesPayments
     /**
      * Validate payment data from Request
      *
-     * @param Request $request
-     * @return array
      * @throws ValidationException
      */
     private function validatePaymentRequest(Request $request): array
@@ -176,8 +170,6 @@ trait HandlesPayments
 
     /**
      * Get payment validation rules
-     *
-     * @return array
      */
     private function getPaymentValidationRules(): array
     {
@@ -193,8 +185,6 @@ trait HandlesPayments
 
     /**
      * Get payment validation messages
-     *
-     * @return array
      */
     private function getPaymentValidationMessages(): array
     {
@@ -213,8 +203,6 @@ trait HandlesPayments
 
     /**
      * Get default payment values
-     *
-     * @return array
      */
     private function getPaymentDefaults(): array
     {

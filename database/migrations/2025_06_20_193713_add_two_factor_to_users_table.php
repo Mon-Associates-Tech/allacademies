@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('two_factor_code', 6)->nullable();
-            $table->timestamp('two_factor_expires_at')->nullable();
+            if (!Schema::hasColumn('users', 'two_factor_code')) {
+                $table->string('two_factor_code', 6)->nullable();
+            }
+            if (!Schema::hasColumn('users', 'two_factor_expires_at')) {
+                $table->timestamp('two_factor_expires_at')->nullable();
+            }
         });
     }
 

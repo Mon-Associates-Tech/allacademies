@@ -72,7 +72,7 @@ class AssessmentResponse extends Model
         $questions = $this->getQuestionsData();
 
         foreach ($questions as $question) {
-            if ($question['type'] === 'essay_question' && !($question['is_graded'] ?? false)) {
+            if ($question['type'] === 'essay_question' && ! ($question['is_graded'] ?? false)) {
                 return false;
             }
         }
@@ -89,7 +89,7 @@ class AssessmentResponse extends Model
         $essayQuestions = [];
 
         foreach ($questions as $index => $question) {
-            if ($question['type'] === 'essay_question' && !($question['is_graded'] ?? false)) {
+            if ($question['type'] === 'essay_question' && ! ($question['is_graded'] ?? false)) {
                 $essayQuestions[] = array_merge($question, ['index' => $index]);
             }
         }
@@ -100,7 +100,7 @@ class AssessmentResponse extends Model
     /**
      * Update essay question grading
      */
-    public function gradeEssayQuestion(int $questionIndex, float $points, string $feedback = null, $gradedBy = null): void
+    public function gradeEssayQuestion(int $questionIndex, float $points, ?string $feedback = null, $gradedBy = null): void
     {
         $data = $this->data;
 
@@ -148,7 +148,7 @@ class AssessmentResponse extends Model
     public static function createQuestionData(array $questionData): array
     {
         return [
-//            'question_id' => $questionData['question_id'],
+            //            'question_id' => $questionData['question_id'],
             'type' => $questionData['type'], // 'multiple_choice_question', 'true_or_false_question', 'essay_question'
             'question' => $questionData['question'],
             'options' => $questionData['options'] ?? null, // For multiple choice

@@ -9,13 +9,13 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Name</label>
-                <input type="text" wire:model="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                <input type="text" wire:model="name" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Type</label>
-                <select wire:model="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                <select wire:model="type" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
                     <option value="">Select Type</option>
                     <option value="semester">Semester</option>
                     <option value="term">Term</option>
@@ -23,27 +23,27 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                <input type="date" wire:model="startDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                <input type="date" wire:model="startDate" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">End Date</label>
-                <input type="date" wire:model="endDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                <input type="date" wire:model="endDate" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Academic Year</label>
-                <input type="text" wire:model="academicYear" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Academic Year</label>
+                <input type="text" wire:model="academicYear" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Description</label>
-                <textarea wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                <textarea wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"></textarea>
             </div>
 
             <div class="flex items-center">
-                <input type="checkbox" wire:model="isActive" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <input type="checkbox" wire:model="isActive" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 <label class="ml-2 text-sm text-gray-700">Is Active</label>
             </div>
         </div>

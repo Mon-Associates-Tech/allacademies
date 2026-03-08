@@ -8,25 +8,32 @@ use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
-use Illuminate\Support\Str;
 
 class FinancialAidManager extends Component
 {
-    use WithPagination, withFileUploads;
+    use withFileUploads, WithPagination;
 
     public $search = '';
+
     public $isModalOpen = false;
+
     public $manageBeneficiariesMode = false;
 
     // Form Fields
     public $aidId;
+
     public $name;
+
     public $code;
+
     public $amount;
+
     public $description;
+
     public $status = 'active';
 
     // Structure ID
@@ -34,12 +41,16 @@ class FinancialAidManager extends Component
 
     // Options
     public $availableStructures = [];
+
     public $availableStudentGroups = [];
 
     // Beneficiary Management
     public $beneficiaryInput = '';
+
     public $beneficiaryFile; // 4. File property
+
     public $selectedGroupId; // 5. Group selection
+
     public $currentAid;
 
     protected $rules = [
@@ -54,7 +65,7 @@ class FinancialAidManager extends Component
         $schoolId = $this->getSchoolId();
 
         $aids = FinancialAid::where('school_id', $schoolId)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('name', 'like', '%'.$this->search.'%')
                     ->orWhere('code', 'like', '%'.$this->search.'%');
             })
@@ -64,7 +75,7 @@ class FinancialAidManager extends Component
             ->paginate(10);
 
         return view('livewire.financial-aid-manager', [
-            'aids' => $aids
+            'aids' => $aids,
         ]);
     }
 
@@ -100,11 +111,12 @@ class FinancialAidManager extends Component
             ->where('is_active', true)
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($structure) {
+            ->map(function ($structure) {
                 $type = ucwords(str_replace('_', ' ', $structure->payment_type));
+
                 return [
                     'id' => $structure->id,
-                    'label' => "{$structure->name} - {$type} (GHS " . number_format($structure->amount, 2) . ")"
+                    'label' => "{$structure->name} - {$type} (GHS ".number_format($structure->amount, 2).')',
                 ];
             });
     }
@@ -113,20 +125,22 @@ class FinancialAidManager extends Component
     {
         $schoolId = $this->getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             session()->flash('error', 'School context not found.');
+
             return;
         }
 
         $rules = $this->rules;
         // Unique code check within school
-        $rules['code'] = 'nullable|string|unique:financial_aids,code,' . ($this->aidId ?? 'NULL') . ',id,school_id,' . $schoolId;
+        $rules['code'] = 'nullable|string|unique:financial_aids,code,'.($this->aidId ?? 'NULL').',id,school_id,'.$schoolId;
 
         $this->validate($rules);
 
-        $code = $this->code ?: strtoupper('AID-' . Str::random(6));
+        $code = $this->code ?: strtoupper('AID-'.Str::random(6));
+        $isCreating = ! $this->aidId;
 
-        FinancialAid::updateOrCreate(['id' => $this->aidId], [
+        $aid = FinancialAid::updateOrCreate(['id' => $this->aidId], [
             'school_id' => $schoolId,
             'name' => $this->name,
             'code' => $code,
@@ -135,6 +149,23 @@ class FinancialAidManager extends Component
             'status' => $this->status,
             'school_payment_structure_id' => $this->school_payment_structure_id ?: null,
         ]);
+
+        // Log activity
+        if ($isCreating) {
+            $aid->logActivity('create', 'Financial Aid Created', 'financial_aid', [
+                'aid_name' => $this->name,
+                'code' => $code,
+                'amount' => $this->amount,
+                'created_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        } else {
+            $aid->logActivity('update', 'Financial Aid Updated', 'financial_aid', [
+                'aid_name' => $this->name,
+                'code' => $code,
+                'amount' => $this->amount,
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
 
         session()->flash('message', $this->aidId ? 'Financial Aid Updated.' : 'Financial Aid Created.');
         $this->closeModal();
@@ -156,11 +187,11 @@ class FinancialAidManager extends Component
 
             $student = Student::where('school_id', $schoolId)->where('student_id', $id)->first();
 
-            if (!$student) {
+            if (! $student) {
                 $user = User::where('email', $id)
-                    ->where(function($q) use ($schoolId) {
+                    ->where(function ($q) use ($schoolId) {
                         $q->where('school_id', $schoolId)
-                            ->orWhereHas('student', fn($sq) => $sq->where('school_id', $schoolId));
+                            ->orWhereHas('student', fn ($sq) => $sq->where('school_id', $schoolId));
                     })->first();
 
                 if ($user) {
@@ -169,7 +200,7 @@ class FinancialAidManager extends Component
             }
 
             if ($student) {
-                if (!$this->currentAid->beneficiaries()->where('student_id', $student->id)->exists()) {
+                if (! $this->currentAid->beneficiaries()->where('student_id', $student->id)->exists()) {
                     $this->currentAid->beneficiaries()->attach($student->id);
                     $foundCount++;
                 }
@@ -180,7 +211,7 @@ class FinancialAidManager extends Component
 
         $this->beneficiaryInput = '';
         $this->currentAid->refresh();
-        session()->flash('message', "Added $foundCount students." . (count($notFound) ? " Not found: " . implode(', ', $notFound) : ""));
+        session()->flash('message', "Added $foundCount students.".(count($notFound) ? ' Not found: '.implode(', ', $notFound) : ''));
     }
 
     public function removeBeneficiary($studentId)
@@ -191,9 +222,14 @@ class FinancialAidManager extends Component
         }
     }
 
-    public function openModal() { $this->isModalOpen = true; $this->manageBeneficiariesMode = false; }
+    public function openModal()
+    {
+        $this->isModalOpen = true;
+        $this->manageBeneficiariesMode = false;
+    }
 
-    public function closeModal() {
+    public function closeModal()
+    {
         $this->isModalOpen = false;
         $this->manageBeneficiariesMode = false;
         $this->resetInputFields();
@@ -223,7 +259,7 @@ class FinancialAidManager extends Component
 
         // Adjust query based on your actual StudentGroup schema.
         // If StudentGroup doesn't have school_id, you might need to filter by teachers in the school.
-        $this->availableStudentGroups = StudentGroup::whereHas('students', function($q) use ($schoolId) {
+        $this->availableStudentGroups = StudentGroup::whereHas('students', function ($q) use ($schoolId) {
             $q->where('school_id', $schoolId);
         })->get();
     }
@@ -242,13 +278,15 @@ class FinancialAidManager extends Component
 
         $group = StudentGroup::with('students')->find($this->selectedGroupId);
 
-        if (!$group) return;
+        if (! $group) {
+            return;
+        }
 
         $count = 0;
         foreach ($group->students as $student) {
             // Ensure student belongs to current school context
             if ($student->school_id == $this->getSchoolId()) {
-                if (!$this->currentAid->beneficiaries()->where('student_id', $student->id)->exists()) {
+                if (! $this->currentAid->beneficiaries()->where('student_id', $student->id)->exists()) {
                     $this->currentAid->beneficiaries()->attach($student->id);
                     $count++;
                 }
@@ -280,7 +318,7 @@ class FinancialAidManager extends Component
         }
 
         // Filter out potential headers if "email" or "id" is in the first row
-        $identifiers = array_filter($identifiers, function($value) {
+        $identifiers = array_filter($identifiers, function ($value) {
             return strtolower($value) !== 'email' && strtolower($value) !== 'student_id' && strtolower($value) !== 'id';
         });
 
@@ -297,7 +335,9 @@ class FinancialAidManager extends Component
 
         foreach ($identifiers as $id) {
             $id = trim($id);
-            if (empty($id)) continue;
+            if (empty($id)) {
+                continue;
+            }
 
             // 1. Try finding by School-Specific Student ID
             $student = Student::where('school_id', $schoolId)
@@ -305,11 +345,11 @@ class FinancialAidManager extends Component
                 ->first();
 
             // 2. If not found, try by User Email
-            if (!$student) {
+            if (! $student) {
                 $user = User::where('email', $id)
-                    ->where(function($q) use ($schoolId) {
+                    ->where(function ($q) use ($schoolId) {
                         $q->where('school_id', $schoolId)
-                            ->orWhereHas('student', fn($sq) => $sq->where('school_id', $schoolId));
+                            ->orWhereHas('student', fn ($sq) => $sq->where('school_id', $schoolId));
                     })->first();
 
                 if ($user) {
@@ -325,7 +365,7 @@ class FinancialAidManager extends Component
                     ->where('financial_aid_student.student_id', $student->id) // Refers to FK in pivot
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     $this->currentAid->beneficiaries()->attach($student->id);
                     $foundCount++;
                 }
@@ -340,13 +380,14 @@ class FinancialAidManager extends Component
         if (count($notFound) > 0) {
             $limit = 5;
             $missingStr = implode(', ', array_slice($notFound, 0, $limit));
-            if (count($notFound) > $limit) $missingStr .= '...';
+            if (count($notFound) > $limit) {
+                $missingStr .= '...';
+            }
             $msg .= " Could not find: $missingStr";
         }
 
         session()->flash('message', $msg);
     }
-
 
     private function resetInputFields()
     {
@@ -366,10 +407,13 @@ class FinancialAidManager extends Component
     protected function getSchoolId(): ?int
     {
         $user = Auth::user();
-        if (!$user) return null;
+        if (! $user) {
+            return null;
+        }
         if ($user->canAccessCrossSchool()) {
             return session('current_school_id') ?? (app()->bound('current_school') ? app('current_school')->id : null);
         }
+
         return $user->school_id;
     }
 }

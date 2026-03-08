@@ -49,6 +49,13 @@ import '../css/videoplayer.css'
 
 
 import './ChartDataHelper';
+// Charts helpers (reusable components support)
+// Important: use dynamic imports so these execute AFTER window.Chart is attached
+Promise.resolve()
+  .then(() => import('./charts/helpers'))
+  .then(() => import('./charts/gauge'))
+  .catch((e) => console.warn('Chart helpers load error:', e));
+import './calendar';
 // Configure axios
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 

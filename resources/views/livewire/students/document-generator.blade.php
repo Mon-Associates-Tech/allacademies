@@ -171,7 +171,7 @@
                                             Academic Year *
                                         </label>
                                         <select wire:model.live="selectedAcademicYearId"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="">Select Academic Year</option>
                                             @foreach($academicYears as $year)
                                                 <option value="{{ $year->id }}">{{ $year->name }}</option>
@@ -185,7 +185,7 @@
                                             Term/Semester *
                                         </label>
                                         <select wire:model.live="selectedTerm"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="Term 1">Term 1</option>
                                             <option value="Term 2">Term 2</option>
                                             <option value="Term 3">Term 3</option>
@@ -202,9 +202,9 @@
                                         <thead class="bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Subject</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Assessments (10%)</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quizzes (30%)</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Final (60%)</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Assignments (40%)</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quizzes (10%)</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Final Exam (50%)</th>
                                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
                                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Grade</th>
                                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Remarks</th>
@@ -217,21 +217,24 @@
                                                     {{ $grade['subject_name'] }}
                                                 </td>
                                                 <td class="px-4 py-3">
-                                                    <input type="number" wire:model.blur="grades.{{ $subjectId }}.assessments_score"
-                                                           class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                           min="0" max="10" step="0.5">
+                                                    <div class="flex items-center space-x-2">
+                                                        <input type="number" wire:model.blur="grades.{{ $subjectId }}.assessments_score"
+                                                               class="w-24 rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                               min="0" max="40" step="0.1" placeholder="0–40">
+                                                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">auto</span>
+                                                    </div>
                                                     @error("grades.{$subjectId}.assessments_score") <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <input type="number" wire:model.blur="grades.{{ $subjectId }}.quizzes_score"
-                                                           class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                           min="0" max="30" step="0.5">
+                                                           class="w-24 rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                           min="0" max="10" step="0.1" placeholder="0–10">
                                                     @error("grades.{$subjectId}.quizzes_score") <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <input type="number" wire:model.blur="grades.{{ $subjectId }}.final_exam_score"
-                                                           class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                           min="0" max="60" step="0.5">
+                                                           class="w-24 rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                           min="0" max="50" step="0.1" placeholder="0–50">
                                                     @error("grades.{$subjectId}.final_exam_score") <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                                                 </td>
                                                 <td class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
@@ -242,7 +245,7 @@
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <input type="text" wire:model="grades.{{ $subjectId }}.remarks"
-                                                           class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                           class="w-32 rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                                            placeholder="Remarks">
                                                 </td>
                                             </tr>
@@ -305,7 +308,7 @@
                                             Card Validity (Months)
                                         </label>
                                         <select wire:model="cardExpiryMonths"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="12">12 Months (1 Year)</option>
                                             <option value="24">24 Months (2 Years)</option>
                                             <option value="36">36 Months (3 Years)</option>
@@ -366,7 +369,7 @@
                                             Card Type
                                         </label>
                                         <select wire:model="libraryCardType"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="student">Student</option>
                                             <option value="premium">Premium</option>
                                         </select>
@@ -377,7 +380,7 @@
                                             Card Validity (Months)
                                         </label>
                                         <select wire:model="libraryCardExpiryMonths"
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="12">12 Months (1 Year)</option>
                                             <option value="24">24 Months (2 Years)</option>
                                             <option value="36">36 Months (3 Years)</option>
@@ -432,7 +435,7 @@
                                         Academic Year
                                     </label>
                                     <select wire:model.live="selectedAcademicYearId"
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         <option value="">Select Academic Year</option>
                                         @foreach($academicYears as $year)
                                             <option value="{{ $year->id }}">{{ $year->name }}</option>

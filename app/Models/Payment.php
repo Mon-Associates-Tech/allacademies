@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\PaymentStatus;
+use App\Traits\ActivityLoggable;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
     use Trackable;
 
@@ -40,11 +42,11 @@ class Payment extends Model
         return $this->belongsTo(Subscription::class);
     }
 
-
     public function bookSubscription()
     {
         return $this->belongsTo(BookSubscription::class);
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -58,6 +60,7 @@ class Payment extends Model
         if (is_array($this->notes) && isset($this->notes['revenue_split'])) {
             return $this->notes['revenue_split'];
         }
+
         return null;
     }
 

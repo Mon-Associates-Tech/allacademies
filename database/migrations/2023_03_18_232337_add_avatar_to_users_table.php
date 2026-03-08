@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->longText('avatar')->nullable();
+            if (!Schema::hasColumn('users', 'avatar')) {
+                $table->longText('avatar')->nullable();
+            }
         });
     }
 

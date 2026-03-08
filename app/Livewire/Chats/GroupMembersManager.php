@@ -9,9 +9,13 @@ use Livewire\Component;
 class GroupMembersManager extends Component
 {
     public ChatGroup $chatGroup;
+
     public $members = [];
+
     public $userSearch = '';
+
     public $searchResults = [];
+
     public $showAddMember = false;
 
     protected $chatService;

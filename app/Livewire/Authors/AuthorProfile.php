@@ -16,12 +16,19 @@ class AuthorProfile extends Component
 
     // Profile form properties
     public $name;
+
     public $email;
+
     public $phone;
+
     public $biography;
+
     public $avatar;
+
     public $website;
+
     public $pen_name;
+
     public $social_links = [
         'twitter' => '',
         'facebook' => '',
@@ -32,26 +39,38 @@ class AuthorProfile extends Component
 
     // Author-specific fields
     public $genres = [];
+
     public $writing_experience;
+
     public $education;
+
     public $awards;
+
     public $author_statement;
 
     // Password form properties
     public $current_password;
+
     public $new_password;
+
     public $new_password_confirmation;
 
     // Modal states
     public $showPasswordModal = false;
+
     public $showPreferencesModal = false;
 
     // Statistics
     public $totalBooks = 0;
+
     public $totalSubscriptions = 0;
+
     public $totalBorrowings = 0;
+
     public $totalRevenue = 0;
+
     public $averageRating = 0;
+
     public $totalReviews = 0;
 
     // Author instance
@@ -86,7 +105,7 @@ class AuthorProfile extends Component
     {
         $this->author = Auth::user()->author;
 
-        if (!$this->author) {
+        if (! $this->author) {
             // Create author profile if it doesn't exist
             $this->author = Author::create([
                 'user_id' => Auth::id(),
@@ -178,7 +197,7 @@ class AuthorProfile extends Component
             // Dispatch success event
             $this->dispatch('profile-updated', [
                 'message' => 'Profile updated successfully!',
-                'type' => 'success'
+                'type' => 'success',
             ]);
 
         } catch (\Exception $e) {
@@ -187,7 +206,7 @@ class AuthorProfile extends Component
             // Dispatch error event
             $this->dispatch('profile-error', [
                 'message' => 'An error occurred while updating your profile.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
     }
@@ -199,8 +218,9 @@ class AuthorProfile extends Component
         $user = Auth::user();
 
         // Check if current password is correct
-        if (!Hash::check($this->current_password, $user->password)) {
+        if (! Hash::check($this->current_password, $user->password)) {
             $this->addError('current_password', 'The current password is incorrect.');
+
             return;
         }
 
@@ -220,7 +240,7 @@ class AuthorProfile extends Component
             // Dispatch success event
             $this->dispatch('password-updated', [
                 'message' => 'Password updated successfully!',
-                'type' => 'success'
+                'type' => 'success',
             ]);
 
         } catch (\Exception $e) {
@@ -229,7 +249,7 @@ class AuthorProfile extends Component
             // Dispatch error event
             $this->dispatch('password-error', [
                 'message' => 'An error occurred while updating your password.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
     }
@@ -266,7 +286,7 @@ class AuthorProfile extends Component
         // Dispatch refresh event
         $this->dispatch('profile-refreshed', [
             'message' => 'Profile refreshed successfully!',
-            'type' => 'success'
+            'type' => 'success',
         ]);
     }
 

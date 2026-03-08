@@ -13,18 +13,26 @@ class SendMessageToStudents extends Component
     use MessageAttachments;
 
     public $subject = '';
+
     public $body = '';
+
     public $isUrgent = false;
+
     public $targetType = 'academic_group';
 
     // Target criteria
     public $selectedAcademicGroups = [];
+
     public $selectedAcademicLevels = [];
+
     public $selectedSubjects = [];
+
     public $selectedStudents = [];
+
     public $selectedStudentGroups = [];
 
     public $userSearch = '';
+
     public $searchedStudents = [];
 
     protected $rules = [
@@ -138,6 +146,7 @@ class SendMessageToStudents extends Component
 
         if ($recipients->isEmpty()) {
             session()->flash('error', 'No recipients found for the selected criteria.');
+
             return;
         }
 

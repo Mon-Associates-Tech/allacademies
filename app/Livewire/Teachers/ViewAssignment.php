@@ -4,24 +4,35 @@ namespace App\Livewire\Teachers;
 
 use App\Models\Assignment;
 use App\Models\Teacher;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class ViewAssignment extends Component
 {
     public $assignment;
+
     public $teacher;
+
     public $eligibleStudents = [];
+
     public $studentsWithStatus = [];
+
     public $submissionsCount = 0;
+
     public $completedSubmissions = 0;
+
     public $inProgressSubmissions = 0;
+
     public $notStartedCount = 0;
+
     public $questionStatistics = [];
+
     public $previewQuestions = null;
+
     public $showQuestionPreview = false;
+
     public $showStudentDetails = false;
+
     public $selectedFilter = 'all'; // all, completed, in_progress, not_started
 
     public function mount(Assignment $assignment)
@@ -36,7 +47,7 @@ class ViewAssignment extends Component
             'studentGroups',
             'topics',
             'subtopics',
-            'submissions.student.user'
+            'submissions.student.user',
         ]);
         // Ensure the assignment belongs to the current teacher
         if ($this->assignment->teacher_id !== $this->teacher->id) {
@@ -67,7 +78,7 @@ class ViewAssignment extends Component
         $this->questionStatistics = $this->assignment->getQuestionStatistics();
 
         // Get preview questions if not randomized
-        if (!$this->assignment->is_randomized) {
+        if (! $this->assignment->is_randomized) {
             $this->previewQuestions = $this->assignment->getPreviewQuestions();
         }
     }
@@ -151,22 +162,33 @@ class ViewAssignment extends Component
 
     public function toggleQuestionPreview()
     {
-        $this->showQuestionPreview = !$this->showQuestionPreview;
+        $this->showQuestionPreview = ! $this->showQuestionPreview;
     }
 
     public function toggleStudentDetails()
     {
-        $this->showStudentDetails = !$this->showStudentDetails;
+        $this->showStudentDetails = ! $this->showStudentDetails;
     }
 
     public function deleteAssignment()
     {
         if ($this->assignment->teacher_id !== $this->teacher->id) {
             session()->flash('error', 'You are not authorized to delete this assignment.');
+
             return;
         }
 
+        $assignmentTitle = $this->assignment->title;
+        $assignmentId = $this->assignment->id;
         $this->assignment->delete();
+
+        // Log activity
+        Assignment::logActivityForModel('delete', 'Assignment Deleted', 'assignment', [
+            'assignment_title' => $assignmentTitle,
+            'assignment_id' => $assignmentId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
+
         session()->flash('success', 'Assignment deleted successfully.');
 
         return redirect()->route('teachers.dashboard');
@@ -175,7 +197,7 @@ class ViewAssignment extends Component
     public function duplicateAssignment()
     {
         $newAssignment = $this->assignment->replicate();
-        $newAssignment->title = $this->assignment->title . ' (Copy)';
+        $newAssignment->title = $this->assignment->title.' (Copy)';
         $newAssignment->status = 'draft';
         $newAssignment->created_at = now();
         $newAssignment->updated_at = now();

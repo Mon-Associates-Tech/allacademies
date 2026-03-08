@@ -107,17 +107,17 @@
                                                                                 <div class="border-b border-gray-200 mb-4">
                                                                                     <nav class="flex -mb-px">
                                                                                         <button
-                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'mcq' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'mcq' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                                                             wire:click="setTab('mcq')">
                                                                                             Multiple Choice
                                                                                         </button>
                                                                                         <button
-                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'true_false' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'true_false' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                                                             wire:click="setTab('true_false')">
                                                                                             True/False
                                                                                         </button>
                                                                                         <button
-                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'essay' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'essay' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                                                             wire:click="setTab('essay')">
                                                                                             Essay
                                                                                         </button>
@@ -198,17 +198,17 @@
                                                                                                 <div class="border-b border-gray-200 mb-4">
                                                                                                     <nav class="flex -mb-px">
                                                                                                         <button
-                                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'mcq' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'mcq' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                                                                             wire:click="setTab('mcq')">
                                                                                                             Multiple Choice
                                                                                                         </button>
                                                                                                         <button
-                                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'true_false' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'true_false' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                                                                             wire:click="setTab('true_false')">
                                                                                                             True/False
                                                                                                         </button>
                                                                                                         <button
-                                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'essay' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
+                                                                                                            class="py-2 px-4 text-center border-b-2 font-medium text-sm {{ $activeTab === 'essay' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}"
                                                                                                             wire:click="setTab('essay')">
                                                                                                             Essay
                                                                                                         </button>

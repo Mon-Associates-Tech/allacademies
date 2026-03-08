@@ -19,7 +19,7 @@ class TeamApprovedNotification extends Notification implements ShouldQueue
      */
     public function __construct(
         private Team $team
-    ) { }
+    ) {}
 
     /**
      * Get the notification's delivery channels.

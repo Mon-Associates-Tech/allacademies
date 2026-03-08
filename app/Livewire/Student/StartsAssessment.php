@@ -13,7 +13,7 @@ trait StartsAssessment
 
     public function initializeAssessmentService(): void
     {
-        if (!isset($this->assessmentService)) {
+        if (! isset($this->assessmentService)) {
             $this->assessmentService = app(AssessmentConfigurationService::class);
         }
     }
@@ -27,8 +27,9 @@ trait StartsAssessment
 
         try {
             // Validate assignment eligibility
-            if (!$this->canStartAssignment($assignment)) {
+            if (! $this->canStartAssignment($assignment)) {
                 session()->flash('error', 'You are not eligible to start this assignment or it is not available.');
+
                 return;
             }
 
@@ -47,7 +48,7 @@ trait StartsAssessment
             Log::error('Failed to start assessment from assignment', [
                 'assignment_id' => $assignment->id,
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to start assessment. Please try again.');
@@ -77,7 +78,7 @@ trait StartsAssessment
             Log::error('Failed to start self-assessment', [
                 'config' => $config,
                 'error' => $e->getMessage(),
-                'student_id' => auth()->user()->student->id
+                'student_id' => auth()->user()->student->id,
             ]);
 
             session()->flash('error', 'Failed to start assessment. Please try again.');
@@ -115,7 +116,7 @@ trait StartsAssessment
         $this->currentQuestionIndex = 0;
 
         // Set time limit if specified
-        if (!empty($config['time_limit_minutes'])) {
+        if (! empty($config['time_limit_minutes'])) {
             $this->timeLimitSeconds = $config['time_limit_minutes'] * 60;
             $this->timeRemaining = $this->timeLimitSeconds;
         }
@@ -171,7 +172,7 @@ trait StartsAssessment
 
         // Check if a student is eligible
         $eligibleStudents = $assignment->getEligibleStudents();
-        if (!$eligibleStudents->contains('id', $student->id)) {
+        if (! $eligibleStudents->contains('id', $student->id)) {
             return false;
         }
 
@@ -180,7 +181,7 @@ trait StartsAssessment
             ->where('student_id', $student->id)
             ->exists();
 
-        return !$existingSubmission;
+        return ! $existingSubmission;
     }
 
     /**
@@ -209,8 +210,9 @@ trait StartsAssessment
 
     public function submitAssessment(): void
     {
-        if (!$this->assessment) {
+        if (! $this->assessment) {
             session()->flash('error', 'No active assessment found.');
+
             return;
         }
 
@@ -223,7 +225,7 @@ trait StartsAssessment
 
             // Create assessment response
             $assessmentResponse = $this->assessment->assessmentResponse()->create([
-                'data' => $processedData
+                'data' => $processedData,
             ]);
 
             // Update assessment status
@@ -259,7 +261,7 @@ trait StartsAssessment
                 'assessment_id' => $this->assessment->id,
                 'student_id' => auth()->user()->student->id,
                 'error' => $e->getMessage(),
-                'responses' => $this->responses
+                'responses' => $this->responses,
             ]);
 
             session()->flash('error', 'Failed to submit assessment. Please try again.');
@@ -284,7 +286,7 @@ trait StartsAssessment
             $correctAnswer = $this->getCorrectAnswer($questionModel, $questionType);
 
             // Check if question was answered
-            $isAnswered = !empty($userAnswer);
+            $isAnswered = ! empty($userAnswer);
             if ($isAnswered) {
                 $answeredQuestions++;
             }
@@ -368,7 +370,7 @@ trait StartsAssessment
             case 'multiple_choice_question':
             case 'true_or_false_question':
                 return $questionModel->answer ?? null;
-            // Essays don't have a single correct answer
+                // Essays don't have a single correct answer
             default:
                 return null;
         }
@@ -376,7 +378,7 @@ trait StartsAssessment
 
     private function isAnswerCorrect(string $questionType, ?string $userAnswer, ?string $correctAnswer): bool
     {
-        if (!$userAnswer || !$correctAnswer) {
+        if (! $userAnswer || ! $correctAnswer) {
             return false;
         }
 
@@ -390,10 +392,11 @@ trait StartsAssessment
             if (is_array($question)) {
                 return $question['down'] ?? $question['up'] ?? '';
             }
+
             return $question?->down ?? $question?->up ?? '';
         }
 
-        return $questionModel->question?->down ??  '';
+        return $questionModel->question?->down ?? '';
     }
 
     private function getQuestionOptions($questionModel, string $questionType): array
@@ -420,7 +423,7 @@ trait StartsAssessment
                     $options[] = [
                         'label' => strtoupper($letter),
                         'value' => $text,
-                        'is_correct' => strtolower($letter) === strtolower($questionModel->answer ?? '')
+                        'is_correct' => strtolower($letter) === strtolower($questionModel->answer ?? ''),
                     ];
                 }
             }

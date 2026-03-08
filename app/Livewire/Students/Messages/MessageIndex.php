@@ -8,6 +8,7 @@ use Livewire\Component;
 class MessageIndex extends Component
 {
     public $search = '';
+
     public $perPage = 10;
 
     protected $queryString = ['search'];
@@ -20,15 +21,15 @@ class MessageIndex extends Component
             })
             ->when($this->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('subject', 'like', '%' . $search . '%')
-                      ->orWhere('body', 'like', '%' . $search . '%');
+                    $q->where('subject', 'like', '%'.$search.'%')
+                        ->orWhere('body', 'like', '%'.$search.'%');
                 });
             })
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 
         return view('livewire.students.messages.index', [
-            'messages' => $messages
+            'messages' => $messages,
         ]);
     }
 }

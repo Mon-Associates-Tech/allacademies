@@ -3,12 +3,9 @@
 namespace App\Livewire\Assessment;
 
 use App\Models\Assessment;
-use App\Models\AssessmentResponse;
-use Illuminate\Support\Collection;
 
 class AssessmentGradingService
 {
-
     /**
      * Grade an entire assessment.
      */
@@ -28,7 +25,7 @@ class AssessmentGradingService
             $gradedResult = [
                 'is_correct' => false,
                 'score_earned' => 0,
-                'feedback' => 'Not answered'
+                'feedback' => 'Not answered',
             ];
 
             if ($responseValue !== null) {
@@ -54,7 +51,7 @@ class AssessmentGradingService
                 [
                     'question_id' => $question['id'],
                     'question_text' => $question['question'],
-                    'response' => $responseValue
+                    'response' => $responseValue,
                 ]
             );
         }
@@ -65,7 +62,7 @@ class AssessmentGradingService
             'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0,
             'graded_responses' => $gradedResponses,
             'needs_manual_grading' => $needsManualGrading,
-            'status' => $needsManualGrading ? 'pending_manual_grading' : 'graded'
+            'status' => $needsManualGrading ? 'pending_manual_grading' : 'graded',
         ];
     }
 
@@ -85,7 +82,7 @@ class AssessmentGradingService
      */
     public function gradeTrueFalse($question, $response)
     {
-        $isCorrect = (bool)$response === (bool)$question['correct_answer'];
+        $isCorrect = (bool) $response === (bool) $question['correct_answer'];
 
         return $isCorrect ? $question['points'] : 0;
     }
@@ -101,7 +98,7 @@ class AssessmentGradingService
             'needs_grading' => true,
             'response_length' => strlen($response),
             'word_count' => str_word_count($response),
-            'feedback' => 'Essay submitted for manual grading'
+            'feedback' => 'Essay submitted for manual grading',
         ];
     }
 
@@ -117,7 +114,7 @@ class AssessmentGradingService
             'is_correct' => $totalScore >= ($maxScore * 0.7), // 70% threshold
             'score_earned' => min($totalScore, $maxScore),
             'rubric_scores' => $rubricScores,
-            'feedback' => $this->generateEssayFeedback($rubricScores)
+            'feedback' => $this->generateEssayFeedback($rubricScores),
         ];
     }
 
@@ -129,7 +126,7 @@ class AssessmentGradingService
             'content' => 'Content and Knowledge',
             'organization' => 'Organization and Structure',
             'language' => 'Language and Grammar',
-            'analysis' => 'Critical Analysis'
+            'analysis' => 'Critical Analysis',
         ];
 
         foreach ($rubricScores as $criterion => $score) {
@@ -139,6 +136,4 @@ class AssessmentGradingService
 
         return $feedback;
     }
-
-
 }

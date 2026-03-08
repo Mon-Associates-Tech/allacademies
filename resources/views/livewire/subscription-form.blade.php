@@ -53,7 +53,8 @@
                 </div>
                 <div class="ml-3 flex-1 md:flex  md:justify-between">
                     <p class="text-sm text-blue-700">This subscription will apply to
-                        <strong>{{ $this->currentTeam->name }}</strong>. You can change the team if this not your intended
+                        <strong>{{ $this->currentTeam->name }}</strong>. You can change the team if this not your
+                        intended
                         team.</p>
                     <p class="my-auto text-sm md:ml-6">
                         <a href="{{ route('teams.index') }}"
@@ -67,17 +68,20 @@
         </div>
 
         <div class="p-8">
-            @if(auth()->user()->role === \App\Enums\UserRole::SUBSCRIBER)
+            @if(auth()->user()->role === \App\Enums\UserRole::GUEST)
                 <div class="rounded-md bg-amber-50 p-4 mb-6 mx-auto">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clip-rule="evenodd"/>
                             </svg>
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-amber-800">
-                                As a subscriber, you have access to select academic groups only. Contact support if you need access to additional groups.
+                                As a guest, you have access to select academic groups only. Contact support if you need
+                                access to additional groups.
                             </p>
                         </div>
                     </div>
@@ -226,7 +230,7 @@
                                                                wire:model.live="academicSubjects"
                                                                name="academic_subject_ids[]"
                                                                type="checkbox"
-                                                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 focus:ring-offset-0">
+                                                               class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-500 focus:ring-blue-600 focus:ring-offset-0">
                                                         <div class="ml-3 flex-1 min-w-0">
                                                             <div
                                                                 class="text-sm font-medium text-gray-700 group-hover:text-blue-700 transition-colors">
@@ -258,7 +262,7 @@
 
                     <!-- Amount Input (Hidden but keeping for form submission) -->
                     <input type="hidden" value="{{ $this->amount }}" name="amount"/>
-                    <input type="hidden" name="academic_group_tag" value="{{ $academicGroupTag }}" />
+                    <input type="hidden" name="academic_group_tag" value="{{ $academicGroupTag }}"/>
                 </div>
 
                 <!-- Right Column - Selected Subjects Summary -->
@@ -412,29 +416,33 @@
 
                     <!-- Submit Button -->
                     <div class="flex items-center gap-3">
-    <button
-    type="submit"
-    wire:loading.attr="disabled"
-    wire:target="createSubscription"
-    @disabled($this->subjects_count == 0)
-    class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+                        <button
+                            type="submit"
+                            wire:loading.attr="disabled"
+                            wire:target="createSubscription"
+                            @disabled($this->subjects_count == 0)
+                            class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
         {{ $this->subjects_count == 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-violet-600 hover:bg-violet-700 text-white' }}">
-    
-    {{-- Icon + Text --}}
-    @if($this->subjects_count == 0)
-        {{-- Disabled State --}}
-        <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        <span>Select Subjects First</span>
-    @else
-        {{-- Enabled State --}}
-        <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <span>Create Subscription</span>
-    @endif
-</button>
+
+                            {{-- Icon + Text --}}
+                            @if($this->subjects_count == 0)
+                                {{-- Disabled State --}}
+                                <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 4v16m8-8H4"/>
+                                </svg>
+                                <span>Select Subjects First</span>
+                            @else
+                                {{-- Enabled State --}}
+                                <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span>Create Subscription</span>
+                            @endif
+                        </button>
 
 
                     </div>
@@ -444,11 +452,14 @@
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    <path fill-rule="evenodd"
+                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                          clip-rule="evenodd"/>
                                 </svg>
                             </div>
                             <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800">There were errors with your submission:</h3>
+                                <h3 class="text-sm font-medium text-red-800">There were errors with your
+                                    submission:</h3>
                                 <div class="mt-2 text-sm text-red-700">
                                     <ul class="list-disc pl-5 space-y-1">
                                         @foreach ($errors->all() as $error)

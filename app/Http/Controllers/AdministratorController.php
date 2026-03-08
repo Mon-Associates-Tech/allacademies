@@ -72,7 +72,7 @@ class AdministratorController extends Controller
         $studentGroup = StudentGroup::findOrFail($validated['student_group_id']);
         $this->authorize('groupSubscribe', $book);
 
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             return response()->json(['message' => 'This book does not have a softcopy available for subscription'], 422);
         }
 

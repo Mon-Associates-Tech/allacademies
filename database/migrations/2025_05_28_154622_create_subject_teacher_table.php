@@ -19,8 +19,8 @@ return new class extends Migration
 
             $table->unique(['teacher_id', 'subject_id']);
 
-             $table->boolean('is_primary')->default(false);
-             $table->text('notes')->nullable();
+            $table->boolean('is_primary')->default(false);
+            $table->text('notes')->nullable();
         });
     }
 

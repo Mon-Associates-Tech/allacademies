@@ -26,13 +26,12 @@ class ContactFormMail extends Mailable
             replyTo: [
                 new Address(
                     $this->contactData['email'],
-                    $this->contactData['first_name'] . ' ' . $this->contactData['last_name']
-                )
+                    $this->contactData['first_name'].' '.$this->contactData['last_name']
+                ),
             ],
-            subject: 'New Contact Form Submission - ' . $this->contactData['subject']
+            subject: 'New Contact Form Submission - '.$this->contactData['subject']
         );
     }
-
 
     public function content(): Content
     {

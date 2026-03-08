@@ -2,15 +2,16 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Illuminate\Notifications\DatabaseNotification;
 use App\Models\AssignmentNotification;
-use Illuminate\Support\Collection;
+use Illuminate\Notifications\DatabaseNotification;
+use Livewire\Component;
 
 class NotificationsDropdown extends Component
 {
     public $align = 'right';
+
     public $notifications;
+
     public $unreadCount = 0;
 
     public function mount($align = 'right')
@@ -134,7 +135,7 @@ class NotificationsDropdown extends Component
 
         switch ($notification->type) {
             case 'App\Notifications\NewAssignmentNotification':
-                return $data['message'] ?? "New assignment has been created.";
+                return $data['message'] ?? 'New assignment has been created.';
             default:
                 return $data['message'] ?? 'You have a new notification.';
         }
@@ -145,6 +146,7 @@ class NotificationsDropdown extends Component
         if ($notification->assignment) {
             return "New {$notification->assignment->type}: {$notification->assignment->title}";
         }
+
         return 'Assignment Notification';
     }
 
@@ -158,6 +160,7 @@ class NotificationsDropdown extends Component
                 if (str_contains($type, 'assignment')) {
                     return '📚';
                 }
+
                 return '📣';
             default:
                 return '📣';
@@ -168,6 +171,7 @@ class NotificationsDropdown extends Component
     {
         // Mark as read and redirect to detailed view
         $this->markAsRead($notificationId, $type);
+
         return redirect()->route('notifications.show', ['type' => $type, 'id' => $notificationId]);
     }
 

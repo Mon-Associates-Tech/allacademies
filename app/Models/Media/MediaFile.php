@@ -23,11 +23,11 @@ class MediaFile extends Model
         'description',
         'folder_id',
         'uploaded_by',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     public function folder(): BelongsTo
@@ -47,7 +47,7 @@ class MediaFile extends Model
 
     public function getUrlAttribute(): string
     {
-        return asset('storage/' . $this->file_path);
+        return asset('storage/'.$this->file_path);
     }
 
     public function getHumanSizeAttribute(): string
@@ -59,7 +59,7 @@ class MediaFile extends Model
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function isImage(): bool
@@ -79,7 +79,7 @@ class MediaFile extends Model
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
 }

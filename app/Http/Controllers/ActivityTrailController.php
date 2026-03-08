@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityTrailController extends Controller
@@ -32,11 +31,11 @@ class ActivityTrailController extends Controller
         ]);
 
         $query = Activity::with(['causer', 'subject'])
-            ->when($request->user_id, fn($q) => $q->where('causer_id', $request->user_id))
-            ->when($request->question_type, fn($q) => $q->whereJsonContains('properties->question_type', $request->question_type))
-            ->when($request->action, fn($q) => $q->where('description', $request->action))
-            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->user_id, fn ($q) => $q->where('causer_id', $request->user_id))
+            ->when($request->question_type, fn ($q) => $q->whereJsonContains('properties->question_type', $request->question_type))
+            ->when($request->action, fn ($q) => $q->where('description', $request->action))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->whereIn('description', ['question_created', 'question_updated', 'question_deleted'])
             ->orderBy('created_at', 'desc');
 
@@ -54,7 +53,7 @@ class ActivityTrailController extends Controller
             'Score',
             'Changes',
             'Subject ID',
-            'Subject Type'
+            'Subject Type',
         ];
 
         foreach ($activities as $activity) {
@@ -78,7 +77,7 @@ class ActivityTrailController extends Controller
             ];
         }
 
-        $filename = 'activity-trail-' . Carbon::now()->format('Y-m-d-H-i-s') . '.csv';
+        $filename = 'activity-trail-'.Carbon::now()->format('Y-m-d-H-i-s').'.csv';
         $tempFile = tempnam(sys_get_temp_dir(), $filename);
         $handle = fopen($tempFile, 'w');
 
@@ -91,7 +90,7 @@ class ActivityTrailController extends Controller
         return response()->json([
             'success' => true,
             'download_url' => route('activity-trail.download', ['file' => basename($tempFile)]),
-            'filename' => $filename
+            'filename' => $filename,
         ]);
     }
 
@@ -100,9 +99,9 @@ class ActivityTrailController extends Controller
      */
     public function download(Request $request, string $file)
     {
-        $filePath = sys_get_temp_dir() . '/' . $file;
+        $filePath = sys_get_temp_dir().'/'.$file;
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             abort(404, 'File not found');
         }
 
@@ -175,7 +174,7 @@ class ActivityTrailController extends Controller
         $properties = $activity->properties ?? [];
 
         if (isset($properties['question_type'])) {
-            $formatted['Question Type'] = match($properties['question_type']) {
+            $formatted['Question Type'] = match ($properties['question_type']) {
                 'essay' => 'Essay Question',
                 'multiple_choice' => 'Multiple Choice Question',
                 'true_or_false' => 'True or False Question',

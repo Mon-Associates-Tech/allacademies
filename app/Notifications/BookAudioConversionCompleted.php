@@ -13,6 +13,7 @@ class BookAudioConversionCompleted extends Notification implements ShouldQueue
     use Queueable;
 
     public Book $book;
+
     public int $chaptersCount;
 
     public function __construct(Book $book, int $chaptersCount = 0)
@@ -35,11 +36,11 @@ class BookAudioConversionCompleted extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Audio Conversion Completed - ' . $this->book->title)
-            ->greeting('Hello ' . $notifiable->name . '!')
+            ->subject('Audio Conversion Completed - '.$this->book->title)
+            ->greeting('Hello '.$notifiable->name.'!')
             ->line('Great news! The audio conversion for your book has been completed.')
-            ->line('**Book Title:** ' . $this->book->title)
-            ->line('**Chapters Converted:** ' . $this->chaptersCount)
+            ->line('**Book Title:** '.$this->book->title)
+            ->line('**Chapters Converted:** '.$this->chaptersCount)
             ->action('View Book', route('books.show', $this->book->slug))
             ->line('Your book is now available with audio narration!')
             ->line('Thank you for using our platform!');

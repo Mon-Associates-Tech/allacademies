@@ -138,7 +138,7 @@
                                                            value="{{ $topic['id'] }}"
                                                            {{ $topic['questions_count'] < 1 ? 'disabled' : '' }}
                                                            type="checkbox"
-                                                           class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                                                           class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
                                                            x-model="topicChecked"
                                                            @change="showSubtopics_{{ $sectionIndex }}_{{ $topicIndex }} = $event.target.checked">
                                                 </div>
@@ -191,7 +191,7 @@
                                                                 name="sections[{{ $sectionIndex }}][subtopics][{{ $subtopic['id'] }}][id]"
                                                                 value="{{ $subtopic['id'] }}"
                                                                 type="checkbox"
-                                                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                                                                class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
                                                                 x-model="subtopicChecked_{{ $sectionIndex }}_{{ $topicIndex }}_{{ $subtopic['id'] }}">
                                                             <label
                                                                 class="text-sm font-medium text-gray-800 capitalize cursor-pointer"
@@ -250,7 +250,7 @@
                                        name="sections[{{ $sectionIndex }}][page]"
                                        value="blank-page"
                                        type="checkbox"
-                                       class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
+                                       class="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-500 focus:ring-blue-500 focus:ring-offset-0">
                                 <div class="min-w-0 flex-1">
                                     <label class="text-sm font-medium text-gray-900 cursor-pointer">
                                         Insert Blank Page

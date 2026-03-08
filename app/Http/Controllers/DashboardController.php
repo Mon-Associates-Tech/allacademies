@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $currentTeam = Team::query()->find(auth()->user()->current_team_id);
-        if (!$currentTeam) {
+        if (! $currentTeam) {
             $currentTeam = Team::query()->where('owner_id', auth()->id())->first();
         }
 

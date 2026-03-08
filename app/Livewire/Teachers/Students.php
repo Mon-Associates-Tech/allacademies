@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\Teacher;
 use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,16 +12,24 @@ class Students extends Component
 {
     use WithPagination;
 
-
     public $teacher;
+
     public $search = '';
+
     public $selectedGroup = '';
+
     public $selectedLevel = '';
+
     public $selectedSource = '';
+
     public $perPage = 10;
+
     public $sortBy = 'name';
+
     public $sortDirection = 'asc';
+
     public $showDetails = [];
+
     public $viewMode = 'table'; // 'table' or 'grid'
 
     public function mount()
@@ -32,7 +40,6 @@ class Students extends Component
     public function getStudentsQuery()
     {
 
-
         return $this->teacher?->getStudentsWithDetails();
         $query = collect();
 
@@ -42,6 +49,7 @@ class Students extends Component
             ->get()
             ->map(function ($student) {
                 $student->source = $student->pivot->is_primary ? 'Primary Assignment' : 'Secondary Assignment';
+
                 return $student;
             });
 
@@ -51,12 +59,13 @@ class Students extends Component
             $students = Student::whereHas('academicLevel', function ($q) use ($group) {
                 $q->where('academic_group_id', $group->id);
             })
-            ->with(['user', 'academicLevel', 'academicLevel.academicGroup'])
-            ->get()
-            ->map(function ($student) use ($group) {
-                $student->source = 'Academic Group: ' . $group->name;
-                return $student;
-            });
+                ->with(['user', 'academicLevel', 'academicLevel.academicGroup'])
+                ->get()
+                ->map(function ($student) use ($group) {
+                    $student->source = 'Academic Group: '.$group->name;
+
+                    return $student;
+                });
             $groupStudents = $groupStudents->merge($students);
         }
 
@@ -67,7 +76,8 @@ class Students extends Component
                 ->with(['user', 'academicLevel', 'academicLevel.academicGroup'])
                 ->get()
                 ->map(function ($student) use ($level) {
-                    $student->source = 'Academic Level: ' . $level->name;
+                    $student->source = 'Academic Level: '.$level->name;
+
                     return $student;
                 });
             $levelStudents = $levelStudents->merge($students);
@@ -80,7 +90,8 @@ class Students extends Component
                 ->with(['user', 'academicLevel', 'academicLevel.academicGroup'])
                 ->get()
                 ->map(function ($student) use ($studentGroup) {
-                    $student->source = 'Student Group: ' . $studentGroup->name;
+                    $student->source = 'Student Group: '.$studentGroup->name;
+
                     return $student;
                 });
             $studentGroupStudents = $studentGroupStudents->merge($students);

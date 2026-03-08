@@ -14,14 +14,13 @@ class SchoolContextMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
-     * @param Closure(Request): (Response|RedirectResponse) $next
+     * @param  Closure(Request): (Response|RedirectResponse)  $next
      * @return Response|RedirectResponse
      */
     public function handle(Request $request, Closure $next)
     {
         // Only apply to authenticated users
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -34,6 +33,7 @@ class SchoolContextMiddleware
             // For regular users, ensure their school context is set
             if ($user->school_id) {
                 app()->instance('current_school', $user->school);
+                app()->instance('current_school_id', $user->school_id);
             }
         }
 
@@ -60,7 +60,7 @@ class SchoolContextMiddleware
         }
 
         // Priority 2: Check session for current school
-        if (!$schoolId && session()->has('current_school_id')) {
+        if (! $schoolId && session()->has('current_school_id')) {
             $sessionSchoolId = session('current_school_id');
 
             if ($this->validateSchoolAccess($sessionSchoolId, $user)) {
@@ -72,7 +72,7 @@ class SchoolContextMiddleware
         }
 
         // Priority 3: Default to user's own school for cross-school users
-        if (!$schoolId && $user->school_id) {
+        if (! $schoolId && $user->school_id) {
             $schoolId = $user->school_id;
         }
 
@@ -81,6 +81,7 @@ class SchoolContextMiddleware
             $school = School::find($schoolId);
             if ($school) {
                 app()->instance('current_school', $school);
+                app()->instance('current_school_id', $schoolId);
 
                 // Also make it available as a request attribute
                 $request->attributes->set('current_school', $school);
@@ -93,7 +94,7 @@ class SchoolContextMiddleware
      */
     private function validateSchoolAccess($schoolId, $user): bool
     {
-        if (!$schoolId) {
+        if (! $schoolId) {
             return false;
         }
 

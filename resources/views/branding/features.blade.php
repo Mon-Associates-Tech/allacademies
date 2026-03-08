@@ -250,7 +250,7 @@
                      data-aos="fade-up"
                      data-aos-delay="600"
                      data-aos-duration="1000">
-                    <a href="{{ route('sign-up') }}"
+                    <a href="{{ route('register') }}"
                        class="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-full font-semibold text-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 shadow-2xl animate-float">
                         Start Free Trial
                         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1039,7 +1039,7 @@
                      data-aos="fade-up"
                      data-aos-delay="400"
                      data-aos-duration="1000">
-                    <a href="{{ route('sign-up') }}"
+                    <a href="{{ route('register') }}"
                        class="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-full font-semibold text-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 shadow-2xl">
                         Get Started Free
                         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,43 +1,43 @@
 <?php
 
+use App\Models\School;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use App\Models\School;
 
 return new class extends Migration
 {
     public function up(): void
     {
         // First, create the pivot tables for school assignments
-//        $this->createSchoolAssignmentTables();
+        //        $this->createSchoolAssignmentTables();
 
         // Create a default school if none exists
         $defaultSchool = School::first();
-        if (!$defaultSchool) {
+        if (! $defaultSchool) {
             $defaultSchool = School::create([
                 'name' => 'Default School',
                 'code' => 'DEF001',
                 'email' => 'admin@defaultschool.edu',
                 'status' => 'active',
-                'subscription_plan' => 'standard'
+                'subscription_plan' => 'standard',
             ]);
         } else {
             // Update existing school with required fields
             $defaultSchool->update([
                 'code' => $defaultSchool->code ?? 'SCH001',
-                'status' => 'active'
+                'status' => 'active',
             ]);
         }
 
         $schoolId = $defaultSchool->id;
 
         // Migrate existing academic groups to school assignments
-//        $this->migrateAcademicGroupAssignments($schoolId);
+        //        $this->migrateAcademicGroupAssignments($schoolId);
 
         // Migrate existing academic levels to school assignments
-//        $this->migrateAcademicLevelAssignments($schoolId);
+        //        $this->migrateAcademicLevelAssignments($schoolId);
 
         // Update users table (excluding superadmin and owner roles)
         DB::table('users')
@@ -59,14 +59,14 @@ return new class extends Migration
             ->whereNull('school_id')
             ->update([
                 'school_id' => $schoolId,
-                'status' => 'active'
+                'status' => 'active',
             ]);
     }
 
     private function createSchoolAssignmentTables(): void
     {
         // Create school_academic_groups pivot table
-        if (!Schema::hasTable('school_academic_group')) {
+        if (! Schema::hasTable('school_academic_group')) {
             Schema::create('school_academic_group', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
@@ -81,7 +81,7 @@ return new class extends Migration
         }
 
         // Create school_academic_levels pivot table
-        if (!Schema::hasTable('school_academic_level')) {
+        if (! Schema::hasTable('school_academic_level')) {
             Schema::create('school_academic_level', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
@@ -110,13 +110,13 @@ return new class extends Migration
                 ->where('academic_group_id', $group->id)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('school_academic_group')->insert([
                     'school_id' => $schoolId,
                     'academic_group_id' => $group->id,
                     'is_active' => true,
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
             }
         }
@@ -149,7 +149,7 @@ return new class extends Migration
                     ->where('academic_level_id', $level->id)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('school_academic_levels')->insert([
                         'school_id' => $schoolId,
                         'academic_level_id' => $level->id,
@@ -157,7 +157,7 @@ return new class extends Migration
                         'is_active' => true,
                         'sort_order' => $level->sort_order ?? 0,
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]);
                 }
             }
@@ -175,25 +175,24 @@ return new class extends Migration
     private function updateStudentsWithSchool($schoolId): void
     {
 
-
         // Generate student IDs for existing students
         $students = DB::table('students')->whereNull('student_id')->get();
         foreach ($students as $student) {
             $school = School::find($student->school_id);
             $year = date('Y');
             $sequence = DB::table('students')
-                    ->where('school_id', $student->school_id)
-                    ->where('student_id', 'like', "{$school->code}{$year}%")
-                    ->count() + 1;
+                ->where('school_id', $student->school_id)
+                ->where('student_id', 'like', "{$school->code}{$year}%")
+                ->count() + 1;
 
-            $studentId = $school->code . $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $studentId = $school->code.$year.str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
             DB::table('students')
                 ->where('id', $student->id)
                 ->update([
                     'student_id' => $studentId,
                     'admission_date' => $student->created_at ?? now(),
-                    'status' => 'active'
+                    'status' => 'active',
                 ]);
         }
     }
@@ -205,11 +204,11 @@ return new class extends Migration
         foreach ($teachers as $teacher) {
             $school = School::find($teacher->school_id);
             $sequence = DB::table('teachers')
-                    ->where('school_id', $teacher->school_id)
-                    ->where('employee_id', 'like', "{$school->code}T%")
-                    ->count() + 1;
+                ->where('school_id', $teacher->school_id)
+                ->where('employee_id', 'like', "{$school->code}T%")
+                ->count() + 1;
 
-            $employeeId = $school->code . 'T' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $employeeId = $school->code.'T'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
             DB::table('teachers')
                 ->where('id', $teacher->id)
@@ -217,7 +216,7 @@ return new class extends Migration
                     'employee_id' => $employeeId,
                     'hire_date' => $teacher->created_at ?? now(),
                     'employment_type' => 'full_time',
-                    'status' => 'active'
+                    'status' => 'active',
                 ]);
         }
     }
@@ -229,18 +228,18 @@ return new class extends Migration
         foreach ($librarians as $librarian) {
             $school = School::find($librarian->school_id);
             $sequence = DB::table('librarians')
-                    ->where('school_id', $librarian->school_id)
-                    ->where('employee_id', 'like', "{$school->code}L%")
-                    ->count() + 1;
+                ->where('school_id', $librarian->school_id)
+                ->where('employee_id', 'like', "{$school->code}L%")
+                ->count() + 1;
 
-            $employeeId = $school->code . 'L' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $employeeId = $school->code.'L'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
             DB::table('librarians')
                 ->where('id', $librarian->id)
                 ->update([
                     'employee_id' => $employeeId,
                     'hire_date' => $librarian->created_at ?? now(),
-                    'status' => 'active'
+                    'status' => 'active',
                 ]);
         }
     }

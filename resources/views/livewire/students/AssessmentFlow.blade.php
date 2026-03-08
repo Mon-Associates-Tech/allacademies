@@ -14,7 +14,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
                             <select wire:model.live="selectedSubject"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select a subject</option>
                                 @foreach($subjects as $subject)
                                     <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -26,7 +26,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Topic (Optional)</label>
                             <select wire:model.live="selectedTopic"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 {{ count($topics) === 0 ? 'disabled' : '' }}>
                                 <option value="">All topics</option>
                                 @foreach($topics as $topic)
@@ -41,7 +41,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Subtopic (Optional)</label>
                             <select wire:model.live="selectedSubtopic"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">All subtopics</option>
                                 @foreach($subtopics as $subtopic)
                                     <option value="{{ $subtopic['id'] }}">{{ $subtopic['name'] }}</option>
@@ -57,27 +57,27 @@
                             <div class="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50">
                                 <input wire:model="questionTypes.multiple_choice_question"
                                        type="checkbox"
-                                       class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <div class="ml-3">
-                                    <label class="text-sm font-medium text-gray-700">Multiple Choice</label>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Multiple Choice</label>
                                     <p class="text-xs text-gray-500">Choose from multiple options</p>
                                 </div>
                             </div>
                             <div class="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50">
                                 <input wire:model="questionTypes.true_or_false_question"
                                        type="checkbox"
-                                       class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <div class="ml-3">
-                                    <label class="text-sm font-medium text-gray-700">True/False</label>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">True/False</label>
                                     <p class="text-xs text-gray-500">Binary choice questions</p>
                                 </div>
                             </div>
                             <div class="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50">
                                 <input wire:model="questionTypes.essay_question"
                                        type="checkbox"
-                                       class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <div class="ml-3">
-                                    <label class="text-sm font-medium text-gray-700">Essay</label>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Essay</label>
                                     <p class="text-xs text-gray-500">Written responses</p>
                                 </div>
                             </div>
@@ -92,7 +92,7 @@
                                    type="number"
                                    min="1"
                                    max="50"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('questionCount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -102,14 +102,14 @@
                                    type="number"
                                    min="5"
                                    max="180"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('timeLimitMinutes') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
                             <select wire:model="difficulty"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="all">All Levels</option>
                                 <option value="easy">Easy</option>
                                 <option value="medium">Medium</option>
@@ -214,7 +214,7 @@
                                                        name="question_{{ $currentQuestionIndex }}"
                                                        value="{{ $option }}"
                                                        @if($responses[$currentQuestionIndex]['answer'] === $option) checked @endif
-                                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                                                 <div class="ml-3">
                                                     <span class="font-medium">{{ $option }}.</span> {!! $text !!}
                                                 </div>
@@ -230,7 +230,7 @@
                                                    name="question_{{ $currentQuestionIndex }}"
                                                    value="true"
                                                    @if($responses[$currentQuestionIndex]['answer'] === 'true') checked @endif
-                                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                                   class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                                             <span class="ml-3 font-medium">True</span>
                                         </label>
                                         <label class="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -239,7 +239,7 @@
                                                    name="question_{{ $currentQuestionIndex }}"
                                                    value="false"
                                                    @if($responses[$currentQuestionIndex]['answer'] === 'false') checked @endif
-                                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                                   class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                                             <span class="ml-3 font-medium">False</span>
                                         </label>
                                     </div>
@@ -249,7 +249,7 @@
                                         <textarea wire:model="responses.{{ $currentQuestionIndex }}.answer"
                                                   wire:change="answerQuestion({{ $currentQuestionIndex }}, $event.target.value)"
                                                   rows="8"
-                                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                   placeholder="Type your answer here..."></textarea>
                                     </div>
                                 @endif
@@ -355,17 +355,17 @@
                                 @if($question['type'] !== 'essay_question')
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <span class="text-sm font-medium text-gray-700">Your Answer:</span>
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Your Answer:</span>
                                             <div class="text-sm text-gray-900">{{ $question['student_answer'] ?? 'No answer' }}</div>
                                         </div>
                                         <div>
-                                            <span class="text-sm font-medium text-gray-700">Correct Answer:</span>
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Correct Answer:</span>
                                             <div class="text-sm text-green-600">{{ $question['correct_answer'] }}</div>
                                         </div>
                                     </div>
                                 @else
                                     <div>
-                                        <span class="text-sm font-medium text-gray-700">Your Answer:</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Your Answer:</span>
                                         <div class="text-sm text-gray-900 bg-gray-50 rounded p-3 mt-1">
                                             {{ $question['student_answer'] ?? 'No answer provided' }}
                                         </div>

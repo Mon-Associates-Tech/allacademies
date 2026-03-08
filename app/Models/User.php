@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
-use App\Models\Chat\OpenAiTokenPackage;
 use App\Models\Chat\OpenAiTokenUsageLog;
+use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
 use App\Support\TokenSubscriptionStatus;
+use App\Traits\ActivityLoggable;
 use App\Traits\HasAvatar;
+use App\Traits\HasMultipleSubAccounts;
 use App\Traits\HasRoles;
+use App\Traits\HasSubscriptionCycles;
 use App\Traits\HasTeams;
 use App\Traits\Trackable;
 use Exception;
@@ -18,34 +21,71 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Log;
+use App\Notifications\VerifyEmailNotification;
 
 /**
  * @property mixed $school
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
+    use ActivityLoggable;
     use HasApiTokens;
     use HasAvatar;
     use HasFactory;
+    use HasMultipleSubAccounts;
     use HasRoles;
+    use HasSubscriptionCycles;
     use HasTeams;
     use Impersonate;
     use Notifiable;
     use Trackable;
 
+    private const ROLE_MODEL_MAP = [
+        'student' => Student::class,
+        'teacher' => Teacher::class,
+        'author' => Author::class,
+        'librarian' => Librarian::class,
+        'parent' => StudentParent::class,
+    ];
+
+    private const ROLE_RELATION_MAP = [
+        'student' => 'student',
+        'teacher' => 'teacher',
+        'author' => 'author',
+        'librarian' => 'librarian',
+        'accountant' => 'accountant',
+        'parent' => 'parent',
+    ];
+
+    private const SCHOOL_BOUND_ROLES = [
+        'student',
+        'teacher',
+        'librarian',
+        'accountant',
+        'parent',
+        'author',
+        'admin',
+    ];
+
+    private const IMPERSONATION_PROTECTED_ROLES = [
+        'owner',
+        'admin',
+        'superadmin',
+    ];
+
     protected $fillable = [
-        'school_id', 'name', 'email', 'password', 'role', 'avatar', 'role_id',
+        'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
-        'country_code', 'gender', 'cover_image',
+        'country_code', 'country', 'region', 'city', 'gender', 'cover_image',
+        'preferred_academic_level_id',
     ];
 
     protected $hidden = [
@@ -60,11 +100,21 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_expires_at' => 'datetime',
         'is_active' => 'boolean',
         'role' => UserRole::class,
+        'suspended_at' => 'datetime',
     ];
 
     protected $with = [
-
+        'subscriptionCycles',
     ];
+
+    public static function generateNameFromParts(?string $firstName, ?string $lastName, ?string $otherNames = null): string
+    {
+        $parts = array_filter([$firstName, $otherNames, $lastName]);
+
+        return implode(' ', $parts);
+    }
+
+    // ==================== ACCESSORS ====================
 
     protected static function booted(): void
     {
@@ -81,7 +131,8 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         });
 
-        static::observe(new class {
+        static::observe(new class
+        {
             public function verified(User $user): void
             {
                 $user->createFreeTrialSubscription();
@@ -91,138 +142,153 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function handleRoleChange(): void
     {
-        $roleModels = [
-            'student' => Student::class,
-            'teacher' => Teacher::class,
-            'author' => Author::class,
-            'librarian' => Librarian::class,
-            'parent' => StudentParent::class,
-        ];
-        $role = $this->role instanceof UserRole ? $this->role->value : $this->role;
+        $role = $this->getRoleValue();
 
-        if (isset($roleModels[$role])) {
-            $modelClass = $roleModels[$role];
-            $data = ['user_id' => $this->id];
+        if (! isset(self::ROLE_MODEL_MAP[$role])) {
+            return;
+        }
 
-            // Add school_id for school-specific roles
-            if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
-                $data['school_id'] = $this->school_id;
+        $modelClass = self::ROLE_MODEL_MAP[$role];
+        $data = ['user_id' => $this->id];
 
-                // Generate IDs and set defaults based on role
-                switch ($role) {
-                    case 'teacher':
-                        if (method_exists($modelClass, 'generateEmployeeId')) {
-                            $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
-                        } else {
-                            $data['employee_id'] = 'EMP' . time() . rand(100, 999);
-                        }
-                        $data['hire_date'] = now();
-                        $data['employment_type'] = 'full_time';
-                        $data['status'] = 'active';
-                        break;
+        if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
+            $data['school_id'] = $this->school_id;
+            $data = array_merge($data, $this->getRoleSpecificData($role, $modelClass));
+        }
 
-                    case 'librarian':
-                        if (method_exists($modelClass, 'generateEmployeeId')) {
-                            $data['employee_id'] = $modelClass::generateEmployeeId($this->school_id);
-                        } else {
-                            $data['employee_id'] = 'LIB' . time() . rand(100, 999);
-                        }
-                        $data['hire_date'] = now();
-                        $data['status'] = 'active';
-                        break;
+        $this->ensureRequiredFields($data, $role);
 
-                    case 'student':
-                        if (method_exists($modelClass, 'generateStudentId')) {
-                            $data['student_id'] = $modelClass::generateStudentId($this->school_id);
-                        } else {
-                            $data['student_id'] = 'STU' . time() . rand(100, 999);
-                        }
-                        $data['admission_date'] = now();
-                        $data['status'] = 'active';
-                        break;
-                }
-            }
-
-            // Ensure required fields have values
-            if ($role === 'student' && empty($data['student_id'])) {
-                $data['student_id'] = 'STU' . $this->id . time();
-            }
-
-            if (in_array($role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
-                $data['employee_id'] = strtoupper(substr($role, 0, 3)) . $this->id . time();
-            }
-
-            try {
-                $modelClass::firstOrCreate(['user_id' => $this->id], $data);
-            } catch (Exception $e) {
-                Log::error('Failed to create role model', [
-                    'user_id' => $this->id,
-                    'role' => $role,
-                    'data' => $data,
-                    'error' => $e->getMessage(),
-                ]);
-
-                // Fallback: try without the additional data
-                $modelClass::firstOrCreate(['user_id' => $this->id]);
-            }
+        try {
+            $modelClass::firstOrCreate(['user_id' => $this->id], $data);
+        } catch (Exception $e) {
+            \Log::error('Failed to create role model', [
+                'user_id' => $this->id,
+                'role' => $role,
+                'error' => $e->getMessage(),
+            ]);
+            $modelClass::firstOrCreate(['user_id' => $this->id]);
         }
     }
 
-    /**
-     * Create a free trial subscription for new users
-     */
-    public function createFreeTrialSubscription(bool $force = false): void
+    private function getRoleSpecificData(string $role, string $modelClass): array
     {
+        $data = [];
 
-        // Only check email verification if not forcing creation
-        if (!$force && !$this->hasVerifiedEmail()) {
-            return;
+        switch ($role) {
+            case 'teacher':
+                $data['employee_id'] = method_exists($modelClass, 'generateEmployeeId')
+                    ? $modelClass::generateEmployeeId($this->school_id)
+                    : 'EMP'.time().rand(100, 999);
+                $data['hire_date'] = now();
+                $data['employment_type'] = 'full_time';
+                $data['status'] = 'active';
+                break;
+
+            case 'librarian':
+                $data['employee_id'] = method_exists($modelClass, 'generateEmployeeId')
+                    ? $modelClass::generateEmployeeId($this->school_id)
+                    : 'LIB'.time().rand(100, 999);
+                $data['hire_date'] = now();
+                $data['status'] = 'active';
+                break;
+
+            case 'student':
+                $data['student_id'] = method_exists($modelClass, 'generateStudentId')
+                    ? $modelClass::generateStudentId($this->school_id)
+                    : 'STU'.time().rand(100, 999);
+                $data['admission_date'] = now();
+                $data['status'] = 'active';
+
+                // Activate basic tier for students
+                if ($this->hasVerifiedEmail() && ! $this->hasActiveSubscriptionCycle()) {
+                    $this->activateBasicTier();
+                }
+                break;
         }
 
-        // Check if user has ever had a trial subscription
-        if ($this->hasEverHadTrial()) {
-            return;
-        }
+        return $data;
+    }
 
-        // Check if user already has any subscription
-        if ($this->tokenSubscriptions()->count() > 0) {
-            return;
-        }
-
-        // Get free trial package
-        $freePackage = OpenAiTokenPackage::where('is_free', true)
+    public function activateBasicTier(): void
+    {
+        $basicTier = \App\Models\Chat\PricingTier::where('name', 'Basic')
             ->where('is_active', true)
             ->first();
 
-        if (!$freePackage) {
-            Log::warning('No free trial package available for user', ['user_id' => $this->id]);
+        if (! $basicTier) {
+            Log::warning('Basic tier not found for user', ['user_id' => $this->id]);
 
             return;
         }
 
-        // Create a free trial subscription
-        UserTokenSubscription::create([
+        // Check if user already has an active cycle
+        if ($this->subscriptionCycles()->where('status', 'active')->exists()) {
+            return;
+        }
+
+        // Create trial cycle with tokens allocated immediately (no payment required)
+        \App\Models\Chat\SubscriptionCycle::create([
             'user_id' => $this->id,
-            'package_id' => $freePackage->id,
-            'tokens_purchased' => $freePackage->token_limit,
+            'pricing_tier_id' => $basicTier->id,
+            'cycle_number' => 1,
+            'cycle_start_date' => now(),
+            'cycle_end_date' => now()->addDays(7),
+            'tokens_allocated' => $basicTier->monthly_token_limit / 2,
+            'topup_tokens_allocated' => 0,
             'tokens_used' => 0,
-            'tokens_remaining' => $freePackage->token_limit,
-            'purchased_at' => now(),
-            'activated_at' => now(),
-            'expires_at' => now()->addWeek(), // 7 days trial
-            'status' => TokenSubscriptionStatus::ACTIVE,
-            'action_type' => 'trial',
+            'current_price' => 0,
+            'status' => 'active',
+            'is_topup' => false,
+            'is_trial' => true,
         ]);
     }
 
-    /**
-     * Check if user has ever had a trial subscription
-     */
-    public function hasEverHadTrial(): bool
+    private function ensureRequiredFields(array &$data, string $role): void
     {
-        return $this->tokenSubscriptions()
-            ->where('action_type', 'trial')
-            ->exists();
+        if ($role === 'student' && empty($data['student_id'])) {
+            $data['student_id'] = 'STU'.$this->id.time();
+        }
+
+        if (in_array($role, ['teacher', 'librarian']) && empty($data['employee_id'])) {
+            $data['employee_id'] = strtoupper(substr($role, 0, 3)).$this->id.time();
+        }
+    }
+
+    // ==================== SUBSCRIPTION CYCLE MANAGEMENT ====================
+
+    public function createFreeTrialSubscription(bool $force = false): void
+    {
+        if (! $force && ! $this->hasVerifiedEmail()) {
+            return;
+        }
+
+        if ($this->hasActiveSubscriptionCycle()) {
+            return;
+        }
+
+        // NEW: Only grant free tokens if student's school has active content subscription
+        if ($this->role === UserRole::STUDENT) {
+            $school = $this->school;
+            if (! $school || ! $school->hasActiveContentSubscription()) {
+                return;
+            }
+        }
+
+        $this->activateBasicTier();
+    }
+
+    public function getNameAttribute($value): string
+    {
+        if ($this->first_name && $this->last_name) {
+            $name = trim($this->first_name.' '.$this->last_name);
+            if ($this->other_names) {
+                $name = trim($this->first_name.' '.$this->other_names.' '.$this->last_name);
+            }
+
+            return $name;
+        }
+
+        return $value ?? '';
     }
 
     public function tokenSubscriptions(): HasMany
@@ -230,127 +296,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserTokenSubscription::class);
     }
 
-    // Multi-tenant role checking
+    // ==================== RELATIONSHIPS ====================
 
-    public function subscriptions(): User|HasMany
+    // Core Relationships
+    public function school(): BelongsTo
     {
-        return $this->hasMany(Subscription::class, 'subscriber_id');
+        return $this->belongsTo(School::class);
     }
 
-    public function borrowedBooks(): HasMany
-    {
-        return $this->hasMany(BookBorrowing::class);
-    }
-
-    public function bookSubscriptions(): HasMany
-    {
-        return $this->hasMany(BookSubscription::class);
-    }
-
-    // Impersonation methods
-
-    public function worksheets(): HasMany
-    {
-        return $this->hasMany(Worksheet::class);
-    }
-
+    // Role-specific Relationships
     public function student(): HasOne
     {
         return $this->hasOne(Student::class, 'user_id');
-    }
-
-    public function impersonateUser($userId)
-    {
-        $user = self::findOrFail($userId);
-
-        // Check if current user can impersonate
-        if (!Auth::user()->canImpersonate()) {
-            session()->flash('error', 'You do not have permission to impersonate users.');
-
-            return;
-        }
-
-        // Check if target user can be impersonated
-        if (!$user->canBeImpersonated()) {
-            session()->flash('error', 'This user cannot be impersonated.');
-
-            return;
-        }
-
-        // Store the current user ID before impersonation
-        session()->put('impersonate_redirect_to', route('dashboard'));
-
-        return redirect()->route('impersonate', $userId);
-    }
-
-    // Get user's primary role in current school context
-
-    public function canImpersonate(): bool
-    {
-        return $this->isSuperAdmin() ||
-            $this->role === UserRole::OWNER ||
-            $this->role === UserRole::ADMIN;
-    }
-
-    public function isSuperAdmin(): User|bool
-    {
-        return $this->hasRole('superadmin');
-    }
-
-    public function canBeImpersonated(): bool
-    {
-        return !$this->isSuperAdmin() &&
-            !in_array($this->role->value, ['owner', 'admin', 'administrator', 'superadmin']) &&
-            ($this->is_active ?? true);
-    }
-
-    public function hasSchoolBoundRole(): bool
-    {
-        return $this->student || $this->teacher || $this->admin ||
-            $this->librarian || $this->accountant || $this->parent;
-    }
-
-    public function getPrimarySchoolRole(): ?string
-    {
-        if ($this->student) {
-            return 'student';
-        }
-        if ($this->teacher) {
-            return 'teacher';
-        }
-        if ($this->admin) {
-            return 'admin';
-        }
-        if ($this->librarian) {
-            return 'librarian';
-        }
-        if ($this->accountant) {
-            return 'accountant';
-        }
-        if ($this->parent) {
-            return 'parent';
-        }
-
-        return null;
-    }
-
-    public function hasRoleInSchool($role, $schoolId)
-    {
-        return $this->hasRole($role, $schoolId);
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'active')->where('is_active', true);
-    }
-
-    public function scopeByRole($query, $role)
-    {
-        if ($role instanceof UserRole) {
-            return $query->where('role', $role->value);
-        }
-
-        return $query->where('role', $role);
     }
 
     public function teacher(): HasOne
@@ -368,59 +325,241 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Librarian::class, 'user_id');
     }
 
+    public function accountant(): HasOne
+    {
+        return $this->hasOne(Accountant::class);
+    }
+
     public function parent(): HasOne
     {
         return $this->hasOne(StudentParent::class, 'user_id');
     }
 
+    // Activity & Content Relationships
     public function loginActivities(): HasMany
     {
         return $this->hasMany(LoginActivity::class);
     }
 
-    public function preferences(): User|HasMany
+    public function worksheets(): HasMany
     {
-        return $this->hasMany(UserPreference::class);
+        return $this->hasMany(Worksheet::class);
     }
 
-    public function uploadedMedia()
+    public function quizSessions(): HasMany
+    {
+        return $this->hasMany(QuizSession::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
+    }
+
+    public function sharedNotes()
+    {
+        return $this->belongsToMany(Note::class, 'note_shares', 'shared_with_user_id', 'note_id')
+            ->withPivot('can_edit')
+            ->withTimestamps();
+    }
+
+    // Library Relationships
+    public function borrowedBooks(): HasMany
+    {
+        return $this->hasMany(BookBorrowing::class);
+    }
+
+    public function bookSubscriptions(): HasMany
+    {
+        return $this->hasMany(BookSubscription::class);
+    }
+
+    // Subscription Relationships
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'subscriber_id');
+    }
+
+    // Media Relationships
+    public function uploadedMedia(): HasMany
     {
         return $this->hasMany(MediaFile::class, 'uploaded_by');
     }
 
+    // User Preferences
+    public function preferences(): HasMany
+    {
+        return $this->hasMany(UserPreference::class);
+    }
+
+    // User Activities
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class);
+    }
+
+    // Suspension Relationship
+    public function suspendedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'suspended_by');
+    }
+
+    // Academic Level Preference Relationship
+    public function preferredAcademicLevel(): BelongsTo
+    {
+        return $this->belongsTo(AcademicLevel::class, 'preferred_academic_level_id');
+    }
+
     /**
-     * Check if user needs onboarding
+     * Get the effective academic level for the user.
+     *
+     * Priority:
+     * 1. For students: Use student's academic_level_id (set by teacher/admin)
+     * 2. For all users: Use preferred_academic_level_id if set
+     * 3. Default: Return null (BECE grading will be assumed)
      */
+    public function getEffectiveAcademicLevel(): ?AcademicLevel
+    {
+        // For students, prioritize the student's assigned academic level
+        if ($this->student && $this->student->academic_level_id) {
+            return $this->student->academicLevel;
+        }
+
+        // Otherwise, use the user's preferred academic level
+        return $this->preferredAcademicLevel;
+    }
+
+    /**
+     * Get the academic group tag for the user's effective academic level.
+     *
+     * @return string|null Returns 'basic', 'senior', 'university', or null
+     */
+    public function getAcademicGroupTag(): ?string
+    {
+        $academicLevel = $this->getEffectiveAcademicLevel();
+
+        if (! $academicLevel) {
+            return null;
+        }
+
+        return $academicLevel->academicGroup?->tag;
+    }
+
+    /**
+     * Check if the user can set their own academic level preference.
+     *
+     * Students cannot set their own level (must be set by teacher/admin).
+     * Guests and other roles can set their own preference.
+     */
+    public function canSetOwnAcademicLevel(): bool
+    {
+        // Guests can always set their own academic level
+        if ($this->role === UserRole::GUEST) {
+            return true;
+        }
+
+        // Other users can set their level if they don't have a student profile
+        return ! $this->student;
+    }
+
+    // ==================== ROLE CHECKING ====================
+
+    public function isOwner(): bool
+    {
+        return $this->hasRole(UserRole::OWNER->value);
+    }
+
+    public function isSchoolAdmin(): bool
+    {
+        return $this->school_id && $this->hasRole(UserRole::ADMIN->value);
+    }
+
+    public function hasSchoolBoundRole(): bool
+    {
+        return $this->hasAnyRole(self::SCHOOL_BOUND_ROLES);
+    }
+
+    public function getPrimarySchoolRole(): ?string
+    {
+        foreach (self::ROLE_RELATION_MAP as $role => $relation) {
+            if ($this->{$relation}) {
+                return $role;
+            }
+        }
+
+        $role = $this->getRoleValue();
+
+        return in_array($role, self::SCHOOL_BOUND_ROLES, true) ? $role : null;
+    }
+
+    public function impersonateUser($userId)
+    {
+        $user = self::findOrFail($userId);
+
+        if (! Auth::user()->canImpersonate()) {
+            session()->flash('error', 'You do not have permission to impersonate users.');
+
+            return;
+        }
+
+        if (! $user->canBeImpersonated()) {
+            session()->flash('error', 'This user cannot be impersonated.');
+
+            return;
+        }
+
+        session()->put('impersonate_redirect_to', route('dashboard'));
+
+        return redirect()->route('impersonate', $userId);
+    }
+
+    // ==================== IMPERSONATION ====================
+
+    public function canImpersonate(): bool
+    {
+        return $this->isSuperAdmin() ||
+            $this->role === UserRole::OWNER ||
+            $this->role === UserRole::ADMIN;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(UserRole::SUPER_ADMIN->value);
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        $role = $this->getRoleValue();
+
+        return ! $this->isSuperAdmin() &&
+            ! in_array($role, self::IMPERSONATION_PROTECTED_ROLES, true) &&
+            ($this->is_active ?? true);
+    }
+
+    // ==================== EMAIL VERIFICATION ====================
+
+    /**
+     * Send a custom email verification notification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification());
+    }
+
+    // ==================== SCHOOL ACCESS & MULTI-TENANCY ====================
+
     public function needsSchoolOnboarding(): bool
     {
-        // Super admin doesn't need school onboarding
         if ($this->hasRole('super_admin')) {
             return false;
         }
 
-        return !$this->school_id;
-    }
-
-    /**
-     * Check if user is admin of their school
-     */
-    public function isSchoolAdmin(): bool
-    {
-        return $this->school_id && $this->hasRole('admin');
-    }
-
-    public function isOwner(): bool
-    {
-        return $this->hasRole('owner');
+        return ! $this->school_id;
     }
 
     public function canAccessSchool($schoolId): bool
     {
-        if ($this->canAccessCrossSchool()) {
-            return true;
-        }
-
-        return $this->school_id == $schoolId;
+        return $this->canAccessCrossSchool() || $this->school_id == $schoolId;
     }
 
     public function canAccessCrossSchool(): bool
@@ -437,44 +576,34 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->school;
     }
 
-    public function school(): BelongsTo
+    // ==================== QUERY SCOPES ====================
+
+    public function scopeActive($query)
     {
-        return $this->belongsTo(School::class);
+        return $query->where('status', 'active')->where('is_active', true);
     }
 
-    public function accountant(): HasOne
+    public function scopeByRole($query, $role)
     {
-        return $this->hasOne(Accountant::class);
+        $roleValue = $role instanceof UserRole ? $role->value : $role;
+
+        return $query->where('role', $roleValue);
     }
 
     public function scopeForCurrentSchool($query)
     {
         $user = auth()->user();
 
-        if (!$user) {
-            return $query->whereRaw('0=1'); // No results for unauthenticated users
+        if (! $user) {
+            return $query->whereRaw('0=1');
         }
 
-        // Super admins and owners with cross-school access
-        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
-            // Check if they're in a specific school context
-            if (session()->has('current_school_id')) {
-                $schoolId = session('current_school_id');
-                if ($schoolId !== null) { // Explicitly check for null
-                    return $query->where('school_id', $schoolId);
-                }
+        if ($user->canAccessCrossSchool()) {
+            $schoolId = session('current_school_id');
 
-                // If current_school_id is explicitly set to null, they want to see all schools
-                return $query;
-            }
-
-            // If no session context, check if they want to see all schools or their own
-            // By default, super admins and owners can see all schools
-            // unless they've specifically selected a school
-            return $query;
+            return $schoolId !== null ? $query->where('school_id', $schoolId) : $query;
         }
 
-        // Regular users and admins only see their own school
         return $query->where('school_id', $user->school_id);
     }
 
@@ -485,27 +614,22 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $user = auth()->user();
-        if (!$user) {
-            return $query->whereRaw('0=1'); // No results for unauthenticated users
+        if (! $user) {
+            return $query->whereRaw('0=1');
         }
 
-        // Super admins and owners might see all users or just their school
-        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
-            // Check if they're in a specific school context
+        if ($user->canAccessCrossSchool()) {
             $currentSchoolId = session('current_school_id', $user->school_id);
-            if ($currentSchoolId) {
-                return $query->where('school_id', $currentSchoolId);
-            }
 
-            // If in "all schools" view, don't apply scoping
-            return $query;
+            return $currentSchoolId ? $query->where('school_id', $currentSchoolId) : $query;
         }
 
-        // Regular users only see users from their school
         return $query->where('school_id', $user->school_id);
     }
 
-    public function suspend($reason = null)
+    // ==================== USER STATUS MANAGEMENT ====================
+
+    public function suspend($reason = null): void
     {
         $this->update([
             'status' => 'suspended',
@@ -515,42 +639,31 @@ class User extends Authenticatable implements MustVerifyEmail
         ]);
     }
 
-    public function unsuspend()
+    public function unsuspend(): void
     {
         $this->update([
-            'status' => 'active', // or whatever your default active status is
+            'status' => 'active',
             'suspension_reason' => null,
             'suspended_at' => null,
             'suspended_by' => null,
         ]);
     }
 
-    public function isSuspended()
+    public function isSuspended(): bool
     {
         return $this->status === 'suspended';
     }
 
-    public function suspendedBy()
-    {
-        return $this->belongsTo(User::class, 'suspended_by');
-    }
+    // ==================== TOKEN SUBSCRIPTION RELATIONSHIPS ====================
 
-    public function quizSessions()
-    {
-        return $this->hasMany(QuizSession::class);
-    }
-
-    public function activeTokenSubscription()
+    public function activeTokenSubscription(): HasOne
     {
         return $this->hasOne(UserTokenSubscription::class)
             ->where('status', TokenSubscriptionStatus::ACTIVE->value)
             ->latest('activated_at');
     }
 
-    /**
-     * Get all token purchases for this user (including top-ups)
-     */
-    public function tokenPurchases()
+    public function tokenPurchases(): HasMany
     {
         return $this->hasMany(UserTokenSubscription::class)
             ->whereNotNull('purchased_at')
@@ -559,13 +672,17 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function subscriptionHistory()
     {
-        return $this->hasMany(UserTokenSubscription::class)
-            ->whereIn('status', [
-                TokenSubscriptionStatus::EXPIRED->value,
-                TokenSubscriptionStatus::DEPLETED->value,
-                TokenSubscriptionStatus::REPLACED->value,
-            ])
-            ->orderBy('created_at', 'desc');
+        return $this->hasMany(SubscriptionCycle::class)
+            ->with('pricingTier')
+            ->selectRaw('subscription_group_id,
+                        MIN(cycle_start_date) as group_start_date,
+                        MAX(cycle_end_date) as group_end_date,
+                        COUNT(*) as months_count,
+                        SUM(current_price) as total_cost,
+                        SUM(tokens_allocated) as total_tokens,
+                        MAX(id) as latest_cycle_id')
+            ->groupBy('subscription_group_id')
+            ->orderBy('group_start_date', 'desc');
     }
 
     public function tokenUsageLogs(): HasMany
@@ -573,86 +690,61 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(OpenAiTokenUsageLog::class);
     }
 
-    /**
-     * Check if a user has sufficient tokens
-     * Only applies to users with 'subscriber' role
-     */
+    // ==================== TOKEN MANAGEMENT ====================
+
     public function hasOpenAiTokens(int $requiredTokens = 1): bool
     {
+        $cycle = $this->subscriptionCycles()->where('status', 'active')->first();
 
-        $subscription = $this->activeTokenSubscription;
-
-        if (!$subscription) {
+        if (! $cycle) {
             return false;
         }
 
-        // Check if expired
-        if ($subscription->isExpired()) {
-            $subscription->deactivate(TokenSubscriptionStatus::EXPIRED);
+        if ($cycle->isExpired()) {
+            $cycle->update(['status' => 'expired']);
 
             return false;
         }
 
-        return $subscription->hasTokens($requiredTokens);
+        return $cycle->hasTokens($requiredTokens);
     }
 
-    /**
-     * Check if user needs to upgrade
-     * Only applies to users with 'subscriber' role
-     */
     public function needsTokenUpgrade(): bool
     {
-        $subscription = $this->activeTokenSubscription;
+        $cycle = $this->getCurrentActiveCycle();
 
-        if (!$subscription) {
+        if (! $cycle) {
             return true;
         }
 
-        return $subscription->isExpired() ||
-            $subscription->status === TokenSubscriptionStatus::DEPLETED ||
-            $subscription->isNearingDepletion();
+        return $cycle->isExpired() || $cycle->isNearingDepletion();
     }
 
-    /**
-     * Get the OpenAI model based on user's role and subscription
-     * Subscribers use token-based packages, others get premium by default
-     */
     public function getOpenAiModel(): string
     {
-        // Non-subscribers always get premium model - use enum comparison
-        if ($this->role !== UserRole::SUBSCRIBER) {
+        if ($this->role !== UserRole::GUEST) {
             return config('openai.openai.premium_model', 'gpt-4');
         }
 
-        // For subscribers, check their subscription package
-        $subscription = $this->activeTokenSubscription;
+        $cycle = $this->getCurrentActiveCycle();
 
-        if (!$subscription || !$subscription->package) {
+        if (! $cycle || ! $cycle->pricingTier) {
             return config('openai.openai.default_model', 'gpt-3.5-turbo');
         }
 
-        // Get model from package
-        $packageModel = $subscription->package->model;
-
-        if ($packageModel) {
-            return $packageModel;
+        if ($cycle->pricingTier->model) {
+            return $cycle->pricingTier->model;
         }
 
-        // Fallback: determine by package price or is_free flag
-        if ($subscription->package->is_free || $subscription->package->price == 0) {
-            return config('openai.openai.default_model', 'gpt-3.5-turbo');
-        }
-
-        return config('openai.openai.premium_model', 'gpt-4');
+        return ($cycle->current_price == 0)
+            ? config('openai.openai.default_model', 'gpt-3.5-turbo')
+            : config('openai.openai.premium_model', 'gpt-4');
     }
 
-    /**
-     * Check if a user should be tracked for token usage
-     */
     public function shouldTrackTokenUsage(): bool
     {
         return in_array($this->role, [
-            UserRole::SUBSCRIBER,
+            UserRole::GUEST,
             UserRole::ADMIN,
             UserRole::STUDENT,
             UserRole::TEACHER,
@@ -661,24 +753,25 @@ class User extends Authenticatable implements MustVerifyEmail
         ]);
     }
 
+    // ==================== ACTIVITY LOGGING ====================
+
     /**
-     * Get the user's subaccount (for direct user payments)
+     * Specify additional sensitive fields that should not be logged
+     * The base trait already filters: password, api_key, secret, tokens, etc.
      */
-    public function subaccount(): MorphOne
+    public function getSensitiveFieldsForLogging(): array
     {
-        return $this->morphOne(Subaccount::class, 'subaccountable');
+        return [
+            'remember_token',
+            'password_hash',
+            'previous_password',
+            'old_password',
+        ];
     }
 
-    public function notes()
+    private function getRoleValue(): ?string
     {
-        return $this->hasMany(Note::class);
-    }
-
-    public function sharedNotes()
-    {
-        return $this->belongsToMany(Note::class, 'note_shares', 'shared_with_user_id', 'note_id')
-            ->withPivot('can_edit')
-            ->withTimestamps();
+        return $this->role instanceof UserRole ? $this->role->value : $this->role;
     }
 
     /**

@@ -3,28 +3,32 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
+use App\Models\AcademicSubject;
+use App\Models\AssignmentSubmission;
+use App\Models\Attendance\AttendanceRecord;
 use App\Models\Student;
 use App\Models\StudentParent;
-use App\Models\Assessment;
-use App\Models\AcademicSubject;
-use App\Models\Attendance\AttendanceRecord;
-use App\Models\AssignmentSubmission;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
-use Carbon\Carbon;
 
 class ParentReportsManager extends AppComponent
 {
     use WithPagination;
 
     public $selectedWardId = null;
+
     public $selectedReportType = 'performance';
+
     public $selectedPeriod = 'current_term';
+
     public $selectedSubjectId = null;
+
     public $generatedReport = null;
+
     public $showReportPreview = false;
+
     public $activeTab = 'generate'; // 'generate' or 'history'
 
     public function mount()
@@ -61,7 +65,7 @@ class ParentReportsManager extends AppComponent
 
             session()->flash('success', 'Report generated successfully!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error generating report: ' . $e->getMessage());
+            session()->flash('error', 'Error generating report: '.$e->getMessage());
         }
 
         $this->endLoading();
@@ -71,7 +75,7 @@ class ParentReportsManager extends AppComponent
     {
         $this->dispatch('download-report', [
             'format' => $format,
-            'data' => $this->generatedReport
+            'data' => $this->generatedReport,
         ]);
     }
 
@@ -88,7 +92,7 @@ class ParentReportsManager extends AppComponent
 
     private function buildReport()
     {
-        if (!$this->selectedWard) {
+        if (! $this->selectedWard) {
             throw new \Exception('No ward selected');
         }
 
@@ -112,35 +116,35 @@ class ParentReportsManager extends AppComponent
 
         $submissions = AssignmentSubmission::where('student_id', $this->selectedWardId)
             ->with(['assignment.academicSubject'])
-            ->when($this->selectedSubjectId, function($query) {
-                $query->whereHas('assignment', function($q) {
+            ->when($this->selectedSubjectId, function ($query) {
+                $query->whereHas('assignment', function ($q) {
                     $q->where('academic_subject_id', $this->selectedSubjectId);
                 });
             })
-            ->when($dateRange, function($query) use ($dateRange) {
+            ->when($dateRange, function ($query) use ($dateRange) {
                 $query->whereBetween('submitted_at', $dateRange);
             })
             ->get();
 
-        $subjectPerformance = $submissions->groupBy(function($submission) {
+        $subjectPerformance = $submissions->groupBy(function ($submission) {
             return $submission->assignment->academic_subject_id;
-        })->map(function($subjectSubmissions) {
+        })->map(function ($subjectSubmissions) {
             $subject = $subjectSubmissions->first()->assignment->academicSubject;
-            $graded = $subjectSubmissions->filter(fn($s) => $s->status === 'graded' && $s->total_marks > 0);
+            $graded = $subjectSubmissions->filter(fn ($s) => $s->status === 'graded' && $s->total_marks > 0);
 
             return [
                 'subject' => $subject,
                 'count' => $subjectSubmissions->count(),
-                'average' => $graded->isEmpty() ? 0 : $graded->avg(fn($s) => ($s->score / $s->total_marks) * 100),
-                'passed' => $graded->filter(fn($s) => ($s->score / $s->total_marks) * 100 >= 50)->count(),
-                'failed' => $graded->filter(fn($s) => ($s->score / $s->total_marks) * 100 < 50)->count(),
-                'highest' => $graded->isEmpty() ? 0 : $graded->max(fn($s) => ($s->score / $s->total_marks) * 100),
-                'lowest' => $graded->isEmpty() ? 0 : $graded->min(fn($s) => ($s->score / $s->total_marks) * 100),
+                'average' => $graded->isEmpty() ? 0 : $graded->avg(fn ($s) => ($s->score / $s->total_marks) * 100),
+                'passed' => $graded->filter(fn ($s) => ($s->score / $s->total_marks) * 100 >= 50)->count(),
+                'failed' => $graded->filter(fn ($s) => ($s->score / $s->total_marks) * 100 < 50)->count(),
+                'highest' => $graded->isEmpty() ? 0 : $graded->max(fn ($s) => ($s->score / $s->total_marks) * 100),
+                'lowest' => $graded->isEmpty() ? 0 : $graded->min(fn ($s) => ($s->score / $s->total_marks) * 100),
             ];
         });
 
-        $gradedSubmissions = $submissions->filter(fn($s) => $s->status === 'graded' && $s->total_marks > 0);
-        $averageScore = $gradedSubmissions->isEmpty() ? 0 : $gradedSubmissions->avg(fn($s) => ($s->score / $s->total_marks) * 100);
+        $gradedSubmissions = $submissions->filter(fn ($s) => $s->status === 'graded' && $s->total_marks > 0);
+        $averageScore = $gradedSubmissions->isEmpty() ? 0 : $gradedSubmissions->avg(fn ($s) => ($s->score / $s->total_marks) * 100);
 
         return [
             'report_type' => 'performance',
@@ -154,8 +158,8 @@ class ParentReportsManager extends AppComponent
             'summary' => [
                 'total_assignments' => $submissions->count(),
                 'average_score' => $averageScore,
-                'passed_count' => $gradedSubmissions->filter(fn($s) => ($s->score / $s->total_marks) * 100 >= 50)->count(),
-                'pass_rate' => $gradedSubmissions->isEmpty() ? 0 : ($gradedSubmissions->filter(fn($s) => ($s->score / $s->total_marks) * 100 >= 50)->count() / $gradedSubmissions->count()) * 100,
+                'passed_count' => $gradedSubmissions->filter(fn ($s) => ($s->score / $s->total_marks) * 100 >= 50)->count(),
+                'pass_rate' => $gradedSubmissions->isEmpty() ? 0 : ($gradedSubmissions->filter(fn ($s) => ($s->score / $s->total_marks) * 100 >= 50)->count() / $gradedSubmissions->count()) * 100,
             ],
             'subject_breakdown' => $subjectPerformance,
             'assessments' => $submissions->sortByDesc('submitted_at')->take(20),
@@ -168,7 +172,7 @@ class ParentReportsManager extends AppComponent
 
         $attendanceRecords = AttendanceRecord::where('attendance_records.student_id', $this->selectedWardId)
             ->join('attendances', 'attendance_records.attendance_id', '=', 'attendances.id')
-            ->when($dateRange, function($query) use ($dateRange) {
+            ->when($dateRange, function ($query) use ($dateRange) {
                 $query->whereBetween('attendances.date', $dateRange);
             })
             ->select('attendance_records.*', 'attendances.date', 'attendances.session')
@@ -182,9 +186,9 @@ class ParentReportsManager extends AppComponent
         $attendanceRate = $totalDays > 0 ? ($presentDays / $totalDays) * 100 : 0;
 
         // Monthly breakdown
-        $monthlyBreakdown = $attendanceRecords->groupBy(function($record) {
+        $monthlyBreakdown = $attendanceRecords->groupBy(function ($record) {
             return Carbon::parse($record->date)->format('Y-m');
-        })->map(function($records, $month) {
+        })->map(function ($records, $month) {
             return [
                 'month' => Carbon::createFromFormat('Y-m', $month)->format('F Y'),
                 'total' => $records->count(),
@@ -221,17 +225,17 @@ class ParentReportsManager extends AppComponent
 
         $submissions = AssignmentSubmission::where('student_id', $this->selectedWardId)
             ->with(['assignment.academicSubject'])
-            ->when($dateRange, function($query) use ($dateRange) {
+            ->when($dateRange, function ($query) use ($dateRange) {
                 $query->whereBetween('submitted_at', $dateRange);
             })
             ->orderBy('submitted_at')
             ->get();
 
-        $progressData = $submissions->groupBy(function($submission) {
+        $progressData = $submissions->groupBy(function ($submission) {
             return $submission->assignment->academic_subject_id;
-        })->map(function($subjectSubmissions) {
+        })->map(function ($subjectSubmissions) {
             $subject = $subjectSubmissions->first()->assignment->academicSubject;
-            $progressPoints = $subjectSubmissions->map(function($submission) {
+            $progressPoints = $subjectSubmissions->map(function ($submission) {
                 return [
                     'date' => $submission->submitted_at->format('Y-m-d'),
                     'score' => $submission->total_marks > 0 ? ($submission->score / $submission->total_marks) * 100 : 0,
@@ -298,13 +302,20 @@ class ParentReportsManager extends AppComponent
 
     private function calculateTrend($scores)
     {
-        if ($scores->count() < 2) return 'stable';
+        if ($scores->count() < 2) {
+            return 'stable';
+        }
 
         $recent = $scores->slice(-3)->avg();
         $earlier = $scores->slice(0, 3)->avg();
 
-        if ($recent > $earlier + 5) return 'improving';
-        if ($recent < $earlier - 5) return 'declining';
+        if ($recent > $earlier + 5) {
+            return 'improving';
+        }
+        if ($recent < $earlier - 5) {
+            return 'declining';
+        }
+
         return 'stable';
     }
 
@@ -314,15 +325,15 @@ class ParentReportsManager extends AppComponent
         $students = StudentParent::withoutGlobalScopes()
             ->where('user_id', Auth::id())
             ->with([
-                'students' => function($query) {
+                'students' => function ($query) {
                     $query->withoutGlobalScopes();
                 },
                 'students.user',
                 'students.academicLevel.academicGroup',
-                'students.studentGroup'
+                'students.studentGroup',
             ])
             ->get()
-            ->flatMap(function($parent) {
+            ->flatMap(function ($parent) {
                 return $parent->students;
             })
             ->unique('id');
@@ -333,21 +344,25 @@ class ParentReportsManager extends AppComponent
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::withoutGlobalScopes()
             ->with([
                 'user',
-                'academicLevel.academicGroup'
+                'academicLevel.academicGroup',
             ])->find($this->selectedWardId);
     }
 
     #[Computed]
     public function availableSubjects()
     {
-        if (!$this->selectedWard) return collect();
+        if (! $this->selectedWard) {
+            return collect();
+        }
 
-        return AcademicSubject::whereHas('assignments.submissions', function($query) {
+        return AcademicSubject::whereHas('assignments.submissions', function ($query) {
             $query->where('student_id', $this->selectedWardId);
         })->get();
     }
@@ -359,7 +374,7 @@ class ParentReportsManager extends AppComponent
             'performance' => 'Performance Report',
             'attendance' => 'Attendance Report',
             'progress' => 'Progress Report',
-            'comprehensive' => 'Comprehensive Report'
+            'comprehensive' => 'Comprehensive Report',
         ];
     }
 
@@ -371,7 +386,7 @@ class ParentReportsManager extends AppComponent
             'last_term' => 'Last Term',
             'current_year' => 'Current Academic Year',
             'last_year' => 'Last Academic Year',
-            'all_time' => 'All Time'
+            'all_time' => 'All Time',
         ];
     }
 

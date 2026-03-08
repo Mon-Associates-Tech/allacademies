@@ -8,31 +8,51 @@ use Livewire\Component;
 class SearchableMultiSelect extends Component
 {
     public string $search = '';
+
     public array $selected = [];
+
     public array $items = [];
+
     public string $placeholder = 'Search and select...';
+
     public string $emptyMessage = 'No items found';
+
     public bool $multiple = true;
+
     public bool $clearable = true;
+
     public string $maxHeight = '256px';
+
     public string $name = '';
+
     public bool $required = false;
+
     public bool $disabled = false;
+
     public string $size = 'md';
 
     // Lazy loading options
     public ?string $modelClass = null;
+
     public string|array $searchColumn = 'name';
+
     public int $chunkSize = 50;
+
     public bool $lazyLoad = false;
+
     public string $customQuery = '';
+
     public string $labelFormatter = '';
 
     // Hierarchical options
     public bool $hierarchical = false;
+
     public string $parentKey = 'parent_id';
+
     public string $valueKey = 'id';
+
     public string $labelKey = 'name';
+
     public string $childrenKey = 'children';
 
     public bool $dropdownOpen = false;
@@ -65,8 +85,7 @@ class SearchableMultiSelect extends Component
         bool $lazyLoad = false,
         string $customQuery = '',
         string $labelFormatter = '',
-    ): void
-    {
+    ): void {
         $this->items = $items;
         $this->selected = $selected;
         $this->placeholder = $placeholder;
@@ -106,6 +125,7 @@ class SearchableMultiSelect extends Component
 
         $filtered = array_filter($this->items, function ($item) {
             $label = is_array($item) ? ($item[$this->labelKey] ?? '') : $item->label ?? $item->name ?? '';
+
             return stripos($label, $this->search) !== false;
         });
 
@@ -114,7 +134,7 @@ class SearchableMultiSelect extends Component
 
     private function loadItemsFromDatabase(): array
     {
-        if (!class_exists($this->modelClass)) {
+        if (! class_exists($this->modelClass)) {
             return [];
         }
 
@@ -137,21 +157,21 @@ class SearchableMultiSelect extends Component
             } catch (\Exception $e) {
                 \Log::warning('Failed to apply custom query', [
                     'method' => $this->customQuery,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
         // Apply search filter - only load when user searches
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $searchColumns = is_array($this->searchColumn) ? $this->searchColumn : [$this->searchColumn];
 
-            $query->where(function($q) use ($searchColumns) {
+            $query->where(function ($q) use ($searchColumns) {
                 foreach ($searchColumns as $column) {
-                    $q->orWhere($column, 'LIKE', '%' . $this->search . '%');
+                    $q->orWhere($column, 'LIKE', '%'.$this->search.'%');
                 }
             });
-        } elseif (!$this->dropdownOpen) {
+        } elseif (! $this->dropdownOpen) {
             return [];
         }
 
@@ -171,7 +191,7 @@ class SearchableMultiSelect extends Component
 
     private function loadSelectedItemsFromDatabase(): array
     {
-        if (!class_exists($this->modelClass) || empty($this->selected)) {
+        if (! class_exists($this->modelClass) || empty($this->selected)) {
             return [];
         }
 
@@ -187,7 +207,7 @@ class SearchableMultiSelect extends Component
             } catch (\Exception $e) {
                 \Log::warning('Failed to apply custom query for selected items', [
                     'method' => $this->customQuery,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -216,7 +236,7 @@ class SearchableMultiSelect extends Component
             } catch (\Exception $e) {
                 \Log::warning('Failed to format label', [
                     'method' => $this->labelFormatter,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -245,6 +265,7 @@ class SearchableMultiSelect extends Component
     {
         try {
             $parent = $this->getParentComponent();
+
             return $parent ? $parent->getName() : null;
         } catch (\Exception $e) {
             return null;
@@ -255,20 +276,21 @@ class SearchableMultiSelect extends Component
     public function selectedItems(): array
     {
         // When lazy loading, fetch selected items separately
-        if ($this->lazyLoad && $this->modelClass && !empty($this->selected)) {
+        if ($this->lazyLoad && $this->modelClass && ! empty($this->selected)) {
             return $this->loadSelectedItemsFromDatabase();
         }
 
         return array_values(array_filter($this->items, function ($item) {
             $value = is_array($item) ? ($item[$this->valueKey] ?? '') : $item->id ?? $item->value ?? '';
+
             return in_array($value, $this->selected);
         }));
     }
 
     public function toggleDropdown(): void
     {
-        if (!$this->disabled) {
-            $this->dropdownOpen = !$this->dropdownOpen;
+        if (! $this->disabled) {
+            $this->dropdownOpen = ! $this->dropdownOpen;
         }
     }
 
@@ -286,7 +308,7 @@ class SearchableMultiSelect extends Component
 
         if ($this->multiple) {
             if (in_array($value, $this->selected)) {
-                $this->selected = array_values(array_filter($this->selected, fn($v) => $v !== $value));
+                $this->selected = array_values(array_filter($this->selected, fn ($v) => $v !== $value));
             } else {
                 $this->selected[] = $value;
             }
@@ -300,10 +322,10 @@ class SearchableMultiSelect extends Component
         $this->dispatch('selection-changed', [
             'name' => $this->name,
             'selected' => $this->selected,
-            'value' => $this->multiple ? $this->selected : ($this->selected[0] ?? null)
+            'value' => $this->multiple ? $this->selected : ($this->selected[0] ?? null),
         ]);
 
-        $this->dispatch('update-' . $this->name, $this->multiple ? $this->selected : ($this->selected[0] ?? null));
+        $this->dispatch('update-'.$this->name, $this->multiple ? $this->selected : ($this->selected[0] ?? null));
     }
 
     public function removeItem($value): void
@@ -312,7 +334,7 @@ class SearchableMultiSelect extends Component
             return;
         }
 
-        $this->selected = array_values(array_filter($this->selected, fn($v) => $v !== $value));
+        $this->selected = array_values(array_filter($this->selected, fn ($v) => $v !== $value));
 
         $this->dispatch('selection-changed', [
             'name' => $this->name,
@@ -337,7 +359,7 @@ class SearchableMultiSelect extends Component
 
     public function updatedSearch(): void
     {
-        if (!$this->dropdownOpen) {
+        if (! $this->dropdownOpen) {
             $this->dropdownOpen = true;
         }
     }
@@ -386,12 +408,13 @@ class SearchableMultiSelect extends Component
 
     private function hasChildren($item): bool
     {
-        if (!$this->hierarchical) {
+        if (! $this->hierarchical) {
             return false;
         }
 
         $children = is_array($item) ? ($item[$this->childrenKey] ?? []) : $item->{$this->childrenKey} ?? [];
-        return !empty($children);
+
+        return ! empty($children);
     }
 
     private function getChildren($item): array

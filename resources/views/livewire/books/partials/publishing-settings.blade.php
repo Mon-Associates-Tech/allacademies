@@ -26,7 +26,7 @@
                     @endphp
                     <label class="relative flex items-start p-6 bg-white border-2 {{ $status === $value ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200' }} rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                         <input type="radio" wire:model="status" value="{{ $value }}"
-                               class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1">
+                               class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 mt-1">
                         <div class="ml-4 flex-1">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center">
@@ -70,7 +70,7 @@
             <div class="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <span class="text-sm font-medium text-gray-700">Current Status:</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Current Status:</span>
                         <span class="ml-2 px-3 py-1 text-sm font-medium rounded-full {{ $this->currentPublishingStatus->getColorClass() }}">
                             {{ $this->currentPublishingStatus->getLabel() }}
                         </span>

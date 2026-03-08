@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
     protected function getCurrentSchool()
     {
         return app('current_school') ?: auth()->user()?->school;
@@ -20,7 +21,7 @@ class Controller extends BaseController
     {
         $schoolId = $schoolId ?: $this->getCurrentSchool()?->id;
 
-        if (!$schoolId || !Gate::allows('access-school', $schoolId)) {
+        if (! $schoolId || ! Gate::allows('access-school', $schoolId)) {
             abort(403, 'Unauthorized school access');
         }
 
@@ -29,7 +30,7 @@ class Controller extends BaseController
 
     protected function applyCrossSchoolCheck()
     {
-        if (!Gate::allows('cross-school-access')) {
+        if (! Gate::allows('cross-school-access')) {
             abort(403, 'Unauthorized cross-school access');
         }
     }

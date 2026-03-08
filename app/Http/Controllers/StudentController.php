@@ -26,7 +26,7 @@ class StudentController extends BaseSchoolController
     public function index()
     {
         return view('students.index');
-       // return new StudentCollection(Student::with('user', 'group')->paginate());
+        // return new StudentCollection(Student::with('user', 'group')->paginate());
     }
 
     public function store(Request $request)
@@ -78,7 +78,7 @@ class StudentController extends BaseSchoolController
         $book = Book::findOrFail($validated['book_id']);
         $this->authorize('borrow', $book);
 
-        if (!$book->has_hardcopy) {
+        if (! $book->has_hardcopy) {
             return response()->json(['message' => 'This book does not have a hardcopy available for borrowing'], 422);
         }
 
@@ -124,7 +124,7 @@ class StudentController extends BaseSchoolController
         $book = Book::findOrFail($validated['book_id']);
         $this->authorize('subscribe', $book);
 
-        if (!$book->has_softcopy) {
+        if (! $book->has_softcopy) {
             return response()->json(['message' => 'This book does not have a softcopy available for subscription'], 422);
         }
 
@@ -166,7 +166,7 @@ class StudentController extends BaseSchoolController
         $hasAccess = $student->borrowedBooks()->where('book_id', $validated['book_id'])->exists() ||
                      $student->subscriptions()->where('book_id', $validated['book_id'])->exists();
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             return response()->json(['message' => 'Student must borrow or subscribe to this book before creating an assessment'], 422);
         }
 
@@ -183,18 +183,21 @@ class StudentController extends BaseSchoolController
     public function getBorrowedBooks(Student $student)
     {
         $borrowings = $student->borrowedBooks()->with('book')->paginate();
+
         return BookBorrowingResource::collection($borrowings);
     }
 
     public function getSubscriptions(Student $student)
     {
         $subscriptions = $student->subscriptions()->with('book')->paginate();
+
         return BookSubscriptionResource::collection($subscriptions);
     }
 
     public function getAssessments(Student $student)
     {
         $assessments = $student->assessments()->with('book')->paginate();
+
         return AssessmentResource::collection($assessments);
     }
 
@@ -224,14 +227,14 @@ class StudentController extends BaseSchoolController
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'academic_level_id' => 'required|exists:academic_levels,id',
-            'academic_group_id' => 'required|exists:academic_groups,id'
+            'academic_group_id' => 'required|exists:academic_groups,id',
         ]);
 
         // Ensure academic level belongs to current school
         $academicLevel = AcademicLevel::where('school_id', $this->school->id)
             ->findOrFail($validated['academic_level_id']);
 
-        \DB::transaction(function () use ($validated, $academicLevel) {
+        \DB::transaction(function () use ($validated) {
             // Create user
             $user = \App\Models\User::create([
                 'school_id' => $this->school->id,
@@ -239,19 +242,18 @@ class StudentController extends BaseSchoolController
                 'email' => $validated['email'],
                 'password' => \Hash::make('temporary_password'),
                 'role' => 'student',
-                'status' => 'active'
+                'status' => 'active',
             ]);
 
             // Student record is auto-created by User model observer
             $student = $user->student;
             $student->update([
                 'academic_level_id' => $validated['academic_level_id'],
-                'academic_group_id' => $validated['academic_group_id']
+                'academic_group_id' => $validated['academic_group_id'],
             ]);
         });
 
         return redirect()->route('students.index')
             ->with('success', 'Student created successfully');
     }
-
 }

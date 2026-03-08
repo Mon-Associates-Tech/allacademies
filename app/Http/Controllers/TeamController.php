@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Team;
 use App\Enums\TeamStatus;
+use App\Http\Requests\TeamRequest;
+use App\Models\Team;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -11,9 +12,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use App\Http\Requests\TeamRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +28,7 @@ class TeamController extends Controller
         $user = Auth::user();
 
         // Check if user can switch to this team
-        if (!$user->canSwitchToTeam($team)) {
+        if (! $user->canSwitchToTeam($team)) {
             return redirect()->back()->withErrors(['error' => 'You cannot switch to this team.']);
         }
 
@@ -36,7 +36,6 @@ class TeamController extends Controller
 
         return to_route('teams.index')->with('success', __('status.team.activate', ['name' => $team->name]));
     }
-
 
     /**
      * Display a listing of the resource.
@@ -63,7 +62,7 @@ class TeamController extends Controller
         // Apply search filter
         if (request('search')) {
             $search = request('search');
-            $teams = $teams->filter(function($team) use ($search) {
+            $teams = $teams->filter(function ($team) use ($search) {
                 return stripos($team->name, $search) !== false;
             });
         }
@@ -86,7 +85,6 @@ class TeamController extends Controller
         ]);
     }
 
-
     /**
      * Show the form for creating a new resource.
      *
@@ -100,8 +98,6 @@ class TeamController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
-     * @return RedirectResponse|null
      * @throws \Throwable
      */
     public function store(Request $request): ?RedirectResponse
@@ -158,7 +154,7 @@ class TeamController extends Controller
             $message = __('status.resource.created', ['name' => $team->name]);
 
             if ($team->joining_code) {
-                $message .= ' ' . __('Your team code is: :code', ['code' => $team->joining_code]);
+                $message .= ' '.__('Your team code is: :code', ['code' => $team->joining_code]);
             }
 
             return redirect()->route('teams.index')->with('success', $message);
@@ -179,7 +175,6 @@ class TeamController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
     public function edit(Team $team)
@@ -194,8 +189,6 @@ class TeamController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\TeamRequest  $request
-     * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
     public function update(TeamRequest $request, Team $team)
@@ -204,7 +197,7 @@ class TeamController extends Controller
 
         $attributes = $request->validated();
 
-        if (!$team->is_personal) {
+        if (! $team->is_personal) {
             $validated = $request->validate([
                 'type' => ['required', 'string', 'in:institution,department,faculty,college'],
                 'institution' => ['required', 'string', 'min:2', 'max:255'],
@@ -230,7 +223,7 @@ class TeamController extends Controller
             if ($logo) {
                 $path = $request->file('logo')->storePublicly('logos', 's3');
 
-                if (false === $path) {
+                if ($path === false) {
                     throw ValidationException::withMessages(['logo' => 'Logo upload failed.']);
                 }
 
@@ -260,7 +253,6 @@ class TeamController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Team  $team
      * @return \Illuminate\Http\Response
      */
     public function destroy(Team $team)
@@ -285,13 +277,13 @@ class TeamController extends Controller
 
         $team = Team::where('joining_code', $request->joining_code)->first();
 
-        if (!$team) {
+        if (! $team) {
             return back()->withErrors(['joining_code' => 'Invalid joining code.']);
         }
 
         $user = Auth::user();
 
-        if (!$team->addMember($user)) {
+        if (! $team->addMember($user)) {
             return back()->withErrors(['error' => 'Unable to join this team.']);
         }
 
@@ -310,12 +302,11 @@ class TeamController extends Controller
             return back()->withErrors(['error' => 'You cannot leave a team you own.']);
         }
 
-        if (!$team->removeMember($user)) {
+        if (! $team->removeMember($user)) {
             return back()->withErrors(['error' => 'Unable to leave this team.']);
         }
 
         return redirect()->route('teams.index')
             ->with('success', __('Successfully left team: :name', ['name' => $team->name]));
     }
-
 }

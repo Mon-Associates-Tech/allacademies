@@ -18,11 +18,11 @@ class MessageAttachment extends Model
         'original_filename',
         'path',
         'size',
-        'mime_type'
+        'mime_type',
     ];
 
     protected $casts = [
-        'size' => 'integer'
+        'size' => 'integer',
     ];
 
     public function attachable(): MorphTo
@@ -37,12 +37,12 @@ class MessageAttachment extends Model
 
     public function getSizeInKbAttribute(): string
     {
-        return number_format($this->size / 1024, 2) . ' KB';
+        return number_format($this->size / 1024, 2).' KB';
     }
 
     public function getSizeInMbAttribute(): string
     {
-        return number_format($this->size / (1024 * 1024), 2) . ' MB';
+        return number_format($this->size / (1024 * 1024), 2).' MB';
     }
 
     public function getHumanReadableSizeAttribute(): string
@@ -50,6 +50,7 @@ class MessageAttachment extends Model
         if ($this->size < 1024 * 1024) {
             return $this->size_in_kb;
         }
+
         return $this->size_in_mb;
     }
 }

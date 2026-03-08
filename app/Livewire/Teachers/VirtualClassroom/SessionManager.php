@@ -3,7 +3,6 @@
 namespace App\Livewire\Teachers\VirtualClassroom;
 
 use App\Models\Classroom\VirtualSession;
-use App\Services\BigBlueButtonService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,6 +12,7 @@ class SessionManager extends Component
     use WithPagination;
 
     public $view = 'upcoming'; // upcoming, past, all
+
     public $search = '';
 
     protected $queryString = ['view', 'search'];
@@ -29,11 +29,13 @@ class SessionManager extends Component
         // Authorize
         if ($session->teacher_id !== Auth::user()->teacher->id) {
             $this->dispatch('error', 'Unauthorized action.');
+
             return;
         }
 
-        if (!$session->canStart()) {
+        if (! $session->canStart()) {
             $this->dispatch('error', 'Session cannot be started yet.');
+
             return;
         }
 
@@ -46,6 +48,7 @@ class SessionManager extends Component
 
         if ($session->teacher_id !== Auth::user()->teacher->id) {
             $this->dispatch('error', 'Unauthorized action.');
+
             return;
         }
 
@@ -60,10 +63,21 @@ class SessionManager extends Component
 
         if ($session->teacher_id !== Auth::user()->teacher->id) {
             $this->dispatch('error', 'Unauthorized action.');
+
             return;
         }
 
+        $sessionTitle = $session->title;
+        $sessionId = $session->id;
+
         $session->delete();
+
+        // Log activity
+        $session->logActivity('delete', 'Virtual Session Deleted', 'virtual_session', [
+            'session_title' => $sessionTitle,
+            'session_id' => $sessionId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         $this->dispatch('success', 'Session deleted successfully.');
     }
@@ -77,19 +91,19 @@ class SessionManager extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
-                  ->orWhere('description', 'like', "%{$this->search}%");
+                    ->orWhere('description', 'like', "%{$this->search}%");
             });
         }
 
         switch ($this->view) {
             case 'upcoming':
                 $query->where('status', 'scheduled')
-                      ->where('scheduled_start', '>', now())
-                      ->orderBy('scheduled_start');
+                    ->where('scheduled_start', '>', now())
+                    ->orderBy('scheduled_start');
                 break;
             case 'past':
                 $query->whereIn('status', ['ended', 'cancelled'])
-                      ->orderBy('scheduled_start', 'desc');
+                    ->orderBy('scheduled_start', 'desc');
                 break;
             default:
                 $query->orderBy('scheduled_start', 'desc');
@@ -99,7 +113,7 @@ class SessionManager extends Component
             'academicLevel',
             'academicGroup',
             'academicSubject',
-            'participants'
+            'participants',
         ])->paginate(10);
 
         return view('livewire.teachers.virtual-classroom.session-manager', [

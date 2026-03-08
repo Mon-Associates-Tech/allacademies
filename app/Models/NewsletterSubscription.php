@@ -17,14 +17,14 @@ class NewsletterSubscription extends Model
         'subscription_token',
         'subscribed_at',
         'source',
-        'preferences'
+        'preferences',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'subscribed_at' => 'datetime',
         'unsubscribed_at' => 'datetime',
-        'preferences' => 'array'
+        'preferences' => 'array',
     ];
 
     protected static function boot()
@@ -56,7 +56,7 @@ class NewsletterSubscription extends Model
         $this->update([
             'is_active' => true,
             'subscribed_at' => now(),
-            'unsubscribed_at' => null
+            'unsubscribed_at' => null,
         ]);
     }
 
@@ -64,7 +64,7 @@ class NewsletterSubscription extends Model
     {
         $this->update([
             'is_active' => false,
-            'unsubscribed_at' => now()
+            'unsubscribed_at' => now(),
         ]);
     }
 

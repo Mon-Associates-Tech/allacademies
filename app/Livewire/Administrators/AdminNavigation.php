@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Administrators;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Request;
+use Livewire\Component;
 
 class AdminNavigation extends Component
 {

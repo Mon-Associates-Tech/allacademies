@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLoggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +11,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_GRADED = 'graded';
+
     const STATUS_LATE = 'late';
+
     const STATUS_NOT_SUBMITTED = 'not_submitted';
 
     protected $fillable = [
@@ -46,13 +52,14 @@ class Assignment extends Model
         'auto_submit_on_violation' => 'boolean',
     ];
 
-    public function structure(){
+    public function structure()
+    {
         return [
-        'question' => [
-            'up' => '<p>Question text</p>',
-            'down' => 'Question text',
-            'summary' => 'Question summary',
-        ],
+            'question' => [
+                'up' => '<p>Question text</p>',
+                'down' => 'Question text',
+                'summary' => 'Question summary',
+            ],
             'answer' => [
                 'up' => '<p>Answer text</p>',
                 'down' => 'Answer text',
@@ -83,7 +90,7 @@ class Assignment extends Model
                 'down' => 'Option E text',
                 'summary' => 'Option E summary',
             ],
-            ];
+        ];
     }
 
     public function teacher(): BelongsTo
@@ -178,7 +185,7 @@ class Assignment extends Model
      */
     public function generateQuestionsForStudentDeprecated($studentId = null)
     {
-        if (!$this->questions) {
+        if (! $this->questions) {
             return collect();
         }
 
@@ -196,9 +203,10 @@ class Assignment extends Model
             \Log::info("Processing question type: {$type}, count: {$count}");
 
             // If specific question IDs are provided and not randomized, use them
-            if (!empty($specificIds) && !$this->is_randomized) {
+            if (! empty($specificIds) && ! $this->is_randomized) {
                 $questions = $this->getQuestionsByTypeAndIds($type, $specificIds);
                 $generatedQuestions = $generatedQuestions->merge($questions);
+
                 continue;
             }
 
@@ -206,7 +214,7 @@ class Assignment extends Model
             $query = $this->buildQuestionQuery($type, $difficulty, $topicIds, $subtopicIds);
 
             // Debug: Log the SQL query
-            \Log::info("Query for {$type}: " . $query->toSql(), $query->getBindings());
+            \Log::info("Query for {$type}: ".$query->toSql(), $query->getBindings());
 
             if ($this->is_randomized) {
                 // For randomized assignments, pick random questions
@@ -232,10 +240,11 @@ class Assignment extends Model
                 'type' => $this->getQuestionTypeName($question),
                 'model' => $question,
                 'points' => $question->score ?? 1,
-                'difficulty_level' => $question->difficulty_level ?? 'medium'
+                'difficulty_level' => $question->difficulty_level ?? 'medium',
             ];
         });
     }
+
     /**
      * Get preview questions for non-randomized assignments
      */
@@ -253,12 +262,12 @@ class Assignment extends Model
      */
     public function getQuestionStatistics()
     {
-        if (!$this->questions) {
+        if (! $this->questions) {
             return [
                 'total_questions' => 0,
                 'by_type' => [],
                 'by_difficulty' => [],
-                'estimated_duration' => 0
+                'estimated_duration' => 0,
             ];
         }
 
@@ -266,7 +275,7 @@ class Assignment extends Model
             'total_questions' => 0,
             'by_type' => [],
             'by_difficulty' => [],
-            'estimated_duration' => 0
+            'estimated_duration' => 0,
         ];
 
         foreach ($this->questions as $questionConfig) {
@@ -278,7 +287,7 @@ class Assignment extends Model
             $stats['by_type'][$type] = ($stats['by_type'][$type] ?? 0) + $count;
 
             // Estimate duration based on question type
-            $durationPerQuestion = match($type) {
+            $durationPerQuestion = match ($type) {
                 'essay_question' => 5, // 5 minutes per essay
                 'multiple_choice_question' => 1, // 1 minute per MCQ
                 'true_or_false_question' => 0.5, // 30 seconds per T/F
@@ -296,7 +305,7 @@ class Assignment extends Model
 
     public function buildQuestionQuery($type, $difficulty, $topicIds = [], $subtopicIds = [])
     {
-        $model = match($type) {
+        $model = match ($type) {
             'multiple_choice_question' => MultipleChoiceQuestion::class,
             'true_or_false_question' => TrueOrFalseQuestion::class,
             'essay_question' => EssayQuestion::class,
@@ -311,10 +320,10 @@ class Assignment extends Model
         }
 
         // Apply topic/subtopic filters
-        if (!empty($subtopicIds)) {
+        if (! empty($subtopicIds)) {
             // All question types have academic_subtopic_id
             $query->whereIn('academic_subtopic_id', $subtopicIds);
-        } elseif (!empty($topicIds)) {
+        } elseif (! empty($topicIds)) {
             // All question types have both direct topic and subtopic relationships
             $query->where(function ($q) use ($topicIds) {
                 $q->whereIn('academic_topic_id', $topicIds)
@@ -339,7 +348,7 @@ class Assignment extends Model
 
     public function getQuestionsByTypeAndIds($type, $ids)
     {
-        $model = match($type) {
+        $model = match ($type) {
             'multiple_choice_question' => MultipleChoiceQuestion::class,
             'true_or_false_question' => TrueOrFalseQuestion::class,
             'essay_question' => EssayQuestion::class,
@@ -351,7 +360,7 @@ class Assignment extends Model
 
     public function getQuestionTypeName($question)
     {
-        return match(get_class($question)) {
+        return match (get_class($question)) {
             MultipleChoiceQuestion::class => 'multiple_choice_question',
             TrueOrFalseQuestion::class => 'true_or_false_question',
             EssayQuestion::class => 'essay_question',
@@ -361,7 +370,7 @@ class Assignment extends Model
 
     public function getStatusColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
             self::STATUS_SUBMITTED => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
             self::STATUS_GRADED => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -371,7 +380,8 @@ class Assignment extends Model
         };
     }
 
-    public function subject(){
+    public function subject()
+    {
         return $this->belongsTo(AcademicSubject::class, 'academic_subject_id');
     }
 
@@ -381,7 +391,7 @@ class Assignment extends Model
      */
     public function hasEmbeddedQuestions(): bool
     {
-        if (!$this->questions || !is_array($this->questions)) {
+        if (! $this->questions || ! is_array($this->questions)) {
             return false;
         }
 
@@ -401,7 +411,7 @@ class Assignment extends Model
      */
     public function generateQuestionsForStudent($studentId = null)
     {
-        if (!$this->questions) {
+        if (! $this->questions) {
             return collect();
         }
 
@@ -422,9 +432,10 @@ class Assignment extends Model
             $specificIds = $questionConfig['specific_ids'] ?? [];
 
             // If specific question IDs are provided and not randomized, use them
-            if (!empty($specificIds) && !$this->is_randomized) {
+            if (! empty($specificIds) && ! $this->is_randomized) {
                 $questions = $this->getQuestionsByTypeAndIds($type, $specificIds);
                 $generatedQuestions = $generatedQuestions->merge($questions);
+
                 continue;
             }
 
@@ -450,7 +461,7 @@ class Assignment extends Model
                 'type' => $this->getQuestionTypeName($question),
                 'model' => $question,
                 'points' => $question->score ?? 1,
-                'difficulty_level' => $question->difficulty_level ?? 'medium'
+                'difficulty_level' => $question->difficulty_level ?? 'medium',
             ];
         });
     }
@@ -463,7 +474,7 @@ class Assignment extends Model
         $allQuestions = collect();
 
         foreach ($this->questions as $questionConfig) {
-            if (!isset($questionConfig['questions'])) {
+            if (! isset($questionConfig['questions'])) {
                 continue;
             }
 
@@ -542,10 +553,10 @@ class Assignment extends Model
         }
 
         // Log warning if we couldn't match the text to a letter
-        if (!$correctAnswerLetter && $correctAnswerText) {
+        if (! $correctAnswerLetter && $correctAnswerText) {
             \Log::warning('Could not match correct answer text to option', [
                 'correct_answer_text' => $correctAnswerText,
-                'options' => $normalized
+                'options' => $normalized,
             ]);
 
             // Fallback: if correctAnswerText is numeric, use it as index
@@ -556,7 +567,7 @@ class Assignment extends Model
 
         return [
             'options' => $normalized,
-            'answer' => $correctAnswerLetter
+            'answer' => $correctAnswerLetter,
         ];
     }
 
@@ -581,6 +592,7 @@ class Assignment extends Model
 
         return $normalized;
     }
+
     /**
      * Extract options from embedded question
      */
@@ -604,7 +616,7 @@ class Assignment extends Model
      */
     public function normalizeQuestionType($type): string
     {
-        return match($type) {
+        return match ($type) {
             'multiple_choice', 'multiple_choice_question' => 'multiple_choice_question',
             'true_false', 'true_or_false_question' => 'true_or_false_question',
             'essay', 'essay_question' => 'essay_question',

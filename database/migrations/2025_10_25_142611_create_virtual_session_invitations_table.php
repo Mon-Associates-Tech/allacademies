@@ -20,7 +20,7 @@ return new class extends Migration
             // Invitation Details
             $table->string('token')->unique();
             $table->string('status')->default('pending');
-//            $table->enum('status', ['pending', 'accepted', 'declined', 'expired'])->default('pending');
+            //            $table->enum('status', ['pending', 'accepted', 'declined', 'expired'])->default('pending');
             $table->text('message')->nullable();
 
             // Timestamps

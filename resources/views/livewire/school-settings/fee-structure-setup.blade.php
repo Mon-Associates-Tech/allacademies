@@ -230,32 +230,91 @@
                                         @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Type <span class="text-red-500">*</span></label>
-                                        <select wire:model="payment_type" class="block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="">Select Type</option>
-                                            @foreach($paymentTypes as $key => $label)
-                                                <option value="{{ $key }}">{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('payment_type') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <!-- Payment Type Selection -->
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                            Payment Type <span class="text-red-500">*</span>
+                                        </label>
+                                        
+                                        <!-- Toggle between predefined and custom -->
+                                        <div class="flex items-center space-x-6 mb-4 p-3 bg-gray-50 rounded-lg">
+                                            <label class="flex items-center cursor-pointer">
+                                                <input type="radio" wire:model.live="use_custom_payment_type" value="0" 
+                                                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                                <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Use Predefined Types</span>
+                                            </label>
+                                            <label class="flex items-center cursor-pointer">
+                                                <input type="radio" wire:model.live="use_custom_payment_type" value="1" 
+                                                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                                <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Create Custom Type</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Predefined Payment Types -->
+                                        @if(!$use_custom_payment_type)
+                                            <select wire:model="payment_type"
+                                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('payment_type') border-red-500 @enderror">
+                                                <option value="">Select Payment Type</option>
+                                                @foreach($paymentTypes as $key => $label)
+                                                    <option value="{{ $key }}">{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('payment_type')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        @else
+                                            <!-- Custom Payment Type Input -->
+                                            <input type="text" wire:model="custom_payment_type"
+                                                   placeholder="e.g., Sports Fee, Exam Fee, Lab Fee, Development Levy"
+                                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('custom_payment_type') border-red-500 @enderror">
+                                            @error('custom_payment_type')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        @endif
                                     </div>
 
+                                    <!-- Account Selection -->
+                                    <div class="md:col-span-2">
+                                        <label for="subaccount_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                                            Receiving Account <span class="text-amber-600 text-xs">(Optional - uses primary if not selected)</span>
+                                        </label>
+                                        <select wire:model="subaccount_id" id="subaccount_id"
+                                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('subaccount_id') border-red-500 @enderror">
+                                            <option value="">-- Use Primary Account --</option>
+                                            @forelse($schoolSubaccounts as $account)
+                                                <option value="{{ $account['id'] }}">
+                                                    {{ $account['label'] }} - {{ $account['bank'] }} ({{ $account['account_number'] }})
+                                                </option>
+                                            @empty
+                                                <option disabled>No payment accounts available</option>
+                                            @endforelse
+                                        </select>
+                                        @error('subaccount_id')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                        @if(count($schoolSubaccounts) === 0)
+                                            <p class="mt-2 text-sm text-amber-600">
+                                                ⚠️ No additional payment accounts configured. Payments will go to the school's primary account.
+                                            </p>
+                                        @endif
+                                    </div>
+
+                                    <!-- Amount -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Amount (GHS) <span class="text-red-500">*</span></label>
-                                        <input type="number" wire:model="amount" step="0.01" class="block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <input type="number" wire:model="amount" step="0.01" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 @error('amount') border-red-500 @enderror">
                                         @error('amount') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-                                        <input type="date" wire:model="due_date" class="block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <input type="date" wire:model="due_date" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                                         @error('due_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Payment Period</label>
-                                        <select wire:model="payment_period" class="block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <select wire:model="payment_period" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                                             <option value="">Select Period</option>
                                             @foreach($paymentPeriods as $key => $label)
                                                 <option value="{{ $key }}">{{ $label }}</option>
@@ -350,11 +409,11 @@
                             <div>
                                 <div class="flex space-x-6 mb-4">
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" wire:model="is_mandatory" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" wire:model="is_mandatory" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-600">Mandatory</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" wire:model.live="allow_partial_payment" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" wire:model.live="allow_partial_payment" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-600">Allow Partial</span>
                                     </label>
                                 </div>
@@ -451,7 +510,7 @@
                             <div class="mt-8 flex justify-end">
                                 <button
                                     wire:click="closeViewModal"
-                                    class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm">
+                                    class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm">
                                     Close
                                 </button>
                             </div>
@@ -482,7 +541,7 @@
                         <select
                             wire:model.live="academic_year_id"
                             id="academic_year_id"
-                            class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('academic_year_id') border-red-500 @enderror">
+                            class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('academic_year_id') border-red-500 @enderror">
                             <option value="">Select Academic Year</option>
                             @foreach($academicYears as $year)
                                 <option value="{{ $year->id }}">
@@ -512,7 +571,7 @@
                             <select
                                 wire:model.live="academic_group_id"
                                 id="academic_group_id"
-                                class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('academic_group_id') border-red-500 @enderror">
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('academic_group_id') border-red-500 @enderror">
                                 <option value="">Select Academic Group</option>
                                 @foreach($academicGroups as $group)
                                     <option value="{{ $group->id }}">{{ $group->name }}</option>
@@ -531,7 +590,7 @@
                             <select
                                 wire:model="academic_level_id"
                                 id="academic_level_id"
-                                class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('academic_level_id') border-red-500 @enderror"
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('academic_level_id') border-red-500 @enderror"
                                 {{ empty($academicLevels) ? 'disabled' : '' }}>
                                 <option
                                     value="">{{ empty($academic_group_id) ? 'Select group first' : 'Select Academic Level' }}</option>
@@ -552,7 +611,7 @@
                             <select
                                 wire:model="current_term_id"
                                 id="current_term_id"
-                                class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('current_term_id') border-red-500 @enderror"
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('current_term_id') border-red-500 @enderror"
                                 {{ empty($academicPeriods) ? 'disabled' : '' }}>
                                 <option
                                     value="">{{ empty($academic_year_id) ? 'Select year first' : 'Select Term/Period' }}</option>
@@ -601,7 +660,7 @@
                                 type="date"
                                 wire:model="due_date"
                                 id="due_date"
-                                class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('due_date') border-red-500 @enderror">
+                                class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 @error('due_date') border-red-500 @enderror">
                             @error('due_date')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Book\BookMedia;
 use App\Models\Book\BookTableOfContent;
+use App\Traits\ActivityLoggable;
 use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,11 +20,13 @@ use Throwable;
 
 class Book extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
 
     public $with = [
-        'media', 'author', 'publisher', 'bookCategory', 'copies', 'approvedReviews', 'borrowings', 'subscriptions', 'groupSubscriptions', 'approvals', 'students'
+        'media', 'author', 'publisher', 'categories', 'bookCategory', 'copies', 'approvedReviews', 'borrowings', 'subscriptions', 'groupSubscriptions', 'approvals', 'students',
     ];
+
     protected $fillable = [
         'title',
         'slug',
@@ -57,8 +60,12 @@ class Book extends Model
         'audio_conversion_progress',
         'audio_conversion_attempts',
         'audio_conversion_last_attempt',
-
+        'age_groups',
+        'academic_group_ids',
+        'academic_level_ids',
+        'academic_subject_ids',
     ];
+
     protected $casts = [
         'has_hardcopy' => 'boolean',
         'has_softcopy' => 'boolean',
@@ -75,6 +82,10 @@ class Book extends Model
         'audio_conversion_progress' => 'array',
         'audio_conversion_attempts' => 'integer',
         'audio_conversion_last_attempt' => 'datetime',
+        'age_groups' => 'array',
+        'academic_group_ids' => 'array',
+        'academic_level_ids' => 'array',
+        'academic_subject_ids' => 'array',
     ];
 
     protected static function boot()
@@ -110,7 +121,7 @@ class Book extends Model
 
     public function getAuthorNameAttribute()
     {
-        return $this->author->name
+        return $this->author?->name
             ?? $this->author?->user?->name
             ?? 'Unknown';
     }
@@ -126,21 +137,23 @@ class Book extends Model
     public function getCoverImageAttribute(): string
     {
         if ($this->attributes['cover_image']) {
-            return asset('storage/' . $this->attributes['cover_image']);
+            return asset('storage/'.$this->attributes['cover_image']);
         }
         $sampleCovers = [
             'images/book-cover.png',
             'images/book-cover-1.jpg',
             'images/book-cover-2.jpg',
         ];
+
         return asset($sampleCovers[array_rand($sampleCovers)]);
     }
 
     public function getContentUrlAttribute(): string
     {
         if ($this->attributes['content_url']) {
-            return asset('storage/' . $this->attributes['content_url']);
+            return asset('storage/'.$this->attributes['content_url']);
         }
+
         return asset('sample.pdf');
     }
 
@@ -148,7 +161,7 @@ class Book extends Model
     {
         // If we have an existing sample URL, return it
         if ($this->attributes['sample_url']) {
-            return asset('storage/' . $this->attributes['sample_url']);
+            return asset('storage/'.$this->attributes['sample_url']);
         }
 
         // If no sample exists but we have a full PDF and table of contents, try to generate one
@@ -157,7 +170,8 @@ class Book extends Model
             if ($generatedSample) {
                 // Update the model with the generated sample
                 $this->update(['sample_url' => $generatedSample]);
-                return asset('storage/' . $generatedSample);
+
+                return asset('storage/'.$generatedSample);
             }
         }
 
@@ -171,7 +185,7 @@ class Book extends Model
     private function shouldGenerateSample(): bool
     {
         return $this->attributes['content_url']
-            && !$this->attributes['sample_url'];
+            && ! $this->attributes['sample_url'];
     }
 
     /**
@@ -180,7 +194,7 @@ class Book extends Model
     private function generateSampleFromFullPdf(): ?string
     {
         // Check if we have what we need
-        if (!$this->shouldGenerateSample()) {
+        if (! $this->shouldGenerateSample()) {
             return null;
         }
 
@@ -189,16 +203,16 @@ class Book extends Model
             $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
 
             // Check if the file exists
-            if (!file_exists($fullPdfPath)) {
+            if (! file_exists($fullPdfPath)) {
                 return null;
             }
 
             // Create a new FPDI instance
-            $pdf = new Fpdi();
+            $pdf = new Fpdi;
 
             // Get the first chapter pages
             $firstChapter = $this->table_of_contents[0] ?? null;
-            if (!$firstChapter) {
+            if (! $firstChapter) {
                 return null;
             }
 
@@ -221,8 +235,8 @@ class Book extends Model
             }
 
             // Generate a unique filename for the sample
-            $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
-            $samplePath = 'book-samples/' . $filename;
+            $filename = 'sample_'.$this->id.'_'.time().'.pdf';
+            $samplePath = 'book-samples/'.$filename;
 
             // Save the sample PDF
             $pdfContent = $pdf->Output('', 'S');
@@ -231,13 +245,14 @@ class Book extends Model
             return $samplePath;
         } catch (Exception $e) {
             // Log the error but don't break the flow
-            Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+            Log::error('Error extracting sample PDF for book ID '.$this->id.': '.$e->getMessage());
 
             // Return null to indicate failure, but don't throw exception
             return asset('sample.pdf');
         } catch (Throwable $e) {
             // Catch any other errors (like parse errors)
-            Log::error('Critical error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
+            Log::error('Critical error extracting sample PDF for book ID '.$this->id.': '.$e->getMessage());
+
             return null;
         }
     }
@@ -276,22 +291,18 @@ class Book extends Model
 
     /**
      * Get the primary category for backward compatibility
-     * Returns the first category if multiple exist, or the old book_category_id fallback
      */
     public function getPrimaryCategoryAttribute()
     {
-        // First try the new categories relationship
         if ($this->relationLoaded('categories') && $this->categories->isNotEmpty()) {
             return $this->categories->first();
         }
 
-        // Fallback to the old bookCategory relationship
         if ($this->relationLoaded('bookCategory') && $this->bookCategory) {
             return $this->bookCategory;
         }
 
-        // Load and return the first available category
-        return $this->categories()->first() ?? $this->bookCategory()->first();
+        return $this->categories()->first() ?? $this->bookCategory;
     }
 
     public function categories(): BelongsToMany
@@ -312,6 +323,7 @@ class Book extends Model
         if ($limit) {
             return $this->categories()->limit($limit)->get();
         }
+
         return $this->categories;
     }
 
@@ -323,25 +335,24 @@ class Book extends Model
         return $this->categories->pluck('name')->implode(', ');
     }
 
-
     public function getFormattedSubscriptionFeeAttribute(): string
     {
-        return 'GHS ' . number_format($this->annual_subscription_fee, 2);
+        return 'GHS '.number_format($this->annual_subscription_fee, 2);
     }
 
     public function getSubscriptionConditionsAttribute()
     {
         return $this->attributes['subscription_conditions'] ??
-            "1. Subscription is valid for one year from payment date\n" .
-            "2. Book content is for reading only - no downloading, copying or printing allowed\n" .
-            "3. Access will be revoked upon subscription expiry\n" .
-            "4. Subscription is non-refundable\n" .
-            "5. Content is protected by copyright laws";
+            "1. Subscription is valid for one year from payment date\n".
+            "2. Book content is for reading only - no downloading, copying or printing allowed\n".
+            "3. Access will be revoked upon subscription expiry\n".
+            "4. Subscription is non-refundable\n".
+            '5. Content is protected by copyright laws';
     }
 
     public function getIsFreeAttribute(): bool
     {
-        return !$this->annual_subscription_fee || $this->annual_subscription_fee == 0;
+        return ! $this->annual_subscription_fee || $this->annual_subscription_fee == 0;
     }
 
     public function scopeFree($query)
@@ -357,66 +368,6 @@ class Book extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(AcademicSubject::class, 'subject_id');
-    }
-
-    /**
-     * Get the table of contents with default structure if empty
-     */
-    public function getTableOfContentsAttributeDeprecated()
-    {
-        $toc = $this->attributes['table_of_contents'] ? json_decode($this->attributes['table_of_contents'], true) : null;
-
-        if (!$toc) {
-            // Return default table of contents structure
-            return $this->generateDefaultTableOfContents();
-        }
-
-        return $toc;
-    }
-
-    /**
-     * Generate a default table of contents based on book pages
-     */
-    private function generateDefaultTableOfContents(): array
-    {
-        $chaptersCount = max(1, min(15, intval($this->pages / 20))); // Rough estimate
-        $chapters = [];
-
-        for ($i = 1; $i <= $chaptersCount; $i++) {
-            $chapters[] = [
-                'chapter' => $i,
-                'title' => "Chapter {$i}",
-                'description' => "Content for chapter {$i}",
-                'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
-                'page_end' => $i * intval($this->pages / $chaptersCount),
-                'sections' => []
-            ];
-        }
-
-        return $chapters;
-    }
-
-    /**
-     * Get formatted table of contents for display
-     */
-    public function getFormattedTableOfContentsAttributeDeprecated(): array
-    {
-        $toc = $this->table_of_contents;
-
-        return collect($toc)->map(function ($chapter) {
-            return [
-                'chapter_number' => $chapter['chapter'] ?? 1,
-                'title' => $chapter['title'] ?? 'Untitled Chapter',
-                'description' => $chapter['description'] ?? '',
-                'page_range' => isset($chapter['page_start'], $chapter['page_end'])
-                    ? "Pages {$chapter['page_start']}-{$chapter['page_end']}"
-                    : '',
-                'page_count' => isset($chapter['page_start'], $chapter['page_end'])
-                    ? $chapter['page_end'] - $chapter['page_start'] + 1
-                    : 0,
-                'sections' => $chapter['sections'] ?? []
-            ];
-        })->toArray();
     }
 
     public function getAverageRatingAttribute()
@@ -440,7 +391,7 @@ class Book extends Model
 
         $this->update([
             'average_rating' => round($averageRating, 2),
-            'total_reviews' => $totalReviews
+            'total_reviews' => $totalReviews,
         ]);
     }
 
@@ -458,7 +409,7 @@ class Book extends Model
             $distribution[] = [
                 'rating' => $i,
                 'count' => $count,
-                'percentage' => round($percentage, 1)
+                'percentage' => round($percentage, 1),
             ];
         }
 
@@ -477,9 +428,10 @@ class Book extends Model
             $stars[] = [
                 'filled' => $i <= $rating,
                 'half_filled' => $i - 0.5 == $rating,
-                'number' => $i
+                'number' => $i,
             ];
         }
+
         return $stars;
     }
 
@@ -491,7 +443,7 @@ class Book extends Model
         // Check if user hasn't already reviewed this book
         $existingReview = $this->reviews()->where('user_id', $userId)->exists();
 
-        return !$existingReview;
+        return ! $existingReview;
     }
 
     /**
@@ -528,74 +480,62 @@ class Book extends Model
         $readingTimeHours = $readingTimeMinutes / 60;
 
         if ($readingTimeHours < 1) {
-            return round($readingTimeMinutes) . ' minutes';
+            return round($readingTimeMinutes).' minutes';
         } else {
             $hours = floor($readingTimeHours);
             $minutes = round(($readingTimeHours - $hours) * 60);
 
             if ($minutes == 0) {
-                return $hours . ' hour' . ($hours > 1 ? 's' : '');
+                return $hours.' hour'.($hours > 1 ? 's' : '');
             } else {
-                return $hours . 'h ' . $minutes . 'm';
+                return $hours.'h '.$minutes.'m';
             }
         }
     }
 
     public function getSimilarBooks(int $limit = 6)
     {
-        return $this->where('book_category_id', $this->attributes['book_category_id'])
-            ->where('id', '!=', $this->attributes['id'])
-            ->with(['author', 'bookCategory'])
+        $categoryIds = $this->categories->pluck('id');
+        if ($categoryIds->isEmpty() && $this->book_category_id) {
+            $categoryIds = collect([$this->book_category_id]);
+        }
+
+        return self::where('id', '!=', $this->id)
+            ->where(function ($query) use ($categoryIds) {
+                $query->whereHas('categories', function ($q) use ($categoryIds) {
+                    $q->whereIn('book_category.category_id', $categoryIds);
+                })->orWhereIn('book_category_id', $categoryIds);
+            })
+            ->with(['author', 'categories', 'bookCategory'])
             ->limit($limit)
             ->get();
     }
 
     public function getAuthorBooks(int $limit = 3)
     {
-        return $this->where('author_id', $this->attributes['author_id'])
-            ->where('id', '!=', $this->attributes['id'])
-            ->with(['author', 'bookCategory'])
+        return self::where('author_id', $this->author_id)
+            ->where('id', '!=', $this->id)
+            ->with(['author', 'categories', 'bookCategory'])
             ->limit($limit)
             ->get();
     }
 
-    // public function getTableOfContentsAttribute()
-    // {
-    //     // First try to get from relationship
-    //     if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-    //         return $this->tableOfContents->content;
-    //     }
-
-    //     // If no relation exists, generate default
-    //     return $this->generateDefaultTableOfContents();
-    // }
-
-
     public function getTableOfContentsAttribute($value)
     {
-        // Use DB value if it exists
-        if (!empty($value)) {
+        if (! empty($value)) {
             return is_string($value) ? json_decode($value, true) : $value;
         }
 
-        // Then fallback to relationship
         if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
             return $this->tableOfContents->content;
         }
 
-        // Otherwise, generate a default
         return $this->generateDefaultTableOfContents();
     }
 
-
     public function getFormattedTableOfContentsAttribute(): array
     {
-        // First try to get from relationship
-        if ($this->relationLoaded('tableOfContents') && $this->tableOfContents) {
-            $toc = $this->tableOfContents->content;
-        } else {
-            $toc = $this->generateDefaultTableOfContents();
-        }
+        $toc = $this->table_of_contents;
 
         return collect($toc)->map(function ($chapter) {
             return [
@@ -608,46 +548,102 @@ class Book extends Model
                 'page_count' => isset($chapter['page_start'], $chapter['page_end'])
                     ? $chapter['page_end'] - $chapter['page_start'] + 1
                     : 0,
-                'sections' => $chapter['sections'] ?? []
+                'sections' => $chapter['sections'] ?? [],
             ];
         })->toArray();
     }
 
+    private function generateDefaultTableOfContents(): array
+    {
+        $chaptersCount = max(1, min(15, intval($this->pages / 20)));
+        $chapters = [];
+
+        for ($i = 1; $i <= $chaptersCount; $i++) {
+            $chapters[] = [
+                'chapter' => $i,
+                'title' => "Chapter {$i}",
+                'description' => "Content for chapter {$i}",
+                'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
+                'page_end' => $i * intval($this->pages / $chaptersCount),
+                'sections' => [],
+            ];
+        }
+
+        return $chapters;
+    }
 
     public function getSingleAudioAttribute(): ?string
     {
-        return $this->media?->getSingleAudioAttribute();
+        if (isset($this->attributes['single_audio']) && $this->attributes['single_audio']) {
+            return $this->attributes['single_audio'];
+        }
+
+        return $this->media?->single_audio;
     }
 
     public function getSingleVideoAttribute(): ?string
     {
-        return $this->media?->getSingleVideoAttribute();
-    }
+        if (isset($this->attributes['single_video']) && $this->attributes['single_video']) {
+            return $this->attributes['single_video'];
+        }
 
-    // public function getChapterAudiosAttribute(): array
-    // {
-    //     return $this->media?->getChapterAudiosAttribute() ?? [];
-    // }
+        return $this->media?->single_video;
+    }
 
     public function getChapterAudiosAttribute(): array
     {
-        $media = $this->media()->first(); // Always fetch the media row
-        return $media?->chapter_audios ?? [];
-    }
+        if (isset($this->attributes['chapter_audios'])) {
+            $decoded = is_string($this->attributes['chapter_audios'])
+                ? json_decode($this->attributes['chapter_audios'], true)
+                : $this->attributes['chapter_audios'];
 
-    public function media(): HasOne|Book
-    {
-        return $this->hasOne(BookMedia::class);
+            return $this->formatChapterMedia($decoded ?? []);
+        }
+
+        return $this->formatChapterMedia($this->media?->chapter_audios ?? []);
     }
 
     public function getChapterVideosAttribute(): array
     {
-        return $this->media?->getChapterVideosAttribute() ?? [];
+        if (isset($this->attributes['chapter_videos'])) {
+            $decoded = is_string($this->attributes['chapter_videos'])
+                ? json_decode($this->attributes['chapter_videos'], true)
+                : $this->attributes['chapter_videos'];
+
+            return $this->formatChapterMedia($decoded ?? []);
+        }
+
+        return $this->formatChapterMedia($this->media?->chapter_videos ?? []);
+    }
+
+    /**
+     * Format chapter media to ensure consistent structure
+     */
+    private function formatChapterMedia(array $items): array
+    {
+        return array_map(function ($item) {
+            // New format: {chapter: 1, file: 'path', title: 'Title'}
+            if (is_array($item) && isset($item['file'])) {
+                return $item;
+            }
+
+            // Legacy format: just file path string
+            if (is_string($item)) {
+                return ['file' => $item];
+            }
+
+            return $item;
+        }, $items);
     }
 
     public function tableOfContents(): HasOne|Book
     {
         return $this->hasOne(BookTableOfContent::class);
+    }
+
+    public function media(): HasOne
+    {
+        return $this->hasOne(BookMedia::class, 'book_id');
     }
 
     public function quizSessions()

@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLoggable;
+use App\Traits\HasMultipleSubAccounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
 
 class School extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
+    use HasMultipleSubAccounts;
 
     protected $fillable = [
         // Basic information
@@ -52,19 +55,10 @@ class School extends Model
     protected $casts = [
         'settings' => 'array',
         'subscription_ends_at' => 'datetime',
-        'established_date' => 'date'
+        'established_date' => 'date',
     ];
 
     // Relationships
-
-
-    /**
-     * Get the school's subaccount (polymorphic)
-     */
-    public function subaccount(): MorphOne
-    {
-        return $this->morphOne(Subaccount::class, 'subaccountable');
-    }
 
     public function settings(): HasMany
     {
@@ -96,7 +90,8 @@ class School extends Model
     {
         $prefix = strtoupper(substr($this->name, 0, 3));
         $suffix = str_pad(School::count() + 1, 4, '0', STR_PAD_LEFT);
-        return $prefix . $suffix;
+
+        return $prefix.$suffix;
     }
 
     public function scopeActive($query)
@@ -166,16 +161,14 @@ class School extends Model
         return $this->academicLevels()->where('academic_level_id', $levelId)->exists();
     }
 
-
     // Get admins using existing roles system
 
     public function getAvailableAcademicLevels()
     {
         $groupIds = $this->academicGroups()->pluck('academic_groups.id');
+
         return AcademicLevel::whereIn('academic_group_id', $groupIds)->get();
     }
-
-
 
     public function students(): HasMany
     {
@@ -240,7 +233,7 @@ class School extends Model
     public function getCurrentPeriod(): ?AcademicPeriod
     {
         return $this->academicPeriods()->where('status', 'active')->first();
-//        return $this->academicPeriods()->where('is_current', true)->first();
+        //        return $this->academicPeriods()->where('is_current', true)->first();
     }
 
     public function getPeriodsForYear(string $academicYear)
@@ -289,7 +282,7 @@ class School extends Model
             ->exists();
     }
 
-// Add this relationship to School model
+    // Add this relationship to School model
 
     public function studentGroups(): HasMany
     {
@@ -301,7 +294,7 @@ class School extends Model
         return $this->hasMany(StudentGroup::class)->where('is_active', true);
     }
 
-// Update getStats method to include student groups
+    // Update getStats method to include student groups
     public function getStats(): array
     {
         $currentPeriod = $this->getCurrentPeriod();
@@ -322,5 +315,84 @@ class School extends Model
             'total_academic_periods' => $this->academicPeriods()->count(),
             'active_periods' => $this->academicPeriods()->where('status', 'active')->count(),
         ];
+    }
+
+    /**
+     * Get active content subscriptions (paid by admins for this school)
+     */
+    public function activeContentSubscriptions()
+    {
+        // Get subscriptions for teams owned by users in this school
+        return Subscription::query()
+            ->whereIn('team_id', function ($query) {
+                $query->select('teams.id')
+                    ->from('teams')
+                    ->join('users', 'users.id', '=', 'teams.owner_id')
+                    ->where('users.school_id', $this->id);
+            })
+            ->where('status', 'active')
+            ->where('expires_at', '>', now());
+    }
+
+    /**
+     * Check if this school has an active content subscription
+     */
+    public function hasActiveContentSubscription(): bool
+    {
+        return $this->activeContentSubscriptions()->exists();
+    }
+
+    /**
+     * Get the primary active subscription (most recent)
+     */
+    public function getActiveSubscription(): ?Subscription
+    {
+        return $this->activeContentSubscriptions()
+            ->latest('created_at')
+            ->first();
+    }
+
+    /**
+     * Get current subscription status/capacity
+     */
+    public function getSubscriptionStatus(): array
+    {
+        $subscription = $this->getActiveSubscription();
+
+        if (! $subscription) {
+            return [
+                'has_subscription' => false,
+                'message' => 'No active content subscription',
+            ];
+        }
+
+        return array_merge(
+            ['has_subscription' => true],
+            $subscription->getCapacityInfo()
+        );
+    }
+
+    /**
+     * Verify school can add more students
+     */
+    public function canAddStudents(int $count = 1): bool
+    {
+        $subscription = $this->getActiveSubscription();
+
+        if (! $subscription) {
+            return false; // No subscription = cannot add students
+        }
+
+        return $subscription->hasCapacityFor($count);
+    }
+
+    /**
+     * Get remaining student capacity
+     */
+    public function getRemainingStudentCapacity(): int
+    {
+        $subscription = $this->getActiveSubscription();
+
+        return $subscription ? $subscription->getRemainingCapacity() : 0;
     }
 }

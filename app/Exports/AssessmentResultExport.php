@@ -2,8 +2,8 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
 
 class AssessmentResultExport implements FromCollection
 {
@@ -19,4 +19,3 @@ class AssessmentResultExport implements FromCollection
         return $this->collection;
     }
 }
-

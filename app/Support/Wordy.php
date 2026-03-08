@@ -2,15 +2,13 @@
 
 namespace App\Support;
 
-use App\Models\Team;
-
 class Wordy
 {
     public function __construct(
         public readonly int $plus,
         public readonly int $minus,
         public readonly int $zero
-    ) { }
+    ) {}
 
     public function percentage(): array
     {
@@ -19,7 +17,7 @@ class Wordy
         return [
             (int) round($this->plus / $decimal),
             (int) round($this->minus / $decimal),
-            (int) round($this->zero / $decimal)
+            (int) round($this->zero / $decimal),
         ];
     }
 
@@ -38,13 +36,12 @@ class Wordy
             $incoming = array_count_values($incoming);
             $words = array_keys([...$current, ...$incoming]);
 
-
             foreach ($words as $word) {
                 $difference = data_get($current, $word, 0) - data_get($incoming, $word, 0);
 
-                if (0 < $difference) {
+                if ($difference > 0) {
                     $minus += $difference;
-                } elseif (0 > $difference) {
+                } elseif ($difference < 0) {
                     $plus += abs($difference);
                 } else {
                     $zero += 1;

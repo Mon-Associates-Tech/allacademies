@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assessments', function (Blueprint $table) {
-            $table->string('status')->nullable()->default('not_started');
+            if (!Schema::hasColumn('assessments', 'status')) {
+                $table->string('status')->nullable()->default('not_started');
+            }
         });
     }
 
@@ -22,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('assessments', function (Blueprint $table) {
-       $table->dropColumn('status');
+            $table->dropColumn('status');
         });
     }
 };

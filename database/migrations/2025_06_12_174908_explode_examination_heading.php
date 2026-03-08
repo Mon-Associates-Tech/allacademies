@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('examinations', static function (Blueprint $table) {
-            $table->longText('instructions')->nullable()->after('heading');
-            $table->unsignedBigInteger('duration')->default(0)->after('instructions');
-            $table->json('metadata')->nullable()->after('duration');
+            if (!Schema::hasColumn('examinations', 'instructions')) {
+                $table->longText('instructions')->nullable()->after('heading');
+            }
+            if (!Schema::hasColumn('examinations', 'duration')) {
+                $table->unsignedBigInteger('duration')->default(0)->after('instructions');
+            }
+            if (!Schema::hasColumn('examinations', 'metadata')) {
+                $table->json('metadata')->nullable()->after('duration');
+            }
         });
     }
 

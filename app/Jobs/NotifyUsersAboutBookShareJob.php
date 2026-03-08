@@ -31,8 +31,9 @@ class NotifyUsersAboutBookShareJob implements ShouldQueue
             if ($users->isEmpty()) {
                 Log::warning('No users found for book share', [
                     'share_id' => $this->share->id,
-                    'share_type' => $this->share->share_type
+                    'share_type' => $this->share->share_type,
                 ]);
+
                 return;
             }
 
@@ -46,7 +47,7 @@ class NotifyUsersAboutBookShareJob implements ShouldQueue
                             Log::error('Failed to notify user about book share', [
                                 'user_id' => $user->id,
                                 'share_id' => $this->share->id,
-                                'error' => $e->getMessage()
+                                'error' => $e->getMessage(),
                             ]);
                         }
                     }
@@ -55,13 +56,13 @@ class NotifyUsersAboutBookShareJob implements ShouldQueue
 
             Log::info('Book share notifications sent', [
                 'share_id' => $this->share->id,
-                'user_count' => $users->count()
+                'user_count' => $users->count(),
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to process book share notifications', [
                 'share_id' => $this->share->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }

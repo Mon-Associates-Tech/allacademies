@@ -11,20 +11,20 @@
     <div class="bg-white shadow rounded-lg p-6">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Search</label>
-                <input wire:model.live="search" type="text" placeholder="Search students or books..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                <input wire:model.live="search" type="text" placeholder="Search students or books..." class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Status</label>
-                <select wire:model.live="statusFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                <select wire:model.live="statusFilter" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Date</label>
-                <input wire:model.live="selectedDate" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                <input wire:model.live="selectedDate" type="date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
             </div>
             <div class="flex items-end">
                 <button wire:click="$set('search', ''); $set('selectedDate', '')" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -124,8 +124,8 @@
                     <div class="mt-2 px-7 py-3">
                         <p class="text-sm text-gray-500">Set the due date for this book borrowing:</p>
                         <div class="mt-3">
-                            <label class="block text-sm font-medium text-gray-700">Due Date</label>
-                            <input wire:model="customDueDate" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label>
+                            <input wire:model="customDueDate" type="date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                     </div>
                     <div class="items-center px-4 py-3">

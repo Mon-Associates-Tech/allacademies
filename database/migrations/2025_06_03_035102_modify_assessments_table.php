@@ -12,12 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assessments', function (Blueprint $table) {
-            $table->string('title')->nullable();
-            $table->timestamp('start_time')->nullable();
-            $table->timestamp('end_time')->nullable();
-            $table->string('duration')->nullable();
-            $table->unsignedBigInteger('topic_id')->nullable();
-            $table->unsignedBigInteger('subtopic_id')->nullable();
+            if (!Schema::hasColumn('assessments', 'title')) {
+                $table->string('title')->nullable();
+            }
+            if (!Schema::hasColumn('assessments', 'start_time')) {
+                $table->timestamp('start_time')->nullable();
+            }
+            if (!Schema::hasColumn('assessments', 'end_time')) {
+                $table->timestamp('end_time')->nullable();
+            }
+            if (!Schema::hasColumn('assessments', 'duration')) {
+                $table->string('duration')->nullable();
+            }
+            if (!Schema::hasColumn('assessments', 'topic_id')) {
+                $table->unsignedBigInteger('topic_id')->nullable();
+            }
+            if (!Schema::hasColumn('assessments', 'subtopic_id')) {
+                $table->unsignedBigInteger('subtopic_id')->nullable();
+            }
         });
     }
 

@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Notes;
 
-use App\Models\Note;
-use App\Models\NoteShare;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
+use App\Models\Note;
 use App\Models\StudentGroup;
 use App\Services\NoteShareService;
 use Livewire\Component;
@@ -16,15 +15,22 @@ class SharedWithList extends Component
     use WithPagination;
 
     public Note $note;
+
     public int $perPage = 10;
 
     // Filter properties
     public string $filterShareType = 'all';
+
     public string $filterRole = 'all';
+
     public ?int $filterAcademicGroup = null;
+
     public ?int $filterAcademicLevel = null;
+
     public ?int $filterStudentGroup = null;
+
     public string $searchTerm = '';
+
     public bool $filtersOpen = false;
 
     protected $listeners = [
@@ -89,6 +95,7 @@ class SharedWithList extends Component
             // Verify ownership
             if ($this->note->user_id !== auth()->id()) {
                 $this->dispatch('error', message: 'Unauthorized action.');
+
                 return;
             }
 
@@ -168,12 +175,25 @@ class SharedWithList extends Component
     public function getActiveFiltersCountProperty(): int
     {
         $count = 0;
-        if ($this->filterShareType !== 'all') $count++;
-        if ($this->filterRole !== 'all') $count++;
-        if ($this->filterAcademicGroup) $count++;
-        if ($this->filterAcademicLevel) $count++;
-        if ($this->filterStudentGroup) $count++;
-        if (!empty($this->searchTerm)) $count++;
+        if ($this->filterShareType !== 'all') {
+            $count++;
+        }
+        if ($this->filterRole !== 'all') {
+            $count++;
+        }
+        if ($this->filterAcademicGroup) {
+            $count++;
+        }
+        if ($this->filterAcademicLevel) {
+            $count++;
+        }
+        if ($this->filterStudentGroup) {
+            $count++;
+        }
+        if (! empty($this->searchTerm)) {
+            $count++;
+        }
+
         return $count;
     }
 
@@ -246,15 +266,15 @@ class SharedWithList extends Component
         }
 
         // Search by name or email
-        if (!empty($this->searchTerm)) {
+        if (! empty($this->searchTerm)) {
             $query->where(function ($q) {
                 $q->where('share_type', 'individual')
                     ->whereHas('sharedWithUser', function ($userQ) {
-                        $userQ->where('name', 'like', '%' . $this->searchTerm . '%')
-                            ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+                        $userQ->where('name', 'like', '%'.$this->searchTerm.'%')
+                            ->orWhere('email', 'like', '%'.$this->searchTerm.'%');
                     })
                     ->orWhereHasMorph('shareable', [AcademicGroup::class, AcademicLevel::class, StudentGroup::class], function ($morphQ) {
-                        $morphQ->where('name', 'like', '%' . $this->searchTerm . '%');
+                        $morphQ->where('name', 'like', '%'.$this->searchTerm.'%');
                     });
             });
         }

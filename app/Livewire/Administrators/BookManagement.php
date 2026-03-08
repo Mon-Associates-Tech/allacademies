@@ -16,43 +16,70 @@ use Livewire\WithPagination;
 
 class BookManagement extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $title;
+
     public $slug;
+
     public $authorId;
+
     public $bookCategoryId;
+
     public $edition;
+
     public $publisher;
+
     public $pages;
+
     public $hasHardcopy = false;
+
     public $hasSoftcopy = false;
+
     public $additionalInfo;
+
     public $coverImage;
+
     public $pdfFile;
+
     public $existingCover;
+
     public $existingPdf;
+
     public $annualSubscriptionFee = 0;
+
     public $subscriptionConditions;
+
     public $searchTerm = '';
+
     public $isEditing = false;
+
     public $editingBookId;
+
     public $showForm = false;
 
     // Filtering and sorting
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $filterCategory = '';
+
     public $filterAuthor = '';
+
     public $filterFormat = '';
 
     // Bulk operations
     public $selectedBooks = [];
+
     public $selectAll = false;
 
     public $authors;
+
     public $bookCategories;
+
     public $isAdmin = true;
+
     public string $status = 'published';
 
     protected $rules = [
@@ -111,8 +138,9 @@ class BookManagement extends Component
         $this->validate();
 
         // Validate that at least one format is selected
-        if (!$this->hasHardcopy && !$this->hasSoftcopy) {
+        if (! $this->hasHardcopy && ! $this->hasSoftcopy) {
             $this->addError('hasHardcopy', 'Please select at least one format (hardcopy or softcopy).');
+
             return;
         }
 
@@ -164,12 +192,12 @@ class BookManagement extends Component
     public function delete($bookId): void
     {
         $book = Book::findOrFail($bookId);
+        $bookTitle = $book->title;
 
         if ($book->borrowings()->count() > 0 || $book->subscriptions()->count() > 0) {
             session()->flash('error', 'Cannot delete book with active borrowings or subscriptions.');
             // return;
         }
-
 
         $subscriptionIds = $book->subscriptions()->pluck('id');
 
@@ -184,6 +212,13 @@ class BookManagement extends Component
         $this->deleteBookFiles($book);
 
         $book->delete();
+
+        // Log activity
+        Book::logActivityForModel('delete', 'Book Deleted', 'book', [
+            'book_title' => $bookTitle,
+            'book_id' => $bookId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         session()->flash('message', 'Book deleted successfully!');
         $this->dispatch('refreshBooks');
@@ -275,14 +310,16 @@ class BookManagement extends Component
         $this->validate();
 
         // Validate that at least one format is selected
-        if (!$this->hasHardcopy && !$this->hasSoftcopy) {
+        if (! $this->hasHardcopy && ! $this->hasSoftcopy) {
             $this->addError('hasHardcopy', 'Please select at least one format (hardcopy or softcopy).');
+
             return;
         }
 
         // If softcopy is selected but no PDF file provided
-        if ($this->hasSoftcopy && !$this->pdfFile) {
+        if ($this->hasSoftcopy && ! $this->pdfFile) {
             $this->addError('pdfFile', 'PDF file is required for softcopy books.');
+
             return;
         }
 
@@ -299,7 +336,7 @@ class BookManagement extends Component
         }
 
         // Create book
-        Book::create([
+        $book = Book::create([
             'title' => $this->title,
             'slug' => $this->slug,
             'author_id' => $this->authorId,
@@ -315,6 +352,16 @@ class BookManagement extends Component
             'subscription_conditions' => $this->subscriptionConditions,
             'cover_image' => $coverPath,
             'content_url' => $pdfPath,
+        ]);
+
+        // Log activity
+        $book->logActivity('create', 'Book Created', 'book', [
+            'book_title' => $this->title,
+            'author_id' => $this->authorId,
+            'category_id' => $this->bookCategoryId,
+            'has_hardcopy' => $this->hasHardcopy,
+            'has_softcopy' => $this->hasSoftcopy,
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         $this->resetForm();
@@ -351,6 +398,7 @@ class BookManagement extends Component
     {
         if (empty($this->selectedBooks)) {
             session()->flash('error', 'Please select books to delete.');
+
             return;
         }
 
@@ -362,6 +410,7 @@ class BookManagement extends Component
             // Check if book has borrowings or subscriptions
             if ($book->borrowings()->count() > 0 || $book->subscriptions()->count() > 0) {
                 $errors[] = "Cannot delete '{$book->title}' - has active borrowings or subscriptions.";
+
                 continue;
             }
 
@@ -376,7 +425,7 @@ class BookManagement extends Component
             session()->flash('message', "Successfully deleted {$deletedCount} book(s).");
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             session()->flash('error', implode('<br>', $errors));
         }
 
@@ -404,13 +453,13 @@ class BookManagement extends Component
         // Apply search filter
         if ($this->searchTerm) {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('publisher', 'like', '%' . $this->searchTerm . '%')
+                $q->where('title', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('publisher', 'like', '%'.$this->searchTerm.'%')
                     ->orWhereHas('author.user', function ($subQuery) {
-                        $subQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+                        $subQuery->where('name', 'like', '%'.$this->searchTerm.'%');
                     })
                     ->orWhereHas('bookCategory', function ($subQuery) {
-                        $subQuery->where('name', 'like', '%' . $this->searchTerm . '%');
+                        $subQuery->where('name', 'like', '%'.$this->searchTerm.'%');
                     });
             });
         }
@@ -458,7 +507,7 @@ class BookManagement extends Component
     public function render()
     {
         return view('livewire.administrators.book-management', [
-            'books' => $this->books
+            'books' => $this->books,
         ]);
     }
 }

@@ -2,12 +2,10 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\AcademicSubject;
+use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\Assignment;
 use App\Models\Student;
-use App\Models\StudentGroup;
-use App\Models\AcademicSubtopic;
 use App\Models\Teacher;
 use App\Services\AssignmentNotificationService;
 use Carbon\Carbon;
@@ -18,42 +16,64 @@ use Livewire\Component;
 class EditAssignment extends Component
 {
     public $assignmentId;
+
     public $title = '';
+
     public $description = '';
+
     public $type = 'quiz';
+
     public $academic_subject_id;
+
     public $duration_in_minutes = 60;
+
     public $starts_at;
+
     public $ends_at;
+
     public $is_randomized = false;
+
     public $instructions = '';
+
     public $total_marks = 100;
 
     // Assignment targets
     public $selectedAcademicGroups = [];
+
     public $selectedAcademicLevels = [];
+
     public $selectedStudentGroups = [];
+
     public $selectedStudents = [];
 
     // Questions selection
     public $selectedTopics = [];
+
     public $selectedSubtopics = [];
+
     public $questionTypes = [
         'multiple_choice_question' => ['enabled' => false, 'count' => 5, 'difficulty' => 'all'],
         'true_or_false_question' => ['enabled' => false, 'count' => 3, 'difficulty' => 'all'],
-        'essay_question' => ['enabled' => false, 'count' => 2, 'difficulty' => 'all']
+        'essay_question' => ['enabled' => false, 'count' => 2, 'difficulty' => 'all'],
     ];
 
     // Available options
     public $availableSubjects = [];
+
     public $availableAcademicGroups = [];
+
     public $availableAcademicLevels = [];
+
     public $availableStudentGroups = [];
+
     public $availableStudents = [];
+
     public $availableTopics = [];
+
     public $availableSubtopics = [];
 
     public $teacher;
+
     public $showQuestionSelection = false;
 
     protected $rules = [
@@ -75,7 +95,7 @@ class EditAssignment extends Component
         $this->teacher = Teacher::where('user_id', Auth::id())->first();
 
         // Load the existing assignment
-//        $assignment = Assignment::findOrFail($assignmentId);
+        //        $assignment = Assignment::findOrFail($assignmentId);
 
         // Verify teacher owns this assignment
         if ($assignment->teacher_id !== $this->teacher->id) {
@@ -126,7 +146,9 @@ class EditAssignment extends Component
 
     public function loadAvailableOptions()
     {
-        if (!$this->teacher) return;
+        if (! $this->teacher) {
+            return;
+        }
 
         // Load teacher's subjects
         $this->availableSubjects = $this->teacher->academicSubjects()
@@ -191,11 +213,11 @@ class EditAssignment extends Component
 
         // Ensure we're working with an array
         $topicIds = [];
-        if (!empty($this->selectedTopics) && is_array($this->selectedTopics)) {
+        if (! empty($this->selectedTopics) && is_array($this->selectedTopics)) {
             $topicIds = $this->selectedTopics;
         }
 
-        if (!empty($topicIds)) {
+        if (! empty($topicIds)) {
             $this->availableSubtopics = AcademicSubtopic::whereIn('academic_topic_id', $topicIds)
                 ->select('id', 'name', 'academic_topic_id')
                 ->with('academicTopic:id,name')
@@ -206,6 +228,16 @@ class EditAssignment extends Component
 
     public function updateAssignment()
     {
+        // NEW: Check school has active content subscription before allowing assignment updates
+        $school = auth()->user()->school;
+        if (!$school || !$school->hasActiveContentSubscription()) {
+            session()->flash('error',
+                'Your school must have an active subscription to update assignments. ' .
+                'Please contact your school administrator.'
+            );
+            return;
+        }
+
         $this->validate();
 
         // Validate that at least one question type is enabled
@@ -217,8 +249,9 @@ class EditAssignment extends Component
             }
         }
 
-        if (!$hasQuestions) {
+        if (! $hasQuestions) {
             session()->flash('error', 'Please enable at least one question type with a count greater than 0.');
+
             return;
         }
 
@@ -270,7 +303,7 @@ class EditAssignment extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Failed to update assignment: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update assignment: '.$e->getMessage());
         }
     }
 
@@ -279,7 +312,7 @@ class EditAssignment extends Component
         $questionsConfig = [];
 
         foreach ($this->questionTypes as $type => $config) {
-            if (!$config['enabled'] || $config['count'] <= 0) {
+            if (! $config['enabled'] || $config['count'] <= 0) {
                 continue;
             }
 
@@ -289,13 +322,13 @@ class EditAssignment extends Component
                 'difficulty' => $config['difficulty'],
                 'topic_ids' => [],
                 'subtopic_ids' => [],
-                'specific_ids' => []
+                'specific_ids' => [],
             ];
 
             // Add topic/subtopic filters if selected
-            if (!empty($this->selectedSubtopics)) {
+            if (! empty($this->selectedSubtopics)) {
                 $questionConfig['subtopic_ids'] = array_map('intval', $this->selectedSubtopics);
-            } elseif (!empty($this->selectedTopics)) {
+            } elseif (! empty($this->selectedTopics)) {
                 $questionConfig['topic_ids'] = array_map('intval', $this->selectedTopics);
             }
 
@@ -313,6 +346,7 @@ class EditAssignment extends Component
                 $total += (int) $config['count'];
             }
         }
+
         return $total;
     }
 

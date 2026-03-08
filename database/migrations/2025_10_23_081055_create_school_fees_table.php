@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('school_fees', function (Blueprint $table) {
             $table->id();
-            
+
             // Foreign keys and relationships
             $table->unsignedBigInteger('school_id')->index();
             $table->unsignedBigInteger('student_id')->index();
-            
+
             // Polymorphic relationship (payer can be parent, student, etc.)
             $table->unsignedBigInteger('payer_id')->nullable();
             $table->string('payer_type')->nullable();
-            
+
             $table->unsignedBigInteger('term_id')->index();
 
             // Fee details

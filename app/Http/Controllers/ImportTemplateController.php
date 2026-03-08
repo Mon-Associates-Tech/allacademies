@@ -14,18 +14,18 @@ class ImportTemplateController extends Controller
             'parents' => $this->getParentTemplate(),
         ];
 
-        if (!isset($templates[$type])) {
+        if (! isset($templates[$type])) {
             abort(404);
         }
 
         $template = $templates[$type];
-        $filename = ucfirst($type) . '_Import_Template_' . date('Y-m-d') . '.csv';
+        $filename = ucfirst($type).'_Import_Template_'.date('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($template) {
             echo $template;
         }, $filename, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -45,8 +45,8 @@ class ImportTemplateController extends Controller
                 'optional_columns' => [
                     'phone', 'date_of_birth', 'gender', 'student_id', 'admission_date',
                     'blood_group', 'address', 'parent_name', 'parent_phone', 'parent_email',
-                    'emergency_contact', 'city', 'state', 'country', 'postal_code'
-                ]
+                    'emergency_contact', 'city', 'state', 'country', 'postal_code',
+                ],
             ],
             'teachers' => [
                 'title' => 'Teachers Import Format',
@@ -59,8 +59,8 @@ class ImportTemplateController extends Controller
                 'optional_columns' => [
                     'phone', 'date_of_birth', 'gender', 'qualification', 'specialization',
                     'employee_id', 'hire_date', 'address', 'city', 'state', 'country',
-                    'emergency_contact', 'subjects', 'academic_levels', 'department'
-                ]
+                    'emergency_contact', 'subjects', 'academic_levels', 'department',
+                ],
             ],
             'librarians' => [
                 'title' => 'Librarians Import Format',
@@ -73,8 +73,8 @@ class ImportTemplateController extends Controller
                 'optional_columns' => [
                     'phone', 'date_of_birth', 'gender', 'qualification',
                     'employee_id', 'hire_date', 'address', 'city', 'state', 'country',
-                    'emergency_contact', 'certification', 'specialization'
-                ]
+                    'emergency_contact', 'certification', 'specialization',
+                ],
             ],
             'administrators' => [
                 'title' => 'Administrators Import Format',
@@ -87,8 +87,8 @@ class ImportTemplateController extends Controller
                 'optional_columns' => [
                     'phone', 'date_of_birth', 'gender', 'position', 'department',
                     'employee_id', 'hire_date', 'address', 'city', 'state', 'country',
-                    'emergency_contact', 'qualification', 'responsibilities'
-                ]
+                    'emergency_contact', 'qualification', 'responsibilities',
+                ],
             ],
             'parents' => [
                 'title' => 'Parents Import Format',
@@ -101,9 +101,9 @@ class ImportTemplateController extends Controller
                 ],
                 'optional_columns' => [
                     'phone', 'address', 'city', 'state', 'country', 'postal_code',
-                    'relationship', 'occupation', 'emergency_contact', 'secondary_phone'
-                ]
-            ]
+                    'relationship', 'occupation', 'emergency_contact', 'secondary_phone',
+                ],
+            ],
         ];
 
         return view('livewire.school.import-formats', compact('formats'));
@@ -154,7 +154,7 @@ class ImportTemplateController extends Controller
             'Jane Doe',
             '+233207654321',
             'jane.doe@example.com',
-            '+233501234567'
+            '+233501234567',
         ];
 
         return $this->generateCsv($headers, [$example]);
@@ -197,7 +197,7 @@ class ImportTemplateController extends Controller
             'Greater Accra',
             'Ghana',
             '+233507654321',
-            'Mathematics Department'
+            'Mathematics Department',
         ];
 
         return $this->generateCsv($headers, [$example]);
@@ -238,7 +238,7 @@ class ImportTemplateController extends Controller
             'Greater Accra',
             'Ghana',
             '+233607654321',
-            'Certified Librarian'
+            'Certified Librarian',
         ];
 
         return $this->generateCsv($headers, [$example]);
@@ -281,7 +281,7 @@ class ImportTemplateController extends Controller
             'Greater Accra',
             'Ghana',
             '+233707654321',
-            'Masters in Educational Leadership'
+            'Masters in Educational Leadership',
         ];
 
         return $this->generateCsv($headers, [$example]);
@@ -320,7 +320,7 @@ class ImportTemplateController extends Controller
             'Engineer',
             'STD2024001',
             '+233807654321',
-            '+233901234567'
+            '+233901234567',
         ];
 
         return $this->generateCsv($headers, [$example]);

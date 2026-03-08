@@ -31,7 +31,7 @@ class ForumTopic extends Model
         'academic_subject_id',
         'academic_topic_id',
         'study_group_id',
-        'referenced_book_id'
+        'referenced_book_id',
     ];
 
     protected $casts = [
@@ -39,7 +39,7 @@ class ForumTopic extends Model
         'is_locked' => 'boolean',
         'is_announcement' => 'boolean',
         'last_activity_at' => 'datetime',
-        'tags' => 'array'
+        'tags' => 'array',
     ];
 
     public function category()

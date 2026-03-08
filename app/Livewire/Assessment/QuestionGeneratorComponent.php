@@ -2,31 +2,43 @@
 
 namespace App\Livewire\Assessment;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class QuestionGeneratorComponent extends Component
 {
     public $selectedSubject = null;
+
     public $selectedTopic = null;
+
     public $selectedSubtopic = null;
+
     public $questionTypes = [
         'multiple_choice_question' => true,
         'true_or_false_question' => true,
-        'essay_question' => false
+        'essay_question' => false,
     ];
+
     public $questionCount = 10;
+
     public $difficulty = 'all';
+
     public $balancedDistribution = false;
 
     public $subjects = [];
+
     public $topics = [];
+
     public $subtopics = [];
+
     public $questionCounts = [];
+
     public $questionDistribution = [];
+
     public $generatedQuestions = [];
 
     protected RandomQuestionSelectionService $questionService;
+
     protected SubjectSelectionService $subjectService;
 
     public function boot(
@@ -106,8 +118,9 @@ class QuestionGeneratorComponent extends Component
         $config = $this->buildConfiguration();
         Log::info('Generating questions with config:', $config);
 
-        if (!$this->questionService->validateConfiguration($config)) {
+        if (! $this->questionService->validateConfiguration($config)) {
             session()->flash('error', 'Invalid configuration. Please check your selection.');
+
             return;
         }
 
@@ -117,7 +130,7 @@ class QuestionGeneratorComponent extends Component
 
         $this->generatedQuestions = $this->questionService->formatQuestionsForAssessment($questions);
 
-        session()->flash('success', 'Generated ' . $questions->count() . ' questions successfully!');
+        session()->flash('success', 'Generated '.$questions->count().' questions successfully!');
     }
 
     public function debugData()
@@ -131,8 +144,9 @@ class QuestionGeneratorComponent extends Component
 
     protected function updateQuestionData()
     {
-        if (!$this->selectedSubject) {
+        if (! $this->selectedSubject) {
             $this->resetQuestionData();
+
             return;
         }
 

@@ -8,7 +8,7 @@ return [
     */
     'server_url' => env('BBB_SERVER_URL', 'https://bbb.yourdomain.com/bigbluebutton/'),
     'secret' => env('BBB_SECRET', ''),
-    
+
     /*
     |--------------------------------------------------------------------------
     | Default Meeting Settings
@@ -26,7 +26,7 @@ return [
         'allowModsToUnmuteUsers' => true,
         'guestPolicy' => 'ASK_MODERATOR', // ALWAYS_ACCEPT, ALWAYS_DENY, ASK_MODERATOR
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Recording Settings
@@ -38,7 +38,7 @@ return [
         'storage_disk' => 's3', // local, s3, etc.
         'storage_path' => 'virtual-sessions/recordings',
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Session Limits

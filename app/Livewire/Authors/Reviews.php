@@ -5,7 +5,6 @@ namespace App\Livewire\Authors;
 use App\Models\Author;
 use App\Models\BookReview;
 use Illuminate\Contracts\View\View;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,18 +13,26 @@ class Reviews extends Component
     use WithPagination;
 
     public Author $author;
+
     public $search = '';
+
     public $ratingFilter = 'all';
+
     public $bookFilter = 'all';
+
     public $sortBy = 'latest';
+
     public $perPage = 12;
+
     public $selectedReview = null;
+
     public $showReplyModal = false;
+
     public $replyContent = '';
 
     public function mount(?Author $author)
     {
-        if (!$author) {
+        if (! $author) {
             $this->author = auth()->user->author;
         } else {
             $this->author = $author;
@@ -49,21 +56,19 @@ class Reviews extends Component
     private function getReviews()
     {
 
-
-        $query = BookReview::
-            whereHas('book', function ($bookQuery) {
-                $bookQuery->where('author_id',   auth()->user()->author->id);
-            })
+        $query = BookReview::whereHas('book', function ($bookQuery) {
+            $bookQuery->where('author_id', auth()->user()->author->id);
+        })
             ->with(['book', 'user']); // Only show approved reviews
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('review', 'like', '%' . $this->search . '%')
-                  ->orWhere('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('reviewer_name', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('user', function ($userQuery) {
-                      $userQuery->where('name', 'like', '%' . $this->search . '%');
-                  });
+                $q->where('review', 'like', '%'.$this->search.'%')
+                    ->orWhere('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('reviewer_name', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->where('name', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 
@@ -143,10 +148,13 @@ class Reviews extends Component
     private function calculateResponseRate($reviews)
     {
         $totalReviews = $reviews->count();
-        if ($totalReviews === 0) return 0;
+        if ($totalReviews === 0) {
+            return 0;
+        }
 
         // Count reviews that have author replies (you'll need to add this field if needed)
         $repliedReviews = $reviews->whereNotNull('author_reply')->count();
+
         return round(($repliedReviews / $totalReviews) * 100, 1);
     }
 
@@ -204,7 +212,7 @@ class Reviews extends Component
             // You might want to add an author_reply field to the book_reviews table
             $review->update([
                 'author_reply' => $this->replyContent,
-                'author_replied_at' => now()
+                'author_replied_at' => now(),
             ]);
         }
 
@@ -215,8 +223,9 @@ class Reviews extends Component
 
     public function toggleHelpful($reviewId)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $this->dispatch('show-login-modal');
+
             return;
         }
 
@@ -227,15 +236,16 @@ class Reviews extends Component
             $this->dispatch('review-helpful-toggled', [
                 'reviewId' => $reviewId,
                 'wasHelpful' => $wasHelpful,
-                'helpfulCount' => $review->helpful_count
+                'helpfulCount' => $review->helpful_count,
             ]);
         }
     }
 
     public function reportReview($reviewId)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $this->dispatch('show-login-modal');
+
             return;
         }
 

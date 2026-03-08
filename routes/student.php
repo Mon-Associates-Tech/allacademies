@@ -13,6 +13,7 @@ use App\Livewire\Students\Courses;
 use App\Livewire\Students\Messages\ComposeMessage;
 use App\Livewire\Students\Messages\MessageIndex;
 use App\Livewire\Students\Messages\MessageShow;
+use App\Livewire\Students\Notifications;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
@@ -21,7 +22,6 @@ use App\Livewire\Students\VirtualClassroom\ViewSessionRecordings;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->group(function () {
-
 
     Route::prefix('fees')->name('fees.')->group(function () {
         Route::get('/', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('index');
@@ -38,6 +38,7 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('performance', PerformanceOverview::class)->name('performance');
     Route::get('account', StudentProfile::class)->name('account');
     Route::get('activities', ActivityLogs::class)->name('activities');
+    Route::get('notifications', Notifications::class)->name('notifications');
     Route::get('schedules', StudentSchedule::class)->name('schedules');
     Route::get('courses', Courses::class)->name('courses');
     Route::get('courses/{courseId}', CourseDetails::class)->name('course.details');
@@ -64,7 +65,6 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('/messages/compose', ComposeMessage::class)->name('messages.compose');
     Route::get('/messages', MessageIndex::class)->name('messages.index');
     Route::get('/messages/{message}', MessageShow::class)->name('messages.show');
-
 
     Route::get('/students', [StudentManagementController::class, 'index'])->name('index');
     Route::get('{student}', [StudentManagementController::class, 'show'])->name('show');

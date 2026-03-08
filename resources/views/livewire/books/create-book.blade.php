@@ -10,7 +10,7 @@
                         </svg>
                         Back to Books
                     </button>
-                    <div class="border-l border-gray-300 pl-4">
+                    <div class="border-l border-gray-300 dark:border-gray-600 pl-4">
                         <h1 class="text-2xl font-bold text-gray-900">Create New Book</h1>
                         <p class="text-sm text-gray-500">Add a new book to your library collection</p>
                     </div>
@@ -99,7 +99,7 @@
                             <div class="relative">
                                 <input type="text" wire:model.live="title"
                                        placeholder="Enter the complete book title"
-                                       class="block w-full pl-4 pr-10 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg">
+                                       class="block w-full pl-4 pr-10 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg">
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -127,7 +127,7 @@
                                 <div class="space-y-3">
                                     <div class="relative">
                                         <select wire:model="authorId"
-                                                class="block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                                class="block w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                             <option value="">Choose an author</option>
                                             @foreach($authors as $author)
                                                 <option value="{{ $author->id }}">{{ $author->user->name }}</option>
@@ -163,14 +163,14 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Author Name</label>
                                             <input type="text" wire:model="newAuthorName"
                                                    placeholder="Full name of the author"
-                                                   class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                   class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             @error('newAuthorName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Author Email</label>
                                             <input type="email" wire:model="newAuthorEmail"
                                                    placeholder="author@example.com"
-                                                   class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                   class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             @error('newAuthorEmail') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         </div>
                                         <button type="button" wire:click="createNewAuthor"
@@ -193,7 +193,7 @@
                                 <div class="space-y-3">
                                     <div class="relative">
                                         <select wire:model="bookCategoryId"
-                                                class="block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
+                                                class="block w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white">
                                             <option value="">Select a category</option>
                                             @foreach($bookCategories as $category)
                                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -229,14 +229,14 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
                                             <input type="text" wire:model="newCategoryName"
                                                    placeholder="Enter category name"
-                                                   class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                                   class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                                             @error('newCategoryName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Category Description (Optional)</label>
                                             <textarea wire:model="newCategoryDescription" rows="3"
                                                       placeholder="Brief description of this category..."
-                                                      class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"></textarea>
+                                                      class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"></textarea>
                                             @error('newCategoryDescription') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         </div>
                                         <button type="button" wire:click="createNewCategory"
@@ -254,7 +254,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Edition</label>
                             <input type="text" wire:model="edition"
                                    placeholder="e.g., 1st Edition, Revised Edition"
-                                   class="block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="block w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('edition') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
@@ -263,7 +263,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Publisher</label>
                             <input type="text" wire:model="publisher"
                                    placeholder="Publishing house name"
-                                   class="block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="block w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('publisher') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
@@ -272,7 +272,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Number of Pages</label>
                             <input type="number" wire:model.live="pages" min="1"
                                    placeholder="Total pages"
-                                   class="block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   class="block w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('pages') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
@@ -288,7 +288,7 @@
                                 </div>
                                 <input type="number" wire:model="annualSubscriptionFee" step="0.01" min="0"
                                        placeholder="0.00"
-                                       class="block w-full pl-8 pr-4 py-4 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                       class="block w-full pl-8 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <p class="mt-1 text-xs text-gray-500">Enter 0 to make this book free</p>
                             @error('annualSubscriptionFee') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -299,7 +299,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Additional Information</label>
                             <textarea wire:model="additionalInfo" rows="4"
                                       placeholder="Any additional information about the book..."
-                                      class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                                      class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
                             @error('additionalInfo') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
                     </div>
@@ -320,7 +320,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <label class="relative flex items-start p-6 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                                     <input type="checkbox" wire:model="hasHardcopy"
-                                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                                           class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mt-1">
                                     <div class="ml-4">
                                         <div class="flex items-center mb-2">
                                             <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +334,7 @@
 
                                 <label class="relative flex items-start p-6 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                                     <input type="checkbox" wire:model="hasSoftcopy"
-                                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                                           class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mt-1">
                                     <div class="ml-4">
                                         <div class="flex items-center mb-2">
                                             <svg class="w-6 h-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,7 +435,7 @@
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-1">Chapter Number</label>
                                                 <input type="number" wire:model="tableOfContents.{{ $chapterIndex }}.chapter" min="1"
-                                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                       class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 @error("tableOfContents.{$chapterIndex}.chapter")
                                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                 @enderror
@@ -445,7 +445,7 @@
                                                 <label class="block text-sm font-medium text-gray-700 mb-1">Chapter Title</label>
                                                 <input type="text" wire:model="tableOfContents.{{ $chapterIndex }}.title"
                                                        placeholder="Chapter title"
-                                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                       class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 @error("tableOfContents.{$chapterIndex}.title")
                                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                 @enderror
@@ -455,7 +455,7 @@
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 mb-1">Start Page</label>
                                                     <input type="number" wire:model="tableOfContents.{{ $chapterIndex }}.page_start" min="1"
-                                                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                     @error("tableOfContents.{$chapterIndex}.page_start")
                                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                     @enderror
@@ -464,7 +464,7 @@
                                                 <div>
                                                     <label class="block text-sm font-medium text-gray-700 mb-1">End Page</label>
                                                     <input type="number" wire:model="tableOfContents.{{ $chapterIndex }}.page_end" min="1"
-                                                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                     @error("tableOfContents.{$chapterIndex}.page_end")
                                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                     @enderror
@@ -476,7 +476,7 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Chapter Description</label>
                                             <textarea wire:model="tableOfContents.{{ $chapterIndex }}.description" rows="2"
                                                       placeholder="Brief description of this chapter..."
-                                                      class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                                                      class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
                                         </div>
 
                                         <!-- Sections -->
@@ -518,7 +518,7 @@
                                                                     <label class="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
                                                                     <input type="text" wire:model="tableOfContents.{{ $chapterIndex }}.sections.{{ $sectionIndex }}.title"
                                                                            placeholder="Section title"
-                                                                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                           class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                                                     @error("tableOfContents.{$chapterIndex}.sections.{$sectionIndex}.title")
                                                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                                     @enderror
@@ -531,7 +531,7 @@
                                                                                wire:model="tableOfContents.{{ $chapterIndex }}.sections.{{ $sectionIndex }}.page_start"
                                                                                min="{{ $chapter['page_start'] }}"
                                                                                max="{{ $chapter['page_end'] }}"
-                                                                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                                                         @error("tableOfContents.{$chapterIndex}.sections.{$sectionIndex}.page_start")
                                                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                                         @enderror
@@ -543,7 +543,7 @@
                                                                                wire:model="tableOfContents.{{ $chapterIndex }}.sections.{{ $sectionIndex }}.page_end"
                                                                                min="{{ $chapter['page_start'] }}"
                                                                                max="{{ $chapter['page_end'] }}"
-                                                                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                                                         @error("tableOfContents.{$chapterIndex}.sections.{$sectionIndex}.page_end")
                                                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                                                         @enderror
@@ -556,7 +556,7 @@
                                                                 <textarea wire:model="tableOfContents.{{ $chapterIndex }}.sections.{{ $sectionIndex }}.description"
                                                                           rows="2"
                                                                           placeholder="Brief description of this section..."
-                                                                          class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"></textarea>
+                                                                          class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"></textarea>
                                                             </div>
 
                                                             @error("tableOfContents.{$chapterIndex}.sections.{$sectionIndex}.page_range")
@@ -724,7 +724,7 @@
                                     @endphp
                                     <label class="relative flex items-start p-6 bg-white border-2 {{ $status === $value ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200' }} rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                                         <input type="radio" wire:model="status" value="{{ $value }}"
-                                               class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1">
+                                               class="h-5 w-5 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 mt-1">
                                         <div class="ml-4 flex-1">
                                             <div class="flex items-center justify-between mb-2">
                                                 <div class="flex items-center">
@@ -768,7 +768,7 @@
                             <div class="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center">
-                                        <span class="text-sm font-medium text-gray-700">Current Status:</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Current Status:</span>
                                         <span class="ml-2 px-3 py-1 text-sm font-medium rounded-full {{ $this->currentPublishingStatus->getColorClass() }}">
                                             {{ $this->currentPublishingStatus->getLabel() }}
                                         </span>
@@ -797,7 +797,7 @@
                 <!-- Final Actions -->
                 <div class="flex items-center justify-end space-x-4 pt-8 border-t border-gray-200">
                     <button type="button" wire:click="cancel"
-                            class="px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                         Cancel
                     </button>
                     <button type="submit"

@@ -5,37 +5,38 @@ namespace App\Livewire\Students;
 use App\Enums\SubscriptionPackage;
 use App\Enums\SubscriptionStatus;
 use App\Models\AcademicSubject;
-use App\Models\Team;
 use App\Models\Student;
+use App\Models\Team;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 
 class Courses extends Component
 {
     public $showSubjectModal = false;
+
     public $selectedSubject = null;
 
     public function showSubjectDetails($subjectId): void
     {
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             return;
         }
 
         // Get the subject with detailed information
         $this->selectedSubject = AcademicSubject::with([
             'academicLevel.academicGroup',
-            'academicTopics' => function($query) {
-                $query->with(['subtopics' => function($subQuery) {
+            'academicTopics' => function ($query) {
+                $query->with(['subtopics' => function ($subQuery) {
                     $subQuery->orderBy('name');
                 }])->orderBy('name');
             },
-            'lessons' => function($query) {
+            'lessons' => function ($query) {
                 $query->orderBy('title');
             },
             'quizzes',
-            'examinations'
+            'examinations',
         ])->findOrFail($subjectId);
 
         $this->showSubjectModal = true;
@@ -50,14 +51,14 @@ class Courses extends Component
     public function render()
     {
         $currentTeam = Team::query()->find(auth()->user()->current_team_id);
-        if (!$currentTeam) {
+        if (! $currentTeam) {
             $currentTeam = Team::query()->where('owner_id', auth()->id())->first();
         }
 
         // Get the current student
         $student = auth()->user()->student;
 
-        if (!$student) {
+        if (! $student) {
             $student = Student::create([
                 'user_id' => auth()->id(),
                 'team_id' => auth()->user()->current_team_id,
@@ -70,7 +71,7 @@ class Courses extends Component
         $accessibleSubjects = $subjectDetails['total_accessible'];
 
         // Filter subjects based on subscription status
-        $academicSubjects = $accessibleSubjects->filter(function($subject) {
+        $academicSubjects = $accessibleSubjects->filter(function ($subject) {
             return $subject->subscriptions()
                 ->where('status', SubscriptionStatus::PAID)
                 ->where('expires_at', '>', now())
@@ -92,12 +93,12 @@ class Courses extends Component
                 ->exists();
         });
 
-        if(!empty($academicSubjects) && $academicSubjects->count()) {
+        if (! empty($academicSubjects) && $academicSubjects->count()) {
             // Load relationships for display
             $academicSubjects?->load([
                 'academicLevel.academicGroup',
                 'quizzes',
-                'examinations'
+                'examinations',
             ]);
         } else {
             session()->flash('message', 'You don\'t have any active academic subjects.');
@@ -107,8 +108,7 @@ class Courses extends Component
             'academicSubjects' => $academicSubjects,
             'currentTeam' => $currentTeam,
             'student' => $student,
-            'subjectDetails' => $subjectDetails
+            'subjectDetails' => $subjectDetails,
         ]);
     }
-
 }

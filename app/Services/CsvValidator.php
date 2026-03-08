@@ -16,18 +16,18 @@ class CsvValidator
 
             // Read CSV manually
             $handle = fopen($fullPath, 'r');
-            if (!$handle) {
+            if (! $handle) {
                 throw new \Exception('Could not open CSV file');
             }
 
             // Read header row
             $headers = fgetcsv($handle);
-            if (!$headers) {
+            if (! $headers) {
                 throw new \Exception('Could not read header row');
             }
 
             // Clean and normalize headers
-            $cleanHeaders = array_map(function($header) {
+            $cleanHeaders = array_map(function ($header) {
                 return strtolower(trim($header, " \t\n\r\0\x0B\""));
             }, $headers);
 
@@ -37,14 +37,15 @@ class CsvValidator
             // Check for missing columns
             $missingColumns = array_diff($normalizedRequired, $cleanHeaders);
 
-            if (!empty($missingColumns)) {
+            if (! empty($missingColumns)) {
                 fclose($handle);
+
                 return [
                     'valid' => false,
-                    'message' => 'Missing required columns: ' . implode(', ', $missingColumns),
+                    'message' => 'Missing required columns: '.implode(', ', $missingColumns),
                     'required_columns' => $requiredColumns,
                     'found_columns' => $cleanHeaders,
-                    'raw_headers' => $headers
+                    'raw_headers' => $headers,
                 ];
             }
 
@@ -59,7 +60,9 @@ class CsvValidator
                 $dataRowCount++;
 
                 // Only read first few rows for validation
-                if ($dataRowCount > 5) break;
+                if ($dataRowCount > 5) {
+                    break;
+                }
             }
 
             fclose($handle);
@@ -67,7 +70,7 @@ class CsvValidator
             if ($dataRowCount === 0) {
                 return [
                     'valid' => false,
-                    'message' => 'No data rows found in CSV'
+                    'message' => 'No data rows found in CSV',
                 ];
             }
 
@@ -79,11 +82,11 @@ class CsvValidator
                 }
             }
 
-            if (!empty($emptyRequired)) {
+            if (! empty($emptyRequired)) {
                 return [
                     'valid' => false,
-                    'message' => 'Sample row has empty required fields: ' . implode(', ', $emptyRequired),
-                    'sample_row' => $sampleRow
+                    'message' => 'Sample row has empty required fields: '.implode(', ', $emptyRequired),
+                    'sample_row' => $sampleRow,
                 ];
             }
 
@@ -93,13 +96,13 @@ class CsvValidator
                 'total_rows' => $dataRowCount,
                 'required_columns' => $requiredColumns,
                 'found_columns' => $cleanHeaders,
-                'sample_row' => $sampleRow
+                'sample_row' => $sampleRow,
             ];
 
         } catch (\Exception $e) {
             return [
                 'valid' => false,
-                'message' => 'Error reading CSV: ' . $e->getMessage()
+                'message' => 'Error reading CSV: '.$e->getMessage(),
             ];
         } finally {
             if (isset($path)) {

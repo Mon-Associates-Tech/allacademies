@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Forum\ForumCategory;
-use App\Models\Forum\ForumTopic;
-use App\Models\Forum\ForumPost;
-use App\Models\User;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
+use App\Models\Forum\ForumCategory;
+use App\Models\Forum\ForumPost;
+use App\Models\Forum\ForumTopic;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class ForumSeeder extends Seeder
@@ -17,8 +17,9 @@ class ForumSeeder extends Seeder
     {
         $user = User::first();
 
-        if (!$user) {
+        if (! $user) {
             $this->command->info('No users found. Please run UserSeeder first.');
+
             return;
         }
 
@@ -28,33 +29,33 @@ class ForumSeeder extends Seeder
                 'name' => 'General Discussion',
                 'description' => 'General academic discussions and questions',
                 'color' => 'green',
-                'sort_order' => 1
+                'sort_order' => 1,
             ],
             [
                 'name' => 'Study Groups',
                 'description' => 'Find and organize study groups',
                 'color' => 'purple',
-                'sort_order' => 2
+                'sort_order' => 2,
             ],
             [
                 'name' => 'Book Reviews',
                 'description' => 'Share your thoughts on books and resources',
                 'color' => 'yellow',
-                'sort_order' => 3
+                'sort_order' => 3,
             ],
             [
                 'name' => 'Help & Support',
                 'description' => 'Get help with platform features and technical issues',
                 'color' => 'red',
-                'sort_order' => 4
+                'sort_order' => 4,
             ],
             [
                 'name' => 'Announcements',
                 'description' => 'Important announcements and updates',
                 'color' => 'indigo',
                 'is_private' => true,
-                'sort_order' => 5
-            ]
+                'sort_order' => 5,
+            ],
         ];
 
         foreach ($generalCategories as $categoryData) {
@@ -62,7 +63,7 @@ class ForumSeeder extends Seeder
                 'name' => $categoryData['name'],
             ], array_merge($categoryData, [
                 'slug' => $this->generateUniqueSlug($categoryData['name']),
-                'is_active' => true
+                'is_active' => true,
             ]));
 
             // Only create sample topics if category was just created
@@ -78,12 +79,12 @@ class ForumSeeder extends Seeder
                 'academic_level_id' => $level->id,
                 'academic_subject_id' => null,
             ], [
-                'name' => $level->name . ' Discussion',
-                'slug' => $this->generateUniqueSlug($level->name . ' Discussion'),
-                'description' => 'General discussions for ' . $level->name . ' level students',
+                'name' => $level->name.' Discussion',
+                'slug' => $this->generateUniqueSlug($level->name.' Discussion'),
+                'description' => 'General discussions for '.$level->name.' level students',
                 'color' => 'violet',
                 'is_active' => true,
-                'sort_order' => 100 + $level->id
+                'sort_order' => 100 + $level->id,
             ]);
 
             if ($category->wasRecentlyCreated) {
@@ -97,12 +98,12 @@ class ForumSeeder extends Seeder
                     'academic_level_id' => $level->id,
                     'academic_subject_id' => $subject->id,
                 ], [
-                    'name' => $subject->name . ' - ' . $level->name,
-                    'slug' => $this->generateUniqueSlug($subject->name . ' ' . $level->name),
-                    'description' => 'Subject-specific discussions for ' . $subject->name . ' at ' . $level->name . ' level',
+                    'name' => $subject->name.' - '.$level->name,
+                    'slug' => $this->generateUniqueSlug($subject->name.' '.$level->name),
+                    'description' => 'Subject-specific discussions for '.$subject->name.' at '.$level->name.' level',
                     'color' => 'blue',
                     'is_active' => true,
-                    'sort_order' => ($level->id * 100) + $subject->id
+                    'sort_order' => ($level->id * 100) + $subject->id,
                 ]);
 
                 if ($subjectCategory->wasRecentlyCreated) {
@@ -117,7 +118,7 @@ class ForumSeeder extends Seeder
     private function generateUniqueSlug($name, $attempt = 0)
     {
         $baseSlug = Str::slug($name);
-        $slug = $attempt > 0 ? $baseSlug . '-' . $attempt : $baseSlug;
+        $slug = $attempt > 0 ? $baseSlug.'-'.$attempt : $baseSlug;
 
         if (ForumCategory::where('slug', $slug)->exists()) {
             return $this->generateUniqueSlug($name, $attempt + 1);
@@ -130,15 +131,15 @@ class ForumSeeder extends Seeder
     {
         $sampleTopics = [
             [
-                'title' => 'Welcome to ' . $category->name,
-                'content' => 'Welcome to the ' . $category->name . ' category! This is a great place to discuss topics related to ' . $category->description . '. Feel free to ask questions, share insights, and help fellow students.',
-                'is_pinned' => true
+                'title' => 'Welcome to '.$category->name,
+                'content' => 'Welcome to the '.$category->name.' category! This is a great place to discuss topics related to '.$category->description.'. Feel free to ask questions, share insights, and help fellow students.',
+                'is_pinned' => true,
             ],
             [
                 'title' => 'Study Tips and Techniques',
                 'content' => 'Share your best study tips and techniques that have worked for you. What methods do you use to stay organized and productive?',
-                'tags' => ['study-tips', 'productivity', 'learning']
-            ]
+                'tags' => ['study-tips', 'productivity', 'learning'],
+            ],
         ];
 
         foreach ($sampleTopics as $topicData) {
@@ -152,7 +153,7 @@ class ForumSeeder extends Seeder
                 'academic_level_id' => $category->academic_level_id,
                 'academic_subject_id' => $category->academic_subject_id,
                 'last_activity_at' => now(),
-                'views_count' => rand(10, 50)
+                'views_count' => rand(10, 50),
             ]);
 
             // Create first post
@@ -161,7 +162,7 @@ class ForumSeeder extends Seeder
                 'forum_topic_id' => $topic->id,
                 'user_id' => $user->id,
                 'is_approved' => true,
-                'likes_count' => rand(0, 5)
+                'likes_count' => rand(0, 5),
             ]);
         }
     }
@@ -169,7 +170,7 @@ class ForumSeeder extends Seeder
     private function generateUniqueTopicSlug($title, $attempt = 0)
     {
         $baseSlug = Str::slug($title);
-        $slug = $attempt > 0 ? $baseSlug . '-' . $attempt : $baseSlug;
+        $slug = $attempt > 0 ? $baseSlug.'-'.$attempt : $baseSlug;
 
         if (ForumTopic::where('slug', $slug)->exists()) {
             return $this->generateUniqueTopicSlug($title, $attempt + 1);

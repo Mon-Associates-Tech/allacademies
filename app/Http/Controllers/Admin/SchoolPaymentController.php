@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SchoolPayment;
-use App\Models\Student;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
-use App\Models\AcademicYear;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
+use App\Models\School;
+use App\Models\SchoolPayment;
+use App\Models\SchoolPaymentStructure;
+use App\Models\Subaccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -38,7 +40,8 @@ class SchoolPaymentController extends Controller
             'academicLevel',
             'academicYear',
             'academicPeriod',
-            'payer'
+            'subaccount',
+            'payer',
         ])
             ->where('school_id', $schoolId);
 
@@ -69,6 +72,10 @@ class SchoolPaymentController extends Controller
 
         if ($request->filled('payer_type')) {
             $query->where('payer_type', $request->payer_type);
+        }
+
+        if ($request->filled('subaccount_id')) {
+            $query->where('subaccount_id', $request->subaccount_id);
         }
 
         if ($request->filled('student_id')) {
@@ -167,9 +174,36 @@ class SchoolPaymentController extends Controller
      */
     protected function getFilterOptions($schoolId)
     {
+        // Get predefined payment types
+        $predefinedTypes = SchoolPayment::paymentTypes();
+
+        // Get custom payment types from SchoolPaymentStructure
+        $customTypes = SchoolPaymentStructure::where('school_id', $schoolId)
+            ->distinct()
+            ->pluck('payment_type')
+            ->toArray();
+
+        // Merge predefined and custom types, removing duplicates
+        $allPaymentTypes = array_merge($predefinedTypes, array_flip(array_diff($customTypes, array_keys($predefinedTypes))));
+
+        // Get subaccounts for the school
+        $subaccounts = Subaccount::whereIn('subaccountable_type', ['App\Models\School', 'school', School::class])
+            ->where('subaccountable_id', $schoolId)
+            ->where('status', 'active')
+            ->orderBy('is_primary', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($account) {
+                return [
+                    'id' => $account->id,
+                    'name' => ($account->is_primary ? '[Primary] ' : '').($account->name ?? $account->business_name),
+                ];
+            });
+
         return [
-            'payment_types' => SchoolPayment::paymentTypes(),
+            'payment_types' => $allPaymentTypes,
             'payer_types' => SchoolPayment::payerTypes(),
+            'subaccounts' => $subaccounts,
             'academic_groups' => AcademicGroup::forSchool($schoolId)->get(),
             'academic_levels' => AcademicLevel::forSchool($schoolId)->get(),
             'academic_years' => AcademicYear::where('school_id', $schoolId)->orderBy('start_date', 'desc')->get(),
@@ -185,10 +219,10 @@ class SchoolPaymentController extends Controller
         $schoolId = getSchoolId();
 
         $payment->load([
-            'student' => function ($query) use ($schoolId) {
+            'student' => function ($query) {
                 // Explicitly filter by school_id to work with global scope
                 $query->withoutGlobalScope(\App\Scopes\SchoolScope::class);
-                  //  ->where('school_id', $schoolId);
+                //  ->where('school_id', $schoolId);
             },
             'student.user',
             'student.academicGroup',
@@ -197,7 +231,7 @@ class SchoolPaymentController extends Controller
             'academicPeriod',
             'payer',
             'creator',
-            'verifier'
+            'verifier',
         ]);
 
         return view('admin.payments.show', compact('payment'));

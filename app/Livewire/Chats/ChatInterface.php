@@ -14,20 +14,33 @@ class ChatInterface extends Component
     use WithFileUploads;
 
     public $selectedChatGroup = null;
+
     public $messages = [];
+
     public $newMessage = '';
+
     public $replyToMessage = null;
+
     public $attachments = [];
+
     public $showEmojiPicker = false;
+
     public $isTyping = false;
+
     public $chatGroups = [];
+
     public $showCreateGroup = false;
+
     public $searchTerm = '';
 
     protected $chatService;
+
     public ?bool $showMembersModal;
+
     public $showGroupInfoModal = false;
+
     public $showLeaveGroupModal = false;
+
     public $showDeleteGroupModal = false;
 
     public function boot(ChatService $chatService)
@@ -40,72 +53,71 @@ class ChatInterface extends Component
         $this->loadChatGroups();
     }
 
-public function leaveGroup()
-{
-    if (!$this->selectedChatGroup) {
-        return;
+    public function leaveGroup()
+    {
+        if (! $this->selectedChatGroup) {
+            return;
+        }
+
+        try {
+            // Use the ChatService method to leave the group
+            app(ChatService::class)->leaveGroup($this->selectedChatGroup, auth()->user());
+
+            // Reset the selected group
+            $this->selectedChatGroup = null;
+            $this->messages = [];
+
+            // Reload chat groups
+            $this->loadChatGroups();
+
+            // Close modal
+            $this->showLeaveGroupModal = false;
+
+            // Show success message
+            session()->flash('message', 'You have left the group successfully.');
+            $this->dispatch('close-modal', name: 'leave-group-confirmation');
+        } catch (\Exception $e) {
+            \Log::error('Error leaving group', [
+                'group_id' => $this->selectedChatGroup->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+            $this->addError('group', $e->getMessage());
+        }
     }
 
-    try {
-        // Use the ChatService method to leave the group
-        app(ChatService::class)->leaveGroup($this->selectedChatGroup, auth()->user());
+    public function deleteGroup()
+    {
+        if (! $this->selectedChatGroup) {
+            return;
+        }
 
-        // Reset the selected group
-        $this->selectedChatGroup = null;
-        $this->messages = [];
+        try {
+            // Use the ChatService method to delete the group
+            app(ChatService::class)->deleteGroup($this->selectedChatGroup, auth()->user());
 
-        // Reload chat groups
-        $this->loadChatGroups();
+            // Reset the selected group
+            $this->selectedChatGroup = null;
+            $this->messages = [];
 
-        // Close modal
-        $this->showLeaveGroupModal = false;
+            // Reload chat groups
+            $this->loadChatGroups();
 
-        // Show success message
-        session()->flash('message', 'You have left the group successfully.');
-        $this->dispatch('close-modal', name: 'leave-group-confirmation');
-    } catch (\Exception $e) {
-        \Log::error('Error leaving group', [
-            'group_id' => $this->selectedChatGroup->id,
-            'user_id' => auth()->id(),
-            'error' => $e->getMessage()
-        ]);
-        $this->addError('group', $e->getMessage());
+            // Close modal
+            $this->showDeleteGroupModal = false;
+
+            // Show success message
+            session()->flash('message', 'Group has been deleted successfully.');
+            $this->dispatch('close-modal', name: 'delete-group-confirmation');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting group', [
+                'group_id' => $this->selectedChatGroup->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+            $this->addError('group', $e->getMessage());
+        }
     }
-}
-
-public function deleteGroup()
-{
-    if (!$this->selectedChatGroup) {
-        return;
-    }
-
-    try {
-        // Use the ChatService method to delete the group
-        app(ChatService::class)->deleteGroup($this->selectedChatGroup, auth()->user());
-
-        // Reset the selected group
-        $this->selectedChatGroup = null;
-        $this->messages = [];
-
-        // Reload chat groups
-        $this->loadChatGroups();
-
-        // Close modal
-        $this->showDeleteGroupModal = false;
-
-        // Show success message
-        session()->flash('message', 'Group has been deleted successfully.');
-        $this->dispatch('close-modal', name: 'delete-group-confirmation');
-    } catch (\Exception $e) {
-        \Log::error('Error deleting group', [
-            'group_id' => $this->selectedChatGroup->id,
-            'user_id' => auth()->id(),
-            'error' => $e->getMessage()
-        ]);
-        $this->addError('group', $e->getMessage());
-    }
-}
-
 
     public function loadChatGroups()
     {
@@ -123,13 +135,15 @@ public function deleteGroup()
         try {
             $group = ChatGroup::with(['members'])->find($groupId);
 
-            if (!$group) {
+            if (! $group) {
                 $this->addError('group', 'Chat group not found.');
+
                 return;
             }
 
-            if (!$group->isUserMember(auth()->user())) {
+            if (! $group->isUserMember(auth()->user())) {
                 $this->addError('access', 'You do not have access to this chat group.');
+
                 return;
             }
 
@@ -151,11 +165,15 @@ public function deleteGroup()
 
     public function loadMessages($beforeMessageId = null)
     {
-        if (!$this->selectedChatGroup) return;
+        if (! $this->selectedChatGroup) {
+            return;
+        }
 
         $chatGroup = ChatGroup::find($this->selectedChatGroup->id);
 
-        if (!$chatGroup) return;
+        if (! $chatGroup) {
+            return;
+        }
 
         try {
             $paginatedMessages = app(ChatService::class)->getGroupMessages(
@@ -173,7 +191,7 @@ public function deleteGroup()
         } catch (\Exception $e) {
             \Log::error('Error loading messages', [
                 'group_id' => $this->selectedChatGroup->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             $this->addError('messages', 'Unable to load messages.');
         }
@@ -183,13 +201,15 @@ public function deleteGroup()
     {
         $this->validate([
             'newMessage' => 'required_without:attachments|max:2000',
-            'attachments.*' => 'file|max:10240' // 10MB max
+            'attachments.*' => 'file|max:10240', // 10MB max
         ]);
 
-        if (!$this->selectedChatGroup) return;
+        if (! $this->selectedChatGroup) {
+            return;
+        }
 
         try {
-            if (!empty($this->attachments)) {
+            if (! empty($this->attachments)) {
                 $message = $this->chatService->sendMessageWithAttachments(
                     $this->selectedChatGroup,
                     auth()->user(),
@@ -219,7 +239,7 @@ public function deleteGroup()
             \Log::error('Error sending message', [
                 'group_id' => $this->selectedChatGroup->id,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             $this->addError('message', $e->getMessage());
         }
@@ -260,7 +280,7 @@ public function deleteGroup()
             \Log::error('Error deleting message', [
                 'message_id' => $messageId,
                 'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             $this->addError('message', 'Unable to delete message.');
         }
@@ -268,12 +288,13 @@ public function deleteGroup()
 
     public function loadOlderMessages()
     {
-        if (empty($this->messages)) return;
+        if (empty($this->messages)) {
+            return;
+        }
 
         $oldestMessage = collect($this->messages)->first();
         $this->loadMessages($oldestMessage->id);
     }
-
 
     public function onMessageReceived($data)
     {
@@ -281,13 +302,12 @@ public function deleteGroup()
             $message = ChatMessage::with(['user', 'attachments', 'replyTo.user'])
                 ->find($data['message_id']);
 
-            if ($message && !collect($this->messages)->contains('id', $message->id)) {
+            if ($message && ! collect($this->messages)->contains('id', $message->id)) {
                 $this->messages[] = $message;
                 $this->dispatch('scrollToBottom');
             }
         }
     }
-
 
     public function onUserTyping($data)
     {
@@ -303,6 +323,7 @@ public function deleteGroup()
             $this->attachments = array_values($this->attachments);
         }
     }
+
     protected function getListeners()
     {
         $listeners = [];
@@ -317,15 +338,14 @@ public function deleteGroup()
 
     public function updatedNewMessage()
     {
-        if ($this->selectedChatGroup && !empty(trim($this->newMessage))) {
+        if ($this->selectedChatGroup && ! empty(trim($this->newMessage))) {
             $this->dispatch('userTyping', [
                 'chat_group_id' => $this->selectedChatGroup->id,
                 'user_id' => auth()->id(),
-                'user_name' => auth()->user()->name
+                'user_name' => auth()->user()->name,
             ]);
         }
     }
-
 
     #[On('chatGroupCreated')]
     public function onChatGroupCreated($groupId)
@@ -358,6 +378,7 @@ public function deleteGroup()
             $this->selectedChatGroup = $this->selectedChatGroup->fresh(['members']);
         }
     }
+
     public function showMembersModal(): void
     {
         $this->showMembersModal = true;

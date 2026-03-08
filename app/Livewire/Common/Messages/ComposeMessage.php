@@ -3,46 +3,62 @@
 namespace App\Livewire\Common\Messages;
 
 use App\Models\Message;
-use App\Models\MessageAttachment;
 use App\Models\User;
 use App\Services\MessageService;
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ComposeMessage extends Component
 {
     use WithFileUploads;
 
     public $subject = '';
+
     public $body = '';
+
     public $targetType = 'role';
+
     public $isUrgent = false;
+
     public $scheduledAt = '';
+
     public $sendNow = true;
 
     // Target criteria
     public $selectedRoles = [];
+
     public $selectedAcademicGroups = [];
+
     public $selectedAcademicLevels = [];
+
     public $selectedSubjects = [];
+
     public $selectedUsers = [];
+
     public $includeStudents = true;
+
     public $includeTeachers = true;
 
     // File uploads - changed approach
     public $attachments = [];
+
     public $tempAttachments = []; // Store temporarily selected files with preview data
+
     private $fileCache = []; // Private cache for actual file objects
 
     // Preview
     public $showPreview = false;
+
     public $previewRecipients = [];
+
     public $recipientCount = 0;
 
     public $userSearch = '';
+
     public $searchedUsers = [];
+
     public $selectedUsersList = [];
 
     protected $rules = [
@@ -60,7 +76,7 @@ class ComposeMessage extends Component
     ];
 
     protected $listeners = [
-        'attachmentsUpdated' => 'handleAttachmentsUpdate'
+        'attachmentsUpdated' => 'handleAttachmentsUpdate',
     ];
 
     public function mount()
@@ -82,13 +98,13 @@ class ComposeMessage extends Component
 
         // Validate each new attachment
         $this->validate([
-            'attachments.*' => 'file|max:10240'
+            'attachments.*' => 'file|max:10240',
         ]);
 
         foreach ($this->attachments as $attachment) {
             // Immediately store the file temporarily to preserve it across requests
             $tempId = (string) Str::uuid();
-            $tempFilename = $tempId . '.' . $attachment->getClientOriginalExtension();
+            $tempFilename = $tempId.'.'.$attachment->getClientOriginalExtension();
 
             // Store in a temporary location first
             $tempPath = $attachment->storeAs('temp-message-attachments', $tempFilename, 'public');
@@ -112,11 +128,11 @@ class ComposeMessage extends Component
     protected function formatFileSize($bytes)
     {
         if ($bytes < 1024) {
-            return $bytes . ' B';
+            return $bytes.' B';
         } elseif ($bytes < 1048576) {
-            return round($bytes / 1024, 1) . ' KB';
+            return round($bytes / 1024, 1).' KB';
         } else {
-            return round($bytes / 1048576, 1) . ' MB';
+            return round($bytes / 1048576, 1).' MB';
         }
     }
 
@@ -138,7 +154,7 @@ class ComposeMessage extends Component
         // Remove from temporary attachments
         $this->tempAttachments = array_filter(
             $this->tempAttachments,
-            fn($att) => (string) $att['id'] !== $attachmentId
+            fn ($att) => (string) $att['id'] !== $attachmentId
         );
 
         // Remove from file cache (if it exists)
@@ -155,8 +171,8 @@ class ComposeMessage extends Component
         if (strlen($this->userSearch) >= 2) {
             $this->searchedUsers = User::where('is_active', true)
                 ->where(function ($query) {
-                    $query->where('name', 'like', '%' . $this->userSearch . '%')
-                        ->orWhere('email', 'like', '%' . $this->userSearch . '%');
+                    $query->where('name', 'like', '%'.$this->userSearch.'%')
+                        ->orWhere('email', 'like', '%'.$this->userSearch.'%');
                 })
                 ->limit(10)
                 ->get();
@@ -177,7 +193,7 @@ class ComposeMessage extends Component
 
     public function addUser($userId)
     {
-        if (!in_array($userId, $this->selectedUsers)) {
+        if (! in_array($userId, $this->selectedUsers)) {
             $this->selectedUsers[] = $userId;
             $this->updateSelectedUsersList();
         }
@@ -185,7 +201,7 @@ class ComposeMessage extends Component
 
     public function removeUser($userId)
     {
-        $this->selectedUsers = array_filter($this->selectedUsers, fn($id) => $id != $userId);
+        $this->selectedUsers = array_filter($this->selectedUsers, fn ($id) => $id != $userId);
         $this->selectedUsers = array_values($this->selectedUsers);
         $this->updateSelectedUsersList();
     }
@@ -260,53 +276,53 @@ class ComposeMessage extends Component
 
     public function addRole($role)
     {
-        if (!in_array($role, $this->selectedRoles)) {
+        if (! in_array($role, $this->selectedRoles)) {
             $this->selectedRoles[] = $role;
         }
     }
 
     public function removeRole($role)
     {
-        $this->selectedRoles = array_filter($this->selectedRoles, fn($r) => $r !== $role);
+        $this->selectedRoles = array_filter($this->selectedRoles, fn ($r) => $r !== $role);
         $this->selectedRoles = array_values($this->selectedRoles); // Re-index array
     }
 
     public function addAcademicGroup($groupId)
     {
-        if (!in_array($groupId, $this->selectedAcademicGroups)) {
+        if (! in_array($groupId, $this->selectedAcademicGroups)) {
             $this->selectedAcademicGroups[] = $groupId;
         }
     }
 
     public function removeAcademicGroup($groupId)
     {
-        $this->selectedAcademicGroups = array_filter($this->selectedAcademicGroups, fn($id) => $id != $groupId);
+        $this->selectedAcademicGroups = array_filter($this->selectedAcademicGroups, fn ($id) => $id != $groupId);
         $this->selectedAcademicGroups = array_values($this->selectedAcademicGroups);
     }
 
     public function addAcademicLevel($levelId)
     {
-        if (!in_array($levelId, $this->selectedAcademicLevels)) {
+        if (! in_array($levelId, $this->selectedAcademicLevels)) {
             $this->selectedAcademicLevels[] = $levelId;
         }
     }
 
     public function removeAcademicLevel($levelId)
     {
-        $this->selectedAcademicLevels = array_filter($this->selectedAcademicLevels, fn($id) => $id != $levelId);
+        $this->selectedAcademicLevels = array_filter($this->selectedAcademicLevels, fn ($id) => $id != $levelId);
         $this->selectedAcademicLevels = array_values($this->selectedAcademicLevels);
     }
 
     public function addSubject($subjectId)
     {
-        if (!in_array($subjectId, $this->selectedSubjects)) {
+        if (! in_array($subjectId, $this->selectedSubjects)) {
             $this->selectedSubjects[] = $subjectId;
         }
     }
 
     public function removeSubject($subjectId)
     {
-        $this->selectedSubjects = array_filter($this->selectedSubjects, fn($id) => $id != $subjectId);
+        $this->selectedSubjects = array_filter($this->selectedSubjects, fn ($id) => $id != $subjectId);
         $this->selectedSubjects = array_values($this->selectedSubjects);
     }
 
@@ -376,6 +392,7 @@ class ComposeMessage extends Component
         $this->saveAttachments($message);
 
         session()->flash('success', 'Message saved as draft successfully!');
+
         return redirect()->route('admin.messages.index');
     }
 
@@ -383,8 +400,9 @@ class ComposeMessage extends Component
     {
         $this->validate();
 
-        if (!$this->sendNow && empty($this->scheduledAt)) {
+        if (! $this->sendNow && empty($this->scheduledAt)) {
             $this->addError('scheduledAt', 'Please select a scheduled time or choose to send now.');
+
             return;
         }
 
@@ -421,13 +439,13 @@ class ComposeMessage extends Component
     {
         foreach ($this->tempAttachments as $attachment) {
             // Check if we have a temporary file path
-            if (!isset($attachment['temp_path']) || !Storage::disk('public')->exists($attachment['temp_path'])) {
+            if (! isset($attachment['temp_path']) || ! Storage::disk('public')->exists($attachment['temp_path'])) {
                 continue; // Skip if temporary file is not available
             }
 
             // Generate final filename
-            $filename = (string) Str::uuid() . '.' . pathinfo($attachment['original_filename'], PATHINFO_EXTENSION);
-            $finalPath = 'message-attachments/' . $filename;
+            $filename = (string) Str::uuid().'.'.pathinfo($attachment['original_filename'], PATHINFO_EXTENSION);
+            $finalPath = 'message-attachments/'.$filename;
 
             // Move from temporary location to final location
             Storage::disk('public')->move($attachment['temp_path'], $finalPath);

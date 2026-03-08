@@ -3,20 +3,23 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
+use App\Models\Assessment;
 use App\Models\Student;
 use App\Models\StudentParent;
-use App\Models\Assessment;
-use App\Models\AcademicSubject;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
-use Carbon\Carbon;
 
 class ParentTerminalReports extends AppComponent
 {
     public $selectedWardId = null;
+
     public $selectedTerm = 'first_term';
+
     public $selectedYear = null;
+
     public $generatedReport = null;
+
     public $showReportPreview = false;
 
     public function mount()
@@ -43,7 +46,7 @@ class ParentTerminalReports extends AppComponent
             $this->showReportPreview = true;
             session()->flash('success', 'Terminal report generated successfully!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error generating terminal report: ' . $e->getMessage());
+            session()->flash('error', 'Error generating terminal report: '.$e->getMessage());
         }
 
         $this->endLoading();
@@ -53,7 +56,7 @@ class ParentTerminalReports extends AppComponent
     {
         $this->dispatch('download-terminal-report', [
             'format' => $format,
-            'data' => $this->generatedReport
+            'data' => $this->generatedReport,
         ]);
     }
 
@@ -70,7 +73,7 @@ class ParentTerminalReports extends AppComponent
 
     private function buildTerminalReport()
     {
-        if (!$this->selectedWard) {
+        if (! $this->selectedWard) {
             throw new \Exception('No ward selected');
         }
 
@@ -79,7 +82,7 @@ class ParentTerminalReports extends AppComponent
             ->whereYear('created_at', $this->selectedYear)
             ->get();
 
-        $subjectPerformance = $assessments->groupBy('academic_subject_id')->map(function($subjectAssessments) {
+        $subjectPerformance = $assessments->groupBy('academic_subject_id')->map(function ($subjectAssessments) {
             $subject = $subjectAssessments->first()->academicSubject;
             $averageScore = $subjectAssessments->avg('score');
 
@@ -90,7 +93,7 @@ class ParentTerminalReports extends AppComponent
                 'highest_score' => $subjectAssessments->max('score'),
                 'lowest_score' => $subjectAssessments->min('score'),
                 'grade' => $this->calculateGrade($averageScore),
-                'remarks' => $this->generateRemarks($averageScore)
+                'remarks' => $this->generateRemarks($averageScore),
             ];
         });
 
@@ -105,7 +108,7 @@ class ParentTerminalReports extends AppComponent
             'overall_summary' => $overallSummary,
             'teacher_comments' => $this->generateTeacherComments($overallSummary),
             'parent_comments' => '', // To be filled by parent
-            'next_term_begins' => $this->calculateNextTermDate()
+            'next_term_begins' => $this->calculateNextTermDate(),
         ];
     }
 
@@ -132,25 +135,43 @@ class ParentTerminalReports extends AppComponent
 
     private function calculateGrade($score)
     {
-        if ($score >= 90) return 'A';
-        if ($score >= 80) return 'B';
-        if ($score >= 70) return 'C';
-        if ($score >= 60) return 'D';
+        if ($score >= 90) {
+            return 'A';
+        }
+        if ($score >= 80) {
+            return 'B';
+        }
+        if ($score >= 70) {
+            return 'C';
+        }
+        if ($score >= 60) {
+            return 'D';
+        }
+
         return 'F';
     }
 
     private function calculateClassRank($averageScore)
     {
         // Mock implementation - in real app, compare with other students
-        return rand(1, 30) . ' out of ' . rand(25, 35);
+        return rand(1, 30).' out of '.rand(25, 35);
     }
 
     private function generateRemarks($averageScore)
     {
-        if ($averageScore >= 90) return 'Excellent performance!';
-        if ($averageScore >= 80) return 'Very good work!';
-        if ($averageScore >= 70) return 'Good effort!';
-        if ($averageScore >= 60) return 'Needs improvement';
+        if ($averageScore >= 90) {
+            return 'Excellent performance!';
+        }
+        if ($averageScore >= 80) {
+            return 'Very good work!';
+        }
+        if ($averageScore >= 70) {
+            return 'Good effort!';
+        }
+        if ($averageScore >= 60) {
+            return 'Needs improvement';
+        }
+
         return 'Requires additional support';
     }
 
@@ -184,13 +205,13 @@ class ParentTerminalReports extends AppComponent
         $students = StudentParent::where('user_id', Auth::id())
             ->with(['students.user', 'students.academicLevel.academicGroup', 'students.studentGroup'])
             ->get()
-            ->flatMap(function($parent) {
+            ->flatMap(function ($parent) {
                 return $parent->students;
             })
             ->unique('id'); // Remove duplicates
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -201,15 +222,16 @@ class ParentTerminalReports extends AppComponent
             SORT_REGULAR, $this->sortDirection === 'desc');
     }
 
-
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::with([
             'user',
-            'academicLevel.academicGroup'
+            'academicLevel.academicGroup',
         ])->find($this->selectedWardId);
     }
 
@@ -219,7 +241,7 @@ class ParentTerminalReports extends AppComponent
         return [
             'first_term' => 'First Term',
             'second_term' => 'Second Term',
-            'third_term' => 'Third Term'
+            'third_term' => 'Third Term',
         ];
     }
 
@@ -227,6 +249,7 @@ class ParentTerminalReports extends AppComponent
     public function availableYears()
     {
         $currentYear = now()->year;
+
         return range($currentYear - 2, $currentYear + 1);
     }
 

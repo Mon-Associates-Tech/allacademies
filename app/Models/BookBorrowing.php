@@ -15,7 +15,7 @@ class BookBorrowing extends Model
         'borrow_date',
         'due_date',
         'return_date',
-        'status'
+        'status',
     ];
 
     protected $casts = [

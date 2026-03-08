@@ -10,12 +10,14 @@ use Livewire\WithFileUploads;
 
 class ImageUpload extends Component
 {
-
     use WithFileUploads;
 
     public $image = null;
+
     public $description = '';
+
     public $tags = [];
+
     public $tag = '';
 
     protected $rules = [
@@ -24,7 +26,6 @@ class ImageUpload extends Component
         'tags.*' => 'required|string|min:2|max:255',
         'image' => 'required|image',
     ];
-
 
     public function mount()
     {
@@ -40,7 +41,7 @@ class ImageUpload extends Component
 
         $path = $this->image->storePublicly('images', 'public');
 
-        if (false === $path) {
+        if ($path === false) {
             throw ValidationException::withMessages(['image' => 'Image upload failed.']);
         }
 
@@ -57,7 +58,7 @@ class ImageUpload extends Component
     {
         $newTag = Str::studly($newTag);
 
-        if ('' !== $newTag && !in_array($newTag, $this->tags, true)) {
+        if ($newTag !== '' && ! in_array($newTag, $this->tags, true)) {
             array_push($this->tags, $newTag);
         }
 
@@ -84,7 +85,7 @@ class ImageUpload extends Component
                 ->flatten()
                 ->unique()
                 ->filter(function ($tag) use ($search) {
-                    return str_starts_with($tag, $search) && !in_array($tag, $this->tags, true);
+                    return str_starts_with($tag, $search) && ! in_array($tag, $this->tags, true);
                 })
                 ->values()
                 ->all();

@@ -12,8 +12,11 @@ class MessageShow extends Component
     use WithPagination;
 
     public Message $message;
+
     public $activeTab = 'details';
+
     public $searchRecipients = '';
+
     public $readStatusFilter = 'all';
 
     protected $queryString = [
@@ -47,6 +50,7 @@ class MessageShow extends Component
     {
         if ($this->message->status !== Message::STATUS_FAILED) {
             session()->flash('error', 'Only failed messages can be resent.');
+
             return;
         }
 
@@ -66,8 +70,8 @@ class MessageShow extends Component
             ->with('user')
             ->when($this->searchRecipients, function ($query) {
                 $query->whereHas('user', function ($q) {
-                    $q->where('name', 'like', '%' . $this->searchRecipients . '%')
-                        ->orWhere('email', 'like', '%' . $this->searchRecipients . '%');
+                    $q->where('name', 'like', '%'.$this->searchRecipients.'%')
+                        ->orWhere('email', 'like', '%'.$this->searchRecipients.'%');
                 });
             })
             ->when($this->readStatusFilter === 'read', function ($query) {

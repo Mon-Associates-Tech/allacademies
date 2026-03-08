@@ -23,5 +23,4 @@ class ShowImages extends Component
             'images' => $images,
         ]);
     }
-
 }

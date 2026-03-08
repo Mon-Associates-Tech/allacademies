@@ -5,10 +5,11 @@ namespace App\Livewire\Students;
 use App\Enums\Grade;
 use App\Livewire\Assessment\RandomQuestionSelectionService;
 use App\Models\Assessment;
+use App\Models\AssessmentResponse;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\AssessmentResponse;
 use App\Models\Student;
+use App\Support\GradingSystemResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,30 +19,47 @@ class AssignmentTakingComponent extends Component
 {
     // Assignment data
     public $assignment = null;
+
     public $assignmentId = null;
+
     public $assignmentSubmission = null;
 
     // Assessment state
     public $step = 'loading'; // loading, taking, results
+
     public $assessment = null;
+
     public $questions = [];
+
     public $responses = [];
+
     public $currentQuestionIndex = 0;
+
     public $timeRemaining = null;
+
     public $startTime = null;
+
     public $isTimerActive = false;
+
     public $isSubmitted = false;
+
     public $results = null;
 
     // UI state
     public $showResults = false;
+
     public $showReview = false;
+
     public $darkMode = false;
 
     public $tabSwitchCount = 0;
+
     public $maxTabSwitches = null;
+
     public $showViolationWarning = false;
+
     public $violationMessage = '';
+
     public $restrictNavigation = false;
 
     // Services
@@ -65,6 +83,7 @@ class AssignmentTakingComponent extends Component
             $this->loadAssignment();
         } else {
             session()->flash('error', 'No assignment specified.');
+
             return redirect()->route('students.assignments');
         }
     }
@@ -72,11 +91,12 @@ class AssignmentTakingComponent extends Component
     public function loadAssignment()
     {
         $student = Auth::user()->student;
-        if(!$student){
+        if (! $student) {
             $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
-        if (!$student) {
+        if (! $student) {
             session()->flash('error', 'Student profile not found.');
+
             return redirect()->route('students.assignments');
         }
 
@@ -84,24 +104,26 @@ class AssignmentTakingComponent extends Component
         $this->assignment = Assignment::with(['academicSubject', 'teacher.user'])
             ->find($this->assignmentId);
 
-        if (!$this->assignment) {
+        if (! $this->assignment) {
             session()->flash('error', 'Assignment not found.');
+
             return redirect()->route('students.assignments');
         }
 
         $this->restrictNavigation = $this->assignment->restrict_navigation ?? false;
         $this->maxTabSwitches = $this->assignment->max_tab_switches;
 
-
         // Check if student is eligible
-        if (!$this->canStartAssignment()) {
+        if (! $this->canStartAssignment()) {
             session()->flash('error', 'You are not eligible to take this assignment.');
+
             return redirect()->route('students.assignments');
         }
 
         // Check if assignment is within time bounds
-        if (!$this->isAssignmentActive()) {
+        if (! $this->isAssignmentActive()) {
             session()->flash('error', 'Assignment is not currently active.');
+
             return redirect()->route('students.assignments');
         }
 
@@ -109,6 +131,7 @@ class AssignmentTakingComponent extends Component
         $existingSubmission = $this->getExistingSubmission();
         if ($existingSubmission && in_array($existingSubmission->status, ['submitted', 'graded'])) {
             session()->flash('error', 'You have already completed this assignment.');
+
             return redirect()->route('students.assignments');
         }
 
@@ -122,7 +145,7 @@ class AssignmentTakingComponent extends Component
 
     public function recordTabSwitch()
     {
-        if (!$this->restrictNavigation || !$this->assignmentSubmission) {
+        if (! $this->restrictNavigation || ! $this->assignmentSubmission) {
             return;
         }
 
@@ -181,7 +204,7 @@ class AssignmentTakingComponent extends Component
     {
         $student = Auth::user()->student;
 
-        if(!$student){
+        if (! $student) {
             $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
 
@@ -233,13 +256,14 @@ class AssignmentTakingComponent extends Component
         $this->startTime = now();
         $this->step = 'taking';
 
-        session()->flash('info', 'Resuming your assignment. You have ' . gmdate('H:i:s', $this->timeRemaining) . ' remaining.');
+        session()->flash('info', 'Resuming your assignment. You have '.gmdate('H:i:s', $this->timeRemaining).' remaining.');
     }
+
     private function canStartAssignment()
     {
         $student = Auth::user()->student;
 
-        if(!$student){
+        if (! $student) {
             $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
 
@@ -250,20 +274,35 @@ class AssignmentTakingComponent extends Component
         // Check if student is in assigned groups/levels
         $isEligible = false;
 
-        // Check academic groups
-        if ($this->assignment->academicGroups->isNotEmpty()) {
-            $studentAcademicGroupIds = $student->academicGroups?->pluck('id')->toArray();
-            $assignmentAcademicGroupIds = $this->assignment->academicGroups?->pluck('id')->toArray();
+        // Get the academic group ID that the student's academic level belongs to
+        // This is important because assignments can be assigned to academic groups,
+        // and all students whose academic level belongs to that group should be eligible
+        $academicLevelGroupId = null;
+        if ($student->academic_level_id) {
+            $academicLevel = \App\Models\AcademicLevel::find($student->academic_level_id);
+            $academicLevelGroupId = $academicLevel?->academic_group_id;
+        }
 
-            if(is_array($studentAcademicGroupIds) && is_array($assignmentAcademicGroupIds) && array_intersect($studentAcademicGroupIds, $assignmentAcademicGroupIds)) {
+        // Check academic groups (direct many-to-many relationship)
+        if ($this->assignment->academicGroups->isNotEmpty()) {
+            $studentAcademicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
+            $assignmentAcademicGroupIds = $this->assignment->academicGroups->pluck('id')->toArray();
+
+            // Check if student has direct academic group membership
+            if (! empty($studentAcademicGroupIds) && array_intersect($studentAcademicGroupIds, $assignmentAcademicGroupIds)) {
                 $isEligible = true;
             }
 
+            // Check if student's academic level belongs to one of the assignment's academic groups
+            // This matches the logic in AssignmentNotificationService
+            if (! $isEligible && $academicLevelGroupId && in_array($academicLevelGroupId, $assignmentAcademicGroupIds)) {
+                $isEligible = true;
+            }
         }
 
         // Check academic levels
-        if (!$isEligible && $this->assignment->academicLevels?->isNotEmpty()) {
-            $assignmentAcademicLevelIds = $this->assignment->academicLevels?->pluck('id')->toArray();
+        if (! $isEligible && $this->assignment->academicLevels?->isNotEmpty()) {
+            $assignmentAcademicLevelIds = $this->assignment->academicLevels->pluck('id')->toArray();
 
             if (in_array($student->academic_level_id, $assignmentAcademicLevelIds)) {
                 $isEligible = true;
@@ -271,17 +310,17 @@ class AssignmentTakingComponent extends Component
         }
 
         // Check student groups
-        if (!$isEligible && $this->assignment->studentGroups->isNotEmpty()) {
-            $studentGroupIds = $student->studentGroups?->pluck('id')->toArray();
-            $assignmentStudentGroupIds = $this->assignment->studentGroups?->pluck('id')->toArray();
+        if (! $isEligible && $this->assignment->studentGroups->isNotEmpty()) {
+            $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
+            $assignmentStudentGroupIds = $this->assignment->studentGroups->pluck('id')->toArray();
 
-            if (array_intersect($studentGroupIds, $assignmentStudentGroupIds)) {
+            if (! empty($studentGroupIds) && array_intersect($studentGroupIds, $assignmentStudentGroupIds)) {
                 $isEligible = true;
             }
         }
 
         // Check direct assignment to student
-        if (!$isEligible && $this->assignment->students->isNotEmpty()) {
+        if (! $isEligible && $this->assignment->students->isNotEmpty()) {
             $assignmentStudentIds = $this->assignment->students->pluck('id')->toArray();
 
             if (in_array($student->id, $assignmentStudentIds)) {
@@ -295,6 +334,7 @@ class AssignmentTakingComponent extends Component
     private function isAssignmentActive()
     {
         $now = now();
+
         return $this->assignment->starts_at <= $now && $this->assignment->ends_at > $now;
     }
 
@@ -306,6 +346,7 @@ class AssignmentTakingComponent extends Component
 
             if (empty($this->questions)) {
                 session()->flash('error', 'No questions available for this assignment.');
+
                 return redirect()->route('students.assignments');
             }
 
@@ -327,16 +368,17 @@ class AssignmentTakingComponent extends Component
             $this->startTime = now();
             $this->step = 'taking';
 
-            session()->flash('success', 'Assignment started with ' . count($this->questions) . ' questions!');
+            session()->flash('success', 'Assignment started with '.count($this->questions).' questions!');
 
         } catch (\Exception $e) {
             Log::error('Failed to start assignment', [
                 'error' => $e->getMessage(),
                 'assignment_id' => $this->assignment->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             session()->flash('error', 'Failed to start assignment. Please try again.');
+
             return redirect()->route('students.assignments');
         }
     }
@@ -345,7 +387,7 @@ class AssignmentTakingComponent extends Component
     {
         $student = Auth::user()->student;
 
-        if(!$student){
+        if (! $student) {
             $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
 
@@ -362,7 +404,7 @@ class AssignmentTakingComponent extends Component
         Log::info('Assignment submission created:', [
             'submission_id' => $this->assignmentSubmission->id,
             'assignment_id' => $this->assignment->id,
-            'student_id' => $student->id
+            'student_id' => $student->id,
         ]);
     }
 
@@ -372,9 +414,9 @@ class AssignmentTakingComponent extends Component
         if ($this->assignment->hasEmbeddedQuestions()) {
             $this->questions = $this->assignment->getEmbeddedQuestions()->toArray();
 
-            Log::info("Loaded embedded questions from book-based assignment", [
+            Log::info('Loaded embedded questions from book-based assignment', [
                 'assignment_id' => $this->assignment->id,
-                'question_count' => count($this->questions)
+                'question_count' => count($this->questions),
             ]);
 
             return;
@@ -389,7 +431,7 @@ class AssignmentTakingComponent extends Component
             $generatedForThisType = [];
 
             // If specific question IDs are provided, use them
-            if (!empty($questionConfig['specific_ids'])) {
+            if (! empty($questionConfig['specific_ids'])) {
                 $generatedForThisType = $this->getQuestionsByIds($questionConfig['type'], $questionConfig['specific_ids']);
             } else {
                 // ... existing generation logic ...
@@ -400,14 +442,14 @@ class AssignmentTakingComponent extends Component
                     'difficulty' => $questionConfig['difficulty'] ?? 'all',
                 ];
 
-                if (!empty($questionConfig['subtopic_ids'])) {
+                if (! empty($questionConfig['subtopic_ids'])) {
                     $subtopicIds = $questionConfig['subtopic_ids'];
                     $questionsPerSubtopic = max(1, ceil($requestedCount / count($subtopicIds)));
 
                     foreach ($subtopicIds as $subtopicId) {
                         $subtopicConfig = array_merge($config, [
                             'subtopic_id' => $subtopicId,
-                            'question_count' => $questionsPerSubtopic
+                            'question_count' => $questionsPerSubtopic,
                         ]);
 
                         $generatedQuestions = $this->questionService->generateQuestions($subtopicConfig);
@@ -418,14 +460,14 @@ class AssignmentTakingComponent extends Component
                             break;
                         }
                     }
-                } elseif (!empty($questionConfig['topic_ids'])) {
+                } elseif (! empty($questionConfig['topic_ids'])) {
                     $topicIds = $questionConfig['topic_ids'];
                     $questionsPerTopic = max(1, ceil($requestedCount / count($topicIds)));
 
                     foreach ($topicIds as $topicId) {
                         $topicConfig = array_merge($config, [
                             'topic_id' => $topicId,
-                            'question_count' => $questionsPerTopic
+                            'question_count' => $questionsPerTopic,
                         ]);
 
                         $generatedQuestions = $this->questionService->generateQuestions($topicConfig);
@@ -458,14 +500,15 @@ class AssignmentTakingComponent extends Component
 
         $this->questions = $questions;
 
-        Log::info("Generated questions from database for assignment", [
+        Log::info('Generated questions from database for assignment', [
             'assignment_id' => $this->assignment->id,
-            'question_count' => count($this->questions)
+            'question_count' => count($this->questions),
         ]);
     }
+
     private function getQuestionsByIds($type, $ids)
     {
-        $model = match($type) {
+        $model = match ($type) {
             'multiple_choice_question' => \App\Models\MultipleChoiceQuestion::class,
             'true_or_false_question' => \App\Models\TrueOrFalseQuestion::class,
             'essay_question' => \App\Models\EssayQuestion::class,
@@ -473,6 +516,7 @@ class AssignmentTakingComponent extends Component
         };
 
         $questions = $model::whereIn('id', $ids)->get();
+
         return $this->questionService->formatQuestionsForAssessment($questions)->toArray();
     }
 
@@ -480,11 +524,11 @@ class AssignmentTakingComponent extends Component
     {
         $student = Auth::user()->student;
 
-        if(!$student){
+        if (! $student) {
             $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
         }
 
-        if (!$student) {
+        if (! $student) {
             throw new \Exception('Student profile not found.');
         }
 
@@ -503,7 +547,7 @@ class AssignmentTakingComponent extends Component
 
         Log::info('Assessment created for assignment:', [
             'assessment_id' => $this->assessment->id,
-            'assignment_id' => $this->assignment->id
+            'assignment_id' => $this->assignment->id,
         ]);
     }
 
@@ -521,7 +565,7 @@ class AssignmentTakingComponent extends Component
 
     private function saveCurrentAnswers()
     {
-        if (!$this->assignmentSubmission) {
+        if (! $this->assignmentSubmission) {
             return;
         }
 
@@ -550,7 +594,7 @@ class AssignmentTakingComponent extends Component
         Log::debug('Answers auto-saved for assignment submission', [
             'submission_id' => $this->assignmentSubmission->id,
             'answers_count' => count($answers),
-            'time_spent' => $timeSpent
+            'time_spent' => $timeSpent,
         ]);
     }
 
@@ -579,12 +623,13 @@ class AssignmentTakingComponent extends Component
     public function isQuestionAnswered($index)
     {
         $response = $this->responses[$index] ?? null;
+
         return $response !== null && $response !== '';
     }
 
     public function getAnsweredCount()
     {
-        return count(array_filter($this->responses, function($response) {
+        return count(array_filter($this->responses, function ($response) {
             return $response !== null && $response !== '';
         }));
     }
@@ -593,6 +638,7 @@ class AssignmentTakingComponent extends Component
     {
         $total = count($this->questions);
         $answered = $this->getAnsweredCount();
+
         return $total > 0 ? round(($answered / $total) * 100) : 0;
     }
 
@@ -630,8 +676,8 @@ class AssignmentTakingComponent extends Component
                 if ($assessmentResponse) {
                     $data = $assessmentResponse->data;
                     $data['grading_results'] = $results;
-                    $data['is_graded'] = !$results['needs_manual_grading'];
-                    $data['graded_at'] = !$results['needs_manual_grading'] ? now()->toDateTimeString() : null;
+                    $data['is_graded'] = ! $results['needs_manual_grading'];
+                    $data['graded_at'] = ! $results['needs_manual_grading'] ? now()->toDateTimeString() : null;
 
                     $assessmentResponse->update(['data' => $data]);
                 }
@@ -659,7 +705,7 @@ class AssignmentTakingComponent extends Component
                 'submission_id' => $this->assignmentSubmission->id,
                 'assignment_id' => $this->assignment->id,
                 'score' => $results['total_score'],
-                'percentage' => $results['percentage']
+                'percentage' => $results['percentage'],
             ]);
 
         } catch (\Exception $e) {
@@ -668,15 +714,16 @@ class AssignmentTakingComponent extends Component
                 'error' => $e->getMessage(),
                 'submission_id' => $this->assignmentSubmission->id ?? null,
                 'assignment_id' => $this->assignment->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             session()->flash('error', 'Failed to submit assignment. Please try again.');
         }
     }
+
     private function createOrUpdateAssessmentResponse()
     {
-        if (!$this->assessment) {
+        if (! $this->assessment) {
             return null;
         }
 
@@ -702,7 +749,6 @@ class AssignmentTakingComponent extends Component
             ]
         );
     }
-
 
     private function formatQuestionsForAssessmentResponse()
     {
@@ -748,6 +794,7 @@ class AssignmentTakingComponent extends Component
         }
 
         $isCorrect = $this->isResponseCorrect($question, $response);
+
         return $isCorrect ? ($question['points'] ?? 1) : 0;
     }
 
@@ -777,16 +824,16 @@ class AssignmentTakingComponent extends Component
             'multiple_choice_question' => [
                 'selected_option' => $response,
                 'options' => $question['options'] ?? [],
-                'answer' => $question['answer'] ?? null
+                'answer' => $question['answer'] ?? null,
             ],
             'true_or_false_question' => [
                 'selected_answer' => filter_var($response, FILTER_VALIDATE_BOOLEAN),
-                'answer_boolean' => $response === ('True' || 'true')
+                'answer_boolean' => $response === ('True' || 'true'),
             ],
             'essay_question' => [
                 'essay_text' => $response,
                 'word_count' => str_word_count($response ?? ''),
-                'character_count' => strlen($response ?? '')
+                'character_count' => strlen($response ?? ''),
             ],
             default => $response,
         };
@@ -795,7 +842,8 @@ class AssignmentTakingComponent extends Component
     private function gradeResponses()
     {
         $totalScore = 0;
-        $maxScore = 0;
+        $maxScoreAll = 0;
+        $maxScoreAnswered = 0;
         $correctAnswers = 0;
         $needsManualGrading = false;
         $gradedResponses = [];
@@ -803,10 +851,11 @@ class AssignmentTakingComponent extends Component
         foreach ($this->questions as $index => $question) {
             $response = $this->responses[$index] ?? null;
             $questionMaxScore = $question['points'] ?? 1;
-            $maxScore += $questionMaxScore;
+            $maxScoreAll += $questionMaxScore;
 
-            if (!empty($response)) {
+            if (! empty($response)) {
                 $gradeResult = $this->gradeQuestionResponse($question, $response);
+                $maxScoreAnswered += $questionMaxScore;
 
                 if ($gradeResult['needs_manual_grading'] ?? false) {
                     $needsManualGrading = true;
@@ -824,15 +873,21 @@ class AssignmentTakingComponent extends Component
                     'score_earned' => 0,
                     'feedback' => 'Question not answered',
                     'question_id' => $question['id'],
-                    'question_type' => $question['type']
+                    'question_type' => $question['type'],
                 ];
             }
         }
 
+        // Calculate percentage based on ALL questions (total possible score)
+        // This ensures proper grading: if a student answers 3 out of 5 questions correctly,
+        // they get 60% (3/5), not 75% (3/4 answered)
+        $percentage = $maxScoreAll > 0 ? round(($totalScore / $maxScoreAll) * 100, 2) : 0;
+
         return [
             'total_score' => $totalScore,
-            'max_score' => $maxScore,
-            'percentage' => $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0,
+            'max_score' => $maxScoreAll,
+            'max_score_answered' => $maxScoreAnswered,
+            'percentage' => $percentage,
             'correct_answers' => $correctAnswers,
             'answered_questions' => $this->getAnsweredCount(),
             'total_questions' => count($this->questions),
@@ -840,7 +895,7 @@ class AssignmentTakingComponent extends Component
                 round(($this->getAnsweredCount() / count($this->questions)) * 100, 2) : 0,
             'graded_responses' => $gradedResponses,
             'needs_manual_grading' => $needsManualGrading,
-            'graded_at' => now()->toDateTimeString()
+            'graded_at' => now()->toDateTimeString(),
         ];
     }
 
@@ -855,7 +910,7 @@ class AssignmentTakingComponent extends Component
                 'score_earned' => 0,
                 'feedback' => 'Unknown question type',
                 'question_id' => $question['id'],
-                'question_type' => $question['type']
+                'question_type' => $question['type'],
             ],
         };
     }
@@ -874,7 +929,7 @@ class AssignmentTakingComponent extends Component
 
         // If it's numeric, convert to letter
         if (is_numeric($answer)) {
-            return $letters[$answer] ?? strtoupper((string)$answer);
+            return $letters[$answer] ?? strtoupper((string) $answer);
         }
 
         // If it's text and we have options, try to match it to an option
@@ -887,27 +942,27 @@ class AssignmentTakingComponent extends Component
         }
 
         // Default: return uppercase version
-        return strtoupper((string)$answer);
+        return strtoupper((string) $answer);
     }
 
     private function gradeMultipleChoice($question, $response)
     {
         Log::info('Grading multiple choice question', [
             'question' => $question,
-            'response' => $response
+            'response' => $response,
         ]);
 
         $correctAnswer = $question['answer'] ?? $question['correct_answer'] ?? null;
         $options = $question['options'] ?? null;
 
-        if (!$correctAnswer) {
+        if (! $correctAnswer) {
             return [
                 'is_correct' => null,
                 'score_earned' => 0,
                 'feedback' => 'No correct answer defined for this question',
                 'question_id' => $question['id'],
                 'question_type' => $question['type'],
-                'needs_manual_grading' => true
+                'needs_manual_grading' => true,
             ];
         }
 
@@ -925,7 +980,7 @@ class AssignmentTakingComponent extends Component
             'question_type' => $question['type'],
             'selected_option' => $normalizedResponse,
             'correct_answer' => $normalizedCorrectAnswer,
-            'explanation' => $isCorrect ? null : ($question['explanation'] ?? null)
+            'explanation' => $isCorrect ? null : ($question['explanation'] ?? null),
         ];
     }
 
@@ -940,7 +995,7 @@ class AssignmentTakingComponent extends Component
                 'feedback' => 'No correct answer defined for this question',
                 'question_id' => $question['id'],
                 'question_type' => $question['type'],
-                'needs_manual_grading' => true
+                'needs_manual_grading' => true,
             ];
         }
 
@@ -951,12 +1006,12 @@ class AssignmentTakingComponent extends Component
         return [
             'is_correct' => $isCorrect,
             'score_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
-            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was ' . ($correctAnswerBoolean ? 'True' : 'False'),
+            'feedback' => $isCorrect ? 'Correct!' : 'Incorrect. The correct answer was '.($correctAnswerBoolean ? 'True' : 'False'),
             'question_id' => $question['id'],
             'question_type' => $question['type'],
             'selected_answer' => $response,
             'correct_answer' => $correctAnswerBoolean,
-            'explanation' => $isCorrect ? null : ($question['explanation'] ?? null)
+            'explanation' => $isCorrect ? null : ($question['explanation'] ?? null),
         ];
     }
 
@@ -971,7 +1026,7 @@ class AssignmentTakingComponent extends Component
             'question_type' => $question['type'],
             'essay_text' => $response,
             'word_count' => str_word_count($response ?? ''),
-            'character_count' => strlen($response ?? '')
+            'character_count' => strlen($response ?? ''),
         ];
     }
 
@@ -995,7 +1050,7 @@ class AssignmentTakingComponent extends Component
     // Results Management
     public function toggleReview()
     {
-        $this->showReview = !$this->showReview;
+        $this->showReview = ! $this->showReview;
     }
 
     public function backToAssignments()
@@ -1003,9 +1058,11 @@ class AssignmentTakingComponent extends Component
         return redirect()->route('students.assignments');
     }
 
-    public function getGrade($percentage)
+    public function getGrade($percentage): string
     {
-        return Grade::fromPercentage($percentage);
+        $gradeInfo = GradingSystemResolver::getGrade(Auth::user(), $percentage);
+
+        return (string) ($gradeInfo['grade'] ?? 'N/A');
     }
 
     public function render()

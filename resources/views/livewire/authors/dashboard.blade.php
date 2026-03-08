@@ -603,7 +603,7 @@
                                     </svg>
                                     Cover Image
                                 </label>
-                                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
                                     <input type="file"
                                            wire:model="cover_image"
                                            accept="image/*"
@@ -632,7 +632,7 @@
                                     </svg>
                                     PDF File
                                 </label>
-                                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
                                     <input type="file"
                                            wire:model="content_url"
                                            accept=".pdf"

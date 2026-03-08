@@ -171,7 +171,7 @@
                             </svg>
                             Features & Modules
                         </a></li>
-                    <li><a href="{{ route('sign-up') }}"
+                    <li><a href="{{ route('register') }}"
                            class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,7 +206,7 @@
 
                     <li>
                         <x-link.primary type="button" class="ml-4" to="{{ route('payments.public.lookup') }}">
-                            <span>Make Payment</span>
+                            <span>School Fees Payment Portal</span>
                         </x-link.primary>
                     </li>
                 </ul>

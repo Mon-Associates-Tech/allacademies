@@ -5,7 +5,6 @@ namespace App\Notifications;
 use App\Models\Assignment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\DatabaseMessage;
 
 class NewAssignmentNotification extends Notification
 {

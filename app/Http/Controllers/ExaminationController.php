@@ -20,7 +20,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Log;
 
 class ExaminationController extends Controller
 {
@@ -59,7 +58,6 @@ class ExaminationController extends Controller
 
         session()?->forget('examination_preview_data');
 
-
         $metadata = data_get($currentTeam->meta, 'present', []);
 
         $logo = data_get($currentTeam->meta, 'logo');
@@ -77,7 +75,7 @@ class ExaminationController extends Controller
             ->withCount([
                 'essayQuestions',
                 'multipleChoiceQuestions',
-                'trueOrFalseQuestions'
+                'trueOrFalseQuestions',
             ])
             ->with([
                 'subtopics' => function ($query) {
@@ -86,7 +84,7 @@ class ExaminationController extends Controller
                         'multipleChoiceQuestions',
                         'trueOrFalseQuestions',
                     ]);
-                }
+                },
             ])
             ->get()
             ->map(function ($topic) {
@@ -122,7 +120,7 @@ class ExaminationController extends Controller
                         ? $topic->true_or_false_questions_count
                         : $subtopics->sum('true_or_false_questions_count'),
                     'subtopics' => $subtopics->toArray(),
-                    'selectedOptions' => []
+                    'selectedOptions' => [],
                 ];
             })
             ->toArray();
@@ -134,14 +132,9 @@ class ExaminationController extends Controller
         ]);
     }
 
-
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Examination $examination
      * @return Application|Factory|View|\Illuminate\View\View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Examination $examination)
@@ -152,14 +145,13 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $examination->academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        Gate::allowIf(static fn($user) => $user->current_team_id === $examination->team_id);
+        Gate::allowIf(static fn ($user) => $user->current_team_id === $examination->team_id);
 
         $previewData = [
             'team_id' => $examination->team_id,
             'creator_id' => $examination->creator_id,
             'academic_subject' => $examination->academicSubject,
         ];
-
 
         return view('examinations.show', [
             'examination' => $examination,
@@ -168,18 +160,13 @@ class ExaminationController extends Controller
             'sections' => $this->formatSection($examination->sections),
             'heading' => $examination->heading instanceof Mark
                 ? $examination->heading->toArray()
-                : $examination->heading
+                : $examination->heading,
         ]);
     }
-
 
     /**
      * Display the specified resource.
      *
-     * @param AcademicGroup $academicGroup
-     * @param AcademicLevel $academicLevel
-     * @param AcademicSubject $academicSubject
-     * @param Examination $examination
      * @return Application|Factory|\Illuminate\View\View|View
      */
     public function answers(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Examination $examination)
@@ -190,7 +177,7 @@ class ExaminationController extends Controller
         $this->authorize('subscribed', $examination->academicSubject);
         $this->authorize('privileged', $currentTeam);
 
-        Gate::allowIf(static fn($user) => $user->current_team_id === $examination->team_id);
+        Gate::allowIf(static fn ($user) => $user->current_team_id === $examination->team_id);
 
         $sections = Examiner::createSections($examination);
 
@@ -204,8 +191,6 @@ class ExaminationController extends Controller
     /**
      * Generate a preview of the examination without saving to a database
      */
-
-
     public function generatePreview(AcademicGroup $academicGroup, AcademicLevel $academicLevel, HttpRequest $request, AcademicSubject $academicSubject): ?RedirectResponse
     {
         try {
@@ -222,7 +207,7 @@ class ExaminationController extends Controller
 
             session(['examination_form_data' => [
                 'heading' => $headingData,
-                'sections' => $request['sections']
+                'sections' => $request['sections'],
             ]]);
 
             $metadata = json_decode(base64_decode($request['metadata']), true, 512, JSON_THROW_ON_ERROR);
@@ -232,7 +217,7 @@ class ExaminationController extends Controller
             $previewData = QuestionGenerator::generate($request['heading'], $preprocessedSections, $metadata);
 
             $previewData['sections'] = array_filter($previewData['sections'], static function ($data) {
-                return !array_key_exists('count', $data);
+                return ! array_key_exists('count', $data);
             });
 
             $previewData['creator_id'] = auth()->user()->current_team_id;
@@ -255,27 +240,26 @@ class ExaminationController extends Controller
                 ->withInput($request->all())
                 ->withErrors([
                     'questions' => 'Not enough questions available. Please reduce the number of questions or select additional topics.',
-                    'details' => $e->getMessage()
+                    'details' => $e->getMessage(),
                 ]);
         } catch (\App\Exceptions\NoTopicsException $e) {
             return back()
                 ->withInput($request->all())
                 ->withErrors([
                     'topics' => 'No topics selected. Please select at least one topic for each section.',
-                    'details' => $e->getMessage()
+                    'details' => $e->getMessage(),
                 ]);
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Preview generation failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
                 ->withInput($request->all())
-                ->withErrors(['general' => 'Failed to generate preview: ' . $e->getMessage()]);
+                ->withErrors(['general' => 'Failed to generate preview: '.$e->getMessage()]);
         }
     }
-
 
     /**
      * Show the examination preview
@@ -289,7 +273,7 @@ class ExaminationController extends Controller
 
         $previewData = session('examination_preview');
 
-        if (!$previewData) {
+        if (! $previewData) {
             return redirect()->route('examinations.create', [
                 'academic_subject' => $academicSubject,
                 'academic_level' => getRouteParameter('academic_level'),
@@ -316,18 +300,18 @@ class ExaminationController extends Controller
 
     private function formatSection($sections): array
     {
-        $questionGenerator = new QuestionGenerator();
+        $questionGenerator = new QuestionGenerator;
         $previewData = $questionGenerator->processSections($sections);
         $previewData['sections'] = $questionGenerator->normalizeQuestionsToIds($sections);
 
-
         return collect($previewData['sections'])->map(function ($section) use ($questionGenerator) {
-            if (!empty($section['questions'])) {
+            if (! empty($section['questions'])) {
                 $questionType = str_replace('_questions', '', $section['type']);
                 $questionIds = $questionGenerator->getQuestionIdsOnly($section['questions']);
                 $section['questions'] = $questionGenerator->fetchCompleteQuestions($questionIds, $questionType);
                 $section['questions'] = $questionGenerator->formatExistingQuestions($section['questions']);
             }
+
             return $section;
         })->toArray();
     }
@@ -347,7 +331,7 @@ class ExaminationController extends Controller
         $creator = User::query()->findOrFail($request->creator_id);
 
         try {
-            $examinationService = new QuestionGenerator();
+            $examinationService = new QuestionGenerator;
             $examinationService->createExamination(
                 $academicSubject,
                 $validatedData,
@@ -368,5 +352,4 @@ class ExaminationController extends Controller
                 ->withInput();
         }
     }
-
 }

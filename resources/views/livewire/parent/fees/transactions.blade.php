@@ -94,7 +94,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Student</label>
                     <select name="student_id"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                         <option value="">All Students</option>
                         @foreach($students as $student)
                             <option
@@ -109,7 +109,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Type</label>
                     <select name="type"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                         <option value="">All Types</option>
                         <option value="school_fee" {{ $selectedType === 'school_fee' ? 'selected' : '' }}>School Fee
                         </option>
@@ -123,7 +123,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
                     <select name="status"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                         <option value="">All Status</option>
                         <option value="succeeded" {{ $selectedStatus === 'succeeded' ? 'selected' : '' }}>Successful
                         </option>
@@ -136,14 +136,14 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date From</label>
                     <input type="date" name="date_from" value="{{ $dateFrom }}"
-                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                           class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 </div>
 
                 <!-- Date To -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date To</label>
                     <input type="date" name="date_to" value="{{ $dateTo }}"
-                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                           class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 </div>
 
                 <!-- Filter Buttons -->
@@ -228,9 +228,19 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div
-                                        class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->payer->name }}</div>
+                                        class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->getPayerDisplayName() }}</div>
                                     <div
-                                        class="text-xs text-gray-500 dark:text-gray-400">{{ $transaction->payer->email }}</div>
+                                        class="text-xs text-gray-500 dark:text-gray-400">
+                                        @if($transaction->payer)
+                                            @if($transaction->payer_type === 'parent')
+                                                {{ $transaction->payer->user->email ?? 'N/A' }}
+                                            @else
+                                                {{ $transaction->payer->email ?? 'N/A' }}
+                                            @endif
+                                        @else
+                                            {{ $transaction->payer_email ?? 'N/A' }}
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VirtualSession extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToSchoolEnhanced;
+    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -201,7 +201,7 @@ class VirtualSession extends Model
 
     public function generateMeetingId(): string
     {
-        return 'session-' . $this->id . '-' . time();
+        return 'session-'.$this->id.'-'.time();
     }
 
     public function generatePassword(int $length = 12): string
@@ -217,7 +217,7 @@ class VirtualSession extends Model
 
     public function isChildSession(): bool
     {
-        return !is_null($this->parent_session_id);
+        return ! is_null($this->parent_session_id);
     }
 
     public function stopRecurrence(): void
@@ -233,7 +233,7 @@ class VirtualSession extends Model
 
     public function getRecurrenceSummary(): string
     {
-        if (!$this->is_recurring) {
+        if (! $this->is_recurring) {
             return 'One-time session';
         }
 
@@ -262,9 +262,9 @@ class VirtualSession extends Model
         }
 
         if ($this->recurrence_end_date) {
-            $summary .= " until " . $this->recurrence_end_date->format('M d, Y');
+            $summary .= ' until '.$this->recurrence_end_date->format('M d, Y');
         } else {
-            $summary .= " (no end date)";
+            $summary .= ' (no end date)';
         }
 
         return $summary;

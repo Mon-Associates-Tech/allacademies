@@ -22,5 +22,4 @@ trait HasModal
     {
         $this->dispatch('modal:setActive', ['modal' => null]);
     }
-
 }

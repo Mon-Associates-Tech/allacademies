@@ -1,4 +1,7 @@
 <x-layouts.app>
+        @if(auth()->check() && !$has_token_subscription ?? false)
+        <x-alert.token-subscription-banner />
+    @else
     @php
         $cover = $userBook->cover_image ? asset('storage/' . $userBook->cover_image) : asset('images/book-cover.png');
     @endphp
@@ -872,5 +875,6 @@
 
         @livewire('user-books.user-book-p-d-f-reader', ['bookId' => $userBook->id, 'config' => ['book' => $userBook]])
     </div>
+    @endif
 </x-layouts.app>
 

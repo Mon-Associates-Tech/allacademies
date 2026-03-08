@@ -17,7 +17,7 @@ trait Trackable
 
     protected static function track(string $event, Model $model): void
     {
-        $snapshot = 'updated' === $event
+        $snapshot = $event === 'updated'
             ? ['value' => $model->toArray(), 'changes' => $model->getRawOriginal()]
             : ['value' => $model->toArray()];
 

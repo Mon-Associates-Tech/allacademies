@@ -55,9 +55,9 @@
             <thead class="bg-gray-200">
             <tr>
                 <th class="border border-gray-800 px-3 py-2 text-left text-xs font-bold text-gray-900">Subject</th>
-                <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Assessments<br>(10%)</th>
-                <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Quizzes<br>(30%)</th>
-                <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Final Exam<br>(60%)</th>
+                <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Assignments<br>(40%)</th>
+                <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Quizzes<br>(10%)</th>
+                <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Final Exam<br>(50%)</th>
                 <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Total Score</th>
                 <th class="border border-gray-800 px-3 py-2 text-center text-xs font-bold text-gray-900">Grade</th>
                 <th class="border border-gray-800 px-3 py-2 text-left text-xs font-bold text-gray-900">Remarks</th>

@@ -2,31 +2,37 @@
 
 namespace App\Livewire\Teachers\Attendance;
 
-use App\Models\Student;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\Attendance\AttendanceRecord;
+use App\Models\Student;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class AttendanceHistory extends Component
 {
     use WithPagination;
 
     public $student;
+
     public $academicLevels;
+
     public $subjects;
 
     // Filters
     public $selectedLevel;
+
     public $selectedSubject;
+
     public $dateFrom;
+
     public $dateTo;
+
     public $statusFilter = 'all';
 
     public $groupBy = 'daily'; // daily, weekly, monthly
+
     public $perPage = 10;
 
     protected $queryString = [
@@ -93,7 +99,7 @@ class AttendanceHistory extends Component
             'total' => $totalSessions,
             'present' => $presentCount,
             'absent' => $absentCount,
-            'rate' => $totalSessions > 0 ? ($presentCount / $totalSessions) * 100 : 0
+            'rate' => $totalSessions > 0 ? ($presentCount / $totalSessions) * 100 : 0,
         ];
     }
 

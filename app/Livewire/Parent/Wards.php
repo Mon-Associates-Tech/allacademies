@@ -3,8 +3,8 @@
 namespace App\Livewire\Parent;
 
 use App\Livewire\AppComponent;
-use App\Models\Student;
 use App\Models\Assessment;
+use App\Models\Student;
 use App\Models\StudentParent;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -15,10 +15,15 @@ class Wards extends AppComponent
     use WithPagination;
 
     public $selectedWardId = null;
+
     public $showWardDetails = false;
+
     public $sortBy = 'name';
+
     public $sortDirection = 'asc';
+
     public $searchTerm = '';
+
     public $selectedPeriod = 'current_term';
 
     public function mount()
@@ -58,7 +63,7 @@ class Wards extends AppComponent
             ->where('user_id', Auth::id())
             ->first();
 
-        if (!$parent) {
+        if (! $parent) {
             return collect();
         }
 
@@ -69,7 +74,7 @@ class Wards extends AppComponent
             ->get();
 
         if ($this->searchTerm) {
-            $students = $students->filter(function($student) {
+            $students = $students->filter(function ($student) {
                 return stripos($student->user->name, $this->searchTerm) !== false ||
                     stripos($student->academicLevel->name ?? '', $this->searchTerm) !== false ||
                     stripos($student->academicLevel->academicGroup->name ?? '', $this->searchTerm) !== false;
@@ -83,7 +88,9 @@ class Wards extends AppComponent
     #[Computed]
     public function selectedWard()
     {
-        if (!$this->selectedWardId) return null;
+        if (! $this->selectedWardId) {
+            return null;
+        }
 
         return Student::withoutGlobalScopes()
             ->with([
@@ -91,16 +98,18 @@ class Wards extends AppComponent
                 'academicLevel.academicGroup',
                 'academicGroup',
                 'studentGroup',
-                'assessments' => function($query) {
+                'assessments' => function ($query) {
                     $query->latest()->limit(10);
-                }
+                },
             ])->find($this->selectedWardId);
     }
 
     #[Computed]
     public function wardPerformanceData()
     {
-        if (!$this->selectedWard) return [];
+        if (! $this->selectedWard) {
+            return [];
+        }
 
         $assessments = Assessment::where('student_id', $this->selectedWardId)->get();
         $recentAssessments = $assessments->sortByDesc('created_at')->take(5);
@@ -112,7 +121,7 @@ class Wards extends AppComponent
             'failed_assessments' => $assessments->where('passed', false)->count(),
             'recent_assessments' => $recentAssessments,
             'subjects_count' => $assessments->pluck('academic_subject_id')->unique()->count(),
-            'performance_trend' => $this->calculatePerformanceTrend($assessments)
+            'performance_trend' => $this->calculatePerformanceTrend($assessments),
         ];
     }
 
@@ -142,7 +151,7 @@ class Wards extends AppComponent
                 'assessments_count' => $wardAssessmentCount,
                 'average_score' => $wardAverage,
                 'passed_count' => $wardPassed,
-                'performance_trend' => $this->calculatePerformanceTrend($assessments)
+                'performance_trend' => $this->calculatePerformanceTrend($assessments),
             ];
         }
 
@@ -151,14 +160,16 @@ class Wards extends AppComponent
             'total_assessments' => $totalAssessments,
             'overall_average' => $assessmentCount > 0 ? $totalScore / $assessmentCount : 0,
             'overall_pass_rate' => $totalAssessments > 0 ? ($passedCount / $totalAssessments) * 100 : 0,
-            'wards_data' => $wardsWithData
+            'wards_data' => $wardsWithData,
         ];
     }
 
     #[Computed]
     public function subjectBreakdown()
     {
-        if (!$this->selectedWard) return [];
+        if (! $this->selectedWard) {
+            return [];
+        }
 
         $assessments = Assessment::where('student_id', $this->selectedWardId)
             ->with('academicSubject')
@@ -173,7 +184,7 @@ class Wards extends AppComponent
                 'assessments_count' => $subjectAssessments->count(),
                 'average_score' => $subjectAssessments->avg('score'),
                 'passed_count' => $subjectAssessments->where('passed', true)->count(),
-                'last_assessment' => $subjectAssessments->sortByDesc('created_at')->first()
+                'last_assessment' => $subjectAssessments->sortByDesc('created_at')->first(),
             ];
         }
 
@@ -182,13 +193,20 @@ class Wards extends AppComponent
 
     private function calculatePerformanceTrend($assessments)
     {
-        if ($assessments->count() < 2) return 'stable';
+        if ($assessments->count() < 2) {
+            return 'stable';
+        }
 
         $recent = $assessments->sortByDesc('created_at')->take(5)->avg('score');
         $previous = $assessments->sortByDesc('created_at')->skip(5)->take(5)->avg('score');
 
-        if ($recent > $previous + 5) return 'improving';
-        if ($recent < $previous - 5) return 'declining';
+        if ($recent > $previous + 5) {
+            return 'improving';
+        }
+        if ($recent < $previous - 5) {
+            return 'declining';
+        }
+
         return 'stable';
     }
 

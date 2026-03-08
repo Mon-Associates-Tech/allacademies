@@ -3,67 +3,96 @@
 namespace App\Livewire\UserBooks;
 
 use App\Mail\BookShared;
-use App\Models\UserBook;
 use App\Models\User;
+use App\Models\UserBook;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class UserBookForm extends Component
 {
     use WithFileUploads;
 
     public $mode = 'create';
+
     public $userBookId = null;
+
     public $userBook = null;
 
     // Basic book information
     public $title;
+
     public $description;
+
     public $edition;
+
     public $publisher;
+
     public $pages;
+
     public $annualSubscriptionFee = 0;
+
     public $subscriptionConditions;
+
     public $status = 'draft';
 
     // Files
     public $coverImage;
+
     public $pdfFile;
+
     public $samplePdfFile;
+
     public $singleAudio;
+
     public $singleVideo;
+
     public $chapterAudios = [];
+
     public $chapterVideos = [];
 
     // Existing files
     public $existingCoverImage = null;
+
     public $existingPdfFile = null;
+
     public $existingSamplePdfFile = null;
+
     public $existingSingleAudio = null;
+
     public $existingSingleVideo = null;
+
     public $existingChapterAudios = [];
+
     public $existingChapterVideos = [];
 
     // Removal flags
     public $removeCoverImage = false;
+
     public $removePdfFile = false;
+
     public $removeSamplePdfFile = false;
+
     public $removeSingleAudioFile = false;
+
     public $removeSingleVideoFile = false;
+
     public $removeChapterAudioFiles = [];
+
     public $removeChapterVideoFiles = [];
 
     // Table of Contents
     public $tableOfContents = [];
+
     public $showTableOfContents = false;
+
     public $expandedChapters = [];
 
     // Sharing
     public $emails = '';
+
     public $maxShares = 10; // Limit to 10 shares
 
     protected $rules = [
@@ -106,7 +135,7 @@ class UserBookForm extends Component
         'tableOfContents.*.sections.*.page_end.required' => 'Section end page is required.',
     ];
 
-    public function mount(UserBook $userBook = null): void
+    public function mount(?UserBook $userBook = null): void
     {
 
         if ($userBook && $userBook->exists) {
@@ -120,41 +149,41 @@ class UserBookForm extends Component
         }
     }
 
-public function loadUserBookData(): void
-{
-    $this->title = $this->userBook->title;
-    $this->description = $this->userBook->description;
-    $this->edition = $this->userBook->edition;
-    $this->publisher = $this->userBook->publisher;
-    $this->pages = $this->userBook->pages;
-    $this->annualSubscriptionFee = $this->userBook->annual_subscription_fee;
-    $this->subscriptionConditions = $this->userBook->subscription_conditions;
-    $this->status = $this->userBook->status;
+    public function loadUserBookData(): void
+    {
+        $this->title = $this->userBook->title;
+        $this->description = $this->userBook->description;
+        $this->edition = $this->userBook->edition;
+        $this->publisher = $this->userBook->publisher;
+        $this->pages = $this->userBook->pages;
+        $this->annualSubscriptionFee = $this->userBook->annual_subscription_fee;
+        $this->subscriptionConditions = $this->userBook->subscription_conditions;
+        $this->status = $this->userBook->status;
 
-    // Files
-    $this->existingCoverImage = $this->userBook->cover_image;
-    $this->existingPdfFile = $this->userBook->content_url;
-    $this->existingSamplePdfFile = $this->userBook->sample_url;
-    $this->existingSingleAudio = $this->userBook->single_audio;
-    $this->existingSingleVideo = $this->userBook->single_video;
-    $this->existingChapterAudios = $this->userBook->chapter_audios ?? [];
-    $this->existingChapterVideos = $this->userBook->chapter_videos ?? [];
+        // Files
+        $this->existingCoverImage = $this->userBook->cover_image;
+        $this->existingPdfFile = $this->userBook->content_url;
+        $this->existingSamplePdfFile = $this->userBook->sample_url;
+        $this->existingSingleAudio = $this->userBook->single_audio;
+        $this->existingSingleVideo = $this->userBook->single_video;
+        $this->existingChapterAudios = $this->userBook->chapter_audios ?? [];
+        $this->existingChapterVideos = $this->userBook->chapter_videos ?? [];
 
-    // Table of contents
-    if ($this->userBook->table_of_contents) {
-        $this->tableOfContents = $this->userBook->table_of_contents;
-        $this->showTableOfContents = true;
-    } else {
-        $this->initializeTableOfContents();
+        // Table of contents
+        if ($this->userBook->table_of_contents) {
+            $this->tableOfContents = $this->userBook->table_of_contents;
+            $this->showTableOfContents = true;
+        } else {
+            $this->initializeTableOfContents();
+        }
+
+        // Pre-fill emails with existing shares
+        $existingShares = $this->userBook->shares()->where('status', 'pending')->get();
+
+        if ($existingShares->isNotEmpty()) {
+            $this->emails = $existingShares->pluck('shared_to_email')->implode(', ');
+        }
     }
-
-    // Pre-fill emails with existing shares
-    $existingShares = $this->userBook->shares()->where('status', 'pending')->get();
-
-    if ($existingShares->isNotEmpty()) {
-        $this->emails = $existingShares->pluck('shared_to_email')->implode(', ');
-    }
-}
 
     public function initializeTableOfContents(): void
     {
@@ -166,8 +195,8 @@ public function loadUserBookData(): void
                     'description' => '',
                     'page_start' => 1,
                     'page_end' => 10,
-                    'sections' => []
-                ]
+                    'sections' => [],
+                ],
             ];
         }
     }
@@ -186,14 +215,16 @@ public function loadUserBookData(): void
 
     public function updatedPages(): void
     {
-        if ($this->pages && !$this->showTableOfContents) {
+        if ($this->pages && ! $this->showTableOfContents) {
             $this->generateTableOfContents();
         }
     }
 
     public function generateTableOfContents(): void
     {
-        if (!$this->pages) return;
+        if (! $this->pages) {
+            return;
+        }
 
         $chaptersCount = max(1, min(15, intval($this->pages / 20)));
         $this->tableOfContents = [];
@@ -205,14 +236,14 @@ public function loadUserBookData(): void
                 'description' => "Content for chapter {$i}",
                 'page_start' => (($i - 1) * intval($this->pages / $chaptersCount)) + 1,
                 'page_end' => $i * intval($this->pages / $chaptersCount),
-                'sections' => []
+                'sections' => [],
             ];
         }
     }
 
     public function toggleTableOfContents(): void
     {
-        $this->showTableOfContents = !$this->showTableOfContents;
+        $this->showTableOfContents = ! $this->showTableOfContents;
         if ($this->showTableOfContents && empty($this->tableOfContents)) {
             $this->generateTableOfContents();
         }
@@ -239,7 +270,7 @@ public function loadUserBookData(): void
             'description' => '',
             'page_start' => $nextPageStart,
             'page_end' => $nextPageStart + 10,
-            'sections' => []
+            'sections' => [],
         ];
     }
 
@@ -264,11 +295,11 @@ public function loadUserBookData(): void
             'title' => 'New Section',
             'page_start' => $sectionPageStart,
             'page_end' => $sectionPageEnd,
-            'description' => ''
+            'description' => '',
         ];
 
         // Auto-expand the chapter when adding a section
-        if (!in_array($chapterIndex, $this->expandedChapters)) {
+        if (! in_array($chapterIndex, $this->expandedChapters)) {
             $this->expandedChapters[] = $chapterIndex;
         }
     }
@@ -303,12 +334,12 @@ public function loadUserBookData(): void
                 'title' => "Section {$i}",
                 'page_start' => $sectionPageStart,
                 'page_end' => $sectionPageEnd,
-                'description' => "Content for section {$i}"
+                'description' => "Content for section {$i}",
             ];
         }
 
         // Auto-expand the chapter
-        if (!in_array($chapterIndex, $this->expandedChapters)) {
+        if (! in_array($chapterIndex, $this->expandedChapters)) {
             $this->expandedChapters[] = $chapterIndex;
         }
     }
@@ -366,7 +397,7 @@ public function loadUserBookData(): void
             }
 
             // Validate sections
-            if (!empty($chapter['sections'])) {
+            if (! empty($chapter['sections'])) {
                 foreach ($chapter['sections'] as $sectionIndex => $section) {
                     // Section pages must be within chapter bounds
                     if ($section['page_start'] < $chapter['page_start'] || $section['page_end'] > $chapter['page_end']) {
@@ -405,7 +436,7 @@ public function loadUserBookData(): void
             if ($this->existingCoverImage) {
                 Storage::disk('public')->delete($this->existingCoverImage);
             }
-            $fileName = $this->generateFileName('cover.' . $this->coverImage->extension());
+            $fileName = $this->generateFileName('cover.'.$this->coverImage->extension());
             $fileData['cover_image'] = $this->coverImage->storeAs('user-books/covers', $fileName, 'public');
         }
 
@@ -444,7 +475,7 @@ public function loadUserBookData(): void
             if ($this->existingSingleAudio) {
                 Storage::disk('public')->delete($this->existingSingleAudio);
             }
-            $fileName = $this->generateFileName('audio.' . $this->singleAudio->extension());
+            $fileName = $this->generateFileName('audio.'.$this->singleAudio->extension());
             $fileData['single_audio'] = $this->singleAudio->storeAs('user-books/audio', $fileName, 'public');
         }
 
@@ -457,7 +488,7 @@ public function loadUserBookData(): void
             if ($this->existingSingleVideo) {
                 Storage::disk('public')->delete($this->existingSingleVideo);
             }
-            $fileName = $this->generateFileName('video.' . $this->singleVideo->extension());
+            $fileName = $this->generateFileName('video.'.$this->singleVideo->extension());
             $fileData['single_video'] = $this->singleVideo->storeAs('user-books/video', $fileName, 'public');
         }
 
@@ -470,7 +501,7 @@ public function loadUserBookData(): void
                         Storage::disk('public')->delete($this->existingChapterAudios[$index]);
                     }
 
-                    $fileName = $this->generateFileName("chapter-{$index}-audio." . $file->extension());
+                    $fileName = $this->generateFileName("chapter-{$index}-audio.".$file->extension());
                     $path = $file->storeAs('user-books/audio/chapters', $fileName, 'public');
                     $fileData['chapter_audios'][$index] = $path;
                 }
@@ -486,7 +517,7 @@ public function loadUserBookData(): void
                         Storage::disk('public')->delete($this->existingChapterVideos[$index]);
                     }
 
-                    $fileName = $this->generateFileName("chapter-{$index}-video." . $file->extension());
+                    $fileName = $this->generateFileName("chapter-{$index}-video.".$file->extension());
                     $path = $file->storeAs('user-books/video/chapters', $fileName, 'public');
                     $fileData['chapter_videos'][$index] = $path;
                 }
@@ -500,10 +531,10 @@ public function loadUserBookData(): void
     {
         $title = $this->title ?? 'untitled';
         $slug = Str::slug(Str::limit($title, 50, ''));
-        $fileName = "user-book-{$slug}-" . time();
+        $fileName = "user-book-{$slug}-".time();
 
         if ($suffix) {
-            $fileName .= '_' . $suffix;
+            $fileName .= '_'.$suffix;
         }
 
         return $fileName;
@@ -514,21 +545,23 @@ public function loadUserBookData(): void
         $this->validate();
 
         // Additional validation for table of contents
-        if ($this->showTableOfContents && !empty($this->tableOfContents)) {
+        if ($this->showTableOfContents && ! empty($this->tableOfContents)) {
             $errors = $this->validateTableOfContents();
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 foreach ($errors as $field => $message) {
                     $this->addError($field, $message);
                 }
+
                 return;
             }
         }
 
         // Validate emails if provided
-        if (!empty($this->emails)) {
+        if (! empty($this->emails)) {
             $emailArray = array_filter(array_map('trim', explode(',', $this->emails)));
             if (count($emailArray) > $this->maxShares) {
                 $this->addError('emails', "You can only share with up to {$this->maxShares} users.");
+
                 return;
             }
         }
@@ -565,11 +598,12 @@ public function loadUserBookData(): void
             }
 
             // Handle sharing
-            if (!empty($this->emails)) {
+            if (! empty($this->emails)) {
                 $this->handleSharing();
             }
 
             session()->flash('message', $this->mode === 'create' ? 'Book created successfully!' : 'Book updated successfully!');
+
             return redirect()->route('user-books.index');
         } catch (\Exception $e) {
             logError($e->getMessage());
@@ -583,7 +617,7 @@ public function loadUserBookData(): void
 
         foreach ($emailArray as $email) {
             // Validate email
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 continue;
             }
 
@@ -596,8 +630,8 @@ public function loadUserBookData(): void
                     ->where('shared_to_user_id', $user->id)
                     ->first();
 
-                if (!$existingShare) {
-                  $share =   $this->userBook->shares()->create([
+                if (! $existingShare) {
+                    $share = $this->userBook->shares()->create([
                         'shared_by_user_id' => auth()->id(),
                         'shared_to_user_id' => $user->id,
                         'shared_to_email' => $email,
@@ -622,4 +656,3 @@ public function loadUserBookData(): void
         return view('livewire.user-books.user-book-form');
     }
 }
-
