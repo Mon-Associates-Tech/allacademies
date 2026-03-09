@@ -9,7 +9,7 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">Resource Uploaded Successfully!</h3>
+            <h3 class="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">Media Uploaded Successfully!</h3>
             <p class="text-green-600 dark:text-green-400 mb-4">Your resource "{{ $createdResource?->title }}" has been uploaded and is now available.</p>
             <div class="flex justify-center gap-4">
                 <a href="{{ route('educational-resources.show', $createdResource) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
@@ -17,7 +17,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
-                    View Resource
+                    View Media
                 </a>
                 <button wire:click="uploadAnother" class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,7 +284,7 @@
                         <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
-                        Upload Resource
+                        Upload Media
                     </span>
                     <span wire:loading wire:target="saveResource" class="flex items-center">
                         <svg class="animate-spin -ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24">
