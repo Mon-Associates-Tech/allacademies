@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityTrailController;
 use App\Http\Controllers\Admin\SchoolPaymentController;
 use App\Http\Controllers\BookController;
+use App\Livewire\Administrators\AccountantManagement;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/book-management/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
     Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
+    Route::get('/accountant-management', AccountantManagement::class)->name('accountant-management');
     Route::get('/logins', UserLoginLog::class)->name('logins');
     Route::get('/author-management', AuthorManagement::class)->name('author-management');
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');

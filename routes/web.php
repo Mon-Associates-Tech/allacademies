@@ -112,6 +112,9 @@ Route::get('/calendar', function () {
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Password Change for Default Password
+    Route::get('/password/change', \App\Livewire\Auth\ChangeDefaultPassword::class)->name('password.change');
+
     // Ping Route (Keep-alive)
     Route::post('/ping', static function () {
         return response()->noContent();
@@ -462,6 +465,7 @@ include_once 'author.php';
 include_once 'librarian.php';
 include_once 'parent.php';
 include_once 'administrator.php';
+include_once 'accountant.php';
 include_once 'academic.php';
 include_once 'guest.php';
 include_once 'sponsorship.php';

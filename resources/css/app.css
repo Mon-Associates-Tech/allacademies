@@ -272,7 +272,7 @@
 
 /* Default (mobile): sidebar is always full width with visible text */
 #sidebar {
-    width: 13rem !important; /* w-52 equivalent */
+    width: 15rem !important; /* w-52 equivalent */
 }
 
 #sidebar .sidebar-text {
@@ -283,11 +283,11 @@
 /* Large screens (lg+): Apply collapsed/expanded behavior */
 @media (min-width: 1024px) {
     body.sidebar-expanded #sidebar {
-        width: 13rem !important;
+        width: 15rem !important;
     }
 
     body:not(.sidebar-expanded) #sidebar {
-        width: 3.5rem !important;
+        width: 4rem !important;
     }
 
     body.sidebar-expanded #sidebar .sidebar-text {
@@ -304,7 +304,7 @@
 /* Extra large screens (2xl+): Always show expanded sidebar */
 @media (min-width: 1536px) {
     #sidebar {
-        width: 13rem !important;
+        width: 15rem !important;
     }
 
     #sidebar .sidebar-text {

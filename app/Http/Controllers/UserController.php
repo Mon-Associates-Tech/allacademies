@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use App\Enums\UserRole;
 use App\Models\Student;
 use App\Models\Teacher;

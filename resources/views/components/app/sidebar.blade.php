@@ -25,10 +25,9 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-80 lg:w-20 lg:sidebar-expanded:!w-80 2xl:w-80! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-80 lg:w-64 lg:sidebar-expanded:!w-[32rem] 2xl:!w-[32rem] shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
         :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-80 lg:translate-x-0'"
         @click.outside="$store.sidebar.open =  false"
-        style=""
         @keydown.escape.window="$store.sidebar.open = false"
     >
 
@@ -47,7 +46,7 @@
         <!-- Scrollable content area -->
         <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
             <div class="lg:pt-6">
-                <div :class="$store.sidebar.open ? 'w-12 h-12' : 'w-8 h-8'" class="mx-auto mb-2">
+                <div :class="$store.sidebar.open ? 'w-16 h-16' : 'w-12 h-12'" class="mx-auto mb-2">
                     <x-avatar
                         :name="auth()->user()->name"
                         avatar="{{ auth()->user()->avatar }}"
@@ -140,6 +139,8 @@
                             @include('livewire.navigations.moderator-navigation', [
                                 'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                             ])
+                        @elseif($userRole === UserRole::ACCOUNTANT || $roleValue === 'accountant')
+                            @include('livewire.navigations.accountant-navigation')
                         @endif
                     @endauth
                 </div>

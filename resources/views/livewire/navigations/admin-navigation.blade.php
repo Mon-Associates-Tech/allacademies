@@ -50,6 +50,7 @@
         @endif
 
 
+        @if(auth()->user()->role === UserRole::OWNER)
         <li class="mb-0.5 last:mb-0" title="Academic Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('academic-groups.index')? 'bg-violet-500 text-white my-1 font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -65,6 +66,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <!-- User Management -->
         <li class="mb-0.5 last:mb-0 " title="User Management">
@@ -171,6 +173,23 @@
                 </div>
             </a>
         </li>
+
+        <!-- Accountant Management -->
+        <li class="mb-0.5 last:mb-0 " title="Accountant Management">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.accountant-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.accountant-management')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('admin.accountant-management') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                        <path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Accountant Management</span>
+                </div>
+            </a>
+        </li>
         @if(auth()->user()->role === UserRole::OWNER)
             <!-- Author Management -->
             <li class="mb-0.5 last:mb-0 " title="Author Management">
@@ -246,7 +265,9 @@
             </li>
         @endif
 
+
         <!-- Subject Management -->
+         @if(auth()->user()->role === UserRole::OWNER))
         <li class="mb-0.5 last:mb-0 " title="Subject Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('admin.subject-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -264,6 +285,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <!-- Report Card Management -->
         <li class="mb-0.5 last:mb-0" title="Report Card Management">
