@@ -52,6 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'author' => Author::class,
         'librarian' => Librarian::class,
         'parent' => StudentParent::class,
+        'accountant' => Accountant::class,
     ];
 
     private const ROLE_RELATION_MAP = [
