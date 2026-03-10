@@ -63,6 +63,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
 Route::view('/terms', 'branding.terms')->name('branding.terms');
 Route::view('/features', 'branding.features')->name('branding.features');
+Route::view('/pricing', 'branding.pricing')->name('branding.pricing');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
