@@ -393,6 +393,63 @@
             </a>
         </li>
 
+        <!-- Course Management Divider -->
+        <li class="my-4 border-t border-gray-200 dark:border-gray-700"></li>
+        <h3 class="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3 mb-2">
+            <span class="hidden lg:block lg:sidebar-expanded:hidden 2xl:hidden text-center w-6" aria-hidden="true">•••</span>
+            <span class="lg:hidden lg:sidebar-expanded:block 2xl:block">LMS Management</span>
+        </h3>
+
+        <!-- Course Management -->
+        @can('create', App\Models\Lms\Course::class)
+            <li class="mb-0.5 last:mb-0" title="Course Management">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('course-management.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('course-management.index') }}">
+                    <div class="flex items-center">
+                        <svg class="shrink-0 fill-current {{ Route::is('course-management.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path d="M11 0H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM5 1h6a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
+                            <path d="M6.5 4h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1zm0 2h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1zm0 2h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1zm0 2h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Course Management</span>
+                    </div>
+                </a>
+            </li>
+        @endcan
+
+        <!-- Certificate Template Settings -->
+        <li class="mb-0.5 last:mb-0" title="Certificate Templates">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.settings.certificate-templates') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('admin.settings.certificate-templates') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('admin.settings.certificate-templates') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Certificate Templates</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- ID Card Template Settings -->
+        <li class="mb-0.5 last:mb-0" title="ID Card Templates">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.settings.id-card-templates') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('admin.settings.id-card-templates') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('admin.settings.id-card-templates') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm4-2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zM9 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 9 8zm1 2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">ID Card Templates</span>
+                </div>
+            </a>
+        </li>
+
         @if(auth()->user()->role === UserRole::OWNER)
             <li class="mb-0.5 last:mb-0" title="Messenger Allocations">
                 <a :class="sidebarExpanded ? 'py-2' : ''"

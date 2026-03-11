@@ -153,5 +153,40 @@
                 </div>
             </a>
         </li>
+
+        <!-- LMS Divider -->
+        <li class="my-4 border-t border-gray-200 dark:border-gray-700"></li>
+        <h3 class="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3 mb-2">
+            <span class="lg:hidden lg:sidebar-expanded:block 2xl:block">Learning Management</span>
+        </h3>
+
+        <!-- Browse Courses -->
+        <li class="mb-0.5 last:mb-0" title="Browse Courses">
+            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('lms.courses.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('lms.courses.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('lms.courses.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM4 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
+                        <path d="M11 3H5a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 2H5a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 2H5a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 2H5a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Browse Courses</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- My Learning -->
+        <li class="mb-0.5 last:mb-0" title="My Learning">
+            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('my-learning.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('my-learning.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('my-learning.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.933-.475-2.393-.967-4.109-.893a11.95 11.95 0 0 0-2.39.238V2.828zM10 12.396c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893V2.828a11.95 11.95 0 0 0-2.39-.238c-1.716-.074-3.176.418-4.109.893v9.746zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02a.5.5 0 0 0 .707-.455v-11a.5.5 0 0 0-.293-.452C14.958.81 13.53.936 12.517 1.783c-1.017.847-2.184 1.174-3.517 1.174s-2.499-.327-3.517-1.174z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">My Learning</span>
+                </div>
+            </a>
+        </li>
     </ul>
 </div>

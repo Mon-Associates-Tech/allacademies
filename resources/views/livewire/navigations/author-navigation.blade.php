@@ -276,5 +276,28 @@
                 </div>
             </a>
         </li>
+
+        <!-- Course Management Divider -->
+        <li class="my-4 border-t border-gray-200 dark:border-gray-700"></li>
+        <h3 class="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3 mb-2">
+            <span class="lg:hidden lg:sidebar-expanded:block 2xl:block">LMS Management</span>
+        </h3>
+
+        <!-- Course Management -->
+        @can('create', App\Models\Lms\Course::class)
+            <li class="mb-0.5 last:mb-0" title="Course Management">
+                <a class="block px-3 py-2 rounded-lg transition {{ Route::is('course-management.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('course-management.index') }}">
+                    <div class="flex items-center">
+                        <svg class="shrink-0 fill-current {{ Route::is('course-management.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path d="M11 0H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM5 1h6a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
+                            <path d="M6.5 4h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1zm0 2h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1zm0 2h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1zm0 2h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1z"/>
+                        </svg>
+                        <span class="text-sm ml-4 sidebar-text duration-200">Course Management</span>
+                    </div>
+                </a>
+            </li>
+        @endcan
     </ul>
 </div>
