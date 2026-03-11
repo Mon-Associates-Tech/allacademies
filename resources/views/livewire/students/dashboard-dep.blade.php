@@ -18,31 +18,31 @@
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                 <button
                     wire:click="setActiveTab('overview')"
-                    class="{{ $activeTab === 'overview' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    class="{{ $activeTab === 'overview' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
                 >
                     Overview
                 </button>
                 <button
                     wire:click="setActiveTab('subjects')"
-                    class="{{ $activeTab === 'subjects' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    class="{{ $activeTab === 'subjects' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
                 >
                     Subjects
                 </button>
                 <button
                     wire:click="setActiveTab('books')"
-                    class="{{ $activeTab === 'books' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    class="{{ $activeTab === 'books' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
                 >
                     Books
                 </button>
                 <button
                     wire:click="setActiveTab('lessons')"
-                    class="{{ $activeTab === 'lessons' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    class="{{ $activeTab === 'lessons' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
                 >
                     Lessons
                 </button>
                 <button
                     wire:click="setActiveTab('assessments')"
-                    class="{{ $activeTab === 'assessments' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    class="{{ $activeTab === 'assessments' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
                 >
                     Assessments
                 </button>

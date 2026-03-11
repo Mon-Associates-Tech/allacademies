@@ -106,6 +106,7 @@ class StudentProfile extends Component
         }
 
         $user = $this->student->user;
+        $originalData = $user->only(['name', 'email', 'phone', 'address', 'date_of_birth', 'emergency_contact_name', 'emergency_contact_phone', 'bio', 'favorite_subjects', 'learning_goals']);
 
         // Handle avatar upload
         if ($this->avatar) {
@@ -134,6 +135,27 @@ class StudentProfile extends Component
             'learning_goals' => $this->learning_goals,
             'social_links' => json_encode($this->social_links ?? []),
         ]);
+
+        // Track changes
+        $changes = [];
+        foreach ($originalData as $key => $value) {
+            $newValue = $user->{$key};
+            if ($value !== $newValue) {
+                $changes[$key] = [
+                    'old' => $value,
+                    'new' => $newValue,
+                ];
+            }
+        }
+
+        // Log activity if changes were made
+        if (! empty($changes) || $this->avatar) {
+            $user->logActivity('update', 'Student Profile Updated', 'student_profile', [
+                'user_changes' => $changes,
+                'avatar_updated' => ! empty($this->avatar),
+                'updated_by' => auth()->user()?->name ?? 'Unknown',
+            ]);
+        }
 
         $this->isEditing = false;
         $this->avatar = null;

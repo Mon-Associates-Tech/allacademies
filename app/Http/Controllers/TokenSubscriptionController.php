@@ -21,6 +21,15 @@ class TokenSubscriptionController extends Controller
     {
         $this->subscriptionService = $subscriptionService;
         $this->cycleService = $cycleService;
+
+        // Prevent caching of checkout pages to avoid browser cache miss errors
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+
+            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        })->only(['checkout', 'topup', 'processPayment', 'processTopup']);
     }
 
     public function index()
@@ -54,7 +63,29 @@ class TokenSubscriptionController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $subscriptionHistory = $user->subscriptionHistory;
+        $subscriptionHistory = $user->subscriptionHistory()->get()->map(function ($group) use ($user) {
+            // Get the latest cycle to access pricing tier info
+            $latestCycle = SubscriptionCycle::find($group->latest_cycle_id);
+            
+            // Calculate tokens used for this subscription group
+            $tokensUsed = $user->tokenUsageLogs()
+                ->whereHas('subscriptionCycle', function($query) use ($group) {
+                    $query->where('subscription_group_id', $group->subscription_group_id);
+                })
+                ->sum('total_tokens');
+            
+            return (object) [
+                'subscription_group_id' => $group->subscription_group_id,
+                'group_start_date' => $group->group_start_date,
+                'group_end_date' => $group->group_end_date,
+                'months_count' => $group->months_count,
+                'total_cost' => $group->total_cost,
+                'total_tokens' => $group->total_tokens,
+                'tokens_used' => $tokensUsed,
+                'pricing_tier' => $latestCycle?->pricingTier,
+                'is_active' => $group->group_end_date >= now(),
+            ];
+        });
 
         return view('token-subscriptions.history', compact('subscriptionHistory'));
     }
@@ -68,6 +99,9 @@ class TokenSubscriptionController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
+
+        // Ensure any trial is expired before creating a paid cycle
+        $this->cycleService->expireTrialCycles($user);
 
         // Check if user already has an active subscription to the same tier
         $activeSubscription = $user->subscriptionCycles()
@@ -97,10 +131,22 @@ class TokenSubscriptionController extends Controller
 
     public function checkout(Request $request)
     {
+        // If accessed via GET (e.g., coming back from Paystack), redirect to subscriptions
+        if ($request->isMethod('get')) {
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('info', 'Checkout cancelled. You can try again anytime.');
+        }
+
         $request->validate([
             'pricing_tier_id' => 'required|exists:pricing_tiers,id',
             'months' => 'required|integer|min:1|max:12',
         ]);
+
+        // Clear any stale session data from previous payment attempts
+        session()->forget(['pending_payment', 'payment_reference', 'subscription_checkout']);
 
         /** @var User $user */
         $user = Auth::user();
@@ -144,6 +190,26 @@ class TokenSubscriptionController extends Controller
         ]);
     }
 
+    /**
+     * Show subscription data (called after user navigates back from payment page)
+     * This validates that session data still exists and is valid
+     */
+    public function validateCheckout()
+    {
+        $subscriptionCheckout = session('subscription_checkout');
+
+        // If session data is missing, clear and redirect
+        if (! $subscriptionCheckout) {
+            session()->forget(['pending_payment', 'payment_reference', 'payment_timestamp', 'subscription_checkout']);
+
+            return redirect()
+                ->route('token-subscriptions.index')
+                ->with('info', 'Your checkout session has ended. Please start a new subscription.');
+        }
+
+        return null; // Session is valid
+    }
+
     public function processPayment(Request $request)
     {
         $request->validate([
@@ -153,8 +219,15 @@ class TokenSubscriptionController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
+
+        // Clear any stale session data before processing new payment
+        session()->forget(['payment_timestamp']);
+
         $pricingTier = PricingTier::findOrFail($request->pricing_tier_id);
         $months = (int) $request->input('months');
+
+        // Ensure trials are expired so paid cycles don't merge into them
+        $this->cycleService->expireTrialCycles($user);
 
         // Calculate total price using same logic as checkout
         $totalPrice = 0;
@@ -162,32 +235,32 @@ class TokenSubscriptionController extends Controller
             $totalPrice += $pricingTier->getMonthlyPriceIncrement($cycleNumber);
         }
 
-        // Create subscription cycles as PENDING (no tokens assigned yet)
-        $cycles = $this->cycleService->createSubscriptionCycles($user, $pricingTier, $months, true);
-        $groupId = $cycles[0]->subscription_group_id;
+        // Generate group ID for future cycle creation
+        $groupId = \Illuminate\Support\Str::uuid()->toString();
 
         \Log::info('Processing payment for multi-month subscription', [
             'user_id' => $user->id,
             'pricing_tier_id' => $pricingTier->id,
             'pricing_tier_name' => $pricingTier->name,
             'months' => $months,
-            'cycles_created' => count($cycles),
             'group_id' => $groupId,
             'total_price' => $totalPrice,
         ]);
 
-        // Store payment info in session
+        // Store payment info in session (cycles will be created after payment)
         session([
             'pending_payment' => [
                 'group_id' => $groupId,
                 'pricing_tier_id' => $pricingTier->id,
+                'months' => $months,
                 'amount' => $totalPrice,
                 'type' => 'subscription',
             ],
         ]);
 
-        // Redirect to payment with group ID
-        return redirect()->route('token-payments.initialize', ['group_id' => $groupId])
+        // Redirect to payment with group ID using 303 to convert POST to GET
+        // This prevents 'Form Resubmission' errors when user cancels payment
+        return redirect()->route('token-payments.initialize', ['group_id' => $groupId], 303)
             ->with('success', 'Ready for payment. Please complete your transaction.');
     }
 
@@ -243,6 +316,9 @@ class TokenSubscriptionController extends Controller
             'amount' => 'required|numeric|min:10',
         ]);
 
+        // Clear any stale session data from previous payment attempts
+        session()->forget(['pending_payment', 'payment_reference']);
+
         /** @var User $user */
         $user = Auth::user();
 
@@ -272,8 +348,9 @@ class TokenSubscriptionController extends Controller
             ],
         ]);
 
-        // Redirect to payment
-        return redirect()->route('token-payments.initialize')
+        // Redirect to payment using 303 to convert POST to GET
+        // This prevents 'Form Resubmission' errors when user cancels payment
+        return redirect()->route('token-payments.initialize', 303)
             ->with('success', 'Ready for topup payment. Please complete your transaction.');
     }
 

@@ -96,6 +96,8 @@ class VirtualSessionRecordings extends Component
         }
 
         $recording = SessionRecording::findOrFail($recordingId);
+        $recordingName = $recording->name;
+        $sessionTitle = $recording->session?->title ?? 'Unknown Session';
 
         try {
             $bbbService = app(BigBlueButtonService::class);
@@ -103,6 +105,14 @@ class VirtualSessionRecordings extends Component
             if ($bbbService->deleteRecording($recording->recording_id)) {
                 $recording->update(['status' => 'deleted']);
                 $recording->delete();
+
+                // Log activity
+                SessionRecording::logActivityForModel('delete', 'Session Recording Deleted', 'session_recording', [
+                    'recording_name' => $recordingName,
+                    'session_title' => $sessionTitle,
+                    'recording_id' => $recordingId,
+                    'deleted_by' => auth()->user()?->name ?? 'Unknown',
+                ]);
 
                 $this->dispatch('success', 'Recording deleted successfully.');
             } else {

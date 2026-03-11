@@ -46,7 +46,7 @@
                                 Academic Level
                             </label>
                             <select wire:model.live="academicLevelId" id="academicLevelId"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <option value="">Select Level</option>
                                 @foreach($academicLevels as $level)
                                     <option value="{{ $level['id'] }}">{{ $level['name'] }}</option>
@@ -60,7 +60,7 @@
                                 Subject (Optional)
                             </label>
                             <select wire:model.live="academicSubjectId" id="academicSubjectId"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <option value="">All Subjects</option>
                                 @foreach($subjects as $subject)
                                     <option value="{{ $subject['id'] }}">{{ $subject['name'] }}</option>
@@ -73,7 +73,7 @@
                                 Date
                             </label>
                             <input type="date" wire:model="date" id="date"
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             @error('date') <span class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                         </div>
 
@@ -82,7 +82,7 @@
                                 Session
                             </label>
                             <select wire:model="session" id="session"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <option value="morning">Morning</option>
                                 <option value="afternoon">Afternoon</option>
                                 <option value="full_day">Full Day</option>
@@ -131,7 +131,7 @@
                                                     <th scope="col" class="relative w-12 px-6 sm:w-16 sm:px-8">
                                                         <input type="checkbox"
                                                                x-model="selectAll"
-                                                               class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
+                                                               class="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
                                                     </th>
                                                     <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Student</th>
                                                     <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
@@ -146,7 +146,7 @@
                                                                 <input type="checkbox"
                                                                        wire:model="selectedStudents.{{ $student['id'] }}.present"
                                                                        x-on:change="$wire.studentPresenceChanged({{ $student['id'] }}, $event.target.checked)"
-                                                                       class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
+                                                                       class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 dark:text-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
                                                             </div>
                                                         </td>
                                                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
@@ -172,7 +172,7 @@
                                                             @if(!isset($selectedStudents[$student['id']]['present']) || !$selectedStudents[$student['id']]['present'])
                                                                 <input type="text"
                                                                        wire:model.defer="selectedStudents.{{ $student['id'] }}.reason"
-                                                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                                       class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                                                        placeholder="Enter reason for absence">
                                                             @endif
                                                         </td>

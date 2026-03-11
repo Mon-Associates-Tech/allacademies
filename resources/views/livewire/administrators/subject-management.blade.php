@@ -157,7 +157,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Subtopic Name *</label>
                                     <input type="text" wire:model="subtopicName"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                            placeholder="Enter subtopic name">
                                     @error('subtopicName')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -167,7 +167,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
                                     <input type="text" wire:model="subtopicSlug"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-gray-400 text-gray-500"
                                            readonly>
                                     @error('subtopicSlug')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -178,7 +178,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                                 <textarea wire:model="subtopicDescription" rows="4"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                           placeholder="Enter subtopic description (optional)"></textarea>
                                 @error('subtopicDescription')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -187,7 +187,7 @@
 
                             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                                 <button type="button" wire:click="resetSubtopicForm"
-                                        class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
+                                        class="px-4 py-2 text-gray-700 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
                                     Cancel
                                 </button>
                                 <button type="submit"
@@ -306,7 +306,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Topic Name *</label>
                                     <input type="text" wire:model="topicName"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                            placeholder="Enter topic name">
                                     @error('topicName')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -316,7 +316,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
                                     <input type="text" wire:model="topicSlug"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-gray-400 text-gray-500"
                                            readonly>
                                     @error('topicSlug')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -327,7 +327,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                                 <textarea wire:model="topicDescription" rows="4"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                           placeholder="Enter topic description (optional)"></textarea>
                                 @error('topicDescription')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -336,7 +336,7 @@
 
                             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                                 <button type="button" wire:click="resetTopicForm"
-                                        class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
+                                        class="px-4 py-2 text-gray-700 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
                                     Cancel
                                 </button>
                                 <button type="submit"
@@ -451,7 +451,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Academic Group *</label>
                             <select wire:model="academicGroupId"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                                 <option value="">Select Academic Group</option>
                                 @foreach($academicGroups as $group)
                                     <option value="{{ $group->id }}">{{ $group->name }}</option>
@@ -465,7 +465,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Academic Level *</label>
                             <select wire:model="academicLevelId"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                                 <option value="">Select Academic Level</option>
                                 @foreach($academicLevels as $level)
                                     <option value="{{ $level->id }}">{{ $level->name }}</option>
@@ -478,7 +478,7 @@
 
                         <div>
                             <x-form.input type="text" wire:model="name" name="name" label="Subject Name" required
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                           placeholder="Enter subject name">
 
                             </x-form.input>
@@ -497,7 +497,7 @@
                         </div>
                         <div>
                             <x-form.input type="text" wire:model="slug" name="slug"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 dark:text-gray-400 text-gray-500"
                                           readonly></x-form.input>
                             @error('slug')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -508,7 +508,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                         <textarea wire:model="description" rows="4"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                   placeholder="Enter subject description (optional)"></textarea>
                         @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -553,7 +553,7 @@
                                 </div>
                                 <input type="text" wire:model.debounce.300ms="searchTerm"
                                        placeholder="Search subjects..."
-                                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                       class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                             </div>
                         </div>
                     </div>

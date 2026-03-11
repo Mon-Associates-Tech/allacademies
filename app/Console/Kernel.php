@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\ResetMonthlySubscriptionCycles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Services\SubscriptionCycleService;
 
 class Kernel extends ConsoleKernel
 {
@@ -17,7 +18,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('subscription:expired')->dailyAt('09:00');
         $schedule->command('subscriptions:expire-cycles')->hourly();
-        $schedule->command('app:update-user-online-status')->everyMinute();
+        $schedule->command('users:update-online-status')->everyMinute();
         $schedule->command('sessions:cleanup --timeout=30')->everyFiveMinutes();
         $schedule->command('messages:send-scheduled')->everyMinute();
         $schedule->command('calendar:process-reminders')->everyMinute();

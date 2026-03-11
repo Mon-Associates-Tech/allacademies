@@ -370,7 +370,7 @@ class ParentManagement extends AppComponent // /
     public function getParentsProperty()
     {
         // dd(StudentParent::with(['user', 'students'])->get());
-        return StudentParent::withoutGlobalScopes()->with(['user', 'students'])->get();
+        return StudentParent::withoutGlobalScope('soft_deletes')->with(['user', 'students'])->get();
 
         // ->whereHas('user', function (Builder $query) {
         //     if ($this->search) {

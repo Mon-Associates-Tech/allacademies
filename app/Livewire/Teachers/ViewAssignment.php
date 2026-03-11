@@ -178,7 +178,17 @@ class ViewAssignment extends Component
             return;
         }
 
+        $assignmentTitle = $this->assignment->title;
+        $assignmentId = $this->assignment->id;
         $this->assignment->delete();
+
+        // Log activity
+        Assignment::logActivityForModel('delete', 'Assignment Deleted', 'assignment', [
+            'assignment_title' => $assignmentTitle,
+            'assignment_id' => $assignmentId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
+
         session()->flash('success', 'Assignment deleted successfully.');
 
         return redirect()->route('teachers.dashboard');

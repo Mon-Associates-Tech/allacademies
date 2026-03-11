@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subscription_cycles', function (Blueprint $table) {
-            if (!Schema::hasColumn('subscription_cycles', 'merged_with_group_id')) {
-                $table->string('merged_with_group_id')->nullable()->after('subscription_group_id');
+            if (! Schema::hasColumn('subscription_cycles', 'merged_with_group_id')) {
+                $table->string('merged_with_group_id')->nullable();
             }
-            if (!Schema::hasColumn('subscription_cycles', 'is_merged')) {
-                $table->boolean('is_merged')->default(false)->after('is_topup');
+            if (! Schema::hasColumn('subscription_cycles', 'is_merged')) {
+                $table->boolean('is_merged')->default(false);
             }
         });
     }

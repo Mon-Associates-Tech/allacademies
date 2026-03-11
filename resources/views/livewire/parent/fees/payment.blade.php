@@ -64,7 +64,7 @@
                                     </label>
                                     <div class="flex space-x-3">
                                         <select name="student_id" id="student" required
-                                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                                                class="flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                             <option value="">Choose a ward...</option>
                                             @foreach($students as $student)
                                                 <option value="{{ $student->id }}">
@@ -130,7 +130,7 @@
                                     </label>
                                     <select name="payment_type" id="payment_type" required
                                             onchange="togglePaymentStructure()"
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                         <option
                                             value="school_fee" {{ $paymentType === 'school_fee' ? 'selected' : '' }}>
                                             School Fee (Term Fees)
@@ -153,7 +153,7 @@
                                         Select Payment Item <span class="text-red-500">*</span>
                                     </label>
                                     <select name="payment_structure_id" id="payment_structure_id"
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                             onchange="updateAmountFromStructure()">
                                         <option value="">Choose payment item...</option>
                                         @foreach($paymentStructures as $structure)
@@ -231,7 +231,7 @@
                                         <input type="number" name="amount" id="amount" step="0.01" min="1"
                                                value="{{ old('amount', $remainingAmount > 0 ? $remainingAmount : '') }}"
                                                required
-                                               class="block w-full pl-16 pr-12 py-3 text-lg rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                               class="block w-full pl-16 pr-12 py-3 text-lg rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-violet-500 focus:ring-violet-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                                placeholder="0.00">
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">

@@ -23,12 +23,12 @@
 
                     <!-- Template Selector -->
                     <div class="flex items-center space-x-2">
-                        <span class="text-sm font-medium text-gray-700">Template:</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Template:</span>
                         <div class="relative">
                             <select wire:model.live="template"
                                     id="heading_template"
                                     name="heading[template]"
-                                    class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors duration-200">
+                                    class="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-white rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors duration-200">
                                 <option value="twig">Twig</option>
                                 <option value="pug">Pug</option>
                                 @isset($metadata['institution'])
@@ -160,7 +160,7 @@
                                                  required
                                                  style="resize: vertical"
                                                  placeholder="Enter the examination title..."
-                                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 resize-none transition-colors duration-200"></x-form.textarea>
+                                                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 resize-none transition-colors duration-200"></x-form.textarea>
                                 @error('title')
                                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
@@ -176,7 +176,7 @@
                                                   info-position="bottom"
                                                   info="The duration of the examination"
                                                   placeholder="e.g., 120"
-                                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pr-16 transition-colors duration-200"></x-form.input>
+                                                  class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-purple-500 focus:ring-purple-500 pr-16 transition-colors duration-200"></x-form.input>
 
                                 </div>
                                 @error('duration')

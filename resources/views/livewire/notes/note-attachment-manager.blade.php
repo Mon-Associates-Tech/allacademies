@@ -115,57 +115,119 @@
             @if($existingAttachments->count() > 0)
                 <div class="space-y-2">
                     @foreach($existingAttachments as $attachment)
-                        <div class="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                            <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <span class="text-2xl flex-shrink-0">{{ $attachment->file_icon }}</span>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {{ $attachment->original_filename }}
-                                    </p>
-                                    <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        <span>{{ $attachment->file_size_human }}</span>
-                                        <span>•</span>
-                                        <span>{{ $attachment->created_at->diffForHumans() }}</span>
-                                        <span>•</span>
-                                        <span>by {{ $attachment->user->name }}</span>
+                        <div class="p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                            <div class="flex flex-col gap-2 sm:gap-0 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                                    <span class="text-2xl flex-shrink-0">{{ $attachment->file_icon }}</span>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                            <span class="block md:hidden truncate">
+                                                {{ \Illuminate\Support\Str::limit($attachment->original_filename, 23) }}
+                                            </span>
+                                            <span class="hidden md:block break-words">
+                                                {{ $attachment->original_filename }}
+                                            </span>
+                                        </p>
+                                        <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <span>{{ $attachment->file_size_human }}</span>
+                                            <span>•</span>
+                                            <span>{{ $attachment->created_at->diffForHumans() }}</span>
+                                            <span>•</span>
+                                            <span>by {{ $attachment->user->name }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="flex items-center gap-2 flex-shrink-0 ml-2">
-                                {{-- View Button (for supported formats) --}}
-                                @if(in_array($attachment->file_extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt']))
-                                    <a href="{{ route('notes.attachments.view', ['note' => $note, 'attachment' => $attachment]) }}"
-                                       target="_blank"
-                                       class="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                       title="View">
+                                {{-- Mobile actions: kebab menu --}}
+                                <div class="mt-1 sm:mt-0 flex-shrink-0 md:hidden relative" x-data="{ open: false }">
+                                    <button @click="open = !open" @click.outside="open=false" :aria-expanded="open.toString()"
+                                            class="inline-flex items-center justify-center h-10 w-10 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            aria-label="Attachment actions">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </a>
-                                @endif
-
-                                {{-- Download Button --}}
-                                <a href="{{ route('notes.attachments.download', ['note' => $note, 'attachment' => $attachment]) }}"
-                                   class="p-2 text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                                   title="Download">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                </a>
-
-                                {{-- Delete Button (if can edit) --}}
-                                @if($note->canUserEdit(Auth::id()))
-                                    <button wire:click="deleteAttachment({{ $attachment->id }})"
-                                            wire:confirm="Are you sure you want to delete this attachment?"
-                                            class="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                            title="Delete">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6h.01M12 12h.01M12 18h.01" />
                                         </svg>
                                     </button>
-                                @endif
+
+                                    <template x-teleport="body">
+                                        <div x-show="open"
+                                             x-transition:enter="transition ease-out duration-100"
+                                             x-transition:enter-start="transform opacity-0 scale-95"
+                                             x-transition:enter-end="transform opacity-100 scale-100"
+                                             x-transition:leave="transition ease-in duration-75"
+                                             x-transition:leave-start="transform opacity-100 scale-100"
+                                             x-transition:leave-end="transform opacity-0 scale-95"
+                                             @keydown.escape.window="open=false"
+                                             class="fixed inset-x-4 top-24 z-50 rounded-lg shadow-xl bg-white dark:bg-gray-800 p-1 max-h-[70vh] overflow-auto"
+                                             role="menu" aria-orientation="vertical" :aria-hidden="(!open).toString()">
+                                            <div class="py-1">
+                                                @if(in_array($attachment->file_extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt']))
+                                                    <a href="{{ route('notes.attachments.view', ['note' => $note, 'attachment' => $attachment]) }}" target="_blank"
+                                                       class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                       role="menuitem">
+                                                        <svg class="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        View
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('notes.attachments.download', ['note' => $note, 'attachment' => $attachment]) }}"
+                                                   class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                   role="menuitem">
+                                                    <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                    Download
+                                                </a>
+                                                @if($note->canUserEdit(Auth::id()))
+                                                    <button wire:click="deleteAttachment({{ $attachment->id }})"
+                                                            wire:confirm="Are you sure you want to delete this attachment?"
+                                                            class="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                            role="menuitem">
+                                                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                        Delete
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                {{-- Desktop/Tablet actions inline --}}
+                                <div class="hidden md:flex items-center gap-2 flex-shrink-0 ml-2">
+                                    @if(in_array($attachment->file_extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt']))
+                                        <a href="{{ route('notes.attachments.view', ['note' => $note, 'attachment' => $attachment]) }}"
+                                           target="_blank"
+                                           class="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                           title="View">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </a>
+                                    @endif
+
+                                    <a href="{{ route('notes.attachments.download', ['note' => $note, 'attachment' => $attachment]) }}"
+                                       class="p-2 text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                       title="Download">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                    </a>
+
+                                    @if($note->canUserEdit(Auth::id()))
+                                        <button wire:click="deleteAttachment({{ $attachment->id }})"
+                                                wire:confirm="Are you sure you want to delete this attachment?"
+                                                class="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                title="Delete">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endforeach

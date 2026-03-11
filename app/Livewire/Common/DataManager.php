@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Common;
 
+use App\Models\School;
 use App\Services\ImportExportService;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -36,11 +37,42 @@ class DataManager extends Component
     #[Validate('required|file|mimes:csv,xlsx|max:10240')] // 10MB max
     public $uploadedFile;
 
+    public $selectedSchoolId;
+
     protected $listeners = ['refreshComponent' => '$refresh'];
 
     public function mount()
     {
         $this->resetState();
+        $this->initializeSchoolSelection();
+    }
+
+    public function initializeSchoolSelection()
+    {
+        $user = auth()->user();
+        // If admin, auto-set to their school
+        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
+            $this->selectedSchoolId = null; // Owners need to select
+        } else {
+            $this->selectedSchoolId = $user->school_id; // Admins use their school
+        }
+    }
+
+    public function isOwnerOrSuperAdmin(): bool
+    {
+        $user = auth()->user();
+
+        return $user->isSuperAdmin() || $user->hasRole('owner');
+    }
+
+    public function getAvailableSchools()
+    {
+        $user = auth()->user();
+        if ($this->isOwnerOrSuperAdmin()) {
+            return School::all()->pluck('name', 'id')->toArray();
+        }
+
+        return [];
     }
 
     public function updatedActiveOperation()
@@ -251,6 +283,13 @@ class DataManager extends Component
             return;
         }
 
+        // Validate that owners/superadmins select a school
+        if ($this->isOwnerOrSuperAdmin() && ! $this->selectedSchoolId) {
+            $this->addError('selectedSchoolId', 'Please select a school for this import.');
+
+            return;
+        }
+
         $this->processingMessage = 'Importing data... This may take a few moments.';
         $this->isProcessing = true;
 
@@ -259,7 +298,8 @@ class DataManager extends Component
             $result = $service->performImport(
                 $this->uploadedFile,
                 $this->selectedModel,
-                $this->importOptions
+                $this->importOptions,
+                ['school_id' => $this->selectedSchoolId]
             );
 
             if ($result['success']) {
@@ -368,6 +408,8 @@ class DataManager extends Component
             'availableModels' => $this->getAvailableModels(),
             'modelFilters' => $this->getModelFilters(),
             'importOptions' => $this->getImportOptions(),
+            'availableSchools' => $this->getAvailableSchools(),
+            'isOwnerOrSuperAdmin' => $this->isOwnerOrSuperAdmin(),
         ]);
     }
 }

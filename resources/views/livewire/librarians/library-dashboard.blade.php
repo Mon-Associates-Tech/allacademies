@@ -6,7 +6,7 @@
             <p class="mt-2 text-sm text-gray-700">Manage your library operations and monitor key metrics</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <select wire:model.live="selectedPeriod" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            <select wire:model.live="selectedPeriod" class="rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
                 <option value="today">Today</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>

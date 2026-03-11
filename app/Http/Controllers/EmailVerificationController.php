@@ -26,6 +26,11 @@ class EmailVerificationController extends Controller
 
         $user = User::findOrFail($id);
         $redirectFlag = $request->session()->pull('redirect_after_verification');
+
+        // If no session flag, check if user is admin (school onboarding flow)
+        if (! $redirectFlag && $user->hasRole('admin') && ! $user->school_id) {
+            $redirectFlag = 'onboarding';
+        }
         //  if ($redirectFlag === 'onboarding') {
         //     return redirect('/onboarding/school-setup')
         //         ->with('success', 'Your email has been verified successfully! Let’s onboard your school.');

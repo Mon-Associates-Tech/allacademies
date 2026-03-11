@@ -136,7 +136,7 @@
                     <input type="text"
                            wire:model="reviewTitle"
                            placeholder="Sum up your review in a few words"
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                           class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     @error('reviewTitle')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
@@ -150,7 +150,7 @@
                     <textarea wire:model="reviewContent"
                               rows="6"
                               placeholder="Share your thoughts about this book..."
-                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                              class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
                     <div class="mt-1 flex justify-between">
                         @error('reviewContent')
                         <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -202,7 +202,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by
                             Rating</label>
                         <select wire:model.live="filterByRating"
-                                class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                class="rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="all">All Ratings</option>
                             <option value="5">5 Stars</option>
                             <option value="4">4 Stars</option>
@@ -216,7 +216,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
                     <select wire:model.live="sortBy"
-                            class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            class="rounded-md border-gray-300 dark:border-gray-600 shadow-sm dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="rating_high">Highest Rating</option>

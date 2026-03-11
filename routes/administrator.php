@@ -6,10 +6,10 @@ use App\Http\Controllers\BookController;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
-use App\Livewire\Administrators\GroupManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
 use App\Livewire\Administrators\SchoolSwitcherPage;
+use App\Livewire\Administrators\StudentGroupManagement;
 use App\Livewire\Administrators\StudentManagement;
 use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
-    Route::get('/student-groups', GroupManagement::class)->name('student-groups');
+    Route::get('/student-groups', StudentGroupManagement::class)->name('student-groups');
     Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
     Route::get('/book-management', BookManagement::class)->name('book-management');
     Route::get('/book-management/create', [BookController::class, 'create'])->name('books.create');
@@ -61,6 +61,10 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     // Get specific activity details
     Route::get('/admin/activity-trail/{activity}', [ActivityTrailController::class, 'show'])
         ->name('activity-trail.show');
+
+    // Login Activity Details
+    Route::get('/users/{user}/login-activities', [App\Http\Controllers\UserLoginActivityController::class, 'show'])
+        ->name('login-activities.show');
 
     // Messages routes
     Route::prefix('messages')->name('messages.')->group(function () {

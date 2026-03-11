@@ -231,7 +231,47 @@ class NotesController extends Controller
 
         $note->load(['book', 'academicSubject', 'user']);
 
-        return view('notes.show', compact('note'));
+        // Determine previous/next notes the current user can access, using the same base access rules
+        $baseAccessQuery = function ($q) {
+            $q->where('user_id', Auth::id())
+                ->orWhere('is_public', true)
+                ->orWhereHas('shares', function ($shareQuery) {
+                    $shareQuery->where('shared_with_user_id', Auth::id());
+                });
+        };
+
+        // Sort order: same as index default -> created_at desc (tie-breaker by id desc)
+        // Previous in the list (i.e., newer item when sorted desc)
+        $previousNote = Note::where($baseAccessQuery)
+            ->where(function ($q) use ($note) {
+                $q->where('created_at', '>', $note->created_at)
+                    ->orWhere(function ($q2) use ($note) {
+                        $q2->where('created_at', $note->created_at)
+                            ->where('id', '>', $note->id);
+                    });
+            })
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->first();
+
+        // Next in the list (i.e., older item when sorted desc)
+        $nextNote = Note::where($baseAccessQuery)
+            ->where(function ($q) use ($note) {
+                $q->where('created_at', '<', $note->created_at)
+                    ->orWhere(function ($q2) use ($note) {
+                        $q2->where('created_at', $note->created_at)
+                            ->where('id', '<', $note->id);
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        return view('notes.show', [
+            'note' => $note,
+            'previousNote' => $previousNote,
+            'nextNote' => $nextNote,
+        ]);
     }
 
     public function edit(Note $note)

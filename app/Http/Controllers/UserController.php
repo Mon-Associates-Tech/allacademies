@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -26,6 +29,7 @@ class UserController extends Controller
 
         $users = User::query()
             ->forCurrentSchool()
+            ->with(['student.academicGroup', 'student.academicLevel', 'teacher'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
@@ -36,6 +40,24 @@ class UserController extends Controller
             ->when($request->filled('role'), function ($query) use ($request) {
                 $query->where('role', $request->input('role'));
             })
+            ->when($request->filled('gender'), function ($query) use ($request) {
+                $query->where('gender', $request->input('gender'));
+            })
+            ->when($request->filled('academic_group'), function ($query) use ($request) {
+                $query->whereHas('student', function ($q) use ($request) {
+                    $q->where('academic_group_id', $request->input('academic_group'));
+                });
+            })
+            ->when($request->filled('academic_level'), function ($query) use ($request) {
+                $query->whereHas('student', function ($q) use ($request) {
+                    $q->where('academic_level_id', $request->input('academic_level'));
+                });
+            })
+            ->when($request->filled('subject'), function ($query) use ($request) {
+                $query->whereHas('teacher.subjects', function ($q) use ($request) {
+                    $q->where('academic_subjects.id', $request->input('subject'));
+                });
+            })
             ->when($request->boolean('verified'), function ($query) {
                 $query->whereNotNull('email_verified_at');
             })
@@ -45,18 +67,65 @@ class UserController extends Controller
             ->when($request->boolean('online'), function ($query) {
                 $query->where('is_online', true);
             })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $status = $request->input('status');
+                if ($status === 'active') {
+                    $query->where('is_active', true);
+                } elseif ($status === 'inactive') {
+                    $query->where('is_active', false);
+                }
+            })
             ->when($request->missing('all'), function ($query) {
-                // Only show verified users by default unless 'all' parameter is present
                 if (! request()->hasAny(['verified', 'unverified'])) {
                     $query->whereNotNull('email_verified_at');
                 }
             })
-            ->latest('id')
+            ->when($request->filled('sort_by'), function ($query) use ($request) {
+                $sortBy = $request->input('sort_by');
+                $sortDirection = $request->input('sort_direction', 'asc');
+
+                // Validate sort direction
+                $sortDirection = in_array(strtolower($sortDirection), ['asc', 'desc']) ? $sortDirection : 'asc';
+
+                // Validate and apply sorting
+                $allowedSortColumns = ['name', 'email', 'created_at', 'last_seen_at', 'role'];
+                if (in_array($sortBy, $allowedSortColumns)) {
+                    $query->orderBy($sortBy, $sortDirection);
+                } else {
+                    $query->orderBy('name', 'asc');
+                }
+            }, function ($query) {
+                $query->orderBy('name', 'asc');
+            })
             ->paginate(15)
             ->withQueryString();
 
+        // Get filter options
+        $academicGroups = AcademicGroup::forCurrentSchool()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $academicLevels = AcademicLevel::forCurrentSchool()
+            ->with('academicGroup:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'academic_group_id']);
+
+        $subjects = AcademicSubject::whereHas('academicLevel.schools', function ($q) {
+            $user = auth()->user();
+            if ($user->canAccessCrossSchool() && app()->has('current_school')) {
+                $q->where('school_id', app('current_school')->id);
+            } else {
+                $q->where('school_id', $user->school_id);
+            }
+        })
+            ->orderBy('name')
+            ->get(['id', 'name', 'academic_level_id']);
+
         return view('users.index', [
             'users' => $users,
+            'academicGroups' => $academicGroups,
+            'academicLevels' => $academicLevels,
+            'subjects' => $subjects,
         ]);
     }
 
@@ -78,6 +147,7 @@ class UserController extends Controller
 
         // Create the user
         $user = User::create([
+            'school_id' => getSchoolId(),
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -132,25 +202,73 @@ class UserController extends Controller
     {
         $this->authorize('administrate');
 
-        // Load relationships and counts
+        // Load all relationship counts for comprehensive display
         $user->loadCount([
             'subscriptions',
             'ownedTeams',
             'joinedTeams',
             'worksheets',
-        ])->load([
+            'notes',
+            'quizSessions',
+            'borrowedBooks',
+            'bookSubscriptions',
+            'loginActivities',
+            'tokenSubscriptions',
+            'subscriptionCycles',
+            'tokenUsageLogs',
+            'uploadedMedia',
+            'preferences',
+            'roles',
+        ]);
+
+        // Load relationships with limits for display
+        $user->load([
+            'school',
             'primaryRole',
             'currentTeam',
+            'suspendedBy',
+            // Role-specific profiles
             'student',
+            'teacher',
+            'author',
+            'librarian',
+            'parent',
+            // Content relationships
             'subscriptions' => function ($query) {
-                $query->latest()->limit(5);
+                $query->latest()->limit(10);
             },
             'ownedTeams' => function ($query) {
-                $query->latest()->limit(3);
+                $query->latest()->limit(10);
             },
             'joinedTeams' => function ($query) {
-                $query->latest()->limit(3);
+                $query->latest()->limit(10);
             },
+            'notes' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'worksheets' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'quizSessions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'borrowedBooks' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'bookSubscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'loginActivities' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'tokenSubscriptions' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'subscriptionCycles' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'preferences',
+            'roles',
         ]);
 
         return view('users.show', [

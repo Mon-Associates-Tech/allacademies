@@ -40,9 +40,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Report Type -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Report Type</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Report Type</label>
                         <select wire:model="reportType" wire:change="generateReport"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                             <option value="borrowing">📚 Book Borrowings</option>
                             <option value="subscription">📋 Book Subscriptions</option>
                             <option value="assessment">📊 Student Assessments</option>
@@ -55,9 +55,9 @@
 
                     <!-- Date Range -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Date Range</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
                         <select wire:model="dateRange"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                             <option value="week">Current Week</option>
                             <option value="month">Current Month</option>
                             <option value="quarter">Current Quarter</option>
@@ -69,24 +69,24 @@
                     @if($dateRange === 'custom')
                         <!-- Start Date -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
                             <input type="date" wire:model="startDate"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                         </div>
 
                         <!-- End Date -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">End Date</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
                             <input type="date" wire:model="endDate"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                         </div>
                     @endif
 
                     <!-- Student Group Filter -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Student Group (Optional)</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Student Group (Optional)</label>
                         <select wire:model="studentGroupId"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                             <option value="">All Groups</option>
                             @foreach($studentGroups as $group)
                                 <option value="{{ $group->id }}">{{ $group->name }}</option>
@@ -97,9 +97,9 @@
                     @if($reportType === 'attendance')
                         <!-- Teacher Filter -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Teacher (Optional)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Teacher (Optional)</label>
                             <select wire:model="teacherId"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                                 <option value="">All Teachers</option>
                                 @foreach($teachers as $teacher)
                                     <option value="{{ $teacher->id }}">{{ $teacher->user->name }}</option>

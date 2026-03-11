@@ -41,7 +41,16 @@ class SessionDetails extends Component
 
     public function deleteSession()
     {
+        $sessionTitle = $this->session->title;
+        $sessionId = $this->session->id;
         $this->session->delete();
+
+        // Log activity
+        VirtualSession::logActivityForModel('delete', 'Virtual Session Deleted', 'virtual_session', [
+            'session_title' => $sessionTitle,
+            'session_id' => $sessionId,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         session()->flash('success', 'Session deleted successfully.');
 
@@ -74,6 +83,10 @@ class SessionDetails extends Component
             ? $this->session->parentSession
             : $this->session;
 
+        $seriesTitle = $parent->title;
+        $seriesId = $parent->id;
+        $childCount = $parent->childSessions()->where('status', 'scheduled')->where('scheduled_start', '>', now())->count();
+
         // Delete all future child sessions
         $parent->childSessions()
             ->where('status', 'scheduled')
@@ -82,6 +95,14 @@ class SessionDetails extends Component
 
         // Delete parent
         $parent->delete();
+
+        // Log activity
+        VirtualSession::logActivityForModel('delete', 'Recurring Session Series Deleted', 'virtual_session', [
+            'series_title' => $seriesTitle,
+            'series_id' => $seriesId,
+            'deleted_child_sessions' => $childCount,
+            'deleted_by' => auth()->user()?->name ?? 'Unknown',
+        ]);
 
         session()->flash('success', 'Recurring session series deleted successfully.');
 

@@ -195,7 +195,7 @@
 
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <!-- Cover Image -->
-                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
                                     <div class="text-center">
                                         <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                                             <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +236,7 @@
                                 </div>
 
                                 <!-- PDF File -->
-                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
                                     <div class="text-center">
                                         <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,7 +283,7 @@
                                 </div>
 
                                 <!-- Sample PDF -->
-                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors">
                                     <div class="text-center">
                                         <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                                             <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -483,7 +483,7 @@
                                                     @else
                                                         <button type="button"
                                                                 wire:click="addSection({{ $index }})"
-                                                                class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                                                class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-600">
                                                             + Add First Section
                                                         </button>
                                                     @endif

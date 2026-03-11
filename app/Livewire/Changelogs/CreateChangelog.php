@@ -41,12 +41,20 @@ class CreateChangelog extends Component
     {
         $this->validate();
 
-        Changelog::create([
+        $changelog = Changelog::create([
             'title' => $this->title,
             'task_name' => $this->task_name,
             'task_description' => $this->task_description,
             'additional_info' => $this->additional_info,
             'completed_items' => array_values(array_filter($this->completed_items)),
+        ]);
+
+        // Log activity
+        $changelog->logActivity('create', 'Changelog Created', 'changelog', [
+            'changelog_title' => $this->title,
+            'task_name' => $this->task_name,
+            'items_count' => count(array_filter($this->completed_items)),
+            'created_by' => auth()->user()?->name ?? 'Unknown',
         ]);
 
         session()->flash('message', 'Changelog entry created successfully.');

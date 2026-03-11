@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\ActivityLoggable;
+use App\Traits\ShouldScopeSchool;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +13,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudentGroup extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
+    use ShouldScopeSchool;
 
     protected $fillable = [
         'name',
@@ -198,4 +202,29 @@ class StudentGroup extends Model
 
         return false;
     }
+
+    /**
+     * Get teacher initials or fallback
+     */
+    public function getTeacherInitials(): string
+    {
+        if ($this->teacher && $this->teacher->user) {
+            return substr($this->teacher->user->name, 0, 2);
+        }
+
+        return 'N/A';
+    }
+
+    /**
+     * Get teacher name or fallback
+     */
+    public function getTeacherName(): string
+    {
+        if ($this->teacher && $this->teacher->user) {
+            return $this->teacher->user->name;
+        }
+
+        return 'No teacher assigned';
+    }
+
 }

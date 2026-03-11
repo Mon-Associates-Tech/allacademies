@@ -1,4 +1,5 @@
 <x-layouts.app>
+     <x-alert.token-subscription-banner variant="full-page" />
     <div class="container mx-auto px-4 py-8">
         <div class="mb-6">
             <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Calendar</h1>

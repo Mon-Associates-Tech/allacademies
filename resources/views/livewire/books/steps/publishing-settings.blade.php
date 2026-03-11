@@ -237,7 +237,7 @@
                 <label class="relative flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer transition-all
                     {{ $status === $value ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-blue-300' }}">
                     <input type="radio" wire:model="status" value="{{ $value }}"
-                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                           class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                     <div class="ml-3">
                         <span class="block text-sm font-medium text-gray-900">{{ $label }}</span>
                         <span class="block text-xs text-gray-500 mt-1">

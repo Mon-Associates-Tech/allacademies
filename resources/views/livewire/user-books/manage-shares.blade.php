@@ -24,7 +24,7 @@
         <nav class="-mb-px flex space-x-8">
             <button wire:click="$set('activeTab', 'shares')"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-                    :class="@js($activeTab === 'shares') ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400'">
+                    :class="@js($activeTab === 'shares') ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400'">
                 <div class="flex items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -38,7 +38,7 @@
             </button>
             <button wire:click="$set('activeTab', 'access_list')"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-                    :class="@js($activeTab === 'access_list') ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400'">
+                    :class="@js($activeTab === 'access_list') ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400'">
                 <div class="flex items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -442,7 +442,7 @@
                                 <input type="checkbox"
                                        wire:model="sendNotification"
                                        id="sendNotification"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
                                 <label for="sendNotification" class="flex-1">
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">
                                         Send Notification

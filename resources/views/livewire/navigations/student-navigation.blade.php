@@ -207,8 +207,8 @@
         </li>
 
         <li class="mb-0.5 last:mb-0" title="Notifications">
-            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('notifications.index')}}">
+            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('students.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('students.notifications')}}">
                 <div class="flex items-center">
                     <svg
                         class="shrink-0 fill-current {{ Route::is('notifications*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"

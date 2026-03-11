@@ -99,7 +99,7 @@
                                 <h3 class="text-lg font-medium text-gray-900">Questions Overview</h3>
                                 @if($previewQuestions && !$assignment->is_randomized)
                                     <button wire:click="toggleQuestionPreview"
-                                            class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         {{ $showQuestionPreview ? 'Hide Preview' : 'Preview Questions' }}
                                     </button>
                                 @endif
@@ -285,7 +285,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-8 w-8">
-                                                <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-gray-700">
+                                                <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300">
                                                     {{ substr($student['name'], 0, 1) }}
                                                 </div>
                                             </div>

@@ -1,5 +1,19 @@
-@props(['variant' => 'v1'])
-<div class="min-w-fit thin-scrollbar">
+@props(['variant' => 'v1', 'hasSchoolSwitcher' => false, 'hasImpersonationBanner' => false])
+@php
+    // Calculate sidebar height and top position based on visible banners
+    // On small devices (< lg), sidebar is absolutely positioned and needs top offset for banners
+    // On large devices (lg+), sidebar is static so top doesn't apply
+    $heightClass = 'h-[100dvh]';
+    $topClass = 'top-0';
+    if ($hasSchoolSwitcher && $hasImpersonationBanner) {
+        $heightClass = 'h-[calc(100dvh-5rem)]'; // Both banners: 2.5rem + 2.5rem
+        $topClass = 'top-[5rem] lg:top-0'; // Offset for banners on small devices
+    } elseif ($hasSchoolSwitcher || $hasImpersonationBanner) {
+        $heightClass = 'h-[calc(100dvh-2.5rem)]'; // One banner: 2.5rem
+        $topClass = 'top-[2.5rem] lg:top-0'; // Offset for banner on small devices
+    }
+@endphp
+<div class="min-w-fit h-full thin-scrollbar">
     <!-- Sidebar backdrop (mobile only) -->
     <div
         class="fixed inset-0 bg-gray-900/30 z-40 lg:hidden lg:z-auto transition-opacity duration-200"
@@ -11,8 +25,8 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] no-scrollbar w-52 lg:w-20 lg:sidebar-expanded:!w-52 2xl:w-52! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
-        :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-52'"
+        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-80 lg:w-20 lg:sidebar-expanded:!w-80 2xl:w-80! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-80 lg:translate-x-0'"
         @click.outside="$store.sidebar.open =  false"
         style=""
         @keydown.escape.window="$store.sidebar.open = false"
@@ -31,7 +45,7 @@
         </div>
 
         <!-- Scrollable content area -->
-        <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
             <div class="lg:pt-6">
                 <div :class="$store.sidebar.open ? 'w-12 h-12' : 'w-8 h-8'" class="mx-auto mb-2">
                     <x-avatar
@@ -96,40 +110,43 @@
                     $roleValue = $userRole instanceof UserRole ? $userRole->value : $userRole;
                 @endphp
 
-                @auth
-                    @if($userRole === UserRole::ADMIN || $userRole === UserRole::OWNER || in_array($roleValue, ['admin', 'owner']))
-                        @livewire('administrators.admin-navigation', [
-                            'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::STUDENT || $roleValue === 'student')
-                        @livewire('students.student-navigation', [
-                            'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::TEACHER || $roleValue === 'teacher')
-                        @include('livewire.navigations.teacher-navigation')
-                    @elseif($userRole === UserRole::PARENT || $roleValue === 'parent')
-                        @include('livewire.navigations.parent-navigation')
-                    @elseif($userRole === UserRole::LIBRARIAN || $roleValue === 'librarian')
-                        @include('livewire.navigations.librarian-navigation', [
-                            'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::AUTHOR || $roleValue === 'author')
-                        @include('livewire.navigations.author-navigation', [
-                            'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::GUEST || $roleValue === 'guest')
-                        @include('livewire.navigations.subscriber-navigation', [
-                            'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @elseif($userRole === UserRole::MODERATOR || $roleValue === 'moderator')
-                        @include('livewire.navigations.moderator-navigation', [
-                            'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
-                        ])
-                    @endif
-                @endauth
+                <div class="mb-4">
+                     @auth
+                        @if($userRole === UserRole::ADMIN || $userRole === UserRole::OWNER || in_array($roleValue, ['admin', 'owner']))
+                            @livewire('administrators.admin-navigation', [
+                                'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::STUDENT || $roleValue === 'student')
+                            @livewire('students.student-navigation', [
+                                'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::TEACHER || $roleValue === 'teacher')
+                            @include('livewire.navigations.teacher-navigation')
+                        @elseif($userRole === UserRole::PARENT || $roleValue === 'parent')
+                            @include('livewire.navigations.parent-navigation')
+                        @elseif($userRole === UserRole::LIBRARIAN || $roleValue === 'librarian')
+                            @include('livewire.navigations.librarian-navigation', [
+                                'activeTab' => Route::is('librarian.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::AUTHOR || $roleValue === 'author')
+                            @include('livewire.navigations.author-navigation', [
+                                'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::GUEST || $roleValue === 'guest')
+                            @include('livewire.navigations.subscriber-navigation', [
+                                'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @elseif($userRole === UserRole::MODERATOR || $roleValue === 'moderator')
+                            @include('livewire.navigations.moderator-navigation', [
+                                'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
+                            ])
+                        @endif
+                    @endauth
+                </div>
+
 
                 <ul x-data="{ sidebarExpanded: $store.sidebar.expanded }"
-                    class="border-t-2 pt-4 border-gray-200 dark:border-gray-700 space-y-1">
+                    class="border-t-2 pt-4 mb-4 border-gray-200 dark:border-gray-700 space-y-1">
                     <li class="mb-0.5 last:mb-2" title="Messenger Subscriptions">
                         <a :class="sidebarExpanded ? 'py-2' : ''"
                            class="block pl-3  rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -144,7 +161,7 @@
                                         d="M3 4h10v6H3V4zm0-1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3z"/>
                                 </svg>
 
-                                <span class="text-sm ml-2 sidebar-text duration-200">Messenger Subscriptions</span>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Premium Subscriptions</span>
                             </div>
                         </a>
                     </li>
@@ -201,12 +218,29 @@
                             </div>
                         </a>
                     </li>
+
+                    <li class="mb-0.5 last:mb-2 hidden" title="Activity Tracker">
+                        <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                           class="block pl-3 rounded-lg transition {{ Route::is('activities*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{route('activities.index')}}">
+                            <div class="flex items-center">
+                                <svg
+                                    class="shrink-0 fill-current {{ Route::is('activities*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                </svg>
+
+                                <span class="text-sm ml-2 sidebar-text duration-200">Activity Tracker</span>
+                            </div>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
 
 
-        <div class="py-1 hidden lg:inline-flex justify-end border-t border-gray-200 dark:border-gray-700 shrink-0">
+        <div class="hidden lg:flex mt-auto py-1 justify-end border-t border-gray-200 dark:border-gray-700 shrink-0 bg-slate-50 dark:bg-slate-900">
             <div class="w-12 pl-4 pr-3 py-2">
                 <button
                     class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"

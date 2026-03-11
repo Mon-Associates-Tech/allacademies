@@ -277,35 +277,27 @@
                         </button>
                         <!-- Dropdown -->
                         <div
-                            class="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                            class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                             <div class="p-6">
                                 <a href="{{ route('branding.features') }}"
                                    class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">Modules & Features</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Comprehensive platform
-                                        overview
-                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Comprehensive platform overview</div>
                                 </a>
-                                <a href="#"
+                                <a href="{{ route('solutions.schools') }}"
                                    class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">For Schools</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Complete school
-                                        management
-                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Complete school management</div>
                                 </a>
-                                <a href="#"
+                                <a href="{{ route('solutions.teachers') }}"
                                    class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">For Teachers</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Teaching and assessment
-                                        tools
-                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Teaching and assessment tools</div>
                                 </a>
-                                <a href="#"
+                                <a href="{{ route('solutions.students') }}"
                                    class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                                     <div class="font-semibold text-gray-900 dark:text-white">For Students</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Interactive learning
-                                        platform
-                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Interactive learning platform</div>
                                 </a>
                             </div>
                         </div>

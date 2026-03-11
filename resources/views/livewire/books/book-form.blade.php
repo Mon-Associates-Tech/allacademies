@@ -10,7 +10,7 @@
                         </svg>
                         <span class="font-medium">Back</span>
                     </button>
-                    <div class="border-l border-gray-300 pl-4">
+                    <div class="border-l border-gray-300 dark:border-gray-600 pl-4">
                         <h1 class="text-2xl font-bold text-gray-900">{{ $this->pageTitle }}</h1>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                 <div class="flex items-center justify-between pt-8 border-t border-gray-200 mt-8">
                     <button type="button" wire:click="previousStep" 
                             @if($currentStep === 1) disabled @endif
-                            class="px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
                         Previous
                     </button>
                     

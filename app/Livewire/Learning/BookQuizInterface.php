@@ -10,6 +10,7 @@ use App\Models\QuizSession;
 use App\Services\AcademicChatService;
 use App\Services\BookBasedLearningService;
 use App\Services\PdfContentExtractionService;
+use App\Support\GradingSystemResolver;
 use App\Traits\ChecksTokenAvailability;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -1166,6 +1167,7 @@ class BookQuizInterface extends Component
         $questions = $quizSession->questions;
         $totalQuestions = count($questions);
         $correctAnswers = 0;
+        $answeredQuestions = 0;
         $questionDetails = [];
 
         foreach ($questions as $index => $question) {
@@ -1173,56 +1175,63 @@ class BookQuizInterface extends Component
             $isCorrect = false;
             $feedback = '';
             $pointsEarned = 0;
+            $wasAnswered = ! empty($userAnswer) || $userAnswer === '0' || $userAnswer === 0;
 
             // Safely get question type with fallback
             $questionType = $question['type'] ?? $question['question_type'] ?? 'unknown';
 
-            switch ($questionType) {
-                case 'multiple_choice':
-                case 'true_false':
-                    // Safely get correct answer
-                    $correctAnswer = $question['correct_answer'] ?? '';
-                    $isCorrect = strtolower((string) $userAnswer) === strtolower((string) $correctAnswer);
-                    $feedback = $question['explanation'] ?? '';
-                    $pointsEarned = $isCorrect ? ($question['points'] ?? 1) : 0;
-                    break;
+            if ($wasAnswered) {
+                $answeredQuestions++;
 
-                case 'essay':
-                case 'essay_question':
-                    // FIX: Properly grade essay questions
-                    $gradingResult = $this->gradeEssayQuestion($question, $userAnswer, $quizSession);
+                switch ($questionType) {
+                    case 'multiple_choice':
+                    case 'true_false':
+                        // Safely get correct answer
+                        $correctAnswer = $question['correct_answer'] ?? '';
+                        $isCorrect = strtolower((string) $userAnswer) === strtolower((string) $correctAnswer);
+                        $feedback = $question['explanation'] ?? '';
+                        $pointsEarned = $isCorrect ? ($question['points'] ?? 1) : 0;
+                        break;
 
-                    // Use the score from grading (0-100) to determine correctness
-                    $score = $gradingResult['score'] ?? 0;
+                    case 'essay':
+                    case 'essay_question':
+                        // FIX: Properly grade essay questions
+                        $gradingResult = $this->gradeEssayQuestion($question, $userAnswer, $quizSession);
 
-                    // Consider passing if score is 60% or higher
-                    $isCorrect = $score >= 60;
+                        // Use the score from grading (0-100) to determine correctness
+                        $score = $gradingResult['score'] ?? 0;
 
-                    // Calculate points proportionally
-                    $maxPoints = $question['points'] ?? 1;
-                    $pointsEarned = ($score / 100) * $maxPoints;
+                        // Consider passing if score is 60% or higher
+                        $isCorrect = $score >= 60;
 
-                    $feedback = $gradingResult['feedback'] ?? 'Your essay has been reviewed.';
+                        // Calculate points proportionally
+                        $maxPoints = $question['points'] ?? 1;
+                        $pointsEarned = ($score / 100) * $maxPoints;
 
-                    Log::info('Essay question graded', [
-                        'question_index' => $index,
-                        'score' => $score,
-                        'points_earned' => $pointsEarned,
-                        'max_points' => $maxPoints,
-                        'is_correct' => $isCorrect,
-                    ]);
-                    break;
+                        $feedback = $gradingResult['feedback'] ?? 'Your essay has been reviewed.';
 
-                default:
-                    // Handle unknown question types
-                    $isCorrect = false;
-                    $feedback = 'Unable to grade this question type.';
-                    $pointsEarned = 0;
-                    break;
-            }
+                        Log::info('Essay question graded', [
+                            'question_index' => $index,
+                            'score' => $score,
+                            'points_earned' => $pointsEarned,
+                            'max_points' => $maxPoints,
+                            'is_correct' => $isCorrect,
+                        ]);
+                        break;
 
-            if ($isCorrect && $questionType !== 'essay' && $questionType !== 'essay_question') {
-                $correctAnswers++;
+                    default:
+                        // Handle unknown question types
+                        $isCorrect = false;
+                        $feedback = 'Unable to grade this question type.';
+                        $pointsEarned = 0;
+                        break;
+                }
+
+                if ($isCorrect && $questionType !== 'essay' && $questionType !== 'essay_question') {
+                    $correctAnswers++;
+                }
+            } else {
+                $feedback = 'Question not answered';
             }
 
             $questionDetails[] = [
@@ -1233,6 +1242,7 @@ class BookQuizInterface extends Component
                 'is_correct' => $isCorrect,
                 'points_earned' => round($pointsEarned, 2),
                 'points_possible' => $question['points'] ?? 1,
+                'was_answered' => $wasAnswered,
                 'feedback' => $feedback,
                 'question_type' => $questionType,
                 'essay_score' => $questionType === 'essay' || $questionType === 'essay_question' ? ($score ?? 0) : null,
@@ -1243,15 +1253,35 @@ class BookQuizInterface extends Component
         $totalPointsEarned = array_sum(array_column($questionDetails, 'points_earned'));
         $totalPointsPossible = array_sum(array_column($questionDetails, 'points_possible'));
 
-        $percentage = $totalPointsPossible > 0 ? ($totalPointsEarned / $totalPointsPossible) * 100 : 0;
+        // Calculate points possible for answered questions only
+        // This ensures that if a user answers 2 out of 10 questions correctly,
+        // they get 100% (2/2) instead of 20% (2/10)
+        $answeredPointsPossible = array_sum(
+            array_map(
+                fn ($detail) => $detail['was_answered'] ? $detail['points_possible'] : 0,
+                $questionDetails
+            )
+        );
+
+        $percentage = $answeredPointsPossible > 0 ? ($totalPointsEarned / $answeredPointsPossible) * 100 : 0;
+        $roundedPercentage = round($percentage, 2);
+
+        // Get grade based on user's academic level
+        $gradeInfo = GradingSystemResolver::getGrade(Auth::user(), $roundedPercentage);
 
         return [
             'total_questions' => $totalQuestions,
+            'answered_questions' => $answeredQuestions,
             'correct_answers' => $correctAnswers,
-            'percentage' => round($percentage, 2),
+            'percentage' => $roundedPercentage,
             'question_details' => $questionDetails,
             'points_earned' => round($totalPointsEarned, 2),
             'points_possible' => $totalPointsPossible,
+            'points_possible_answered' => $answeredPointsPossible,
+            'grade' => $gradeInfo['grade'],
+            'grade_interpretation' => $gradeInfo['interpretation'],
+            'is_passing' => $gradeInfo['is_passing'],
+            'grading_system' => $gradeInfo['system'],
         ];
     }
 
@@ -1473,6 +1503,24 @@ class BookQuizInterface extends Component
         ];
 
         $this->dispatch('download-results', $exportData);
+    }
+
+    /**
+     * Get the grade for a given percentage based on the user's academic level.
+     *
+     * @return array{grade: string|int, interpretation: string, is_passing: bool, system: string}
+     */
+    public function getGrade($percentage): array
+    {
+        return GradingSystemResolver::getGrade(Auth::user(), $percentage);
+    }
+
+    /**
+     * Get the grading system name for the current user.
+     */
+    public function getGradingSystemName(): string
+    {
+        return GradingSystemResolver::getSystemName(Auth::user());
     }
 
     public function render()

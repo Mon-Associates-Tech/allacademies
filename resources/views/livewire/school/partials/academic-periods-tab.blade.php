@@ -48,7 +48,7 @@
                 @endforeach
             </div>
         @else
-            <div class="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
+            <div class="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-700">
                 <p class="text-sm text-gray-500 dark:text-gray-400">No academic structure defined yet.</p>
                 <button wire:click="createAcademicGroupsAndLevels" class="mt-2 text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Set up structure</button>
             </div>
@@ -134,7 +134,7 @@
                 </div>
             </div>
         @else
-            <div class="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
+            <div class="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 dark:border-gray-700">
                 <p class="text-sm text-gray-500 dark:text-gray-400">No academic years defined yet.</p>
             </div>
         @endif

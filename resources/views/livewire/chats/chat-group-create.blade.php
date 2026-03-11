@@ -4,7 +4,7 @@
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Group Type</label>
             <select wire:model.live="type"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="custom">Custom Group</option>
                 <option value="academic_level">Academic Level Group</option>
                 <option value="academic_group">Academic Group</option>
@@ -17,7 +17,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Academic Level</label>
                 <select wire:model="academic_level_id"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Select Academic Level</option>
                     @foreach($academicLevels as $level)
                         <option value="{{ $level->id }}">
@@ -37,7 +37,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Academic Group</label>
                 <select wire:model="academic_group_id"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Select Academic Group</option>
                     @foreach($academicGroups as $group)
                         <option value="{{ $group->id }}">{{ $group->name }}</option>
@@ -53,7 +53,7 @@
             <input
                 type="text"
                 wire:model="name"
-                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter group name">
             @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
@@ -63,7 +63,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
             <textarea
                 wire:model="description"
-                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows="3"
                 placeholder="Describe the purpose of this group"></textarea>
             @error('description') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -77,7 +77,7 @@
                     <input
                         type="text"
                         wire:model.live.debounce.300ms="userSearch"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Search by name or email">
 
                     <!-- Search Results -->
@@ -135,7 +135,7 @@
                 type="checkbox"
                 id="is_private"
                 wire:model="is_private"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
             <label for="is_private" class="ml-2 block text-sm text-gray-700">
                 Make this group private (invite only)
             </label>

@@ -25,15 +25,15 @@
     <div class="border-b border-gray-200 dark:border-gray-700">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
             <button wire:click="changeTab('available')"
-                    class="@if($bookTab === 'available') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    class="@if($bookTab === 'available') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
                 Available Books
             </button>
             <button wire:click="changeTab('subscribed')"
-                    class="@if($bookTab === 'subscribed') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    class="@if($bookTab === 'subscribed') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
                 Subscribed Books
             </button>
             <button wire:click="changeTab('borrowed')"
-                    class="@if($bookTab === 'borrowed') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    class="@if($bookTab === 'borrowed') border-indigo-500 text-indigo-600 dark:text-indigo-400 @else border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500 dark:text-gray-400 dark:hover:text-gray-300 @endif whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
                 Borrowed Books
             </button>
         </nav>
@@ -54,7 +54,7 @@
                         <input wire:model.debounce.300ms="search"
                                type="text"
                                id="search"
-                               class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
+                               class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
                                placeholder="Search books..."
                                wire:loading.class="opacity-50"
                                wire:loading.attr="disabled">
@@ -64,7 +64,7 @@
                     <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
                     <select wire:model.live="selectedCategory"
                             id="category"
-                            class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
+                            class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
                             wire:loading.class="opacity-50"
                             wire:loading.attr="disabled">
                         <option value="">All Categories</option>
@@ -77,7 +77,7 @@
                     <label for="format" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
                     <select wire:model.live="selectedFormat"
                             id="format"
-                            class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
+                            class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
                             wire:loading.class="opacity-50"
                             wire:loading.attr="disabled">
                         <option value="">All Formats</option>
@@ -89,7 +89,7 @@
                     <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Price</label>
                     <select wire:model.live="selectedPrice"
                             id="price"
-                            class="block w-full py-2.5 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
+                            class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-400 sm:text-sm transition-colors duration-200"
                             wire:loading.class="opacity-50"
                             wire:loading.attr="disabled">
                         <option value="">All Prices</option>

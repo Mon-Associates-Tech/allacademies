@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Book\BookMedia;
 use App\Models\Book\BookTableOfContent;
+use App\Traits\ActivityLoggable;
 use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use Throwable;
 
 class Book extends Model
 {
+    use ActivityLoggable;
     use HasFactory;
 
     public $with = [
@@ -367,8 +369,6 @@ class Book extends Model
     {
         return $this->belongsTo(AcademicSubject::class, 'subject_id');
     }
-
-
 
     public function getAverageRatingAttribute()
     {

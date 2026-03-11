@@ -21,8 +21,9 @@ trait HasSubscriptionCycles
     {
         return $this->hasOne(SubscriptionCycle::class, 'user_id')
             ->where('status', 'active')
+            ->where('cycle_start_date', '<=', now())
             ->where('cycle_end_date', '>=', now())
-            ->latest('cycle_number');
+            ->latest('cycle_start_date');
     }
 
     /**
@@ -71,7 +72,9 @@ trait HasSubscriptionCycles
     {
         return $this->subscriptionCycles()
             ->where('status', 'active')
-            ->latest('cycle_number')
+            ->where('cycle_start_date', '<=', now())
+            ->where('cycle_end_date', '>=', now())
+            ->orderByDesc('cycle_start_date')
             ->first();
     }
 
