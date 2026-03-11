@@ -40,8 +40,8 @@
                                     {{ $student->academicGroup->name ?? 'N/A' }} / {{ $student->academicLevel->name ?? 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                    <a href="{{ route('accountant.students.show', $student) }}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">View</a>
-                                    <a href="{{ route('accountant.students.payments', $student) }}" class="text-green-600 hover:text-green-700 dark:text-green-400">Payments</a>
+                                    <a href="{{ route('accountant.students.show', $student->id) }}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">View</a>
+                                    <a href="{{ route('accountant.students.payments', $student->id) }}" class="text-green-600 hover:text-green-700 dark:text-green-400">Payments</a>
                                 </td>
                             </tr>
                         @empty

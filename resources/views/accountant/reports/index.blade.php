@@ -104,7 +104,7 @@
 
     <!-- Report Modal -->
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="modalTitle">Generate Report</h3>
                 <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -113,32 +113,130 @@
                     </svg>
                 </button>
             </div>
-            <form method="POST" action="{{ route('accountant.reports.generate') }}" class="p-6 space-y-4">
+            <form method="POST" action="{{ route('accountant.reports.generate') }}" class="p-6 space-y-6">
                 @csrf
                 <input type="hidden" name="report_type" id="reportType">
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range</label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="date" name="start_date" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
-                        <input type="date" name="end_date" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                <!-- Basic Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range *</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="date" name="start_date" value="{{ now()->subMonth()->format('Y-m-d') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                            <input type="date" name="end_date" value="{{ now()->format('Y-m-d') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format *</label>
+                        <select name="format" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                            <option value="view">View in Browser</option>
+                            <option value="pdf">PDF Download</option>
+                            <option value="excel">Excel Download</option>
+                            <option value="csv">CSV Download</option>
+                        </select>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
-                    <select name="format" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                        <option value="pdf">PDF</option>
-                        <option value="excel">Excel</option>
-                        <option value="csv">CSV</option>
-                    </select>
+                <!-- Advanced Filters -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Advanced Filters</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Student Filter -->
+                        <div id="studentFilter" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Specific Student</label>
+                            <select name="student_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Students</option>
+                                <!-- Students will be loaded via AJAX -->
+                            </select>
+                        </div>
+
+                        <!-- Payment Type Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Type</label>
+                            <select name="payment_type" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Types</option>
+                                @foreach($paymentTypes as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Status</label>
+                            <select name="status" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Statuses</option>
+                                <option value="succeeded">Successful</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+
+                        <!-- Academic Year Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Year</label>
+                            <select name="academic_year_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Years</option>
+                                @foreach($academicYears as $year)
+                                    <option value="{{ $year->id }}">{{ $year->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Academic Period Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Period</label>
+                            <select name="academic_period_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Periods</option>
+                                @foreach($academicPeriods as $period)
+                                    <option value="{{ $period->id }}">{{ $period->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Academic Level Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Level</label>
+                            <select name="academic_level_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Levels</option>
+                                @foreach($academicLevels as $level)
+                                    <option value="{{ $level->id }}">{{ $level->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Academic Group Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Group</label>
+                            <select name="academic_group_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Groups</option>
+                                @foreach($academicGroups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Payment Method Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
+                            <select name="payment_method" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                <option value="">All Methods</option>
+                                <option value="card">Card Payment</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="mobile_money">Mobile Money</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex gap-4 pt-4">
-                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Generate
+                <div class="flex gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        Generate Report
                     </button>
-                    <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+                    <button type="button" onclick="closeReportModal()" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
                         Cancel
                     </button>
                 </div>
@@ -151,12 +249,42 @@
         function openReportModal(type) {
             document.getElementById('reportType').value = type;
             document.getElementById('modalTitle').textContent = 'Generate ' + type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' Report';
+            
+            // Show/hide student filter for student-specific reports
+            const studentFilter = document.getElementById('studentFilter');
+            if (type === 'student_payments') {
+                studentFilter.classList.remove('hidden');
+                loadStudents();
+            } else {
+                studentFilter.classList.add('hidden');
+            }
+            
             document.getElementById('reportModal').classList.remove('hidden');
         }
 
         function closeReportModal() {
             document.getElementById('reportModal').classList.add('hidden');
         }
+
+        function loadStudents() {
+            fetch('/accountant/students/api')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.querySelector('select[name="student_id"]');
+                    select.innerHTML = '<option value="">All Students</option>';
+                    data.forEach(student => {
+                        select.innerHTML += `<option value="${student.id}">${student.student_id} - ${student.name}</option>`;
+                    });
+                })
+                .catch(error => console.error('Error loading students:', error));
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('reportModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReportModal();
+            }
+        });
     </script>
     @endpush
 </x-layouts.app>

@@ -20,6 +20,11 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->n
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
     Route::post('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+    
+    // Receipts
+    Route::get('/receipts/{payment}', [TransactionController::class, 'receipt'])->name('receipts.show');
+    Route::get('/receipts/{payment}/pdf', [TransactionController::class, 'receiptPdf'])->name('receipts.pdf');
+    Route::post('/receipts/bulk', [ReportController::class, 'bulkReceipts'])->name('receipts.bulk');
 
     // Financial Aid
     Route::get('/financial-aid', [FinancialAidController::class, 'index'])->name('financial-aid.index');
@@ -34,6 +39,7 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->n
 
     // Students (View only for payment tracking)
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-    Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
-    Route::get('/students/{student}/payments', [StudentController::class, 'payments'])->name('students.payments');
+    Route::get('/students/api', [StudentController::class, 'api'])->name('students.api');
+    Route::get('/students/{studentId}', [StudentController::class, 'show'])->name('students.show');
+    Route::get('/students/{studentId}/payments/index', [StudentController::class, 'payments'])->name('students.payments');
 });

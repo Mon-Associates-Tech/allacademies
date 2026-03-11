@@ -4,15 +4,24 @@ namespace App\Http\Controllers\Accountants;
 
 use App\Http\Controllers\Controller;
 use App\Models\SchoolPayment;
+use App\Services\ReceiptService;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
+    protected ReceiptService $receiptService;
+
+    public function __construct(ReceiptService $receiptService)
+    {
+        $this->receiptService = $receiptService;
+    }
+
     public function index(Request $request)
     {
         $schoolId = getSchoolId();
 
-        $query = SchoolPayment::where('school_id', $schoolId)
+        $query = SchoolPayment::query()
+            ->where('school_id', $schoolId)
             ->with(['student', 'payer', 'academicGroup', 'academicLevel']);
 
         if ($request->filled('status')) {
@@ -40,11 +49,26 @@ class TransactionController extends Controller
         return view('accountant.transactions.show', compact('payment'));
     }
 
+    public function receipt(SchoolPayment $payment)
+    {
+        $payment->load(['student.user', 'payer', 'school', 'academicGroup', 'academicLevel', 'academicYear', 'academicPeriod']);
+
+        return view('accountant.receipts.show', compact('payment'));
+    }
+
+    public function receiptPdf(SchoolPayment $payment)
+    {
+        $pdf = $this->receiptService->generateReceipt($payment);
+        
+        return $pdf->download('receipt-' . $payment->reference . '.pdf');
+    }
+
     public function export(Request $request)
     {
         $schoolId = getSchoolId();
 
-        $query = SchoolPayment::where('school_id', $schoolId)
+        $query = SchoolPayment::query()
+            ->where('school_id', $schoolId)
             ->with(['student', 'payer', 'academicGroup', 'academicLevel']);
 
         if ($request->filled('status')) {
