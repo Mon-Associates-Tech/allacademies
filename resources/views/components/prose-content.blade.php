@@ -1,4 +1,4 @@
-@props(['content' => null, 'size' => 'base', 'mathSupport' => true, 'markdown' => true])
+@props(['content' => null, 'size' => 'base', 'mathSupport' => true, 'markdown' => true, 'textColor' => null])
 
 @php
     $sizeClasses = match($size) {
@@ -36,6 +36,39 @@
             'allow_unsafe_links' => false,
         ]);
     }
+
+    // Build base prose classes
+    $baseProseClasses = "prose {$sizeClasses} max-w-none
+    prose-headings:text-gray-900 dark:prose-headings:text-gray-100
+    prose-headings:font-semibold prose-headings:leading-tight
+    prose-h1:text-2xl prose-h1:mt-6 prose-h1:mb-4
+    prose-h2:text-xl prose-h2:mt-5 prose-h2:mb-3
+    prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-2
+    prose-h4:text-base prose-h4:mt-3 prose-h4:mb-2
+    prose-a:text-blue-600 dark:prose-a:text-blue-400
+    prose-strong:font-bold
+    prose-em:italic
+    prose-code:text-pink-600 dark:prose-code:text-pink-400
+    prose-code:bg-pink-50 dark:prose-code:bg-pink-900/20
+    prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+    prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950 prose-pre:text-gray-100 prose-pre:rounded-lg
+    prose-ul:list-disc prose-ul:my-3 prose-ul:pl-6
+    prose-ol:list-decimal prose-ol:my-3 prose-ol:pl-6
+    prose-li:my-1
+    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic
+    prose-img:rounded-lg prose-img:shadow-md
+    prose-table:w-full
+    prose-th:border prose-th:bg-gray-50 dark:prose-th:bg-gray-800 prose-th:p-3
+    prose-td:border prose-td:p-3";
+
+    // Add default text colors only if no custom textColor is provided
+    if (!$textColor) {
+        $baseProseClasses .= " prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:my-3 prose-p:leading-relaxed
+        prose-strong:text-gray-900 dark:prose-strong:text-gray-100
+        prose-em:text-gray-800 dark:prose-em:text-gray-200";
+    } else {
+        $baseProseClasses .= " prose-p:my-3 prose-p:leading-relaxed";
+    }
 @endphp
 
 @once
@@ -58,29 +91,7 @@
     @endpush
 @endonce
 
-<div {{ $attributes->merge(['class' => "prose {$sizeClasses} max-w-none
-    prose-headings:text-gray-900 dark:prose-headings:text-gray-100
-    prose-headings:font-semibold prose-headings:leading-tight
-    prose-h1:text-2xl prose-h1:mt-6 prose-h1:mb-4
-    prose-h2:text-xl prose-h2:mt-5 prose-h2:mb-3
-    prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-2
-    prose-h4:text-base prose-h4:mt-3 prose-h4:mb-2
-    prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:my-3 prose-p:leading-relaxed
-    prose-a:text-blue-600 dark:prose-a:text-blue-400
-    prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-strong:font-bold
-    prose-em:text-gray-800 dark:prose-em:text-gray-200 prose-em:italic
-    prose-code:text-pink-600 dark:prose-code:text-pink-400
-    prose-code:bg-pink-50 dark:prose-code:bg-pink-900/20
-    prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-    prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950 prose-pre:text-gray-100 prose-pre:rounded-lg
-    prose-ul:list-disc prose-ul:my-3 prose-ul:pl-6
-    prose-ol:list-decimal prose-ol:my-3 prose-ol:pl-6
-    prose-li:my-1
-    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic
-    prose-img:rounded-lg prose-img:shadow-md
-    prose-table:w-full
-    prose-th:border prose-th:bg-gray-50 dark:prose-th:bg-gray-800 prose-th:p-3
-    prose-td:border prose-td:p-3"]) }}"
+<div {{ $attributes->merge(['class' => $baseProseClasses . ($textColor ? " {$textColor}" : '')]) }}"
 @if($mathSupport)
     x-data="{
     renderMath() {

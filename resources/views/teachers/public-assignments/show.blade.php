@@ -156,12 +156,21 @@
                                         <span class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">{{ ucfirst(str_replace('_', ' ', $question->type)) }}</span>
                                         <span class="text-xs text-gray-500">{{ $question->marks }} marks</span>
                                     </div>
-                                    <p class="text-gray-900 dark:text-white">{{ $question->question }}</p>
+                                    <p class="text-gray-900 dark:text-white"><x-prose-content :content="$question->question" />   </p>
                                     @if($question->type === 'multiple_choice' && $question->options)
                                         <div class="mt-2 space-y-1">
                                             @foreach($question->options as $key => $option)
-                                                <div class="text-sm {{ $key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400' }}">
-                                                    {{ $key }}. {{ $option }} {{ $key === $question->correct_answer ? '✓' : '' }}
+                                                <div class="text-sm flex items-center gap-1 {{ $key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400' }}">
+                                                    <span class="flex-shrink-0">{{ $key }}.</span>
+                                                    <div class="flex-1">
+                                                        <x-prose-content 
+                                                            :content="$option" 
+                                                            :textColor="$key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400'" 
+                                                        />
+                                                    </div>
+                                                    @if($key === $question->correct_answer)
+                                                        <span class="flex-shrink-0 text-green-600">✓</span>
+                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
