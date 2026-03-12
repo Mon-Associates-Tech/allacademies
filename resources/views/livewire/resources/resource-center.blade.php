@@ -3,7 +3,7 @@
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Audio & Video Lab</h1>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Trainings &  Lab</h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Browse and download audio & video resources</p>
             </div>
             @if($this->canUpload())

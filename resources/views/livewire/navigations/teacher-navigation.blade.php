@@ -115,6 +115,17 @@
             </a>
         </li>
         <li class="mb-0.5 last:mb-0">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('public-assignments.join*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('public-assignments.join') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('public-assignments.join*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14h-3v-2h3v2zm5-4h-8v-2h8v2zm0-4h-8V7h8v4z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Join Public Assignment</span>
+                </div>
+            </a>
+        </li>
+        <li class="mb-0.5 last:mb-0">
             <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.public-assignments.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{ route('teachers.public-assignments.create') }}">
                 <div class="flex items-center">
