@@ -4,9 +4,6 @@ use App\Http\Controllers\AcademicChatController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
-use App\Http\Controllers\Auth\RegisterAuthorController;
-use App\Http\Controllers\Auth\RegisterGuestController;
-use App\Http\Controllers\Auth\RegisterSchoolController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookCategoryController;
 use App\Http\Controllers\BookController;
@@ -15,7 +12,6 @@ use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonNoteController;
@@ -24,12 +20,11 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuizTestController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SignInController;
 use App\Http\Controllers\StudentGroupController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
@@ -40,6 +35,12 @@ use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\Route;
+
+// Quiz Test Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/quiz-test/create', [QuizTestController::class, 'creator'])->name('quiz.test-create');
+    Route::get('/quiz-test/take', [QuizTestController::class, 'take'])->name('quiz.test-take');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +86,6 @@ Route::get('/test-error-notification', function () {
 // Newsletter Routes
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
-
 
 // Public Payment Routes
 Route::prefix('general/pay')->name('payments.public.')->group(function () {

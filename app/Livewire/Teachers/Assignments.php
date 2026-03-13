@@ -87,8 +87,8 @@ class Assignments extends Component
     {
         $assignment = Assignment::findOrFail($assignmentId);
 
-        // Check if the assignment belongs to the current teacher
-        if ($assignment->teacher_id !== $this->teacher->id) {
+        // Check if the assignment belongs to the current user
+        if ($assignment->user_id !== Auth::id()) {
             $this->dispatch('error', 'You are not authorized to delete this assignment.');
 
             return;
@@ -102,7 +102,7 @@ class Assignments extends Component
     {
         $assignment = Assignment::findOrFail($assignmentId);
 
-        if ($assignment->teacher_id !== $this->teacher->id) {
+        if ($assignment->user_id !== Auth::id()) {
             $this->dispatch('error', 'You are not authorized to duplicate this assignment.');
 
             return;
@@ -120,7 +120,7 @@ class Assignments extends Component
     public function getAssignmentsProperty()
     {
         $query = Assignment::query()
-            ->where('teacher_id', $this->teacher->id)
+            ->where('user_id', Auth::id())
             ->with(['academicSubject', 'students', 'academicLevels', 'submissions']);
 
         // Apply search filter

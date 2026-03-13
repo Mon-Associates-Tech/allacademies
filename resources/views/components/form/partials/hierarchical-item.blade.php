@@ -27,7 +27,7 @@
                 <div class="w-4 h-4 mr-2"></div>
             @endif
 
-            <span class="flex-1 truncate cursor-pointer"
+            <span class="flex-1 cursor-pointer"
                   wire:click.stop="selectItem('{{ $value }}')">{{ $label }}</span>
         </div>
 

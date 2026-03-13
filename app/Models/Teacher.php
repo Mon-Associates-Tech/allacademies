@@ -15,10 +15,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Teacher extends Model
 {
     use ActivityLoggable;
+    use BelongsToSchoolEnhanced;
     use HasFactory;
     use HasStudents;
-    use BelongsToSchoolEnhanced;
-//    use ShouldScopeSchool;
+    //    use ShouldScopeSchool;
 
     protected $fillable = [
         'school_id', 'user_id', 'employee_id', 'department',
@@ -112,9 +112,9 @@ class Teacher extends Model
         return $this->belongsToMany(AcademicSubject::class, 'subject_teacher', 'teacher_id', 'subject_id');
     }
 
-    public function assignments(): HasMany|Teacher
+    public function assignments(): HasMany
     {
-        return $this->hasMany(Assignment::class);
+        return $this->hasMany(Assignment::class, 'user_id', 'user_id');
     }
 
     public function books(): BelongsToMany

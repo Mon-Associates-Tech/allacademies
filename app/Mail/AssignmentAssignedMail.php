@@ -29,7 +29,7 @@ class AssignmentAssignedMail extends Mailable
             ->with([
                 'assignment' => $this->assignment,
                 'student' => $this->student,
-                'teacherName' => $this->assignment->teacher->user->name ?? 'Your Teacher',
+                'teacherName' => $this->assignment->user->name ?? 'Your Teacher',
                 'subjectName' => $this->assignment->academicSubject->name ?? 'Unknown Subject',
             ]);
     }

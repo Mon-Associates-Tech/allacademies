@@ -19,7 +19,7 @@
     <!-- Mode Selection -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Select Assessment Mode</h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Self Assessment -->
             <div class="relative">
@@ -81,7 +81,7 @@
     @if($assessmentMode === 'self')
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Select Subject</h2>
-            
+
             @if($subjects->isEmpty())
                 <div class="text-center py-8">
                     <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +111,7 @@
     @else
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Available Assignments</h2>
-            
+
             @if($availableAssignments->isEmpty())
                 <div class="text-center py-8">
                     <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +135,7 @@
                                                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ Str::limit($assignment->description, 100) }}</p>
                                             @endif
                                             <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                                                <span>{{ $assignment->teacher->user->name }}</span>
+                                                <span>{{ $assignment->user->name }}</span>
                                                 @if($assignment->duration_in_minutes)
                                                     <span>• {{ $assignment->duration_in_minutes }} minutes</span>
                                                 @endif
@@ -159,7 +159,7 @@
 
     <!-- Continue Button -->
     <div class="mt-8 flex justify-end">
-        <button wire:click="proceedToConfiguration" 
+        <button wire:click="proceedToConfiguration"
                 class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 {{ ($assessmentMode === 'self' && !$selectedSubject) || ($assessmentMode === 'assignment' && !$selectedAssignment) ? 'disabled' : '' }}>
             Continue to Configuration

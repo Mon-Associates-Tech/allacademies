@@ -49,7 +49,7 @@ class NotificationsDropdown extends Component
         // Get assignment notifications if user is a student
         if ($user && $user->student) {
             $assignmentNotifications = AssignmentNotification::where('student_id', $user->student->id)
-                ->with(['assignment', 'assignment.academicSubject', 'assignment.teacher.user'])
+                ->with(['assignment', 'assignment.academicSubject', 'assignment.user'])
                 ->latest('notified_at')
                 ->take(10)
                 ->get()
@@ -65,7 +65,7 @@ class NotificationsDropdown extends Component
                             'assignment_id' => $notification->assignment_id,
                             'assignment_title' => $notification->assignment->title ?? 'Unknown Assignment',
                             'subject' => $notification->assignment->academicSubject->name ?? 'Unknown Subject',
-                            'teacher' => $notification->assignment->teacher->user->name ?? 'Unknown Teacher',
+                            'teacher' => $notification->assignment->user->name ?? 'Unknown Teacher',
                         ],
                     ];
                 });

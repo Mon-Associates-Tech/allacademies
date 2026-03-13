@@ -29,7 +29,7 @@ class Assignment extends Model
         'description',
         'type', // 'quiz' or 'examination'
         'academic_subject_id',
-        'teacher_id',
+        'user_id',
         'duration_in_minutes',
         'starts_at',
         'ends_at',
@@ -93,9 +93,9 @@ class Assignment extends Model
         ];
     }
 
-    public function teacher(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(User::class);
     }
 
     public function academicSubject(): BelongsTo

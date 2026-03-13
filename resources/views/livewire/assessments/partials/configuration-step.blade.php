@@ -189,7 +189,7 @@
                         </div>
                         <div class="text-right">
                             <p class="text-sm text-gray-500 dark:text-gray-400">Instructor</p>
-                            <p class="font-semibold text-gray-900 dark:text-white">{{ $assignment->teacher->user->name }}</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">{{ $assignment->user->name }}</p>
                         </div>
                     </div>
 

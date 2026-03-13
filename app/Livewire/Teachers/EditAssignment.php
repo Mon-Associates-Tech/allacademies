@@ -92,13 +92,9 @@ class EditAssignment extends Component
     public function mount(Assignment $assignment)
     {
         $this->assignmentId = $assignment->id;
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
 
-        // Load the existing assignment
-        //        $assignment = Assignment::findOrFail($assignmentId);
-
-        // Verify teacher owns this assignment
-        if ($assignment->teacher_id !== $this->teacher->id) {
+        // Verify user owns this assignment
+        if ($assignment->user_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
@@ -230,11 +226,12 @@ class EditAssignment extends Component
     {
         // NEW: Check school has active content subscription before allowing assignment updates
         $school = auth()->user()->school;
-        if (!$school || !$school->hasActiveContentSubscription()) {
+        if (! $school || ! $school->hasActiveContentSubscription()) {
             session()->flash('error',
-                'Your school must have an active subscription to update assignments. ' .
+                'Your school must have an active subscription to update assignments. '.
                 'Please contact your school administrator.'
             );
+
             return;
         }
 

@@ -5,7 +5,6 @@ namespace App\Livewire\Teachers;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
 use App\Models\AssignmentSubmission;
-use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -51,14 +50,12 @@ class ViewAssignmentSubmission extends Component
     {
         $this->submission = AssignmentSubmission::with([
             'assignment.academicSubject',
-            'assignment.teacher',
+            'assignment.user',
             'student.user',
         ])->find($this->submissionId);
 
-        $this->teacher = Teacher::where('user_id', $this->teacherId)->first();
-
-        // Security check - ensure teacher owns the assignment
-        if ($this->submission->assignment->teacher_id !== $this->teacher->id) {
+        // Security check - ensure current user owns the assignment
+        if ($this->submission->assignment->user_id !== Auth::id()) {
             abort(403, 'You are not authorized to view this submission.');
         }
 

@@ -14,9 +14,7 @@ class AssignmentController extends Controller
 {
     public function index()
     {
-        $teacher = auth()->user()->teacher;
-
-        $assignments = Assignment::where('teacher_id', $teacher->id)
+        $assignments = Assignment::where('user_id', auth()->id())
             ->with(['academicSubject', 'academicGroups', 'academicLevels', 'students'])
             ->withCount('submissions')
             ->latest()
@@ -87,14 +85,14 @@ class AssignmentController extends Controller
             'sections.*.marks_per_question' => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($validated, $teacher) {
+        DB::transaction(function () use ($validated) {
             // Create assignment
             $assignment = Assignment::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'type' => $validated['type'],
                 'academic_subject_id' => $validated['academic_subject_id'],
-                'teacher_id' => $teacher->id,
+                'user_id' => auth()->id(),
                 'duration_in_minutes' => $validated['duration_in_minutes'],
                 'starts_at' => $validated['starts_at'],
                 'ends_at' => $validated['ends_at'],

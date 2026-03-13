@@ -7,6 +7,7 @@ use App\Models\Chat\OpenAiTokenUsageLog;
 use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
+use App\Notifications\VerifyEmailNotification;
 use App\Support\TokenSubscriptionStatus;
 use App\Traits\ActivityLoggable;
 use App\Traits\HasAvatar;
@@ -27,7 +28,6 @@ use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Log;
-use App\Notifications\VerifyEmailNotification;
 
 /**
  * @property mixed $school
@@ -387,6 +387,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(MediaFile::class, 'uploaded_by');
     }
 
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
     // User Preferences
     public function preferences(): HasMany
     {
@@ -544,7 +549,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifyEmailNotification());
+        $this->notify(new VerifyEmailNotification);
     }
 
     // ==================== SCHOOL ACCESS & MULTI-TENANCY ====================
@@ -675,7 +680,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(SubscriptionCycle::class)
             ->with('pricingTier')
-            ->selectRaw('subscription_group_id, 
+            ->selectRaw('subscription_group_id,
                         MIN(cycle_start_date) as group_start_date,
                         MAX(cycle_end_date) as group_end_date,
                         COUNT(*) as months_count,

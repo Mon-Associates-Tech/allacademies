@@ -1067,6 +1067,57 @@ class AssignmentTakingComponent extends Component
 
     public function render()
     {
+        if ($this->step === 'taking' && $this->assignment) {
+            $sections = [];
+            // Group questions into one section if they are not already structured
+            $sections[] = [
+                'title' => $this->assignment->title,
+                'instructions' => $this->assignment->instructions ?? 'Please answer all questions.',
+                'questions' => array_map(function ($q) {
+                    return [
+                        'text' => $q['question_text'] ?? $q['text'] ?? '',
+                        'type' => $this->normalizeQuestionType($q['type']),
+                        'options' => $q['options'] ?? [],
+                        'points' => $q['points'] ?? 1,
+                        'correct_answer' => $q['answer'] ?? $q['correct_answer'] ?? null,
+                    ];
+                }, $this->questions),
+                'duration_minutes' => $this->assignment->duration_minutes ?? null,
+                'grading_mode' => 'automatic',
+            ];
+
+            return <<<'HTML'
+                <div>
+                    <livewire:shared.quiz-engine
+                        :quizData="[
+                            'title' => $assignment->title,
+                            'sections' => $sections
+                        ]"
+                        wire:key="quiz-{{ $assignment->id }}"
+                    />
+                </div>
+            HTML;
+        }
+
         return view('livewire.students.assignment-taking');
+    }
+
+    protected function normalizeQuestionType($type): string
+    {
+        $type = strtolower($type);
+        if (str_contains($type, 'multiple')) {
+            return 'multiple_choice';
+        }
+        if (str_contains($type, 'true')) {
+            return 'true_false';
+        }
+        if (str_contains($type, 'essay')) {
+            return 'essay';
+        }
+        if (str_contains($type, 'short')) {
+            return 'short_answer';
+        }
+
+        return 'multiple_choice';
     }
 }

@@ -28,7 +28,7 @@ class NewAssignmentNotification extends Notification
             'assignment_id' => $this->assignment->id,
             'title' => $this->assignment->title,
             'subject' => $this->assignment->academicSubject->name ?? 'Unknown Subject',
-            'teacher' => $this->assignment->teacher->user->name ?? 'Unknown Teacher',
+            'teacher' => $this->assignment->user->name ?? 'Unknown Teacher',
             'type' => $this->assignment->type,
             'starts_at' => $this->assignment->starts_at?->format('Y-m-d H:i:s'),
             'ends_at' => $this->assignment->ends_at?->format('Y-m-d H:i:s'),

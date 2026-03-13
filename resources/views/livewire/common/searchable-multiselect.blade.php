@@ -4,9 +4,9 @@
     disabled: {{ $disabled ? 'true' : 'false' }},
     dropdownOpen: @entangle('dropdownOpen'),
     componentId: '{{ $this->getId() }}'
-}" 
+}"
 x-on:click.outside="$wire.closeDropdown()"
-x-on:click="if (!dropdownOpen && !disabled) { 
+x-on:click="if (!dropdownOpen && !disabled) {
     window.dispatchEvent(new CustomEvent('close-all-dropdowns', { detail: { except: componentId } }));
 }"
 x-on:close-all-dropdowns.window="if ($event.detail.except !== componentId) { $wire.closeDropdown(); }">
@@ -107,7 +107,7 @@ x-on:close-all-dropdowns.window="if ($event.detail.except !== componentId) { $wi
         {{-- Dropdown menu --}}
         <div x-show="dropdownOpen"
              x-cloak
-             class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+             class="absolute z-50 min-w-full w-max mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
              style="max-height: {{ $maxHeight }}; overflow-y: auto;"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 translate-y-1"
@@ -145,7 +145,7 @@ x-on:close-all-dropdowns.window="if ($event.detail.except !== componentId) { $wi
                                 <div class="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-left
                                     {{ $isSelected ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100' }}"
                                      wire:click.stop="selectItem('{{ $value }}')">
-                                    <span class="flex-1 truncate text-left">{{ $label }}</span>
+                                    <span class="flex-1 text-left">{{ $label }}</span>
                                     @if($isSelected)
                                         <svg class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>

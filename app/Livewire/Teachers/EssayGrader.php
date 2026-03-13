@@ -99,8 +99,8 @@ class EssayGrader extends Component
     {
         $pendingAssessments = Assessment::with(['student.user', 'subject', 'assessmentResponse'])
             ->where('status', Assessment::STATUS_PENDING_REVIEW)
-            ->whereHas('student.teachers', function ($query) {
-                $query->where('teacher_id', auth()->user()->teacher->id);
+            ->whereHas('assignment', function ($query) {
+                $query->where('user_id', auth()->id());
             })
             ->paginate(10);
 

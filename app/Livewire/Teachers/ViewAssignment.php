@@ -3,7 +3,6 @@
 namespace App\Livewire\Teachers;
 
 use App\Models\Assignment;
-use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -37,8 +36,6 @@ class ViewAssignment extends Component
 
     public function mount(Assignment $assignment)
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
-
         $this->assignment = $assignment->load([
             'academicSubject',
             'academicGroups',
@@ -49,8 +46,8 @@ class ViewAssignment extends Component
             'subtopics',
             'submissions.student.user',
         ]);
-        // Ensure the assignment belongs to the current teacher
-        if ($this->assignment->teacher_id !== $this->teacher->id) {
+        // Ensure the assignment belongs to the current user
+        if ($this->assignment->user_id !== Auth::id()) {
             abort(403, 'You are not authorized to view this assignment.');
         }
 
@@ -172,7 +169,7 @@ class ViewAssignment extends Component
 
     public function deleteAssignment()
     {
-        if ($this->assignment->teacher_id !== $this->teacher->id) {
+        if ($this->assignment->user_id !== Auth::id()) {
             session()->flash('error', 'You are not authorized to delete this assignment.');
 
             return;
