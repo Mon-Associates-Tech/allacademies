@@ -36,6 +36,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
 use Illuminate\Support\Facades\Route;
@@ -159,6 +160,9 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::match(['GET', 'POST'], 'settings/role', [SettingsController::class, 'role'])->name('settings.role');
+    Route::get('admin/pricing-settings', [PricingSettingsController::class, 'edit'])->name('admin.pricing-settings.edit');
+    Route::get('admin/pricing-settings/audits', [PricingSettingsController::class, 'audits'])->name('admin.pricing-settings.audits');
+    Route::put('admin/pricing-settings', [PricingSettingsController::class, 'update'])->name('admin.pricing-settings.update');
 
     Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
     Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');

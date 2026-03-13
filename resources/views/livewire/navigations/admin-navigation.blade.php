@@ -394,6 +394,13 @@
         </li>
 
         @if(auth()->user()->role === UserRole::OWNER)
+
+            <li class="mt-3 mb-2">
+                <h4 class="text-[11px] uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3">
+                    Owner Tools
+                </h4>
+            </li>
+
             <li class="mb-0.5 last:mb-0" title="Messenger Allocations">
                 <a :class="sidebarExpanded ? 'py-2' : ''"
                    class="block pl-3 rounded-lg transition {{ Route::is('token-allocations*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -425,6 +432,37 @@
                                 d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
                         </svg>
                         <span class="text-sm ml-2 sidebar-text duration-200">Messengers Transactions</span>
+                    </div>
+                </a>
+            </li>
+
+            <li class="mb-0.5 last:mb-0" title="Pricing Settings">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('admin.pricing-settings.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('admin.pricing-settings.edit') }}">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('admin.pricing-settings.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path
+                                d="M8 0a4 4 0 0 1 4 4v1h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v1a4 4 0 0 1-8 0v-1H2a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a4 4 0 0 1 4-4zm-2 6h4V4a2 2 0 0 0-4 0v2zm-2 2v2h2v-2H4zm6 0v2h2v-2h-2z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Pricing Settings</span>
+                    </div>
+                </a>
+            </li>
+            <li class="mb-0.5 last:mb-0" title="Pricing Audit Log">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('admin.pricing-settings.audits') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('admin.pricing-settings.audits') }}">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('admin.pricing-settings.audits') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path
+                                d="M2 1h9.293L14 3.707V15a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm8.5 1.5V4h1.5L10.5 2.5zM4 6h8v1H4V6zm0 3h8v1H4V9zm0 3h6v1H4v-1z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Pricing Audit Log</span>
                     </div>
                 </a>
             </li>
