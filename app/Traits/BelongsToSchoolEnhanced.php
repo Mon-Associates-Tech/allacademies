@@ -231,7 +231,7 @@ trait BelongsToSchoolEnhanced
     {
         $user = auth()->user();
 
-        if (! $user || (! $user->hasAnyRole(['superadmin', 'owner']))) {
+        if (!$user || !$user->hasAnyRole(['superadmin', 'owner'])) {
             abort(403, 'Unauthorized to access cross-school data');
         }
 

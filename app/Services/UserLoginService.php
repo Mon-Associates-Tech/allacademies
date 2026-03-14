@@ -14,7 +14,7 @@ class UserLoginService
 
     public function __construct()
     {
-        $this->agent = new Agent;
+        $this->agent = new Agent();
     }
 
     public function handleLogin($user): LoginActivity

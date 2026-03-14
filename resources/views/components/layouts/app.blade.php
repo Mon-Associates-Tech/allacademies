@@ -72,7 +72,7 @@
 
 <x-alert.impersonation-banner></x-alert.impersonation-banner>
 @if(auth()->check() && auth()->user()->canAccessCrossSchool())
-        <livewire:administrators.school-switcher />
+    <livewire:administrators.school-switcher />
 @endif
 
 <!-- Page wrapper -->
@@ -133,6 +133,7 @@
 </div>
 
 <!-- Scripts -->
+@stack('scripts')
 @livewireScriptConfig
 
 <script>
@@ -239,5 +240,6 @@
         });
     });
 </script>
+@stack('scripts')
 </body>
 </html>

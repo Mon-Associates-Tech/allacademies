@@ -20,7 +20,7 @@
                     <a href="{{ route('register.author') }}" class="px-8 py-4 bg-white text-purple-600 font-semibold rounded-xl hover:shadow-xl transition-all">
                         Start Creating
                     </a>
-                    <a href="{{ route('branding.features') }}" class="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all">
+                    <a href="{{ route('features') }}" class="px-8 py-4 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition-all">
                         Explore Features
                     </a>
                 </div>

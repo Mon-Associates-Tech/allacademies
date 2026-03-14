@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\ApplyUserPreferences;
+use App\Http\Middleware\CheckDefaultPassword;
 use App\Http\Middleware\CheckSuspended;
 use App\Http\Middleware\EnsureUserIsParent;
 use App\Http\Middleware\TrackUserLoginActivity;
@@ -44,6 +45,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             ApplyUserPreferences::class,
             CheckSuspended::class,
+            CheckDefaultPassword::class,
             //            \App\Http\Middleware\SchoolContextMiddleware::class,
             //            \App\Http\Middleware\AutomaticSchoolScoping::class,
         ],

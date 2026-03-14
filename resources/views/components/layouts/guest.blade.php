@@ -423,13 +423,13 @@
                             <a href="{{ route('branding.features') }}"
                                class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋
                                 Modules & Features</a>
-                            <a href="#"
+                            <a href="{{ route('solutions.schools') }}"
                                class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">🏫
                                 For Schools</a>
-                            <a href="#"
+                            <a href="{{ route('solutions.teachers') }}"
                                class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">👨‍🏫
                                 For Teachers</a>
-                            <a href="#"
+                            <a href="{{ route('solutions.students') }}"
                                class="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">👨‍🎓
                                 For Students</a>
                         </div>

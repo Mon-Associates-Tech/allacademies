@@ -3,11 +3,14 @@
 use App\Http\Controllers\ActivityTrailController;
 use App\Http\Controllers\Admin\SchoolPaymentController;
 use App\Http\Controllers\BookController;
+use App\Livewire\Administrators\AccountantManagement;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
+use App\Livewire\Administrators\GroupManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
+use App\Livewire\Administrators\ReportCardManagement;
 use App\Livewire\Administrators\SchoolSwitcherPage;
 use App\Livewire\Administrators\StudentGroupManagement;
 use App\Livewire\Administrators\StudentManagement;
@@ -28,6 +31,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
     Route::get('/student-management', StudentManagement::class)->name('student-management');
+    Route::get('/students/create', StudentManagement::class)->name('students.create');
+    Route::get('/students/{student}/edit', StudentManagement::class)->name('students.edit');
     Route::get('/student-groups', StudentGroupManagement::class)->name('student-groups');
     Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
     Route::get('/book-management', BookManagement::class)->name('book-management');
@@ -35,12 +40,16 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/book-management/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::get('/book-approvals', BookApprovalManagement::class)->name('book-approvals');
     Route::get('/librarian-management', LibrarianManagement::class)->name('librarian-management');
+    Route::get('/accountant-management', AccountantManagement::class)->name('accountant-management');
     Route::get('/logins', UserLoginLog::class)->name('logins');
     Route::get('/author-management', AuthorManagement::class)->name('author-management');
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
     Route::get('datamanager', [\App\Http\Controllers\Student\StudentManagementController::class, 'index'])->name('data-manager');
+
+    // Report Card Management
+    Route::get('/report-cards', ReportCardManagement::class)->name('report-cards');
 
     // Main activity trail page
     Route::get('/admin/activity-trail', [ActivityTrailController::class, 'index'])

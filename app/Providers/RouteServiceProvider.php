@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\AcademicTopic;
+use App\Models\EducationalResource;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         Route::model('academic_topic', AcademicTopic::class);
+        Route::model('educationalResource', EducationalResource::class);
 
         $this->routes(function () {
             Route::middleware('api')

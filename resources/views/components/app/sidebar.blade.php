@@ -25,10 +25,9 @@
     <!-- Sidebar -->
     <div
         id="sidebar"
-        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-80 lg:w-20 lg:sidebar-expanded:!w-80 2xl:w-80! shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
+        class="flex lg:flex! flex-col absolute z-40 left-0 {{ $topClass }} lg:static lg:left-auto lg:top-auto lg:translate-x-0 {{ $heightClass }} overflow-hidden no-scrollbar w-80 lg:w-64 lg:sidebar-expanded:!w-[32rem] 2xl:!w-[32rem] shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800  transition-all duration-200 ease-in-out {{ $variant === 'v2' ? 'border-r border-gray-200 dark:border-gray-700/60' : ' shadow-xs' }}"
         :class="$store.sidebar.open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-80 lg:translate-x-0'"
         @click.outside="$store.sidebar.open =  false"
-        style=""
         @keydown.escape.window="$store.sidebar.open = false"
     >
 
@@ -47,7 +46,7 @@
         <!-- Scrollable content area -->
         <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
             <div class="lg:pt-6">
-                <div :class="$store.sidebar.open ? 'w-12 h-12' : 'w-8 h-8'" class="mx-auto mb-2">
+                <div :class="$store.sidebar.open ? 'w-16 h-16' : 'w-12 h-12'" class="mx-auto mb-2">
                     <x-avatar
                         :name="auth()->user()->name"
                         avatar="{{ auth()->user()->avatar }}"
@@ -140,13 +139,139 @@
                             @include('livewire.navigations.moderator-navigation', [
                                 'activeTab' => Route::is('author.dashboard') ? request()->query('activeTab', 'overview') : 'overview'
                             ])
+                        @elseif($userRole === UserRole::ACCOUNTANT || $roleValue === 'accountant')
+                            @include('livewire.navigations.accountant-navigation')
                         @endif
                     @endauth
                 </div>
 
 
                 <ul x-data="{ sidebarExpanded: $store.sidebar.expanded }"
-                    class="border-t-2 pt-4 mb-4 border-gray-200 dark:border-gray-700 space-y-1">
+                    class="border-t-2 pt-4 border-gray-200 dark:border-gray-700 space-y-1">
+
+
+                    <!-- Sponsorship Section -->
+                    <template class="hidden">
+                        <li class="px-3 py-2 rounded-sm mb-0.5">
+                            <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Sponsorship</span>
+                        </li>
+
+                        <li class="mb-0.5 last:mb-2" title="Programs">
+                            <a :class="sidebarExpanded ? 'py-2' : ''"
+                               class="block pl-3 rounded-lg transition {{ Route::is('sponsorship.programs*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('sponsorship.programs.index') }}">
+                                <div class="flex items-center">
+                                    <svg
+                                        class="shrink-0 fill-current {{ Route::is('sponsorship.programs*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Programs</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        <li class="mb-0.5 last:mb-2" title="Sponsor Offers">
+                            <a :class="sidebarExpanded ? 'py-2' : ''"
+                               class="block pl-3 rounded-lg transition {{ Route::is('sponsorship.offers*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('sponsorship.offers.index') }}">
+                                <div class="flex items-center">
+                                    <svg
+                                        class="shrink-0 fill-current {{ Route::is('sponsorship.offers*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                        <path
+                                            d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Sponsor Offers</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        @auth
+                            <li class="mb-0.5 last:mb-2" title="My Contributions">
+                                <a :class="sidebarExpanded ? 'py-2' : ''"
+                                   class="block pl-3 rounded-lg transition {{ Route::is('sponsorship.contributions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                   href="{{ route('sponsorship.contributions.mine') }}">
+                                    <div class="flex items-center">
+                                        <svg
+                                            class="shrink-0 fill-current {{ Route::is('sponsorship.contributions*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                            xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.89-8.9c-.6-.14-1.19-.31-1.19-.76 0-.37.35-.59 1-.59.75 0 1.03.36 1.1.89h1.37c-.09-.84-.59-1.56-1.47-1.82V7h-2v1.79c-.93.22-1.7.84-1.7 1.96 0 1.41 1.22 1.91 2.37 2.18.68.16 1.28.34 1.28.81 0 .3-.27.65-1 .65-.81 0-1.15-.43-1.21-.98H10.1c.08 1.03.75 1.76 1.9 2.01V17h2v-1.61c.94-.24 1.71-.87 1.71-1.99 0-1.56-1.22-2.08-2.82-2.3z"/>
+                                        </svg>
+                                        <span class="text-sm ml-2 sidebar-text duration-200">My Contributions</span>
+                                    </div>
+                                </a>
+                            </li>
+
+                            <!-- Benefactor Dashboard (conditionally shown) -->
+                            <li class="mb-0.5 last:mb-2" title="Benefactor Dashboard">
+                                <a :class="sidebarExpanded ? 'py-2' : ''"
+                                   class="block pl-3 rounded-lg transition {{ Route::is('benefactor.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                   href="{{ route('benefactor.dashboard') }}">
+                                    <div class="flex items-center">
+                                        <svg
+                                            class="shrink-0 fill-current {{ Route::is('benefactor.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                            xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                                stroke="currentColor" stroke-width="2" fill="none"
+                                                stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <span class="text-sm ml-2 sidebar-text duration-200">Benefactor</span>
+                                    </div>
+                                </a>
+                            </li>
+
+                            <!-- Sponsor Dashboard -->
+                            <li class="mb-0.5 last:mb-2" title="Sponsor Dashboard">
+                                <a :class="sidebarExpanded ? 'py-2' : ''"
+                                   class="block pl-3 rounded-lg transition {{ Route::is('sponsor.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                   href="{{ route('sponsor.dashboard') }}">
+                                    <div class="flex items-center">
+                                        <svg
+                                            class="shrink-0 fill-current {{ Route::is('sponsor.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                            xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M9 11.75A2.25 2.25 0 116.75 9 2.25 2.25 0 019 11.75zm0 1.5a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM12.75 12a2.25 2.25 0 112.25-2.25A2.25 2.25 0 0112.75 12zm0 1.5a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM8.25 16.5A2.25 2.25 0 116 14.25a2.25 2.25 0 012.25 2.25zm0 1.5a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM15.75 18a2.25 2.25 0 112.25-2.25A2.25 2.25 0 0115.75 18zm0 1.5a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"
+                                                fill="currentColor"/>
+                                        </svg>
+                                        <span class="text-sm ml-2 sidebar-text duration-200">Sponsor</span>
+                                    </div>
+                                </a>
+                            </li>
+
+                            @if(auth()->user()->hasRole('owner') || auth()->user()->hasRole('reviewer'))
+                                <!-- Reviewer Queue -->
+                                <li class="mb-0.5 last:mb-2" title="Verification Queue">
+                                    <a :class="sidebarExpanded ? 'py-2' : ''"
+                                       class="block pl-3 rounded-lg transition {{ Route::is('reviewer.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                       href="{{ route('reviewer.verification.queue') }}">
+                                        <div class="flex items-center">
+                                            <svg
+                                                class="shrink-0 fill-current {{ Route::is('reviewer.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                                xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24">
+                                                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                                            </svg>
+                                            <span class="text-sm ml-2 sidebar-text duration-200">Verification</span>
+                                        </div>
+                                    </a>
+                                </li>
+                            @endif
+                        @endauth
+                    </template>
+
+
+                    <!-- Other Sections -->
+                    <li class="px-3 py-2 rounded-sm mb-0.5 mt-4">
+                        <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Resources</span>
+                    </li>
+
                     <li class="mb-0.5 last:mb-2" title="Messenger Subscriptions">
                         <a :class="sidebarExpanded ? 'py-2' : ''"
                            class="block pl-3  rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -232,6 +357,22 @@
                                 </svg>
 
                                 <span class="text-sm ml-2 sidebar-text duration-200">Activity Tracker</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-0" title="Trainings & Lab">
+                        <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                           class="block pl-3 rounded-lg transition {{ Route::is('educational-resources.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{ route('educational-resources.index') }}">
+                            <div class="flex items-center">
+                                <svg
+                                    class="shrink-0 fill-current {{ Route::is('educational-resources.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path d="M4 4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-9l-5-5H4zm0 2h8v4h4v8H4V6zm10-1.5 3.5 3.5H14V4.5z"/>
+                                </svg>
+
+                                <span class="text-sm ml-2 sidebar-text duration-200">Trainings & Lab</span>
                             </div>
                         </a>
                     </li>
