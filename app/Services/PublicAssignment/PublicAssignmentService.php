@@ -9,7 +9,7 @@ use App\Models\PublicAssignmentQuestion;
 use App\Models\PublicAssignmentSection;
 use App\Models\PublicAssignmentSubmission;
 use App\Models\Student;
-use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class PublicAssignmentService
@@ -17,14 +17,15 @@ class PublicAssignmentService
     /**
      * Create a new public assignment
      */
-    public function createAssignment(Teacher $teacher, array $data): PublicAssignment
+    public function createAssignment(User $user, array $data): PublicAssignment
     {
-        return DB::transaction(function () use ($teacher, $data) {
+        return DB::transaction(function () use ($user, $data) {
             $assignment = PublicAssignment::create([
                 'title' => $data['title'],
                 'description' => $data['description'] ?? null,
-                'teacher_id' => $teacher->id,
-                'school_id' => $teacher->school_id,
+                'user_id' => $user->id,
+                'teacher_id' => $user->teacher->id ?? null,
+                'school_id' => getSchoolId() ?? $user->school_id,
                 'type' => $data['type'] ?? 'quiz',
                 'duration_in_minutes' => $data['duration_in_minutes'] ?? null,
                 'starts_at' => $data['starts_at'] ?? null,
@@ -392,6 +393,7 @@ class PublicAssignmentService
             $newAssignment->title = $newTitle ?? $assignment->title.' (Copy)';
             $newAssignment->status = 'draft';
             $newAssignment->results_released = false;
+            $newAssignment->user_id = $assignment->user_id ?? $assignment->teacher?->user_id;
             $newAssignment->save();
 
             // Duplicate sections and questions

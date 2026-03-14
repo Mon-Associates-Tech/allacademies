@@ -166,7 +166,7 @@ class PublicAssignmentGradingService
                     'points_earned' => $pointsEarned,
                     'feedback' => "Matched {$matchedKeywords} of {$totalKeywords} expected keywords.",
                     'correct_answer' => $question->correct_answer,
-                    'requires_review' => true,
+                    'requires_review' => false,
                     'keyword_match_ratio' => $keywordRatio,
                 ];
             }
@@ -299,7 +299,7 @@ PROMPT;
                             'strengths' => $parsed['strengths'] ?? [],
                             'areas_for_improvement' => $parsed['areas_for_improvement'] ?? [],
                         ],
-                        'requires_review' => true, // AI graded items should still be reviewable
+                        'requires_review' => false,
                     ];
                 }
             }

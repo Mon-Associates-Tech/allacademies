@@ -276,10 +276,16 @@
                             @php
                                 $response = $viewingSubmission->responses[$question->id] ?? null;
                                 $isCorrect = $response['is_correct'] ?? null;
+                                $question = Str::limit($question->question, 50)
                             @endphp
                             <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Q{{ $index + 1 }}: {{ Str::limit($question->question, 50) }}</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                                        <span class="flex-shrink-0 mt-0.5">Q{{ $index + 1 }}:</span>
+                                        <span class="flex-1">
+                                            <x-prose-content :content="$question" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
+                                        </span>
+                                    </span>
                                     @if($isCorrect === true)
                                         <span class="text-green-600">✓ Correct</span>
                                     @elseif($isCorrect === false)

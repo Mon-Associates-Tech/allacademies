@@ -4,7 +4,6 @@ namespace App\Livewire\Teachers;
 
 use App\Models\PublicAssignment;
 use App\Models\PublicAssignmentSubmission;
-use App\Models\Teacher;
 use App\Services\PublicAssignment\ParticipantVerificationService;
 use App\Services\PublicAssignment\PublicAssignmentGradingService;
 use Illuminate\Support\Facades\Auth;
@@ -35,8 +34,6 @@ class ViewPublicAssignmentResults extends Component
 
     public bool $showGradingSummary = false;
 
-    protected ?Teacher $teacher = null;
-
     protected PublicAssignmentGradingService $gradingService;
 
     protected ParticipantVerificationService $verificationService;
@@ -58,10 +55,12 @@ class ViewPublicAssignmentResults extends Component
 
     public function mount(PublicAssignment $assignment): void
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
+        // Verify ownership by creator, fallback to legacy teacher link
+        $user = Auth::user();
+        $ownsByUser = $assignment->user_id === $user->id;
+        $ownsByTeacher = $user?->teacher && $assignment->teacher_id === $user->teacher->id;
 
-        // Verify ownership
-        if (! $this->teacher || $assignment->teacher_id !== $this->teacher->id) {
+        if (! ($ownsByUser || $ownsByTeacher)) {
             abort(403, 'Unauthorized access to assignment results.');
         }
 

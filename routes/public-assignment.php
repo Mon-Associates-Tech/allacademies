@@ -4,6 +4,7 @@ use App\Http\Controllers\PublicAssignmentController;
 use App\Http\Controllers\Student\PublicAssignmentController as StudentPublicAssignmentController;
 use App\Http\Controllers\Teachers\PublicAssignmentController as TeacherPublicAssignmentController;
 use App\Services\PublicAssignment\ParticipantVerificationService;
+use App\Services\PublicAssignment\PublicAssignmentService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,15 +41,43 @@ Route::get('/assignments/verify-email', function () {
     }
 
     $verificationService = app(ParticipantVerificationService::class);
+    $assignmentService = app(\App\Services\PublicAssignment\PublicAssignmentService::class);
     $result = $verificationService->verifyEmail($token, $accessCode);
 
-    if ($result['success']) {
-        return redirect()->route('public-assignments.join.code', $accessCode)
-            ->with('success', $result['message']);
+    if (! $result['success']) {
+        return redirect()->route('public-assignments.join')
+            ->with('error', $result['error']);
     }
 
-    return redirect()->route('public-assignments.join')
-        ->with('error', $result['error']);
+    /** @var \App\Models\PublicAssignmentParticipant $participant */
+    $participant = $result['participant'];
+    /** @var \App\Models\PublicAssignment $assignment */
+    $assignment = $result['assignment'];
+
+    // Check eligibility
+    $canTake = $verificationService->canParticipantTakeAssignment($participant, $assignment);
+    if (! $canTake['can_take']) {
+        return redirect()->route('public-assignments.join.code', $accessCode)
+            ->with('error', $canTake['message']);
+    }
+
+    // Reuse existing in-progress submission if present
+    if (! empty($canTake['has_existing_submission']) && $canTake['has_existing_submission'] === true) {
+        $submission = $canTake['submission'];
+    } else {
+        $submission = $assignmentService->getOrCreateSubmission(
+            $assignment,
+            \App\Models\PublicAssignmentParticipant::class,
+            $participant->id,
+            [
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]
+        );
+    }
+
+    return redirect()->route('public-assignments.take', $submission)
+        ->with('success', $result['message'] ?? 'Email verified. You can start the assignment now.');
 })->name('public-assignments.verify-email')->middleware('signed');
 
 // Take assignment (requires valid submission)

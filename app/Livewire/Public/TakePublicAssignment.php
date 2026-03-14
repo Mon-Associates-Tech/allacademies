@@ -214,11 +214,21 @@ class TakePublicAssignment extends Component
 
     public function updatedResponses($value, $key): void
     {
-        // Extract question ID from the key (e.g., "responses.123.response")
+        // Livewire passes keys like "123.response" or "responses.123.response"
         $parts = explode('.', $key);
-        if (count($parts) >= 2 && is_numeric($parts[0])) {
-            $questionId = (int) $parts[0];
-            $this->saveResponse($questionId, $this->responses[$questionId]['response'] ?? $value);
+
+        $questionId = null;
+        if (count($parts) >= 2) {
+            if (is_numeric($parts[0])) {
+                $questionId = (int) $parts[0];
+            } elseif ($parts[0] === 'responses' && isset($parts[1]) && is_numeric($parts[1])) {
+                $questionId = (int) $parts[1];
+            }
+        }
+
+        if ($questionId !== null) {
+            $response = $this->responses[$questionId]['response'] ?? $value;
+            $this->saveResponse($questionId, $response);
         }
     }
 
@@ -290,7 +300,7 @@ class TakePublicAssignment extends Component
             }
         }
 
-        // Submit the assignment
+        // Submit the assignment with accurate time spent
         $this->submission->submit(false);
 
         // End proctoring session

@@ -37,18 +37,21 @@
                     <div>
                         <h2 class="text-lg font-medium opacity-90">Access Code</h2>
                         <p class="text-sm opacity-75 mt-1">Share this code with participants to join</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="text-base font-semibold text-white">{{ route('public-assignments.join.code', $assignment->access_code) }}</span>
+                            <x-copyable-text :text="route('public-assignments.join.code', $assignment->access_code)"
+                                             :show-text="''"
+                                             tooltip="Copy join URL"
+                                             class="text-base"
+                                             buttonClass="bg-white text-indigo-600 p-2 rounded-md shadow hover:bg-indigo-100 transition" />
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <code class="px-4 py-2 bg-white/20 rounded-lg text-2xl font-mono tracking-widest">{{ $assignment->access_code }}</code>
-                        <button onclick="navigator.clipboard.writeText('{{ $assignment->access_code }}')" class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors" title="Copy code">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                            </svg>
-                        </button>
+                    <div class="flex flex-col items-end gap-3 text-right">
+                        <div class="flex items-center gap-3">
+                            <code class="px-4 py-2 bg-white/20 rounded-lg text-2xl font-mono tracking-widest">{{ $assignment->access_code }}</code>
+                            <x-copyable-text :text="$assignment->access_code" tooltip="Copy code" class="!text-white" :show-text="''" />
+                        </div>
                     </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-white/20">
-                    <p class="text-sm opacity-75">Join URL: <span class="font-mono">{{ route('public-assignments.join.code', $assignment->access_code) }}</span></p>
                 </div>
             </div>
 

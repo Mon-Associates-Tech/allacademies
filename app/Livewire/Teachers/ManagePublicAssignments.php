@@ -3,7 +3,6 @@
 namespace App\Livewire\Teachers;
 
 use App\Models\PublicAssignment;
-use App\Models\Teacher;
 use App\Services\PublicAssignment\PublicAssignmentService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -29,7 +28,7 @@ class ManagePublicAssignments extends Component
 
     public ?array $assignmentStats = null;
 
-    protected ?Teacher $teacher = null;
+    public ?int $userId = null;
 
     protected PublicAssignmentService $assignmentService;
 
@@ -46,9 +45,15 @@ class ManagePublicAssignments extends Component
         $this->assignmentService = $assignmentService;
     }
 
+    public function hydrate(): void
+    {
+        // Ensure userId persists across Livewire requests
+        $this->userId = $this->userId ?? Auth::id();
+    }
+
     public function mount(): void
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
+        $this->userId = Auth::id();
     }
 
     public function updatingSearch(): void
@@ -226,29 +231,49 @@ class ManagePublicAssignments extends Component
         $assignment = $this->getAssignment($id);
 
         if ($assignment) {
-            $this->dispatch('copy-to-clipboard', code: $assignment->access_code);
+            $this->dispatch('copy-to-clipboard', text: $assignment->access_code);
+        }
+    }
+
+    public function copyJoinUrl(int $id): void
+    {
+        $assignment = $this->getAssignment($id);
+
+        if ($assignment) {
+            $url = route('public-assignments.join.code', $assignment->access_code);
+            $this->dispatch('copy-to-clipboard', text: $url);
         }
     }
 
     protected function getAssignment(int $id): ?PublicAssignment
     {
-        if (! $this->teacher) {
-            return null;
-        }
+        $query = PublicAssignment::where('id', $id);
 
-        return PublicAssignment::where('id', $id)
-            ->where('teacher_id', $this->teacher->id)
-            ->first();
+        $query->where(function ($q) {
+            $q->where('user_id', $this->userId);
+
+            // Backward compatibility: include legacy teacher ownership
+            if (Auth::user()?->teacher) {
+                $q->orWhere('teacher_id', Auth::user()->teacher->id);
+            }
+        });
+
+        return $query->first();
     }
 
     public function getAssignmentsProperty()
     {
-        if (! $this->teacher) {
+        if (! $this->userId) {
             return collect();
         }
 
-        $query = PublicAssignment::where('teacher_id', $this->teacher->id)
-            ->withCount(['submissions', 'questions']);
+        $query = PublicAssignment::where(function ($q) {
+            $q->where('user_id', $this->userId);
+
+            if (Auth::user()?->teacher) {
+                $q->orWhere('teacher_id', Auth::user()->teacher->id);
+            }
+        })->withCount(['submissions', 'questions']);
 
         // Search filter
         if (! empty($this->search)) {
@@ -277,15 +302,24 @@ class ManagePublicAssignments extends Component
 
     public function getStatusCountsProperty(): array
     {
-        if (! $this->teacher) {
+        if (! $this->userId) {
             return ['draft' => 0, 'published' => 0, 'closed' => 0, 'archived' => 0];
         }
 
+        $baseFilter = function ($status) {
+            return PublicAssignment::where(function ($q) {
+                $q->where('user_id', $this->userId);
+                if (Auth::user()?->teacher) {
+                    $q->orWhere('teacher_id', Auth::user()->teacher->id);
+                }
+            })->where('status', $status)->count();
+        };
+
         return [
-            'draft' => PublicAssignment::where('teacher_id', $this->teacher->id)->where('status', 'draft')->count(),
-            'published' => PublicAssignment::where('teacher_id', $this->teacher->id)->where('status', 'published')->count(),
-            'closed' => PublicAssignment::where('teacher_id', $this->teacher->id)->where('status', 'closed')->count(),
-            'archived' => PublicAssignment::where('teacher_id', $this->teacher->id)->where('status', 'archived')->count(),
+            'draft' => $baseFilter('draft'),
+            'published' => $baseFilter('published'),
+            'closed' => $baseFilter('closed'),
+            'archived' => $baseFilter('archived'),
         ];
     }
 

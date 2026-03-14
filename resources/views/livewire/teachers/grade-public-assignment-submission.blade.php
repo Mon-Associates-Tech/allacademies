@@ -117,12 +117,29 @@
                     <h2 class="font-semibold text-gray-900 dark:text-white mb-4">Questions</h2>
                     <div class="grid grid-cols-5 gap-2">
                         @foreach($questions as $index => $question)
+                            @php
+                                $respData = $submission->responses[$question->id] ?? null;
+                                $resp = $respData['response'] ?? null;
+                                $isCorrect = $respData['is_correct'] ?? null;
+                                $type = $question->type;
+
+                                $base = 'w-10 h-10 rounded-lg text-sm font-medium transition-all ';
+                                $state = 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+
+                                if ($type === 'multiple_choice' || $type === 'true_false') {
+                                    if ($isCorrect === true) {
+                                        $state = 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
+                                    } elseif ($isCorrect === false && $resp !== null) {
+                                        $state = 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300';
+                                    }
+                                } elseif (in_array($type, ['short_answer', 'essay'], true)) {
+                                    $state = 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300';
+                                }
+
+                                $ring = $currentQuestionIndex === $index ? 'ring-2 ring-indigo-500' : '';
+                            @endphp
                             <button wire:click="goToQuestion({{ $index }})"
-                                    class="w-10 h-10 rounded-lg text-sm font-medium transition-all
-                                        {{ $currentQuestionIndex === $index ? 'ring-2 ring-indigo-500' : '' }}
-                                        {{ ($questionGrades[$question->id]['is_graded'] ?? false)
-                                            ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
-                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }}">
+                                    class="{{ $base }}{{ $ring }} {{ $state }}">
                                 {{ $index + 1 }}
                             </button>
                         @endforeach
@@ -147,7 +164,9 @@
                         <!-- Question Text -->
                         <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                             <h3 class="font-medium text-gray-900 dark:text-white mb-2">Question</h3>
-                            <p class="text-gray-700 dark:text-gray-300">{{ $currentQuestion->question }}</p>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                <x-prose-content :content="$currentQuestion->question" />
+                            </p>
                         </div>
 
                         <!-- Correct Answer (for auto-gradable questions) -->
@@ -155,9 +174,18 @@
                             <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl">
                                 <h3 class="font-medium text-green-800 dark:text-green-300 mb-2">Correct Answer</h3>
                                 @if($currentQuestion->type === 'multiple_choice')
-                                    <p class="text-green-700 dark:text-green-400">
-                                        {{ $currentQuestion->correct_answer }}. {{ $currentQuestion->options[$currentQuestion->correct_answer] ?? '' }}
-                                    </p>
+                                    @php
+                                        $correctKey = strtoupper($currentQuestion->correct_answer);
+                                        $options = $currentQuestion->options ?? [];
+                                        $optionText = $options[$correctKey]
+                                            ?? ($options[strtolower($correctKey)] ?? ($options[strtoupper($correctKey)] ?? ''));
+                                    @endphp
+                                    <div class="flex items-start gap-2 text-green-700 dark:text-green-400">
+                                        <span class="font-semibold flex-shrink-0 pt-0.5">{{ $correctKey }}.</span>
+                                        <span class="flex-1">
+                                            <x-prose-content :content="$optionText" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
+                                        </span>
+                                    </div>
                                 @else
                                     <p class="text-green-700 dark:text-green-400">{{ ucfirst($currentQuestion->correct_answer) }}</p>
                                 @endif
@@ -172,9 +200,18 @@
                             @endphp
                             @if($response)
                                 @if($currentQuestion->type === 'multiple_choice')
-                                    <p class="text-blue-700 dark:text-blue-400">
-                                        {{ $response }}. {{ $currentQuestion->options[$response] ?? '' }}
-                                    </p>
+                                    @php
+                                        $respKey = strtoupper($response);
+                                        $options = $currentQuestion->options ?? [];
+                                        $optionText = $options[$respKey]
+                                            ?? ($options[strtolower($respKey)] ?? ($options[strtoupper($respKey)] ?? ''));
+                                    @endphp
+                                    <div class="flex items-start gap-2 text-blue-700 dark:text-blue-400">
+                                        <span class="font-semibold flex-shrink-0 pt-0.5">{{ $respKey }}.</span>
+                                        <span class="flex-1">
+                                            <x-prose-content :content="$optionText" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
+                                        </span>
+                                    </div>
                                 @elseif($currentQuestion->type === 'true_false')
                                     <p class="text-blue-700 dark:text-blue-400">{{ ucfirst($response) }}</p>
                                 @else

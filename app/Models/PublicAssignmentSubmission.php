@@ -120,12 +120,18 @@ class PublicAssignmentSubmission extends Model
 
     public function submit(bool $autoSubmitted = false, ?string $reason = null): void
     {
+        // Calculate time spent if possible
+        $timeSpent = $this->time_spent_seconds;
+        if ($this->started_at) {
+            $timeSpent = now()->diffInSeconds($this->started_at);
+        }
+
         $this->update([
             'submitted_at' => now(),
             'status' => self::STATUS_SUBMITTED,
             'auto_submitted' => $autoSubmitted,
             'auto_submit_reason' => $reason,
-            'time_spent_seconds' => $this->started_at ? now()->diffInSeconds($this->started_at) : 0,
+            'time_spent_seconds' => $timeSpent,
         ]);
     }
 

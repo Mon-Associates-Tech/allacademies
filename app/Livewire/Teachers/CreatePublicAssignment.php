@@ -9,7 +9,6 @@ use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
-use App\Models\Teacher;
 use App\Models\TrueOrFalseQuestion;
 use App\Services\PublicAssignment\PublicAssignmentAIService;
 use App\Services\PublicAssignment\PublicAssignmentService;
@@ -138,8 +137,6 @@ class CreatePublicAssignment extends Component
 
     protected PublicAssignmentAIService $aiService;
 
-    protected ?Teacher $teacher = null;
-
     protected $rules = [
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
@@ -161,20 +158,6 @@ class CreatePublicAssignment extends Component
 
     public function mount(): void
     {
-        $schoolId = getSchoolId() ?? Auth::user()?->school_id;
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
-
-        // Allow administrators/owners to create public assignments by ensuring a teacher profile exists
-        if (! $this->teacher && $schoolId) {
-            $this->teacher = Teacher::firstOrCreate(
-                ['user_id' => Auth::id()],
-                [
-                    'school_id' => $schoolId,
-                    'status' => 'active',
-                ]
-            );
-        }
-
         // Set default dates
         $this->starts_at = Carbon::now()->addHour()->format('Y-m-d\TH:i');
         $this->ends_at = Carbon::now()->addWeek()->format('Y-m-d\TH:i');
@@ -855,21 +838,6 @@ class CreatePublicAssignment extends Component
             return;
         }
 
-        $schoolId = getSchoolId() ?? Auth::user()?->school_id;
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
-
-        // Allow administrators/owners to create public assignments by ensuring a teacher profile exists
-        if (! $this->teacher && $schoolId) {
-            $this->teacher = Teacher::firstOrCreate(
-                ['user_id' => Auth::id()],
-                [
-                    'school_id' => $schoolId,
-                    'status' => 'active',
-                ]
-            );
-        }
-
-
         try {
             $data = [
                 'title' => $this->title,
@@ -898,7 +866,7 @@ class CreatePublicAssignment extends Component
                 $data['questions'] = $this->questions;
             }
 
-            $assignment = $this->assignmentService->createAssignment($this->teacher, $data);
+            $assignment = $this->assignmentService->createAssignment(Auth::user(), $data);
 
             session()->flash('success', 'Assignment created successfully! Access code: '.$assignment->access_code);
 
@@ -915,24 +883,9 @@ class CreatePublicAssignment extends Component
 
     public function publishAssignment(): void
     {
-
-        $schoolId = getSchoolId() ?? Auth::user()?->school_id;
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
-
-        // Allow administrators/owners to create public assignments by ensuring a teacher profile exists
-        if (! $this->teacher && $schoolId) {
-            $this->teacher = Teacher::firstOrCreate(
-                ['user_id' => Auth::id()],
-                [
-                    'school_id' => $schoolId,
-                    'status' => 'active',
-                ]
-            );
-        }
-
         try {
             $data = $this->prepareAssignmentData();
-            $assignment = $this->assignmentService->createAssignment($this->teacher, $data);
+            $assignment = $this->assignmentService->createAssignment(Auth::user(), $data);
             $this->assignmentService->publishAssignment($assignment);
 
             session()->flash('success', 'Assignment published successfully! Access code: '.$assignment->access_code);

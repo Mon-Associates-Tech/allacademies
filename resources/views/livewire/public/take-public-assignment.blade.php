@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900"
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col pb-24"
      x-data="{
          timer: @entangle('remainingSeconds'),
          timerStarted: @entangle('timerStarted'),
@@ -121,10 +121,22 @@
                     <div class="bg-indigo-600 h-1 transition-all duration-300" style="width: {{ $progressPercentage }}%"></div>
                 </div>
 
+                <!-- Question Navigator (inline) -->
+                <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                    @foreach($questionOrder as $index => $questionId)
+                        <button wire:click="goToQuestion({{ $index }})"
+                                class="flex items-center justify-center h-10 px-3 rounded-lg text-sm font-semibold border transition
+                                {{ $index === $currentQuestionIndex ? 'bg-indigo-600 text-white border-indigo-600 shadow'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                            {{ $index + 1 }}
+                        </button>
+                    @endforeach
+                </div>
+
                 <!-- Main Content -->
-                <div class="flex-1 overflow-hidden flex">
+                <div class="flex flex-col flex-1">
                     <!-- Question Panel -->
-                    <div class="flex-1 overflow-y-auto p-6">
+                    <div class="w-full p-6">
                         <div class="max-w-3xl mx-auto">
                             @if($currentQuestion)
                                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
@@ -139,35 +151,52 @@
                                     </div>
 
                                     <!-- Question Text -->
-                                    <div class="text-lg text-gray-900 dark:text-white mb-6 prose dark:prose-invert max-w-none">
-                                        {!! nl2br(e($currentQuestion->question)) !!}
+                                    @php
+                                        $questionTextClasses = $currentQuestion->type === 'true_false'
+                                            ? 'prose-lg font-semibold'
+                                            : 'text-lg';
+                                    @endphp
+                                    <div class="{{ $questionTextClasses }} text-gray-900 dark:text-white mb-6 prose dark:prose-invert max-w-none">
+                                        <x-prose-content :content="($currentQuestion->content ?? null) ?: ($currentQuestion->question ?? '')" />
                                     </div>
 
-                                    <!-- Answer Options -->
+                                                                        <!-- Answer Options -->
                                     @if($currentQuestion->type === 'multiple_choice')
                                         <div class="space-y-3">
                                             @foreach($currentQuestion->options as $key => $option)
-                                                <label class="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all
+                                                <label wire:key="mc-{{ $currentQuestion->id }}-{{ $key }}"
+                                                       class="flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all
                                                     {{ ($responses[$currentQuestion->id]['response'] ?? '') === $key
                                                         ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                                                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500' }}">
+                                                        : 'border-gray-200 dark:border-gray-600 hover-border-gray-300 dark:hover-border-gray-500' }}">
                                                     <input type="radio"
                                                            wire:model="responses.{{ $currentQuestion->id }}.response"
+                                                           name="question_{{ $currentQuestion->id }}"
                                                            value="{{ $key }}"
-                                                           class="w-4 h-4 text-indigo-600">
-                                                    <span class="ml-3 text-gray-900 dark:text-white">{{ $key }}. {{ $option }}</span>
+                                                           class="mt-1 w-4 h-4 text-indigo-600">
+                                                    <span class="text-gray-900 dark:text-white flex-1 leading-relaxed">
+                                                        <span class="flex items-start gap-2">
+                                                            <span class="font-semibold flex-shrink-0 pt-0.5 leading-tight">{{ $key }}.</span>
+                                                            <span class="flex-1">
+                                                                <x-prose-content :content="$option"
+                                                                                 class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 leading-tight" />
+                                                            </span>
+                                                        </span>
+                                                    </span>
                                                 </label>
                                             @endforeach
                                         </div>
                                     @elseif($currentQuestion->type === 'true_false')
                                         <div class="grid grid-cols-2 gap-4">
                                             @foreach(['true' => 'True', 'false' => 'False'] as $value => $label)
-                                                <label class="flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all
+                                                <label wire:key="tf-{{ $currentQuestion->id }}-{{ $value }}"
+                                                       class="flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all
                                                     {{ ($responses[$currentQuestion->id]['response'] ?? '') === $value
                                                         ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                                                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300' }}">
+                                                        : 'border-gray-200 dark:border-gray-600 hover-border-gray-300' }}">
                                                     <input type="radio"
                                                            wire:model="responses.{{ $currentQuestion->id }}.response"
+                                                           name="question_{{ $currentQuestion->id }}"
                                                            value="{{ $value }}"
                                                            class="sr-only">
                                                     <span class="font-medium text-gray-900 dark:text-white">{{ $label }}</span>
@@ -176,18 +205,19 @@
                                         </div>
                                     @elseif($currentQuestion->type === 'short_answer')
                                         <input type="text"
-                                               wire:model.lazy="responses.{{ $currentQuestion->id }}.response"
+                                               wire:key="sa-{{ $currentQuestion->id }}"
+                                               wire:model.live.debounce.300ms="responses.{{ $currentQuestion->id }}.response"
                                                placeholder="Type your answer..."
                                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500">
                                     @elseif($currentQuestion->type === 'essay')
-                                        <textarea wire:model.lazy="responses.{{ $currentQuestion->id }}.response"
+                                        <textarea wire:key="essay-{{ $currentQuestion->id }}"
+                                                  wire:model.live.debounce.500ms="responses.{{ $currentQuestion->id }}.response"
                                                   rows="8"
                                                   placeholder="Write your answer..."
                                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
                                     @endif
-                                </div>
 
-                                <!-- Navigation Buttons -->
+                                    <!-- Navigation Buttons -->
                                 <div class="flex items-center justify-between mt-6">
                                     <button wire:click="previousQuestion"
                                             @if($currentQuestionIndex === 0) disabled @endif
@@ -208,28 +238,6 @@
                                     @endif
                                 </div>
                             @endif
-                        </div>
-                    </div>
-
-                    <!-- Question Navigator Sidebar -->
-                    <div class="w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4 overflow-y-auto hidden lg:block">
-                        <h3 class="font-medium text-gray-900 dark:text-white mb-4">Questions</h3>
-                        <div class="grid grid-cols-5 gap-2">
-                            @foreach($questionOrder as $index => $questionId)
-                                <button wire:click="goToQuestion({{ $index }})"
-                                        class="w-10 h-10 rounded-lg text-sm font-medium transition-all
-                                            {{ $currentQuestionIndex === $index ? 'ring-2 ring-indigo-500' : '' }}
-                                            {{ $this->isQuestionAnswered($questionId)
-                                                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
-                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }}">
-                                    {{ $index + 1 }}
-                                </button>
-                            @endforeach
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                <span class="font-medium">{{ $answeredCount }}</span> of {{ $totalQuestions }} answered
-                            </p>
                         </div>
                     </div>
                 </div>

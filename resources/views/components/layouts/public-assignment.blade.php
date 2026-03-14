@@ -75,7 +75,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1">
+<main class="flex-1 min-h-[calc(100vh-8rem)]">
         {{ $slot }}
     </main>
 

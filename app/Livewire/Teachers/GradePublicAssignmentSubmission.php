@@ -5,7 +5,6 @@ namespace App\Livewire\Teachers;
 use App\Models\PublicAssignment;
 use App\Models\PublicAssignmentQuestion;
 use App\Models\PublicAssignmentSubmission;
-use App\Models\Teacher;
 use App\Services\PublicAssignment\PublicAssignmentGradingService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -24,8 +23,6 @@ class GradePublicAssignmentSubmission extends Component
 
     public bool $showProctoringDetails = false;
 
-    protected ?Teacher $teacher = null;
-
     protected PublicAssignmentGradingService $gradingService;
 
     public function boot(PublicAssignmentGradingService $gradingService): void
@@ -35,12 +32,14 @@ class GradePublicAssignmentSubmission extends Component
 
     public function mount(PublicAssignmentSubmission $submission): void
     {
-        $this->teacher = Teacher::where('user_id', Auth::id())->first();
         $this->submission = $submission;
         $this->assignment = $submission->assignment;
 
-        // Verify ownership
-        if (! $this->teacher || $this->assignment->teacher_id !== $this->teacher->id) {
+        $user = Auth::user();
+        $ownsByUser = $this->assignment->user_id === $user->id;
+        $ownsByTeacher = $user?->teacher && $this->assignment->teacher_id === $user->teacher->id;
+
+        if (! ($ownsByUser || $ownsByTeacher)) {
             abort(403, 'Unauthorized access to grade this submission.');
         }
 
@@ -126,7 +125,7 @@ class GradePublicAssignmentSubmission extends Component
                 $questionId,
                 $points,
                 $gradeData['feedback'] ?? null,
-                $this->teacher->user_id ?? Auth::id()
+                Auth::id()
             );
 
             $this->questionGrades[$questionId]['is_graded'] = true;
@@ -162,7 +161,7 @@ class GradePublicAssignmentSubmission extends Component
                         $questionId,
                         $points,
                         $gradeData['feedback'] ?? null,
-                        $this->teacher->user_id ?? Auth::id()
+                        Auth::id()
                     );
                 } catch (\Exception $e) {
                     // Continue with other questions
@@ -181,7 +180,7 @@ class GradePublicAssignmentSubmission extends Component
         try {
             $this->gradingService->finalizeGrading(
                 $this->submission,
-                $this->teacher->user ?? Auth::user(),
+                Auth::user(),
                 $this->overallFeedback
             );
 
@@ -245,28 +244,43 @@ class GradePublicAssignmentSubmission extends Component
     {
         $total = $this->assignment->questions->count();
         $graded = 0;
+        $correct = 0;
 
-        foreach ($this->questionGrades as $grade) {
-            if ($grade['is_graded'] ?? false) {
+        // Count graded based on submission responses (auto-graded + manual)
+        foreach ($this->submission->responses ?? [] as $resp) {
+            if (array_key_exists('is_correct', $resp)) {
                 $graded++;
+                if ($resp['is_correct'] === true) {
+                    $correct++;
+                }
             }
         }
 
         return [
             'total' => $total,
             'graded' => $graded,
+            'correct' => $correct,
             'percentage' => $total > 0 ? round(($graded / $total) * 100) : 0,
         ];
     }
 
     public function getParticipantInfoProperty(): array
     {
+        $timeSpentSeconds = $this->submission->time_spent_seconds;
+        if ($this->submission->started_at && $this->submission->submitted_at) {
+            // Use absolute to guard against clock skew; fall back to stored value if available and positive
+            $diff = $this->submission->submitted_at->diffInSeconds($this->submission->started_at, true);
+            if ($diff > 0) {
+                $timeSpentSeconds = $diff;
+            }
+        }
+
         return [
             'name' => $this->submission->getParticipantName(),
             'email' => $this->submission->getParticipantEmail(),
             'started_at' => $this->submission->started_at?->format('M d, Y H:i'),
             'submitted_at' => $this->submission->submitted_at?->format('M d, Y H:i'),
-            'time_spent' => $this->formatTimeSpent($this->submission->time_spent_seconds),
+            'time_spent' => $this->formatTimeSpent($timeSpentSeconds),
             'attempt_number' => $this->submission->attempt_number,
         ];
     }
