@@ -267,7 +267,7 @@
 
 
         <!-- Subject Management -->
-         @if(auth()->user()->role === UserRole::OWNER))
+         @if(auth()->user()->role === UserRole::OWNER)
         <li class="mb-0.5 last:mb-0 " title="Subject Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('admin.subject-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
