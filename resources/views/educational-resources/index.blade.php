@@ -1,4 +1,4 @@
-<x-layouts.app :has-action="false" page-name="Trainings & Lab">
+<x-layouts.app :has-action="false" page-name="Labs & Practicals">
     <div class="container mx-auto px-4 py-6">
         <livewire:resources.resource-center />
     </div>

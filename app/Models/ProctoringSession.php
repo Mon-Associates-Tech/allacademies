@@ -45,7 +45,7 @@ class ProctoringSession extends Model
     public const EVENT_WARNING_ISSUED = 'warning_issued';
 
     protected $fillable = [
-        'public_assignment_submission_id',
+        'general_exam_submission_id',
         'started_at',
         'ended_at',
         'status',
@@ -86,7 +86,7 @@ class ProctoringSession extends Model
 
     public function submission(): BelongsTo
     {
-        return $this->belongsTo(PublicAssignmentSubmission::class, 'public_assignment_submission_id');
+        return $this->belongsTo(GeneralExamSubmission::class, 'general_exam_submission_id');
     }
 
     public function reviewer(): BelongsTo

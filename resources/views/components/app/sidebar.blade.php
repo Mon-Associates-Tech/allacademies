@@ -361,7 +361,7 @@
                         </a>
                     </li>
 
-                    <li class="mb-0.5 last:mb-0" title="Trainings & Lab">
+                    <li class="mb-0.5 last:mb-0" title="Labs & Practicals">
                         <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                            class="block pl-3 rounded-lg transition {{ Route::is('educational-resources.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                            href="{{ route('educational-resources.index') }}">
@@ -372,7 +372,7 @@
                                     <path d="M4 4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-9l-5-5H4zm0 2h8v4h4v8H4V6zm10-1.5 3.5 3.5H14V4.5z"/>
                                 </svg>
 
-                                <span class="text-sm ml-2 sidebar-text duration-200">Trainings & Lab</span>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Labs & Practicals</span>
                             </div>
                         </a>
                     </li>

@@ -23,7 +23,7 @@ use App\Models\Forum\ForumTopic;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\Note;
 use App\Models\Payment;
-use App\Models\PublicAssignmentParticipant;
+use App\Models\GeneralExamParticipant;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentGroup;
@@ -124,7 +124,7 @@ class AppServiceProvider extends ServiceProvider
             'forum_mention' => \App\Models\Forum\ForumMention::class,
             'user_preference' => \App\Models\UserPreference::class,
             'assignment_submission' => \App\Models\AssignmentSubmission::class,
-            'participant' => PublicAssignmentParticipant::class,
+            'participant' => GeneralExamParticipant::class,
             'media_file' => \App\Models\Media\MediaFile::class,
             'media_folder' => \App\Models\Media\MediaFolder::class,
             'media_attachment' => \App\Models\Media\MediaAttachment::class,

@@ -102,37 +102,37 @@
             </a>
         </li>
 
-        <p class="px-3 mt-4 mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">Public Assignments</p>
+        <p class="px-3 mt-4 mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">General Exams</p>
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.public-assignments.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{ route('teachers.public-assignments.index') }}">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.general-exams.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('teachers.general-exams.index') }}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('teachers.public-assignments.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                    <svg class="shrink-0 fill-current {{ Route::is('teachers.general-exams.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
                         <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-5 16h10v-2H7v2zm0-4h10v-2H7v2zm0-4h10V7H7v4z"/>
                     </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Manage Public Assignments</span>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Manage General Exams</span>
                 </div>
             </a>
         </li>
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('public-assignments.join*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{ route('public-assignments.join') }}">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('general-exams.join*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('general-exams.join') }}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('public-assignments.join*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                    <svg class="shrink-0 fill-current {{ Route::is('general-exams.join*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
                         <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14h-3v-2h3v2zm5-4h-8v-2h8v2zm0-4h-8V7h8v4z"/>
                     </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Join Public Assignment</span>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Join General Exam</span>
                 </div>
             </a>
         </li>
         <li class="mb-0.5 last:mb-0">
-            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.public-assignments.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{ route('teachers.public-assignments.create') }}">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.general-exams.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('teachers.general-exams.create') }}">
                 <div class="flex items-center">
-                    <svg class="shrink-0 fill-current {{ Route::is('teachers.public-assignments.create') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                    <svg class="shrink-0 fill-current {{ Route::is('teachers.general-exams.create') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
                         <path d="M13 11h6v2h-6v6h-2v-6H5v-2h6V5h2v6zm8-6V5a2 2 0 0 0-2-2h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v1h16z"/>
                     </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Create Public Assignment</span>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Create General Exam</span>
                 </div>
             </a>
         </li>
