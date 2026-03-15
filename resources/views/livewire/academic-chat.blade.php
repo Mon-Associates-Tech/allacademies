@@ -32,12 +32,14 @@
     },
 
     adjustMessageRows() {
-        const textarea = $refs.messageInput;
+        const textarea = this.$refs.messageInput;
         if (textarea) {
-           // textarea.style.height = 'auto';
-          //  const newRows = Math.ceil(textarea.scrollHeight / 24);
-          //  this.messageRows = Math.max(3, Math.min(newRows, 8));
-          //  textarea.style.height = 'auto';
+            textarea.style.height = 'auto';
+            const lineHeight = 24; // Approximate line height for text-base leading-relaxed
+            const maxLines = 5;
+            const maxHeight = lineHeight * maxLines;
+            const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+            textarea.style.height = newHeight + 'px';
         }
     }
 }"
@@ -298,35 +300,61 @@
             </button>
 
             <!-- Message Input -->
-            <div class="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 bg-gradient-to-r from-gray-50/50 to-blue-50/50 dark:from-gray-800/50 dark:to-gray-700/50 {{ $this->messageInputDisabled ? 'opacity-50 pointer-events-none' : '' }}">
-                <div class="flex gap-3">
-                    <div class="flex-1 relative">
-            <textarea x-ref="messageInput"
-                      wire:model="message"
-                      @input="adjustMessageRows()"
-                      @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
-                      :rows="messageRows"
-                      class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none transition-all shadow-sm hover:shadow-md placeholder-gray-400 dark:placeholder-gray-500 text-sm"
-                      placeholder="{{ $this->messageInputDisabled ? 'Subscribe to chat...' : 'Ask me anything... (Shift+Enter for new line)' }}"
-                      @disabled($this->messageInputDisabled)></textarea>
-                    </div>
+            <div class="border-t border-gray-200/50 dark:border-gray-700/50 p-4 sm:p-6 bg-white dark:bg-gray-800 transition-all duration-300">
+                <div class="max-w-4xl mx-auto">
+                    <div class="relative flex items-end gap-2 p-1.5 bg-gray-100 dark:bg-gray-900/50 rounded-[24px] border border-gray-200 dark:border-gray-700 shadow-sm focus-within:shadow-md focus-within:border-blue-400 dark:focus-within:border-blue-500/50 transition-all duration-300 {{ $this->messageInputDisabled ? 'opacity-50 grayscale cursor-not-allowed' : '' }}">
+                        <!-- Left Action (Optional: File Upload/Add) -->
+                        <div class="flex-shrink-0 ml-1 mb-1">
+                            <button @disabled($this->messageInputDisabled)
+                                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all duration-200"
+                                    title="Add resource">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </button>
+                        </div>
 
-                    <!-- Send Button -->
-                    <button wire:click="sendMessage"
-                            wire:loading.attr="disabled"
-                            wire:target="sendMessage"
-                            :disabled="!$wire.message.trim() || {{ $this->messageInputDisabled ? 'true' : 'false' }}"
-                            class="flex-shrink-0 h-12 px-4 my-auto sm:px-6 text-white rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold flex items-center justify-center">
-                        <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                        </svg>
-                        <svg wire:loading wire:target="sendMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </button>
+                        <!-- Textarea -->
+                        <div class="flex-1 min-w-0 flex items-center">
+                            <textarea x-ref="messageInput"
+                                      wire:model="message"
+                                      @input="adjustMessageRows()"
+                                      @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
+                                      rows="1"
+                                      class="w-full px-2 py-3 bg-transparent border-0 focus:ring-0 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base resize-none max-h-[120px] overflow-y-auto leading-relaxed"
+                                      placeholder="{{ $this->messageInputDisabled ? 'Subscribe to chat...' : 'Message Research Assistant...' }}"
+                                      @disabled($this->messageInputDisabled)></textarea>
+                        </div>
+
+                        <!-- Send Button -->
+                        <div class="flex-shrink-0 mr-1 mb-1">
+                            <button wire:click="sendMessage"
+                                    wire:loading.attr="disabled"
+                                    wire:target="sendMessage"
+                                    :disabled="!$wire.message.trim() || {{ $this->messageInputDisabled ? 'true' : 'false' }}"
+                                    class="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-full shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none">
+                                <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"></path>
+                                </svg>
+                                <svg wire:loading wire:target="sendMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center px-4 mt-2">
+                        <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400/80 font-medium">
+                            {{ !$this->messageInputDisabled ? 'Press Enter to send, Shift+Enter for new line' : 'Subscription required to send messages' }}
+                        </p>
+                        @if(!$this->messageInputDisabled)
+                        <div class="flex items-center gap-2">
+                             <div class="h-1 w-1 bg-green-500 rounded-full animate-pulse"></div>
+                             <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Ready to assist</span>
+                        </div>
+                        @endif
+                    </div>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1">{{ !$this->messageInputDisabled ? '💡 Tip: Add details about your learning goals for better results' : '' }}</p>
             </div>
         </div>
 
