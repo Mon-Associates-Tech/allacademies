@@ -7,7 +7,6 @@ use App\Livewire\Administrators\AccountantManagement;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
-use App\Livewire\Administrators\GroupManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
 use App\Livewire\Administrators\ReportCardManagement;
@@ -46,7 +45,6 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
-    Route::get('datamanager', [\App\Http\Controllers\Student\StudentManagementController::class, 'index'])->name('data-manager');
 
     // Report Card Management
     Route::get('/report-cards', ReportCardManagement::class)->name('report-cards');

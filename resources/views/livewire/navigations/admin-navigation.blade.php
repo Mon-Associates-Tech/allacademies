@@ -601,13 +601,13 @@
         </li>
 
 
-        <li class="mb-0.5 last:mb-0" title="Data Manager">
+        <li class="mb-0.5 last:mb-0" title="Student Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
-               class="block pl-3  rounded-lg transition {{ Route::is('admin.data-manager') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('admin.data-manager')}}">
+               class="block pl-3  rounded-lg transition {{ Route::is('admin.student-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.student-management')}}">
                 <div class="flex items-center">
                     <svg
-                        class="shrink-0 fill-current {{ Route::is('admin.data-manager') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        class="shrink-0 fill-current {{ Route::is('admin.student-management') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path
                             d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
