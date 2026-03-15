@@ -3,15 +3,15 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Public Assignments</h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Create and manage code-based assignments for anyone to take</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">General Exams</h1>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Create and manage code-based exams for anyone to take</p>
             </div>
             <a href="{{ route('teachers.general-exams.create') }}"
                class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Create Assignment
+                Create Exam
             </a>
         </div>
 
@@ -192,10 +192,10 @@
                     <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No assignments found</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-4">Get started by creating your first public assignment.</p>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Exams found</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">Get started by creating your first general exam.</p>
                     <a href="{{ route('teachers.general-exams.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg">
-                        Create Assignment
+                        Create Exams
                     </a>
                 </div>
             @endif
@@ -213,8 +213,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                     </div>
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Assignment?</h2>
-                    <p class="text-gray-600 dark:text-gray-400 mb-6">This will permanently delete the assignment and all its submissions. This action cannot be undone.</p>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Exam?</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">This will permanently delete the exam and all its submissions. This action cannot be undone.</p>
                     <div class="flex gap-3">
                         <button wire:click="cancelDelete" class="flex-1 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300">
                             Cancel
@@ -234,7 +234,7 @@
             <div class="flex items-center justify-center min-h-screen p-4">
                 <div class="fixed inset-0 bg-black/50" wire:click="closeStats"></div>
                 <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-lg w-full p-6">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Assignment Statistics</h2>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Exam Statistics</h2>
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">

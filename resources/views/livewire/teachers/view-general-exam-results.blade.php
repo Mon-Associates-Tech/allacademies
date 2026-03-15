@@ -5,7 +5,7 @@
             <div>
                 <a href="{{ route('teachers.general-exams.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1 mb-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Back to Assignments
+                    Back to Exams
                 </a>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $assignment->title }}</h1>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Submission Results</p>
