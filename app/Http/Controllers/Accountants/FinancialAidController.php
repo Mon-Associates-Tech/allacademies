@@ -103,7 +103,7 @@ class FinancialAidController extends Controller
             'student_id' => 'required|exists:students,id',
         ]);
 
-        if (! $financialAid->beneficiaries()->where('student_id', $request->student_id)->exists()) {
+        if (! $financialAid->beneficiaries()->where('financial_aid_student.student_id', $request->student_id)->exists()) {
             $financialAid->beneficiaries()->attach($request->student_id);
         }
 

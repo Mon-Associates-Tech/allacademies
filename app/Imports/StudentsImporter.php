@@ -97,7 +97,7 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
         // Clean and validate data
         $studentData = $this->cleanRowData($row);
 
-        $usernameService = new StudentUsernameService();
+        $usernameService = new StudentUsernameService;
 
         // Check if user already exists by email or username
         $user = null;
@@ -163,7 +163,13 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'emergency_contact' => $studentData['emergency_contact'] ?? null,
             'blood_group' => $studentData['blood_group'] ?? null,
             'admission_date' => $studentData['admission_date'] ?? now(),
-            'student_id' => $studentData['student_id'] ?? Student::generateStudentId(),
+            'student_id' => $studentData['student_id'] ?? Student::generateStudentId($school?->id ?? $this->defaultSchoolId),
+            'first_name' => $studentData['first_name'] ?? null,
+            'last_name' => $studentData['last_name'] ?? null,
+            'other_name' => $studentData['other_name'] ?? null,
+            'bio' => $studentData['bio'] ?? null,
+            'favorite_subjects' => $studentData['favorite_subjects'] ?? null,
+            'learning_goals' => $studentData['learning_goals'] ?? null,
         ]);
 
         // If no user exists yet, create a username-based account for optional portal access
@@ -172,12 +178,20 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
 
             $user = User::create([
                 'name' => trim($studentData['first_name'].' '.$studentData['last_name']),
+                'first_name' => $studentData['first_name'] ?? null,
+                'last_name' => $studentData['last_name'] ?? null,
+                'other_names' => $studentData['other_name'] ?? null,
                 'email' => $studentData['email'] ?? null,
                 'username' => $generatedUsername,
                 'login_type' => empty($studentData['email']) ? 'username' : 'email',
                 'password' => Hash::make($studentData['password'] ?? $this->defaultPassword),
                 'role' => UserRole::STUDENT,
                 'phone' => $studentData['phone'] ?? null,
+                'gender' => $studentData['gender'] ?? null,
+                'city' => $studentData['city'] ?? null,
+                'region' => $studentData['region'] ?? null,
+                'country' => $studentData['country'] ?? null,
+                'school_id' => $school?->id ?? $this->defaultSchoolId,
             ]);
 
             $student->update(['user_id' => $user->id]);
@@ -193,6 +207,7 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'name' => trim($row['name'] ?? $row['full_name'] ?? ''),
             'first_name' => trim($row['first_name'] ?? explode(' ', $row['name'] ?? '')[0] ?? ''),
             'last_name' => trim($row['last_name'] ?? implode(' ', array_slice(explode(' ', $row['name'] ?? ''), 1)) ?? ''),
+            'other_name' => trim($row['other_name'] ?? $row['other_names'] ?? ''),
             'email' => strtolower(trim($row['email'] ?? '')),
             'username' => $row['username'] ?? $row['student_id'] ?? null,
             'password' => $row['password'] ?? null,
@@ -204,6 +219,9 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'date_of_birth' => $row['date_of_birth'] ?? $row['dob'] ?? null,
             'phone' => $row['phone'] ?? $row['mobile'] ?? null,
             'address' => $row['address'] ?? null,
+            'city' => $row['city'] ?? null,
+            'region' => $row['region'] ?? null,
+            'country' => $row['country'] ?? null,
             // Additional fields
             'gender' => $row['gender'] ?? null,
             'parent_name' => $row['parent_name'] ?? null,
@@ -212,6 +230,9 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'emergency_contact' => $row['emergency_contact'] ?? null,
             'blood_group' => $row['blood_group'] ?? null,
             'admission_date' => $row['admission_date'] ?? now(),
+            'bio' => $row['bio'] ?? null,
+            'favorite_subjects' => $row['favorite_subjects'] ?? null,
+            'learning_goals' => $row['learning_goals'] ?? null,
         ];
     }
 

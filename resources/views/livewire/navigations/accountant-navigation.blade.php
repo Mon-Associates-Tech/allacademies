@@ -101,15 +101,54 @@
             </button>
             <ul x-show="open" x-transition class="ml-6 mt-1 space-y-1">
                 <li>
-                    <a href="{{ route('accountant.transactions.index') }}?status=succeeded" 
+                    <a href="{{ route('accountant.transactions.index') }}?status=succeeded"
                        class="block py-1 px-3 text-sm rounded transition {{ request()->get('status') === 'succeeded' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
                         Generate Receipts
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('accountant.reports.index') }}" 
+                    <a href="{{ route('accountant.reports.index') }}"
                        class="block py-1 px-3 text-sm rounded transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                         Bulk Receipts
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- School Settings -->
+        <li class="mb-0.5 last:mb-0" title="School Settings & Configuration" x-data="{ open: false }">
+            <button @click="open = !open" :class="sidebarExpanded ? 'py-2' : ''"
+                    class="w-full text-left pl-3 rounded-lg transition {{ Route::is('school-settings.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="shrink-0 fill-current {{ Route::is('school-settings.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7-4.42 1.71-1.41c.15-.12.18-.33.08-.49l-1.53-2.65c-.1-.17-.3-.22-.47-.15l-2.01.81c-.42-.32-.88-.59-1.38-.8l-.3-2.14c-.03-.18-.19-.32-.37-.32h-3.07c-.18 0-.34.14-.37.32l-.3 2.14c-.5.21-.96.48-1.38.8l-2.01-.81c-.17-.07-.37-.02-.47.15L3.21 9.18c-.1.16-.07.37.08.49l1.71 1.41c-.03.3-.05.61-.05.92s.02.62.05.92l-1.71 1.41c-.15.12-.18.33-.08.49l1.53 2.65c.1.17.3.22.47.15l2.01-.81c.42.32.88.59 1.38.8l.3 2.14c.03.18.19.32.37.32h3.07c.18 0 .34.14.37.32l.3-2.14c.5-.21.96-.48 1.38-.8l2.01.81c.17.07.37.02.47-.15l1.53-2.65c.1-.17.07-.37-.08-.49l-1.71-1.41c.03-.3.05-.61.05-.92s-.02-.62-.05-.92Z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">School Settings</span>
+                    </div>
+                    <svg :class="open ? 'rotate-90' : ''" class="w-4 h-4 transition-transform duration-200 {{ Route::is('school-settings.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </button>
+            <ul x-show="open" x-transition class="ml-6 mt-1 space-y-1">
+                <li>
+                    <a href="{{ route('school-settings.index') }}?activeTab=account-information"
+                       class="block py-1 px-3 text-sm rounded transition {{ request()->get('activeTab') === 'account-information' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        Account Information
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('school-settings.index') }}?activeTab=fee-structure"
+                       class="block py-1 px-3 text-sm rounded transition {{ request()->get('activeTab') === 'fee-structure' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        Fees & Payments
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('school-settings.index') }}?activeTab=financialaids"
+                       class="block py-1 px-3 text-sm rounded transition {{ request()->get('activeTab') === 'financialaids' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        Financial Aids
                     </a>
                 </li>
             </ul>
@@ -134,13 +173,13 @@
             </button>
             <ul x-show="open" x-transition class="ml-6 mt-1 space-y-1">
                 <li>
-                    <a href="{{ route('accountant.transactions.export') }}" 
+                    <a href="{{ route('accountant.transactions.export') }}"
                        class="block py-1 px-3 text-sm rounded transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                         Export Transactions
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('accountant.reports.export') }}" 
+                    <a href="{{ route('accountant.reports.export') }}"
                        class="block py-1 px-3 text-sm rounded transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                         Export Reports
                     </a>

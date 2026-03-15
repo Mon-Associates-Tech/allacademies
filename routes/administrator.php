@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityTrailController;
 use App\Http\Controllers\Admin\SchoolPaymentController;
+use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\BookController;
 use App\Livewire\Administrators\AccountantManagement;
 use App\Livewire\Administrators\AuthorManagement;
@@ -45,6 +46,9 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/subject-management', SubjectManagement::class)->name('subject-management');
     Route::get('/parent-management', ParentManagement::class)->name('parent-management');
     Route::get('/impersonate', UserImpersonation::class)->name('users.impersonate');
+
+    // Generic Import Routes
+    Route::post('/import/{role}', [UserImportController::class, 'import'])->name('import');
 
     // Report Card Management
     Route::get('/report-cards', ReportCardManagement::class)->name('report-cards');

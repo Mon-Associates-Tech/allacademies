@@ -30,8 +30,22 @@ class Librarian extends Model
         return $this->hasMany(BookLending::class);
     }
 
-    public function groupSubscriptions()
+    public static function generateEmployeeId($schoolId)
     {
-        return $this->hasMany(GroupBookSubscription::class);
+        $school = School::find($schoolId);
+        if (! $school) {
+            return null;
+        }
+
+        $lastLibrarian = static::withoutGlobalScope('school')
+            ->where('school_id', $schoolId)
+            ->where('employee_id', 'like', "{$school->code}L%")
+            ->latest('employee_id')
+            ->first();
+
+        $sequence = $lastLibrarian ?
+            (int) substr($lastLibrarian->employee_id, -4) + 1 : 1;
+
+        return $school->code.'L'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

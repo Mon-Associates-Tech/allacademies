@@ -71,12 +71,21 @@
 
                         <!-- School Name & Description -->
                         <div>
-                            <h1 class="text-2xl md:text-3xl font-bold text-white">
-                                School Settings & Configuration
-                            </h1>
-                            <p class="text-indigo-100 text-sm md:text-base mt-1">
-                                {{ $school->name }} • Manage academic periods, fees, users, and system preferences
-                            </p>
+                            @if(!($isAccountant ?? false))
+                                <h1 class="text-2xl md:text-3xl font-bold text-white">
+                                    School Settings & Configuration
+                                </h1>
+                                <p class="text-indigo-100 text-sm md:text-base mt-1">
+                                    {{ $school->name }} • Manage academic periods, fees, users, and system preferences
+                                </p>
+                            @else
+                                <h1 class="text-2xl md:text-3xl font-bold text-white">
+                                    School Settings
+                                </h1>
+                                <p class="text-indigo-100 text-sm md:text-base mt-1">
+                                    {{ $school->name }} • Financial and Account Management
+                                </p>
+                            @endif
                         </div>
                     </div>
 
@@ -114,18 +123,19 @@
                     <!-- Compact Grid Layout -->
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                         <!-- Academic Periods -->
-
-                        <button wire:click="setActiveTab('academic-periods')"
-                            class="group bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600">
-                            <div class="flex flex-col items-center text-center">
-                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-2">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
+                        @if(!($isAccountant ?? false))
+                            <button wire:click="setActiveTab('academic-periods')"
+                                class="group bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600">
+                                <div class="flex flex-col items-center text-center">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-2">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-900 dark:text-white">Periods</span>
                                 </div>
-                                <span class="text-xs font-medium text-gray-900 dark:text-white">Periods</span>
-                            </div>
-                        </button>
+                            </button>
+                        @endif
 
                         <!-- Fee Structure -->
                         <button wire:click="setActiveTab('fee-structure')"
@@ -141,30 +151,34 @@
                         </button>
 
                         <!-- Academic Structure -->
-                        <a href="#"
-                           class="group hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600">
-                            <div class="flex flex-col items-center text-center">
-                                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-2">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                    </svg>
+                        @if(!($isAccountant ?? false))
+                            <a href="#"
+                               class="group hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600">
+                                <div class="flex flex-col items-center text-center">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-2">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-900 dark:text-white">Structure</span>
                                 </div>
-                                <span class="text-xs font-medium text-gray-900 dark:text-white">Structure</span>
-                            </div>
-                        </a>
+                            </a>
+                        @endif
 
                         <!-- Settings -->
-                        <button type="button" wire:click="setActiveTab('system-settings')"
-                                class="group bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600">
-                            <div class="flex flex-col items-center text-center">
-                                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-2">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-                                    </svg>
+                        @if(!($isAccountant ?? false))
+                            <button type="button" wire:click="setActiveTab('system-settings')"
+                                    class="group bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600">
+                                <div class="flex flex-col items-center text-center">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-2">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-900 dark:text-white">Settings</span>
                                 </div>
-                                <span class="text-xs font-medium text-gray-900 dark:text-white">Settings</span>
-                            </div>
-                        </button>
+                            </button>
+                        @endif
 
                         <!-- Import Data -->
                         <button type="button" wire:click="openImportModal"
@@ -197,7 +211,8 @@
         </section>
 
         <!-- Stats Overview -->
-        <div class="px-4 sm:px-6 lg:px-8 py-8">
+        @if(!($isAccountant ?? false))
+            <div class="px-4 sm:px-6 lg:px-8 py-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <div class="flex items-center justify-between">
@@ -264,8 +279,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
+            <div class="px-4 sm:px-6 lg:px-8 py-8 pt-0">
             <!-- Navigation Tabs -->
             <div class="mb-8">
                 <livewire:scrollable-tabs
@@ -275,7 +291,9 @@
             </div>
 
             <!-- Tab Content -->
-            @include('livewire.school.partials.overview-tab')
+            @if(!($isAccountant ?? false))
+                @include('livewire.school.partials.overview-tab')
+            @endif
             @include('livewire.school.partials.basic-info-tab')
             @include('livewire.school.partials.academic-periods-tab')
 {{--        @include('livewire.school.partials.system-settings-tab')--}}

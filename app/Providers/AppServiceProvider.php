@@ -142,7 +142,9 @@ class AppServiceProvider extends ServiceProvider
             'report_card' => \App\Models\ReportCard::class,
             'note' => Note::class,
             'calendar_event' => CalendarEvent::class,
-
+            'librarian' => \App\Models\Librarian::class,
+            'accountant' => \App\Models\Accountant::class,
+            'parent' => \App\Models\StudentParent::class,
         ]);
     }
 }

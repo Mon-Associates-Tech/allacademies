@@ -31,8 +31,22 @@ class Accountant extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function school(): BelongsTo
+    public static function generateEmployeeId($schoolId)
     {
-        return $this->belongsTo(School::class);
+        $school = School::find($schoolId);
+        if (! $school) {
+            return null;
+        }
+
+        $lastAccountant = static::withoutGlobalScope('school')
+            ->where('school_id', $schoolId)
+            ->where('employee_id', 'like', "{$school->code}A%")
+            ->latest('employee_id')
+            ->first();
+
+        $sequence = $lastAccountant ?
+            (int) substr($lastAccountant->employee_id, -4) + 1 : 1;
+
+        return $school->code.'A'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

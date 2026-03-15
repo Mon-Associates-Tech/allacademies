@@ -5,7 +5,12 @@ namespace App\Services;
 use App\Exports\BooksExporter;
 use App\Exports\StudentsExporter;
 use App\Exports\TeachersExporter;
+use App\Imports\AccountantsImporter;
+use App\Imports\AdministratorsImporter;
+use App\Imports\LibrariansImporter;
+use App\Imports\ParentsImporter;
 use App\Imports\StudentsImporter;
+use App\Imports\TeachersImporter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -18,6 +23,7 @@ class ImportExportService
         'librarians' => LibrariansImporter::class,
         'administrators' => AdministratorsImporter::class,
         'parents' => ParentsImporter::class,
+        'accountants' => AccountantsImporter::class,
     ];
 
     protected $availableExporters = [
@@ -146,11 +152,14 @@ class ImportExportService
     protected function getRequiredColumns(string $model): array
     {
         $columns = [
-            'students' => ['name', 'email'],
-            'teachers' => ['name', 'email'],
-            'librarians' => ['name', 'email'],
-            'administrators' => ['name', 'email'],
-            'parents' => ['name', 'email'],
+            'students' => [
+                'first_name', 'last_name', 'email', 'academic_level_id', 'academic_group_id',
+            ],
+            'teachers' => ['first_name', 'last_name', 'email'],
+            'librarians' => ['first_name', 'last_name', 'email'],
+            'administrators' => ['first_name', 'last_name', 'email'],
+            'parents' => ['first_name', 'last_name', 'email'],
+            'accountants' => ['first_name', 'last_name', 'email'],
             'books' => ['title', 'author'],
             'academic_subjects' => ['name'],
             'academic_levels' => ['name'],
@@ -165,9 +174,9 @@ class ImportExportService
         $samples = [
             'students' => [
                 [
-                    'name' => 'John Doe',
                     'first_name' => 'John',
                     'last_name' => 'Doe',
+                    'other_name' => 'Junior',
                     'email' => 'john.doe@example.com',
                     'phone' => '+233201234567',
                     'date_of_birth' => '2010-05-15',
@@ -177,74 +186,86 @@ class ImportExportService
                     'student_id' => 'STD2024001',
                     'admission_date' => '2024-01-15',
                     'blood_group' => 'O+',
-                    'address' => '123 Main Street, Accra',
+                    'address' => '123 Main Street',
+                    'city' => 'Accra',
+                    'region' => 'Greater Accra',
+                    'country' => 'Ghana',
                     'parent_name' => 'Jane Doe',
                     'parent_phone' => '+233207654321',
                     'parent_email' => 'jane.doe@example.com',
                     'emergency_contact' => '+233501234567',
+                    'bio' => 'Interested in science and art.',
+                    'favorite_subjects' => 'Science, Mathematics',
+                    'learning_goals' => 'Improve coding skills.',
                 ],
             ],
             'teachers' => [
                 [
-                    'name' => 'Dr. Alice Johnson',
                     'first_name' => 'Alice',
                     'last_name' => 'Johnson',
+                    'other_names' => '',
                     'email' => 'alice.johnson@school.edu',
                     'phone' => '+233301234567',
-                    'date_of_birth' => '1985-03-20',
                     'gender' => 'Female',
                     'qualification' => 'Masters in Mathematics',
                     'specialization' => 'Mathematics',
                     'employee_id' => 'TCH2024001',
                     'hire_date' => '2024-01-01',
-                    'address' => '456 Teacher Lane, Accra',
-                    'emergency_contact' => '+233507654321',
+                    'address' => '456 Teacher Lane',
+                    'city' => 'Accra',
+                    'region' => 'Greater Accra',
+                    'country' => 'Ghana',
                 ],
             ],
             'librarians' => [
                 [
-                    'name' => 'Robert Johnson',
                     'first_name' => 'Robert',
                     'last_name' => 'Johnson',
                     'email' => 'robert.johnson@school.edu',
                     'phone' => '+233401234567',
-                    'date_of_birth' => '1990-07-10',
                     'gender' => 'Male',
                     'qualification' => 'Bachelors in Library Science',
                     'employee_id' => 'LIB2024001',
                     'hire_date' => '2024-01-01',
-                    'address' => '789 Library Road, Accra',
-                    'emergency_contact' => '+233607654321',
+                    'address' => '789 Library Road',
                 ],
             ],
             'administrators' => [
                 [
-                    'name' => 'Mary Williams',
                     'first_name' => 'Mary',
                     'last_name' => 'Williams',
                     'email' => 'mary.williams@school.edu',
                     'phone' => '+233501234567',
-                    'date_of_birth' => '1980-11-25',
                     'gender' => 'Female',
                     'position' => 'Principal',
                     'department' => 'Administration',
                     'employee_id' => 'ADM2024001',
                     'hire_date' => '2024-01-01',
-                    'address' => '321 Admin Street, Accra',
-                    'emergency_contact' => '+233707654321',
                 ],
             ],
             'parents' => [
                 [
-                    'name' => 'David Brown',
                     'first_name' => 'David',
                     'last_name' => 'Brown',
                     'email' => 'david.brown@example.com',
                     'phone' => '+233601234567',
-                    'address' => '654 Parent Avenue, Accra',
+                    'address' => '654 Parent Avenue',
                     'relationship' => 'Father',
                     'occupation' => 'Engineer',
-                    'student_id' => 'STD2024001', // Link to student
+                    'student_id' => 'STD2024001',
+                ],
+            ],
+            'accountants' => [
+                [
+                    'first_name' => 'Sarah',
+                    'last_name' => 'Miller',
+                    'email' => 'sarah.miller@school.edu',
+                    'phone' => '+233701234567',
+                    'gender' => 'Female',
+                    'employee_id' => 'ACC2024001',
+                    'hire_date' => '2024-01-01',
+                    'address' => '321 Finance Blvd',
+                    'date_of_birth' => '1985-06-20',
                 ],
             ],
             'books' => [
