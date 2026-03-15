@@ -6,14 +6,14 @@
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-3">
                     <h3 class="text-lg font-medium text-white">{{ $reportCard->term }}</h3>
-                    <p class="text-sm text-blue-100">{{ $reportCard->configuration->academicPeriod->academic_year }}</p>
+                    <p class="text-sm text-blue-100">{{ $reportCard->configuration?->academicPeriod?->academic_year ?? 'N/A' }}</p>
                 </div>
 
                 <div class="p-4">
                     <div class="space-y-3">
                         <div>
                             <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Level</dt>
-                            <dd class="text-sm text-gray-900 dark:text-white">{{ $reportCard->configuration->academicLevel->name }}</dd>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ $reportCard->configuration?->academicLevel?->name ?? 'N/A' }}</dd>
                         </div>
 
                         <div>
@@ -31,7 +31,7 @@
                         <div>
                             <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Status</dt>
                             <dd>
-                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
                                     {{ $reportCard->status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
                                     {{ $reportCard->status === 'published' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}">
                                     {{ ucfirst($reportCard->status) }}
@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button wire:click="downloadReportCard({{ $reportCard->id }})" 
+                        <button wire:click="downloadReportCard({{ $reportCard->id }})"
                                 class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>

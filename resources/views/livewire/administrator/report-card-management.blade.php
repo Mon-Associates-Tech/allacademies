@@ -1,17 +1,35 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Report Card Management</h1>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
+            <select wire:model.live="selectedYearId" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option value="">All Years</option>
+                @foreach($years as $year)
+                    <option value="{{ $year->id }}">{{ $year->name }}</option>
+                @endforeach
+            </select>
             <select wire:model.live="selectedPeriodId" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                 <option value="">All Periods</option>
                 @foreach($periods as $period)
-                    <option value="{{ $period->id }}">{{ $period->name }} ({{ $period->academic_year }})</option>
+                    <option value="{{ $period->id }}">{{ $period->name }}</option>
                 @endforeach
             </select>
             <select wire:model.live="selectedLevelId" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                 <option value="">All Levels</option>
                 @foreach($levels as $level)
                     <option value="{{ $level->id }}">{{ $level->name }}</option>
+                @endforeach
+            </select>
+            <select wire:model.live="selectedGroupId" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option value="">All Groups</option>
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                @endforeach
+            </select>
+            <select wire:model.live="selectedStudentId" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option value="">All Students</option>
+                @foreach($students as $student)
+                    <option value="{{ $student->id }}">{{ $student->user->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -22,6 +40,9 @@
         <nav class="flex gap-8">
             <button wire:click="$set('activeTab', 'configurations')" class="py-4 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'configurations' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                 Configurations
+            </button>
+            <button wire:click="$set('activeTab', 'report-cards')" class="py-4 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'report-cards' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                All Report Cards
             </button>
             <button wire:click="$set('activeTab', 'approvals')" class="py-4 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'approvals' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                 Pending Approvals ({{ $pendingApprovals->total() }})
@@ -66,8 +87,20 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <button wire:click="generateReportCards({{ $config->id }})" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-                                        Generate
+                                    <button wire:click="generateReportCards({{ $config->id }})" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="generateReportCards({{ $config->id }})">
+                                            @if($selectedStudentId)
+                                                Generate for Student
+                                            @elseif($selectedGroupId)
+                                                Generate for Group
+                                            @else
+                                                Generate for Level
+                                            @endif
+                                        </span>
+                                        <span wire:loading wire:target="generateReportCards({{ $config->id }})">Generating...</span>
+                                    </button>
+                                    <button wire:click="togglePublishConfig({{ $config->id }})" class="px-3 py-1 text-sm {{ $config->is_published ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-indigo-600 hover:bg-indigo-700' }} text-white rounded">
+                                        {{ $config->is_published ? 'Unpublish' : 'Publish' }}
                                     </button>
                                     <button wire:click="openConfigModal({{ $config->id }})" class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700">
                                         Edit
@@ -78,6 +111,66 @@
                     @empty
                         <p class="text-gray-500 dark:text-gray-400 text-center py-8">No configurations found</p>
                     @endforelse
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- All Report Cards Tab -->
+    @if($activeTab === 'report-cards')
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">All Report Cards</h3>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead>
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Student</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Level/Term</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Accessible</th>
+                                <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            @forelse($reportCards as $rc)
+                                <tr>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $rc->student->user->name }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $rc->student->student_id }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">{{ $rc->configuration?->academicLevel?->name ?? 'N/A' }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $rc->term }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs rounded-full
+                                            {{ $rc->status === 'approved' ? 'bg-green-100 text-green-800' :
+                                               ($rc->status === 'submitted' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
+                                            {{ ucfirst($rc->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $rc->is_accessible ? 'Yes' : 'No' }}
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        @if($rc->status !== 'approved')
+                                            <button wire:click="approveReportCard({{ $rc->id }})" class="text-green-600 hover:text-green-900 mr-2">Approve</button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No report cards found</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    {{ $reportCards->links() }}
                 </div>
             </div>
         </div>
@@ -96,7 +189,7 @@
                                 <div>
                                     <h4 class="font-medium text-gray-900 dark:text-white">{{ $reportCard->student->user->name }}</h4>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                                        {{ $reportCard->configuration->academicLevel->name }} - {{ $reportCard->term }}
+                                        {{ $reportCard->configuration?->academicLevel?->name ?? 'N/A' }} - {{ $reportCard->term }}
                                     </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         Submitted {{ $reportCard->submitted_at->diffForHumans() }}

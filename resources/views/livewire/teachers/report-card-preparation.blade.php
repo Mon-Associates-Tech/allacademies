@@ -10,18 +10,28 @@
                     <option value="">Choose...</option>
                     @foreach($configurations as $config)
                         <option value="{{ $config->id }}">
-                            {{ $config->academicLevel->name }} - {{ $config->academicPeriod->name }}
+                            {{ $config->academicLevel?->name ?? 'N/A' }} - {{ $config->academicPeriod?->name ?? 'N/A' }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
             @if($selectedConfigId)
+                <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mb-4">
+                    <h3 class="font-medium text-gray-900 dark:text-white mb-3">Filter by Group</h3>
+                    <select wire:model.live="selectedGroupId" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                        <option value="">All Groups</option>
+                        @foreach($groups as $group)
+                            <option value="{{ $group->id }}">{{ $group->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
                     <h3 class="font-medium text-gray-900 dark:text-white mb-3">Students</h3>
                     <div class="space-y-2 max-h-96 overflow-y-auto">
                         @foreach($students as $student)
-                            <button wire:click="$set('selectedStudentId', {{ $student->id }})" 
+                            <button wire:click="$set('selectedStudentId', {{ $student->id }})"
                                     class="w-full text-left px-3 py-2 rounded {{ $selectedStudentId == $student->id ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                                 <div class="text-sm font-medium">{{ $student->user->name }}</div>
                                 <div class="text-xs text-gray-500">{{ $student->student_id }}</div>
@@ -39,7 +49,7 @@
                     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                         <div>
                             <h2 class="text-lg font-medium text-gray-900 dark:text-white">{{ $reportCard->student->user->name }}</h2>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $reportCard->configuration->academicLevel->name }} - {{ $reportCard->term }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $reportCard->configuration?->academicLevel?->name ?? 'N/A' }} - {{ $reportCard->term }}</p>
                         </div>
                         <div class="flex gap-2">
                             <button wire:click="saveAll" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
@@ -74,7 +84,7 @@
                                         </td>
                                         @foreach($gradeData['scores'] as $key => $value)
                                             <td class="px-3 py-3">
-                                                <input type="number" 
+                                                <input type="number"
                                                        wire:model.blur="grades.{{ $gradeId }}.scores.{{ $key }}"
                                                        step="0.01"
                                                        class="w-20 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
@@ -91,7 +101,7 @@
                                         </td>
                                         <td class="px-3 py-3">
                                             @if($gradeData['can_edit'])
-                                                <button wire:click="autoCalculate({{ $gradeId }})" 
+                                                <button wire:click="autoCalculate({{ $gradeId }})"
                                                         class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400">
                                                     Auto
                                                 </button>

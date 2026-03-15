@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Administrators;
 
+use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicPeriod;
+use App\Models\AcademicYear;
 use App\Models\GradeScale;
 use App\Models\ReportCard;
 use App\Models\ReportCardConfiguration;
 use App\Models\ScoreWeighting;
+use App\Models\Student;
 use App\Services\ReportCardService;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,45 +20,81 @@ class ReportCardManagement extends Component
     use WithPagination;
 
     public $activeTab = 'configurations';
+
+    public $selectedYearId;
+
     public $selectedPeriodId;
+
     public $selectedLevelId;
+
+    public $selectedGroupId;
+
+    public $selectedStudentId;
+
     public $showConfigModal = false;
+
     public $showGradeScaleModal = false;
+
     public $showWeightingModal = false;
 
     // Configuration form
     public $configId;
+
     public $requiresApproval = true;
+
     public $isPublished = false;
+
     public $availableFrom;
+
     public $availableUntil;
+
     public $preparationMode = 'hybrid';
 
     // Grade Scale form
     public $gradeScaleId;
+
     public $gradeName;
+
     public $minScore;
+
     public $maxScore;
+
     public $letterGrade;
+
     public $gradePoint;
+
     public $gradeRemarks;
+
     public $isDefaultGrade = false;
+
     public $gradeLevelId;
 
     // Weighting form
     public $weightingId;
+
     public $weightingName;
+
     public $weightPercentage;
+
     public $weightingLevelId;
+
     public $weightingSubjectId;
+
     public $isDefaultWeighting = false;
 
-    protected $queryString = ['activeTab', 'selectedPeriodId', 'selectedLevelId'];
+    protected $queryString = ['activeTab', 'selectedYearId', 'selectedPeriodId', 'selectedLevelId', 'selectedGroupId', 'selectedStudentId'];
 
     public function mount()
     {
+        $currentYear = AcademicYear::where('school_id', getSchoolId())
+            ->where('is_current', true)
+            ->first();
+
+        $this->selectedYearId = $currentYear?->id;
+
         $this->selectedPeriodId = AcademicPeriod::where('school_id', getSchoolId())
             ->where('status', 'active')
+            ->when($this->selectedYearId, fn ($q) => $q->where('academic_year_id', $this->selectedYearId))
             ->first()?->id;
     }
 
@@ -109,7 +148,15 @@ class ReportCardManagement extends Component
     public function generateReportCards($configId)
     {
         $service = app(ReportCardService::class);
-        $count = $service->bulkGenerateForLevel($configId);
+
+        if ($this->selectedStudentId) {
+            $student = Student::findOrFail($this->selectedStudentId);
+            $count = $service->generateForStudent($student, $configId);
+        } elseif ($this->selectedGroupId) {
+            $count = $service->generateForGroup($this->selectedGroupId, $configId);
+        } else {
+            $count = $service->bulkGenerateForLevel($configId);
+        }
 
         session()->flash('success', "Generated {$count} report cards");
     }
@@ -128,6 +175,15 @@ class ReportCardManagement extends Component
         $reportCard->reject(auth()->user(), $reason);
 
         session()->flash('success', 'Report card rejected');
+    }
+
+    public function togglePublishConfig($configId)
+    {
+        $config = ReportCardConfiguration::findOrFail($configId);
+        $config->is_published = ! $config->is_published;
+        $config->save();
+
+        session()->flash('success', $config->is_published ? 'Configuration published' : 'Configuration unpublished');
     }
 
     public function openGradeScaleModal($id = null)
@@ -221,43 +277,76 @@ class ReportCardManagement extends Component
 
     public function render()
     {
-        $periods = AcademicPeriod::where('school_id', getSchoolId())->latest()->get();
+        $years = AcademicYear::where('school_id', getSchoolId())->latest()->get();
+
+        $periods = AcademicPeriod::where('school_id', getSchoolId())
+            ->when($this->selectedYearId, fn ($q) => $q->where('academic_year_id', $this->selectedYearId))
+            ->latest()
+            ->get();
+
         $levels = AcademicLevel::whereHas('schools', function ($q) {
             $q->where('school_id', getSchoolId());
         })->get();
 
+        $groups = AcademicGroup::forSchool(getSchoolId())->get();
+
+        $students = [];
+        if ($this->selectedLevelId) {
+            $students = Student::where('academic_level_id', $this->selectedLevelId)
+                ->when($this->selectedGroupId, fn ($q) => $q->where('academic_group_id', $this->selectedGroupId))
+                ->where('status', 'active')
+                ->with('user')
+                ->get();
+        }
+
         $configurations = ReportCardConfiguration::with(['academicPeriod', 'academicLevel'])
             ->where('school_id', getSchoolId())
-            ->when($this->selectedPeriodId, fn($q) => $q->where('academic_period_id', $this->selectedPeriodId))
+            ->when($this->selectedPeriodId, fn ($q) => $q->where('academic_period_id', $this->selectedPeriodId))
+            ->when($this->selectedLevelId, fn ($q) => $q->where('academic_level_id', $this->selectedLevelId))
             ->latest()
             ->get();
+
+        $reportCards = ReportCard::with(['student.user', 'configuration.academicLevel'])
+            ->where('school_id', getSchoolId())
+            ->when($this->selectedLevelId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_level_id', $this->selectedLevelId)))
+            ->when($this->selectedGroupId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_group_id', $this->selectedGroupId)))
+            ->when($this->selectedStudentId, fn ($q) => $q->where('student_id', $this->selectedStudentId))
+            ->latest()
+            ->paginate(20);
 
         $pendingApprovals = ReportCard::with(['student.user', 'configuration.academicLevel'])
             ->where('school_id', getSchoolId())
             ->where('status', 'submitted')
+            ->when($this->selectedLevelId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_level_id', $this->selectedLevelId)))
+            ->when($this->selectedGroupId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_group_id', $this->selectedGroupId)))
+            ->when($this->selectedStudentId, fn ($q) => $q->where('student_id', $this->selectedStudentId))
             ->latest()
-            ->paginate(20);
+            ->paginate(20, ['*'], 'pendingPage');
 
         $gradeScales = GradeScale::where('school_id', getSchoolId())
-            ->when($this->selectedLevelId, fn($q) => $q->where(function ($q2) {
+            ->when($this->selectedLevelId, fn ($q) => $q->where(function ($q2) {
                 $q2->where('academic_level_id', $this->selectedLevelId)
-                    ->orWhere(fn($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
+                    ->orWhere(fn ($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
             }))
             ->orderBy('min_score')
             ->get();
 
         $weightings = ScoreWeighting::where('school_id', getSchoolId())
-            ->when($this->selectedLevelId, fn($q) => $q->where(function ($q2) {
+            ->when($this->selectedLevelId, fn ($q) => $q->where(function ($q2) {
                 $q2->where('academic_level_id', $this->selectedLevelId)
-                    ->orWhere(fn($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
+                    ->orWhere(fn ($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
             }))
             ->orderBy('sort_order')
             ->get();
 
         return view('livewire.administrator.report-card-management', compact(
+            'years',
             'periods',
             'levels',
+            'groups',
+            'students',
             'configurations',
+            'reportCards',
             'pendingApprovals',
             'gradeScales',
             'weightings'

@@ -12,12 +12,18 @@ use Livewire\Component;
 class ReportCardPreparation extends Component
 {
     public $selectedConfigId;
+
+    public $selectedGroupId;
+
     public $selectedStudentId;
+
     public $reportCard;
+
     public $grades = [];
+
     public $mode = 'hybrid';
 
-    protected $queryString = ['selectedConfigId', 'selectedStudentId'];
+    protected $queryString = ['selectedConfigId', 'selectedGroupId', 'selectedStudentId'];
 
     public function mount()
     {
@@ -29,13 +35,13 @@ class ReportCardPreparation extends Component
     public function loadReportCard()
     {
         $student = Student::findOrFail($this->selectedStudentId);
-        
+
         $this->reportCard = ReportCard::with(['grades.subject', 'configuration'])
             ->where('student_id', $student->id)
             ->where('report_card_configuration_id', $this->selectedConfigId)
             ->first();
 
-        if (!$this->reportCard) {
+        if (! $this->reportCard) {
             $service = app(ReportCardService::class);
             $this->reportCard = $service->generateReportCard($student, $this->selectedConfigId, $this->mode);
         }
@@ -73,21 +79,22 @@ class ReportCardPreparation extends Component
 
         $this->grades[$gradeId]['scores'] = $scores;
         $this->grades[$gradeId]['total_score'] = array_sum($scores);
-        
+
         $this->saveGrade($gradeId);
     }
 
     public function saveGrade($gradeId)
     {
         $grade = ReportCardGrade::findOrFail($gradeId);
-        
-        if (!$grade->canBeEditedBy(auth()->user())) {
+
+        if (! $grade->canBeEditedBy(auth()->user())) {
             session()->flash('error', 'You do not have permission to edit this subject');
+
             return;
         }
 
         $gradeData = $this->grades[$gradeId];
-        
+
         $grade->update([
             'scores' => $gradeData['scores'],
             'total_score' => $gradeData['total_score'],
@@ -100,7 +107,7 @@ class ReportCardPreparation extends Component
         $grade->save();
 
         $this->grades[$gradeId]['grade_label'] = $grade->grade_label;
-        
+
         session()->flash('success', 'Grade saved successfully');
     }
 
@@ -131,22 +138,30 @@ class ReportCardPreparation extends Component
     public function render()
     {
         $teacher = auth()->user()->teacher;
-        
+
         $configurations = ReportCardConfiguration::with(['academicPeriod', 'academicLevel'])
             ->where('school_id', getSchoolId())
-            ->whereHas('academicLevel.teachers', fn($q) => $q->where('teachers.id', $teacher->id))
+            ->whereHas('academicLevel.teachers', fn ($q) => $q->where('teachers.id', $teacher->id))
             ->latest()
             ->get();
 
+        $groups = [];
         $students = [];
+
         if ($this->selectedConfigId) {
             $config = ReportCardConfiguration::findOrFail($this->selectedConfigId);
+
+            $groups = $teacher->academicGroups()
+                ->whereHas('academicLevels', fn ($q) => $q->where('academic_levels.id', $config->academic_level_id))
+                ->get();
+
             $students = Student::where('academic_level_id', $config->academic_level_id)
+                ->when($this->selectedGroupId, fn ($q) => $q->where('academic_group_id', $this->selectedGroupId))
                 ->where('status', 'active')
                 ->with('user')
                 ->get();
         }
 
-        return view('livewire.teachers.report-card-preparation', compact('configurations', 'students'));
+        return view('livewire.teachers.report-card-preparation', compact('configurations', 'groups', 'students'));
     }
 }
