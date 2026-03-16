@@ -87,6 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'suspension_reason', 'suspended_at', 'suspended_by',
         'country_code', 'country', 'region', 'city', 'gender', 'cover_image',
         'preferred_academic_level_id',
+        'email_verified_at',
     ];
 
     protected $hidden = [
