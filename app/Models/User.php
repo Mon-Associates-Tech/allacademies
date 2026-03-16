@@ -122,7 +122,9 @@ class User extends Authenticatable implements MustVerifyEmail
         parent::booted();
 
         static::created(static function ($user) {
+            if(!$user->role === UserRole::ACCOUNTANT){
             $user->handleRoleChange();
+            }
             $user->createFreeTrialSubscription();
         });
 
