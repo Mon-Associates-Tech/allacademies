@@ -19,6 +19,7 @@ class Accountant extends Model
         'date_of_birth',
         'employee_id',
         'hire_date',
+        'email_verified_at',
     ];
 
     protected $casts = [
