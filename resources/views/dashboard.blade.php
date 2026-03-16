@@ -33,6 +33,20 @@
 
     @elseif(in_array($primaryRole, ['admin', 'owner']))
         <livewire:administrators.overview/>
+        @if($primaryRole === 'owner')
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+                <div class="bg-white border border-gray-200 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-sm">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Manage Pricing</h3>
+                        <p class="text-sm text-gray-600 mt-1">Update subscription pricing used across the platform.</p>
+                    </div>
+                    <a href="{{ route('admin.pricing-settings.edit') }}"
+                       class="mt-4 sm:mt-0 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
+                        Open Pricing Settings
+                    </a>
+                </div>
+            </div>
+        @endif
 
     @elseif($primaryRole === 'moderator')
         @livewire('moderator.dashboard')

@@ -25,6 +25,12 @@ class SchoolSettingsDashboard extends Component
 
     public $activeTab = 'overview';
 
+    private $allowedAccountantTabs = [
+        'account-information',
+        'fee-structure',
+        'financialaids',
+    ];
+
     public $darkMode = false;
 
     // School basic settings
@@ -241,6 +247,13 @@ class SchoolSettingsDashboard extends Component
 
         // Restore active tab from session or default to 'overview'
         $this->activeTab = session('school_settings_active_tab', 'overview');
+
+        // Restrict access for Accountants
+        if ($user->isAccountant()) {
+            if ($this->activeTab === 'overview' || ! in_array($this->activeTab, $this->allowedAccountantTabs)) {
+                $this->activeTab = 'account-information';
+            }
+        }
 
         $this->loadSchoolData();
         $this->loadAcademicYears();
@@ -890,6 +903,7 @@ class SchoolSettingsDashboard extends Component
 
     public function render()
     {
+        $user = Auth::user();
 
         $tabs = [
             ['key' => 'overview', 'label' => 'Overview'],
@@ -902,10 +916,18 @@ class SchoolSettingsDashboard extends Component
             ['key' => 'financialaids', 'label' => 'Financial Aids'],
         ];
 
+        if ($user->isAccountant()) {
+            $tabs = array_filter($tabs, function ($tab) {
+                return in_array($tab['key'], $this->allowedAccountantTabs);
+            });
+            $tabs = array_values($tabs);
+        }
+
         return view('livewire.school.school-settings-dashboard', [
             'schoolInitials' => $this->getSchoolInitials(),
             'schoolLogo' => $this->school->logo ? Storage::url($this->school->logo) : null,
             'tabs' => $tabs,
+            'isAccountant' => $user->isAccountant(),
         ]);
     }
 

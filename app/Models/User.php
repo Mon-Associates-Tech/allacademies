@@ -7,6 +7,7 @@ use App\Models\Chat\OpenAiTokenUsageLog;
 use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
 use App\Models\Media\MediaFile;
+use App\Notifications\VerifyEmailNotification;
 use App\Support\TokenSubscriptionStatus;
 use App\Traits\ActivityLoggable;
 use App\Traits\HasAvatar;
@@ -27,7 +28,6 @@ use Illuminate\Support\Facades\Auth;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Log;
-use App\Notifications\VerifyEmailNotification;
 
 /**
  * @property mixed $school
@@ -52,6 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'author' => Author::class,
         'librarian' => Librarian::class,
         'parent' => StudentParent::class,
+        'accountant' => Accountant::class,
     ];
 
     private const ROLE_RELATION_MAP = [
@@ -80,7 +81,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $fillable = [
-        'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'password', 'role', 'avatar', 'role_id',
+        'school_id', 'name', 'first_name', 'last_name', 'other_names', 'email', 'username', 'login_type', 'password', 'role', 'avatar', 'role_id',
         'phone', 'profile_image_url', 'status', 'is_online', 'last_seen_at',
         'two_factor_code', 'two_factor_expires_at', 'is_active',
         'suspension_reason', 'suspended_at', 'suspended_by',
@@ -469,6 +470,31 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole(UserRole::OWNER->value);
     }
 
+    public function isAccountant(): bool
+    {
+        return $this->hasRole(UserRole::ACCOUNTANT->value);
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->hasRole(UserRole::TEACHER->value);
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->hasRole(UserRole::STUDENT->value);
+    }
+
+    public function isLibrarian(): bool
+    {
+        return $this->hasRole(UserRole::LIBRARIAN->value);
+    }
+
+    public function isParent(): bool
+    {
+        return $this->hasRole(UserRole::PARENT->value);
+    }
+
     public function isSchoolAdmin(): bool
     {
         return $this->school_id && $this->hasRole(UserRole::ADMIN->value);
@@ -543,7 +569,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifyEmailNotification());
+        $this->notify(new VerifyEmailNotification);
     }
 
     // ==================== SCHOOL ACCESS & MULTI-TENANCY ====================

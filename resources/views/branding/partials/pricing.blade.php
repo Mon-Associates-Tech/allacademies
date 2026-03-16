@@ -1,3 +1,6 @@
+@php
+    $pricing = \App\Models\PricingSetting::brandingPricing();
+@endphp
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-start">
     <!-- Basic Plan -->
     <div
@@ -20,10 +23,8 @@
             </div>
 
             <!-- Header -->
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Basic
-                Subscription</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">For Individuals in Basic
-                Schools</p>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ $pricing['plans']['basic']['title'] }}</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">{{ $pricing['plans']['basic']['subtitle'] }}</p>
 
             <!-- Pricing Options -->
             <div class="space-y-6 mb-10">
@@ -37,13 +38,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Quarterly Subscription
+                        {{ $pricing['plans']['basic']['options']['quarterly']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 20</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['basic']['options']['quarterly']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Subject For 3 Months</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['basic']['options']['quarterly']['period'] }}</span>
                 </div>
 
                 <!-- Biannual -->
@@ -51,7 +51,7 @@
                     class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 transition-all duration-300 hover:scale-[1.02] relative">
                     <div
                         class="absolute hidden -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        SAVE 15%
+                        {{ $pricing['plans']['basic']['options']['biannual']['badge'] }}
                     </div>
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-semibold text-sm mb-4">
@@ -61,13 +61,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Biannual Subscription
+                        {{ $pricing['plans']['basic']['options']['biannual']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 30</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['basic']['options']['biannual']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Subject For 6 Months</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['basic']['options']['biannual']['period'] }}</span>
                 </div>
 
 
@@ -76,7 +75,7 @@
                     class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6 border-2 border-purple-300 dark:border-purple-500 hover:border-purple-400 dark:hover:border-purple-400 transition-all duration-300 hover:scale-[1.02] relative">
                     <div
                         class="absolute hidden -top-2 -right-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
-                        BEST VALUE
+                        {{ $pricing['plans']['basic']['options']['annual']['badge'] }}
                     </div>
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 font-semibold text-sm mb-4">
@@ -86,13 +85,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Annual Subscription
+                        {{ $pricing['plans']['basic']['options']['annual']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 45</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['basic']['options']['annual']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Subject For 1 Year</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['basic']['options']['annual']['period'] }}</span>
                 </div>
             </div>
         </div>
@@ -103,7 +101,7 @@
                             <span
                                 class="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-800 opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></span>
             <span class="relative flex items-center justify-center">
-            Get Started
+            {{ $pricing['plans']['basic']['cta'] }}
             <svg class="w-6 h-6 ml-3 group-hover/button:translate-x-2 transition-transform duration-300" fill="none"
                  stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -135,11 +133,8 @@
             </div>
 
             <!-- Header -->
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Secondary
-                Subscription</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">For Individuals in Senior
-                High
-                Schools</p>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ $pricing['plans']['secondary']['title'] }}</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">{{ $pricing['plans']['secondary']['subtitle'] }}</p>
 
             <!-- Pricing Options -->
             <div class="space-y-8 mb-10">
@@ -154,13 +149,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Quarterly Subscription
+                        {{ $pricing['plans']['secondary']['options']['quarterly']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 35</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['secondary']['options']['quarterly']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Subject For 3 Months</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['secondary']['options']['quarterly']['period'] }}</span>
                 </div>
 
                 <!-- Biannual -->
@@ -168,7 +162,7 @@
                     class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 transition-all duration-300 hover:scale-[1.02] relative">
                     <div
                         class="absolute hidden -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        SAVE 15%
+                        {{ $pricing['plans']['secondary']['options']['biannual']['badge'] }}
                     </div>
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-semibold text-sm mb-4">
@@ -178,13 +172,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Biannual Subscription
+                        {{ $pricing['plans']['secondary']['options']['biannual']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 50</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['secondary']['options']['biannual']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Subject For 6 Months</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['secondary']['options']['biannual']['period'] }}</span>
                 </div>
 
                 <!-- Annual -->
@@ -192,7 +185,7 @@
                     class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6 border-2 border-purple-300 dark:border-purple-500 hover:border-purple-400 dark:hover:border-purple-400 transition-all duration-300 hover:scale-[1.02] relative">
                     <div
                         class="absolute hidden -top-2 -right-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
-                        BEST VALUE
+                        {{ $pricing['plans']['secondary']['options']['annual']['badge'] }}
                     </div>
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 font-semibold text-sm mb-4">
@@ -202,13 +195,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Annual Subscription
+                        {{ $pricing['plans']['secondary']['options']['annual']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 75</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['secondary']['options']['annual']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Subject For 1 Year</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['secondary']['options']['annual']['period'] }}</span>
                 </div>
             </div>
         </div>
@@ -219,7 +211,7 @@
                             <span
                                 class="absolute inset-0 bg-gradient-to-r from-blue-700 to-green-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
             <span class="relative flex items-center justify-center">
-            Subscribe Now
+            {{ $pricing['plans']['secondary']['cta'] }}
             <svg class="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform duration-300" fill="none"
                  stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -257,11 +249,8 @@
             </div>
 
             <!-- Enhanced header -->
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Institutional
-                Subscription</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">Subscription covers all
-                subjects
-                per student</p>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">{{ $pricing['plans']['institutional']['title'] }}</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-10 text-md">{{ $pricing['plans']['institutional']['subtitle'] }}</p>
 
             <!-- Enhanced pricing sections -->
             <div class="space-y-5 mb-10">
@@ -276,22 +265,18 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Quarterly Subscription
+                        {{ $pricing['plans']['institutional']['options']['quarterly']['label'] }}
                     </div>
                     <div class="space-y-3">
                         <div
                             class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                                    <span
-                                                        class="font-semibold text-gray-700 dark:text-gray-300">Basic:</span>
-                            <span
-                                class="font-bold text-md text-gray-900 dark:text-white">GHS 45 / Student</span>
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $pricing['plans']['institutional']['options']['quarterly']['tiers']['basic']['label'] }}:</span>
+                            <span class="font-bold text-md text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['institutional']['options']['quarterly']['tiers']['basic']['price'] }} {{ $pricing['plans']['institutional']['options']['quarterly']['tiers']['basic']['suffix'] }}</span>
                         </div>
                         <div
                             class="flex justify-between items-center bg-white dark:bg-gray-600 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                            <span
-                                                class="font-semibold text-gray-700 dark:text-gray-300">Secondary:</span>
-                            <span
-                                class="font-bold text-md text-gray-900 dark:text-white">GHS 75 / Student</span>
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $pricing['plans']['institutional']['options']['quarterly']['tiers']['secondary']['label'] }}:</span>
+                            <span class="font-bold text-md text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['institutional']['options']['quarterly']['tiers']['secondary']['price'] }} {{ $pricing['plans']['institutional']['options']['quarterly']['tiers']['secondary']['suffix'] }}</span>
                         </div>
                     </div>
                 </div>
@@ -301,7 +286,7 @@
                     class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-600 hover:border-green-300 dark:hover:border-green-500 transition-all duration-300 hover:scale-[1.02] relative">
                     <div
                         class="absolute hidden -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        SAVE 15%
+                        {{ $pricing['plans']['institutional']['options']['basic_annual']['badge'] }}
                     </div>
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-semibold text-sm mb-4">
@@ -311,20 +296,19 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Basic Subscription
+                        {{ $pricing['plans']['institutional']['options']['basic_annual']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 45</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['institutional']['options']['basic_annual']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Student For 1 Year</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['institutional']['options']['basic_annual']['period'] }}</span>
                 </div>
                 <!-- Annual -->
                 <div
                     class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6 border-2 border-purple-300 dark:border-purple-500 hover:border-purple-400 dark:hover:border-purple-400 transition-all duration-300 hover:scale-[1.02] relative">
                     <div
                         class="absolute hidden -top-2 -right-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
-                        BEST VALUE
+                        {{ $pricing['plans']['institutional']['options']['secondary_annual']['badge'] }}
                     </div>
                     <div
                         class="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 font-semibold text-sm mb-4">
@@ -334,13 +318,12 @@
                                   stroke-width="2"
                                   d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Secondary Subscription
+                        {{ $pricing['plans']['institutional']['options']['secondary_annual']['label'] }}
                     </div>
                     <div class="flex items-baseline justify-center mb-2">
-                                                <span
-                                                    class="text-5xl font-black text-gray-900 dark:text-white">GHS 75</span>
+                        <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $pricing['currency'] }} {{ $pricing['plans']['institutional']['options']['secondary_annual']['price'] }}</span>
                     </div>
-                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">Per Student For 1 Year</span>
+                    <span class="text-lg font-medium text-gray-600 dark:text-gray-400">{{ $pricing['plans']['institutional']['options']['secondary_annual']['period'] }}</span>
                 </div>
             </div>
         </div>
@@ -351,7 +334,7 @@
                             <span
                                 class="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></span>
             <span class="relative flex items-center justify-center">
-            Get Started
+            {{ $pricing['plans']['institutional']['cta'] }}
             <svg class="w-6 h-6 ml-3 group-hover/button:translate-x-2 transition-transform duration-300" fill="none"
                  stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -11,6 +11,7 @@ use App\Livewire\Teachers\Messages\MessageIndex;
 use App\Livewire\Teachers\Messages\MessageShow;
 use App\Livewire\Teachers\Messages\SendMessageToStudents;
 use App\Livewire\Teachers\PublicProfile;
+use App\Livewire\Teachers\ReportCardPreparation;
 use App\Livewire\Teachers\Schedules;
 use App\Livewire\Teachers\StudentDetails;
 use App\Livewire\Teachers\StudentPerformances;
@@ -33,6 +34,9 @@ Route::middleware(['auth'])->name('teachers.')->prefix('dashboard/teachers')->gr
     Route::get('assignments/{assignment}', ViewAssignment::class)->name('assignments.show');
     Route::get('/create-assignment', CreateAssignment::class)->name('assignments.create');
     Route::get('/assignments/{assignment}/edit', App\Livewire\Teachers\EditAssignment::class)->name('assignments.edit');
+
+    // Report Cards
+    Route::get('/report-cards', ReportCardPreparation::class)->name('report-cards');
 
     Route::get('students', Students::class)->name('students.index');
     Route::get('/students/{student}', StudentDetails::class)

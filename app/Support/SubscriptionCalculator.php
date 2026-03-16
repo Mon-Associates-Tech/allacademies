@@ -16,67 +16,67 @@ class SubscriptionCalculator
             case SubscriptionPackage::INDIVIDUAL_FULL:
                 if ($tag === AcademicGroupTag::BASIC) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_YEAR,
-                        AcademicDuration::HALF => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_HALF,
-                        AcademicDuration::ONE_OFF => SubscriptionAmount::BASIC_SCHOOL_ONE_OFF,
-                        default => SubscriptionAmount::BASIC_SCHOOL_PER_STUDENT_PER_QUARTER
+                        AcademicDuration::YEAR => SubscriptionAmount::basicSchoolPerStudentPerYear(),
+                        AcademicDuration::HALF => SubscriptionAmount::basicSchoolPerStudentPerHalf(),
+                        AcademicDuration::ONE_OFF => SubscriptionAmount::basicSchoolOneOff(),
+                        default => SubscriptionAmount::basicSchoolPerStudentPerQuarter()
                     };
                 } elseif ($tag === AcademicGroupTag::SENIOR) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_YEAR,
-                        AcademicDuration::HALF => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_HALF,
-                        AcademicDuration::ONE_OFF => SubscriptionAmount::SENIOR_SCHOOL_ONE_OFF,
-                        default => SubscriptionAmount::SENIOR_SCHOOL_PER_STUDENT_PER_QUARTER
+                        AcademicDuration::YEAR => SubscriptionAmount::seniorSchoolPerStudentPerYear(),
+                        AcademicDuration::HALF => SubscriptionAmount::seniorSchoolPerStudentPerHalf(),
+                        AcademicDuration::ONE_OFF => SubscriptionAmount::seniorSchoolOneOff(),
+                        default => SubscriptionAmount::seniorSchoolPerStudentPerQuarter()
                     };
                 } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_YEAR,
-                        AcademicDuration::HALF => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_HALF,
-                        AcademicDuration::ONE_OFF => SubscriptionAmount::UNIVERSITY_ONE_OFF,
-                        default => SubscriptionAmount::UNIVERSITY_SCHOOL_PER_STUDENT_PER_QUARTER
+                        AcademicDuration::YEAR => SubscriptionAmount::universitySchoolPerStudentPerYear(),
+                        AcademicDuration::HALF => SubscriptionAmount::universitySchoolPerStudentPerHalf(),
+                        AcademicDuration::ONE_OFF => SubscriptionAmount::universityOneOff(),
+                        default => SubscriptionAmount::universitySchoolPerStudentPerQuarter()
                     };
                 }
                 break;
             case SubscriptionPackage::INSTITUTION_FULL:
                 if ($tag === AcademicGroupTag::BASIC) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
-                        AcademicDuration::HALF => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
-                        AcademicDuration::ONE_OFF => SubscriptionAmount::BASIC_SCHOOL_ONE_OFF,
-                        default => SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
+                        AcademicDuration::YEAR => SubscriptionAmount::basicSchoolInstPerStudentPerYearAllSubjects(),
+                        AcademicDuration::HALF => SubscriptionAmount::basicSchoolInstPerStudentPerHalfAllSubjects(),
+                        AcademicDuration::ONE_OFF => SubscriptionAmount::basicSchoolOneOff(),
+                        default => SubscriptionAmount::basicSchoolInstPerStudentPerQuarterAllSubjects()
                     };
                 } elseif ($tag === AcademicGroupTag::SENIOR) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
-                        AcademicDuration::HALF => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
-                        AcademicDuration::ONE_OFF => SubscriptionAmount::SENIOR_SCHOOL_ONE_OFF,
-                        default => SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
+                        AcademicDuration::YEAR => SubscriptionAmount::seniorSchoolInstPerStudentPerYearAllSubjects(),
+                        AcademicDuration::HALF => SubscriptionAmount::seniorSchoolInstPerStudentPerHalfAllSubjects(),
+                        AcademicDuration::ONE_OFF => SubscriptionAmount::seniorSchoolOneOff(),
+                        default => SubscriptionAmount::seniorSchoolInstPerStudentPerQuarterAllSubjects()
                     };
                 } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
                     return match ($duration) {
-                        AcademicDuration::YEAR => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_YEAR_ALL_SUBJECTS,
-                        AcademicDuration::HALF => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_HALF_ALL_SUBJECTS,
-                        AcademicDuration::ONE_OFF => SubscriptionAmount::UNIVERSITY_ONE_OFF,
-                        default => SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_PER_QUARTER_ALL_SUBJECTS
+                        AcademicDuration::YEAR => SubscriptionAmount::universitySchoolInstPerStudentPerYearAllSubjects(),
+                        AcademicDuration::HALF => SubscriptionAmount::universitySchoolInstPerStudentPerHalfAllSubjects(),
+                        AcademicDuration::ONE_OFF => SubscriptionAmount::universityOneOff(),
+                        default => SubscriptionAmount::universitySchoolInstPerStudentPerQuarterAllSubjects()
                     };
                 }
                 break;
             case SubscriptionPackage::INSTITUTION_MID_TERM:
                 if ($tag === AcademicGroupTag::BASIC) {
-                    return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                    return SubscriptionAmount::basicSchoolInstPerStudentMidTermOnce();
                 } elseif ($tag === AcademicGroupTag::SENIOR) {
-                    return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                    return SubscriptionAmount::seniorSchoolInstPerStudentMidTermOnce();
                 } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
-                    return SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_MID_TERM_ONCE;
+                    return SubscriptionAmount::universitySchoolInstPerStudentMidTermOnce();
                 }
                 break;
             case SubscriptionPackage::INSTITUTION_MOCK_EXAMS:
                 if ($tag === AcademicGroupTag::BASIC) {
-                    return SubscriptionAmount::BASIC_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                    return SubscriptionAmount::basicSchoolInstPerStudentMockExamsOnce();
                 } elseif ($tag === AcademicGroupTag::SENIOR) {
-                    return SubscriptionAmount::SENIOR_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                    return SubscriptionAmount::seniorSchoolInstPerStudentMockExamsOnce();
                 } elseif ($tag === AcademicGroupTag::UNIVERSITY) {
-                    return SubscriptionAmount::UNIVERSITY_SCHOOL_INST_PER_STUDENT_MOCK_EXAMS_ONCE;
+                    return SubscriptionAmount::universitySchoolInstPerStudentMockExamsOnce();
                 }
                 break;
             default:

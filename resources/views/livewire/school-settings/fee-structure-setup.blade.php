@@ -1,10 +1,10 @@
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8">
     <div class="mx-auto">
         <!-- Header Section -->
         <div class="mb-8 flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Payment Management</h1>
-                <p class="mt-2 text-sm text-gray-600">Manage school fee structures and other payments</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Payment Management</h1>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Manage school fee structures and other payments</p>
             </div>
             <button
                 wire:click="showCreateForm"
@@ -18,23 +18,23 @@
 
         <!-- Success/Error Messages -->
         @if (session()->has('success'))
-            <div class="rounded-lg bg-green-50 p-4 border border-green-200 animate-fadeIn mb-6">
+            <div class="rounded-lg bg-green-50 dark:bg-green-900/30 p-4 border border-green-200 dark:border-green-800 animate-fadeIn mb-6">
                 <div class="flex">
                     <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <p class="ml-3 text-sm font-medium text-green-800">{{ session('success') }}</p>
+                    <p class="ml-3 text-sm font-medium text-green-800 dark:text-green-300">{{ session('success') }}</p>
                 </div>
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="rounded-lg bg-red-50 p-4 border border-red-200 animate-fadeIn mb-6">
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/30 p-4 border border-red-200 dark:border-red-800 animate-fadeIn mb-6">
                 <div class="flex">
                     <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                    <p class="ml-3 text-sm font-medium text-red-800">{{ session('error') }}</p>
+                    <p class="ml-3 text-sm font-medium text-red-800 dark:text-red-300">{{ session('error') }}</p>
                 </div>
             </div>
         @endif
@@ -42,68 +42,68 @@
         <!-- Section 1: School Fees (Tuition/Admission) -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <div class="bg-indigo-100 p-2 rounded-lg mr-3">
-                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                 </div>
-                <h2 class="text-xl font-bold text-gray-800">School Fees</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">School Fees</h2>
             </div>
 
             @if($schoolFees->count() > 0)
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Period/Year</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Target</th>
-                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Period/Year</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Target</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                             </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($schoolFees as $fee)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $fee->name }}</div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $fee->name }}</div>
                                         @if($fee->description)
-                                            <div class="text-xs text-gray-500 truncate max-w-xs">{{ $fee->description }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{{ $fee->description }}</div>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 capitalize">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300 capitalize">
                                             {{ str_replace('_', ' ', $fee->payment_type) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-900">₵{{ number_format($fee->amount, 2) }}</div>
+                                        <div class="text-sm font-bold text-gray-900 dark:text-white">₵{{ number_format($fee->amount, 2) }}</div>
                                         @if($fee->allow_partial_payment)
-                                            <div class="text-xs text-green-600">Partial allowed</div>
+                                            <div class="text-xs text-green-600 dark:text-green-400">Partial allowed</div>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-900">{{ $fee->academicPeriod?->name ?? 'All Periods' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $fee->academicYear?->name ?? 'All Years' }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-white">{{ $fee->academicPeriod?->name ?? 'All Periods' }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $fee->academicYear?->name ?? 'All Years' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
                                         @if($fee->academic_group_id)
-                                            <div class="text-sm text-gray-900">{{ $fee->academicGroup->name }}</div>
-                                            <div class="text-xs text-gray-500">{{ $fee->academicLevel?->name ?? 'All Levels' }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-white">{{ $fee->academicGroup->name }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $fee->academicLevel?->name ?? 'All Levels' }}</div>
                                         @else
-                                            <span class="text-sm text-gray-500 italic">All Students</span>
+                                            <span class="text-sm text-gray-500 dark:text-gray-400 italic">All Students</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-right text-sm font-medium">
                                         <div class="flex items-center justify-end space-x-2">
-                                            <button wire:click="edit({{ $fee->id }})" class="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-1 rounded">
+                                            <button wire:click="edit({{ $fee->id }})" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 p-1 rounded">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </button>
-                                            <button wire:click="delete({{ $fee->id }})" wire:confirm="Are you sure?" class="text-red-600 hover:text-red-900 hover:bg-red-50 p-1 rounded">
+                                            <button wire:click="delete({{ $fee->id }})" wire:confirm="Are you sure?" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/50 p-1 rounded">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                 </svg>
@@ -117,8 +117,8 @@
                     </div>
                 </div>
             @else
-                <div class="bg-white rounded-2xl shadow p-8 text-center border border-gray-100">
-                    <p class="text-gray-500">No school fees configured yet.</p>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow p-8 text-center border border-gray-100 dark:border-gray-700">
+                    <p class="text-gray-500 dark:text-gray-400">No school fees configured yet.</p>
                 </div>
             @endif
         </div>
@@ -126,43 +126,43 @@
         <!-- Section 2: Other Fees/Payments -->
         <div>
             <div class="flex items-center mb-4">
-                <div class="bg-purple-100 p-2 rounded-lg mr-3">
-                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                 </div>
-                <h2 class="text-xl font-bold text-gray-800">Other Fees & Payments</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Other Fees & Payments</h2>
             </div>
 
             @if($otherFees->count() > 0)
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Context</th>
-                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Context</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                             </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($otherFees as $fee)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $fee->name }}</div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $fee->name }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 capitalize">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 capitalize">
                                             {{ str_replace('_', ' ', $fee->payment_type) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-900">₵{{ number_format($fee->amount, 2) }}</div>
+                                        <div class="text-sm font-bold text-gray-900 dark:text-white">₵{{ number_format($fee->amount, 2) }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-500">
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
                                             @if($fee->academic_group_id)
                                                 {{ $fee->academicGroup->name }}
                                                 @if($fee->academic_level_id) > {{ $fee->academicLevel->name }} @endif
@@ -173,12 +173,12 @@
                                     </td>
                                     <td class="px-6 py-4 text-right text-sm font-medium">
                                         <div class="flex items-center justify-end space-x-2">
-                                            <button wire:click="edit({{ $fee->id }})" class="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-1 rounded">
+                                            <button wire:click="edit({{ $fee->id }})" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 p-1 rounded">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </button>
-                                            <button wire:click="delete({{ $fee->id }})" wire:confirm="Are you sure?" class="text-red-600 hover:text-red-900 hover:bg-red-50 p-1 rounded">
+                                            <button wire:click="delete({{ $fee->id }})" wire:confirm="Are you sure?" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/50 p-1 rounded">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                 </svg>
@@ -192,8 +192,8 @@
                     </div>
                 </div>
             @else
-                <div class="bg-white rounded-2xl shadow p-8 text-center border border-gray-100">
-                    <p class="text-gray-500">No other fees configured.</p>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow p-8 text-center border border-gray-100 dark:border-gray-700">
+                    <p class="text-gray-500 dark:text-gray-400">No other fees configured.</p>
                 </div>
             @endif
         </div>
@@ -204,7 +204,7 @@
                 <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeModal"></div>
                     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                    <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                    <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-gray-200 dark:border-gray-700">
                         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-xl font-semibold text-white">
@@ -221,12 +221,12 @@
                         <form wire:submit.prevent="save" class="px-6 py-6 space-y-6 max-h-[80vh] overflow-y-auto">
 
                             <!-- Basic Information -->
-                            <div class="border-b border-gray-200 pb-6">
-                                <h4 class="text-sm uppercase tracking-wide text-gray-500 font-bold mb-4">Basic Details</h4>
+                            <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                                <h4 class="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 font-bold mb-4">Basic Details</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Name <span class="text-red-500">*</span></label>
-                                        <input type="text" wire:model="name" placeholder="e.g., Term 1 Tuition" class="block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name <span class="text-red-500">*</span></label>
+                                        <input type="text" wire:model="name" placeholder="e.g., Term 1 Tuition" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
                                         @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
 
@@ -235,17 +235,17 @@
                                         <label class="block text-sm font-semibold text-gray-700 mb-3">
                                             Payment Type <span class="text-red-500">*</span>
                                         </label>
-                                        
+
                                         <!-- Toggle between predefined and custom -->
-                                        <div class="flex items-center space-x-6 mb-4 p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-6 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                             <label class="flex items-center cursor-pointer">
-                                                <input type="radio" wire:model.live="use_custom_payment_type" value="0" 
-                                                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                                <input type="radio" wire:model.live="use_custom_payment_type" value="0"
+                                                       class="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-600 focus:ring-indigo-500 dark:bg-gray-700">
                                                 <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Use Predefined Types</span>
                                             </label>
                                             <label class="flex items-center cursor-pointer">
-                                                <input type="radio" wire:model.live="use_custom_payment_type" value="1" 
-                                                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                                <input type="radio" wire:model.live="use_custom_payment_type" value="1"
+                                                       class="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-600 focus:ring-indigo-500 dark:bg-gray-700">
                                                 <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Create Custom Type</span>
                                             </label>
                                         </div>
@@ -301,20 +301,20 @@
 
                                     <!-- Amount -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount (GHS) <span class="text-red-500">*</span></label>
-                                        <input type="number" wire:model="amount" step="0.01" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 @error('amount') border-red-500 @enderror">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount (GHS) <span class="text-red-500">*</span></label>
+                                        <input type="number" wire:model="amount" step="0.01" class="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('amount') border-red-500 @enderror">
                                         @error('amount') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-                                        <input type="date" wire:model="due_date" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date</label>
+                                        <input type="date" wire:model="due_date" class="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
                                         @error('due_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Period</label>
-                                        <select wire:model="payment_period" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Period</label>
+                                        <select wire:model="payment_period" class="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
                                             <option value="">Select Period</option>
                                             @foreach($paymentPeriods as $key => $label)
                                                 <option value="{{ $key }}">{{ $label }}</option>
@@ -325,15 +325,15 @@
                             </div>
 
                             <!-- Academic Context -->
-                            <div class="border-b border-gray-200 pb-6">
-                                <h4 class="text-sm uppercase tracking-wide text-gray-500 font-bold mb-4">Academic Context</h4>
+                            <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                                <h4 class="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 font-bold mb-4">Academic Context</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                     <!-- Academic Year -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Year</label>
                                         @if($academicYears->isNotEmpty())
-                                            <select wire:model.live="academic_year_id" class="block w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                                            <select wire:model.live="academic_year_id" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
                                                 <option value="">All Years</option>
                                                 @foreach($academicYears as $year)
                                                     <option value="{{ $year->id }}">{{ $year->name }}</option>

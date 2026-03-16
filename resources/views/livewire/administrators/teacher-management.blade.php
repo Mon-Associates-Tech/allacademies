@@ -7,16 +7,29 @@
                 <p class="mt-2 text-gray-600 dark:text-gray-400">Manage teachers, their academic assignments, and subject specializations</p>
             </div>
 
-            <x-button.primary
-                type="button"
-                onclick="window.Modal.open('teacher-form', {})"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                Add Teacher
-            </x-button.primary>
+            <div class="flex space-x-3">
+                <x-button.secondary
+                    type="button"
+                    @click="$dispatch('open-modal', 'import-teachers')"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Import
+                </x-button.secondary>
+
+                <x-button.primary
+                    type="button"
+                    onclick="window.Modal.open('teacher-form', {})"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add Teacher
+                </x-button.primary>
+            </div>
         </div>
 
         <!-- Alert Messages -->
@@ -573,6 +586,80 @@
             </div>
         </div>
     @endif
+    <x-modal name="import-teachers" :show="false">
+        <div x-data="{ isUploading: false, fileName: '' }" class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                        Import Teachers
+                    </h3>
+                    <div class="mt-2">
+                        <form id="import-form-teachers" action="{{ route('admin.import', 'teachers') }}" method="POST" enctype="multipart/form-data" @submit="isUploading = true">
+                            @csrf
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    CSV File
+                                </label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-6 w-full text-center cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                            </svg>
+                                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                                <span class="font-semibold" x-text="fileName ? 'File Selected' : 'Click to upload'">Click to upload</span> or drag and drop
+                                            </p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400" x-text="fileName ? fileName : 'CSV files only'">
+                                                CSV files only
+                                            </p>
+                                        </div>
+                                        <input type="file" name="file" class="hidden" accept=".csv" @change="fileName = $event.target.files[0]?.name || ''">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div x-show="isUploading" class="mb-4">
+                                <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Processing import... Please wait.</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Default School
+                                </label>
+                                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasRole('owner'))
+                                    <select name="school_id" class="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                        <option value="">Select School</option>
+                                        @foreach(App\Models\School::all() as $school)
+                                            <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input type="hidden" name="school_id" value="{{ auth()->user()->school_id }}">
+                                    <div class="mt-1 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                                        <p class="text-sm text-blue-800 dark:text-blue-200">All imported data will be associated with your school: <strong>{{ auth()->user()->school->name ?? 'N/A' }}</strong></p>
+                                    </div>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="submit" form="import-form-teachers" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-base font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                Import
+            </button>
+            <button @click="$dispatch('close-modal', 'import-teachers')" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                Cancel
+            </button>
+        </div>
+    </x-modal>
 </div>
 
 <script>

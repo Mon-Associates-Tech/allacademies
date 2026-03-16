@@ -590,6 +590,11 @@ class TeacherManagement extends Component
             $query->where('school_id', $schoolId);
         }
 
+        // Apply school context
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
+        }
+
         // Search filter
         if ($this->searchTerm) {
             $query->whereHas('user', function ($q) {

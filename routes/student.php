@@ -13,6 +13,7 @@ use App\Livewire\Students\Courses;
 use App\Livewire\Students\Messages\ComposeMessage;
 use App\Livewire\Students\Messages\MessageIndex;
 use App\Livewire\Students\Messages\MessageShow;
+use App\Livewire\Students\MyReportCards;
 use App\Livewire\Students\Notifications;
 use App\Livewire\Students\PerformanceOverview;
 use App\Livewire\Students\StudentProfile;
@@ -33,6 +34,9 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
 
     // Alias route for convenience
     Route::get('payments', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('payments.index');
+
+    // Report Cards
+    Route::get('/report-cards', MyReportCards::class)->name('report-cards');
 
     Route::get('assessments', BookQuizInterface::class)->name('assessments');
     Route::get('performance', PerformanceOverview::class)->name('performance');

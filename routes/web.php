@@ -36,8 +36,10 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
+use App\Services\LocationService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -62,6 +64,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
 Route::view('/terms', 'branding.terms')->name('branding.terms');
 Route::view('/features', 'branding.features')->name('branding.features');
+Route::view('/pricing', 'branding.pricing')->name('branding.pricing');
+Route::get('/library', [\App\Http\Controllers\LibraryShowcaseController::class, 'index'])->name('library.showcase');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
@@ -111,6 +115,9 @@ Route::get('/calendar', function () {
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Password Change for Default Password
+    Route::get('/password/change', \App\Livewire\Auth\ChangeDefaultPassword::class)->name('password.change');
+
     // Ping Route (Keep-alive)
     Route::post('/ping', static function () {
         return response()->noContent();
@@ -159,6 +166,9 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::match(['GET', 'POST'], 'settings/role', [SettingsController::class, 'role'])->name('settings.role');
+    Route::get('admin/pricing-settings', [PricingSettingsController::class, 'edit'])->name('admin.pricing-settings.edit');
+    Route::get('admin/pricing-settings/audits', [PricingSettingsController::class, 'audits'])->name('admin.pricing-settings.audits');
+    Route::put('admin/pricing-settings', [PricingSettingsController::class, 'update'])->name('admin.pricing-settings.update');
 
     Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
     Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');
@@ -191,6 +201,13 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::post('export/pdf', fn () => exportToPdf())->name('export.pdf');
     Route::post('export/word', fn () => exportToWord())->name('export.word');
+
+    // Location debug route
+    Route::get('/debug/location', function (LocationService $locationService) {
+        return view('debug.location', [
+            'countries' => $locationService->getCountries(),
+        ]);
+    })->name('debug.location');
 
     /*
     |--------------------------------------------------------------------------
@@ -343,6 +360,20 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Educational Resource Center
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('resources')->name('educational-resources.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EducationalResourceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\EducationalResourceController::class, 'create'])->name('create');
+        Route::get('/{educationalResource}/edit', [\App\Http\Controllers\EducationalResourceController::class, 'edit'])->name('edit');
+        Route::get('/{educationalResource}', [\App\Http\Controllers\EducationalResourceController::class, 'show'])->name('show');
+        Route::get('/{educationalResource}/download', [\App\Http\Controllers\EducationalResourceController::class, 'download'])->name('download');
+        Route::get('/{educationalResource}/stream', [\App\Http\Controllers\EducationalResourceController::class, 'stream'])->name('stream');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Media
     |--------------------------------------------------------------------------
     */
@@ -440,10 +471,11 @@ include_once 'author.php';
 include_once 'librarian.php';
 include_once 'parent.php';
 include_once 'administrator.php';
+include_once 'accountant.php';
 include_once 'academic.php';
-include_once 'sponsorship.php';
-
-//
-include_once 'subscriber.php';
 include_once 'guest.php';
+include_once 'sponsorship.php';
 include_once 'misc.php';
+
+// General Exams Routes (code-based assignments for teachers and participants)
+include_once 'general-exams.php';

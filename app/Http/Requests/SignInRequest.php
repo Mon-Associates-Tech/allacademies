@@ -14,8 +14,15 @@ class SignInRequest extends FormRequest
     public function rules()
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8'],
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'login.required' => 'Please enter your email or username / student ID.',
         ];
     }
 }

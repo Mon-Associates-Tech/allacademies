@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\UserRole;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
+use App\Enums\UserRole;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -23,6 +23,7 @@ class UserController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
+
     public function index(Request $request)
     {
         $this->authorize('administrate');

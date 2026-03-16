@@ -40,12 +40,18 @@ class SubscriptionForm extends Component
         $this->currentTeam = $currentTeam;
         $this->package = $currentTeam->is_personal ? SubscriptionPackage::INDIVIDUAL_FULL->value : SubscriptionPackage::INSTITUTION_FULL->value;
         $this->academicGroups = $academicGroups;
-        $this->academicGroupId = $academicGroups[0]['id'];
-        $this->academicLevels = $academicGroups[0]['academic_levels'];
         $this->academicSubjects = [];
 
+        if (! empty($academicGroups)) {
+            $this->academicGroupId = $academicGroups[0]['id'];
+            $this->academicLevels = $academicGroups[0]['academic_levels'];
+        } else {
+            $this->academicGroupId = null;
+            $this->academicLevels = [];
+        }
+
         // Initialize the academicGroupTag
-        $academicGroup = AcademicGroup::find($this->academicGroupId);
+        $academicGroup = $this->academicGroupId ? AcademicGroup::find($this->academicGroupId) : null;
         $this->academicGroupTag = $academicGroup?->tag ?? AcademicGroupTag::BASIC;
 
     }

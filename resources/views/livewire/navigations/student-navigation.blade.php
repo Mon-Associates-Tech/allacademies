@@ -92,6 +92,18 @@
             </a>
         </li>
 
+        <li class="mb-0.5 last:mb-0" title="Join General Exams">
+            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('general-exams.join*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('general-exams.join') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('general-exams.join*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14h-3v-2h3v2zm5-4h-8v-2h8v2zm0-4h-8V7h8v4z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Join General Exams</span>
+                </div>
+            </a>
+        </li>
+
         <li class="mb-0.5 last:mb-0" title="Messages">
             <a class="block px-3 py-2 rounded-lg transition {{ Route::is('students.messages*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('students.messages.index')}}">
@@ -171,6 +183,21 @@
                             d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 2h7v2h-7V5zm0 4h7v2h-7V9zm0 4h7v2h-7v-2zM5 19V5h2v14H5zm4 0V5h2v14H9z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Academic Performance</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- Report Cards -->
+        <li class="mb-0.5 last:mb-0" title="Report Cards">
+            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('students.report-cards') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('students.report-cards')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('students.report-cards') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-3h8v2H8v-2zm0-3h5v2H8V9z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Report Cards</span>
                 </div>
             </a>
         </li>

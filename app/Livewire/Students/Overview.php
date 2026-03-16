@@ -498,7 +498,7 @@ class Overview extends Component
 
                 return $assignment->ends_at >= now() &&
                     $assignment->ends_at <= now()->addDays(7) &&
-                    (! $submission || ! in_array($submission->status, ['completed', 'submitted', 'graded']));
+                    (!$submission || !in_array($submission->status, ['completed', 'submitted', 'graded', 'not_started', 'in_progress']));
             })
             ->sortBy('ends_at')
             ->take(5)

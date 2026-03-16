@@ -14,13 +14,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class StudentManagementController extends Controller
 {
-    public function index()
-    {
-        $students = Student::with(['user', 'academicLevel', 'studentGroup'])->paginate(20);
-
-        return view('students.index', compact('students'));
-    }
-
     public function show(Student $student)
     {
         $student->load([

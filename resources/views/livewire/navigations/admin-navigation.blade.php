@@ -50,6 +50,7 @@
         @endif
 
 
+        @if(auth()->user()->role === UserRole::OWNER)
         <li class="mb-0.5 last:mb-0" title="Academic Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('academic-groups.index')? 'bg-violet-500 text-white my-1 font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -65,6 +66,7 @@
                 </div>
             </a>
         </li>
+        @endif
 
         <!-- User Management -->
         <li class="mb-0.5 last:mb-0 " title="User Management">
@@ -119,23 +121,6 @@
             </a>
         </li>
 
-        <!-- Student Groups -->
-        <li class="mb-0.5 last:mb-0 " title="Student Groups">
-            <a :class="sidebarExpanded ? 'py-2' : ''"
-               class="block pl-3 rounded-lg transition {{ Route::is('admin.student-groups') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('admin.student-groups')}}">
-                <div class="flex items-center">
-                    <svg
-                        class="shrink-0 fill-current {{ Route::is('admin.student-groups') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
-                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                        <path
-                            d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
-                    </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Student Groups</span>
-                </div>
-            </a>
-        </li>
-
         <!-- Teacher Management -->
         <li class="mb-0.5 last:mb-0 " title="Teacher Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
@@ -154,6 +139,23 @@
                 </div>
             </a>
         </li>
+        <!-- Student Groups -->
+        <li class="mb-0.5 last:mb-0 " title="Student Groups">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.student-groups') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.student-groups')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('admin.student-groups') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path
+                            d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Student Groups</span>
+                </div>
+            </a>
+        </li>
+
 
         <!-- Librarian Management -->
         <li class="mb-0.5 last:mb-0 " title="Librarian Management">
@@ -168,6 +170,23 @@
                             d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3zM4.5 8a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1h-7zM4 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Librarian Management</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- Accountant Management -->
+        <li class="mb-0.5 last:mb-0 " title="Accountant Management">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.accountant-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.accountant-management')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('admin.accountant-management') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                        <path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Accountant Management</span>
                 </div>
             </a>
         </li>
@@ -246,7 +265,9 @@
             </li>
         @endif
 
+
         <!-- Subject Management -->
+         @if(auth()->user()->role === UserRole::OWNER)
         <li class="mb-0.5 last:mb-0 " title="Subject Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('admin.subject-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -261,6 +282,24 @@
                             d="M1 6v-.5a.5.5 0 0 1 1 0V6h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V9h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 2.5v.5H.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1H2v-.5a.5.5 0 0 0-1 0z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Subject Management</span>
+                </div>
+            </a>
+        </li>
+        @endif
+
+        <!-- Report Card Management -->
+        <li class="mb-0.5 last:mb-0" title="Report Card Management">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.report-cards') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.report-cards')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('admin.report-cards') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.68 7.68 0 0 1 1.482-.645 19.697 19.697 0 0 0 1.062-2.227 7.269 7.269 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.188-.012.396-.047.614-.084.51-.27 1.134-.52 1.794a10.954 10.954 0 0 0 .98 1.686 5.753 5.753 0 0 1 1.334.05c.364.066.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.856.856 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a5.712 5.712 0 0 1-.911-.95 11.651 11.651 0 0 0-1.997.406 11.307 11.307 0 0 1-1.02 1.51c-.292.35-.609.656-.927.787a.793.793 0 0 1-.58.029zm1.379-1.901c-.166.076-.32.156-.459.238-.328.194-.541.383-.647.547-.094.145-.096.25-.04.361.01.022.02.036.026.044a.266.266 0 0 0 .035-.012c.137-.056.355-.235.635-.572a8.18 8.18 0 0 0 .45-.606zm1.64-1.33a12.71 12.71 0 0 1 1.01-.193 11.744 11.744 0 0 1-.51-.858 20.801 20.801 0 0 1-.5 1.05zm2.446.45c.15.163.296.3.435.41.24.19.407.253.498.256a.107.107 0 0 0 .07-.015.307.307 0 0 0 .094-.125.436.436 0 0 0 .059-.2.095.095 0 0 0-.026-.063c-.052-.062-.2-.152-.518-.209a3.876 3.876 0 0 0-.612-.053zM8.078 7.8a6.7 6.7 0 0 0 .2-.828c.031-.188.043-.343.038-.465a.613.613 0 0 0-.032-.198.517.517 0 0 0-.145.04c-.087.035-.158.106-.196.283-.04.192-.03.469.046.822.024.111.054.227.09.346z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Report Cards</span>
                 </div>
             </a>
         </li>
@@ -281,6 +320,33 @@
                 </div>
             </a>
         </li>
+
+        <p class="px-3 mt-4 mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">General Exams</p>
+       <li class="mb-0.5 last:mb-0" title="General Exams">
+           <a :class="sidebarExpanded ? 'py-2' : ''"
+              class="block pl-3 rounded-lg transition {{ Route::is('teachers.general-exams.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+              href="{{ route('teachers.general-exams.index') }}">
+               <div class="flex items-center">
+                   <svg class="shrink-0 fill-current {{ Route::is('teachers.general-exams.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                       <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-5 16h10v-2H7v2zm0-4h10v-2H7v2zm0-4h10V7H7v4z"/>
+                   </svg>
+                   <span class="text-sm ml-2 sidebar-text duration-200">Manage General Exams</span>
+               </div>
+           </a>
+       </li>
+       <li class="mb-0.5 last:mb-0" title="Create General Exam">
+           <a :class="sidebarExpanded ? 'py-2' : ''"
+              class="block pl-3 rounded-lg transition {{ Route::is('teachers.general-exams.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+              href="{{ route('teachers.general-exams.create') }}">
+               <div class="flex items-center">
+                   <svg class="shrink-0 fill-current {{ Route::is('teachers.general-exams.create') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                       <path d="M13 11h6v2h-6v6h-2v-6H5v-2h6V5h2v6zm8-6V5a2 2 0 0 0-2-2h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v1h16z"/>
+                   </svg>
+                   <span class="text-sm ml-2 sidebar-text duration-200">Create General Exam</span>
+               </div>
+           </a>
+       </li>
+
 
         <li class="mb-0.5 last:mb-0" title="Messages">
             <a :class="sidebarExpanded ? 'py-2' : ''"
@@ -394,6 +460,13 @@
         </li>
 
         @if(auth()->user()->role === UserRole::OWNER)
+
+            <li class="mt-3 mb-2">
+                <h4 class="text-[11px] uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3">
+                    Owner Tools
+                </h4>
+            </li>
+
             <li class="mb-0.5 last:mb-0" title="Messenger Allocations">
                 <a :class="sidebarExpanded ? 'py-2' : ''"
                    class="block pl-3 rounded-lg transition {{ Route::is('token-allocations*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
@@ -425,6 +498,37 @@
                                 d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2H3z"/>
                         </svg>
                         <span class="text-sm ml-2 sidebar-text duration-200">Messengers Transactions</span>
+                    </div>
+                </a>
+            </li>
+
+            <li class="mb-0.5 last:mb-0" title="Pricing Settings">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('admin.pricing-settings.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('admin.pricing-settings.edit') }}">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('admin.pricing-settings.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path
+                                d="M8 0a4 4 0 0 1 4 4v1h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v1a4 4 0 0 1-8 0v-1H2a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a4 4 0 0 1 4-4zm-2 6h4V4a2 2 0 0 0-4 0v2zm-2 2v2h2v-2H4zm6 0v2h2v-2h-2z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Pricing Settings</span>
+                    </div>
+                </a>
+            </li>
+            <li class="mb-0.5 last:mb-0" title="Pricing Audit Log">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('admin.pricing-settings.audits') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('admin.pricing-settings.audits') }}">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('admin.pricing-settings.audits') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path
+                                d="M2 1h9.293L14 3.707V15a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm8.5 1.5V4h1.5L10.5 2.5zM4 6h8v1H4V6zm0 3h8v1H4V9zm0 3h6v1H4v-1z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Pricing Audit Log</span>
                     </div>
                 </a>
             </li>
@@ -535,13 +639,13 @@
         </li>
 
 
-        <li class="mb-0.5 last:mb-0" title="Data Manager">
+        <li class="mb-0.5 last:mb-0" title="Student Management">
             <a :class="sidebarExpanded ? 'py-2' : ''"
-               class="block pl-3  rounded-lg transition {{ Route::is('admin.data-manager') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('admin.data-manager')}}">
+               class="block pl-3  rounded-lg transition {{ Route::is('admin.student-management') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.student-management')}}">
                 <div class="flex items-center">
                     <svg
-                        class="shrink-0 fill-current {{ Route::is('admin.data-manager') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        class="shrink-0 fill-current {{ Route::is('admin.student-management') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path
                             d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>

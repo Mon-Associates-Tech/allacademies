@@ -9,6 +9,7 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\User;
+use App\Services\StudentUsernameService;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -96,27 +97,28 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
         // Clean and validate data
         $studentData = $this->cleanRowData($row);
 
-        // Check if user already exists
-        $user = User::where('email', $studentData['email'])->first();
+        $usernameService = new StudentUsernameService;
 
-        if (! $user) {
-            // Create new user
-            $user = User::create([
-                'name' => trim($studentData['first_name'].' '.$studentData['last_name']),
-                'email' => $studentData['email'],
-                'password' => Hash::make($studentData['password'] ?? $this->defaultPassword),
-                'role' => UserRole::STUDENT,
-                'phone' => $studentData['phone'] ?? null,
-            ]);
+        // Check if user already exists by email or username
+        $user = null;
+
+        if (! empty($studentData['email'])) {
+            $user = User::where('email', $studentData['email'])->first();
         }
 
-        // Check if student record already exists
-        $existingStudent = Student::where('user_id', $user->id)->first();
+        if (! $user && ! empty($studentData['username'])) {
+            $user = User::where('username', $studentData['username'])->first();
+        }
 
-        if ($existingStudent) {
-            $this->skippedCount++;
+        // If we already have a user, ensure we don't duplicate student record
+        if ($user) {
+            $existingStudent = Student::where('user_id', $user->id)->first();
 
-            return;
+            if ($existingStudent) {
+                $this->skippedCount++;
+
+                return;
+            }
         }
 
         // Validate academic level and group IDs if provided
@@ -145,7 +147,7 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
 
         // Create student record
         $student = Student::create([
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
             'academic_level_id' => $academicLevel?->id,
             'academic_group_id' => $academicGroup?->id,
             'school_id' => $school?->id ?? $this->defaultSchoolId,
@@ -161,8 +163,39 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'emergency_contact' => $studentData['emergency_contact'] ?? null,
             'blood_group' => $studentData['blood_group'] ?? null,
             'admission_date' => $studentData['admission_date'] ?? now(),
-            'student_id' => $studentData['student_id'] ?? Student::generateStudentId(),
+            'student_id' => $studentData['student_id'] ?? Student::generateStudentId($school?->id ?? $this->defaultSchoolId),
+            'first_name' => $studentData['first_name'] ?? null,
+            'last_name' => $studentData['last_name'] ?? null,
+            'other_name' => $studentData['other_name'] ?? null,
+            'bio' => $studentData['bio'] ?? null,
+            'favorite_subjects' => $studentData['favorite_subjects'] ?? null,
+            'learning_goals' => $studentData['learning_goals'] ?? null,
         ]);
+
+        // If no user exists yet, create a username-based account for optional portal access
+        if (! $user) {
+            $generatedUsername = $studentData['username'] ?? $usernameService->generate($student);
+
+            $user = User::create([
+                'name' => trim($studentData['first_name'].' '.$studentData['last_name']),
+                'first_name' => $studentData['first_name'] ?? null,
+                'last_name' => $studentData['last_name'] ?? null,
+                'other_names' => $studentData['other_name'] ?? null,
+                'email' => $studentData['email'] ?? null,
+                'username' => $generatedUsername,
+                'login_type' => empty($studentData['email']) ? 'username' : 'email',
+                'password' => Hash::make($studentData['password'] ?? $this->defaultPassword),
+                'role' => UserRole::STUDENT,
+                'phone' => $studentData['phone'] ?? null,
+                'gender' => $studentData['gender'] ?? null,
+                'city' => $studentData['city'] ?? null,
+                'region' => $studentData['region'] ?? null,
+                'country' => $studentData['country'] ?? null,
+                'school_id' => $school?->id ?? $this->defaultSchoolId,
+            ]);
+
+            $student->update(['user_id' => $user->id]);
+        }
 
         // Handle additional relationships if needed
         $this->handleAdditionalRelationships($student, $studentData);
@@ -174,7 +207,9 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'name' => trim($row['name'] ?? $row['full_name'] ?? ''),
             'first_name' => trim($row['first_name'] ?? explode(' ', $row['name'] ?? '')[0] ?? ''),
             'last_name' => trim($row['last_name'] ?? implode(' ', array_slice(explode(' ', $row['name'] ?? ''), 1)) ?? ''),
+            'other_name' => trim($row['other_name'] ?? $row['other_names'] ?? ''),
             'email' => strtolower(trim($row['email'] ?? '')),
+            'username' => $row['username'] ?? $row['student_id'] ?? null,
             'password' => $row['password'] ?? null,
             'academic_level_id' => $row['academic_level_id'] ?? null,
             'academic_group_id' => $row['academic_group_id'] ?? null,
@@ -184,6 +219,9 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'date_of_birth' => $row['date_of_birth'] ?? $row['dob'] ?? null,
             'phone' => $row['phone'] ?? $row['mobile'] ?? null,
             'address' => $row['address'] ?? null,
+            'city' => $row['city'] ?? null,
+            'region' => $row['region'] ?? null,
+            'country' => $row['country'] ?? null,
             // Additional fields
             'gender' => $row['gender'] ?? null,
             'parent_name' => $row['parent_name'] ?? null,
@@ -192,6 +230,9 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'emergency_contact' => $row['emergency_contact'] ?? null,
             'blood_group' => $row['blood_group'] ?? null,
             'admission_date' => $row['admission_date'] ?? now(),
+            'bio' => $row['bio'] ?? null,
+            'favorite_subjects' => $row['favorite_subjects'] ?? null,
+            'learning_goals' => $row['learning_goals'] ?? null,
         ];
     }
 
@@ -332,7 +373,8 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
     public function rules(): array
     {
         return [
-            '*.email' => 'required|email',
+            '*.email' => 'nullable|email',
+            '*.username' => 'nullable|string',
             '*.first_name' => 'required|string|min:2',
             '*.last_name' => 'required|string|min:2',
             '*.academic_level_id' => 'nullable|exists:academic_levels,id',

@@ -16,6 +16,7 @@ class StudentParent extends Model
     protected $fillable = [
         'user_id',
         'relationship',
+        'parent_id',
     ];
 
     public function user(): BelongsTo
@@ -38,5 +39,22 @@ class StudentParent extends Model
     public function accessibleStudents(): BelongsToMany
     {
         return $this->students()->where('students.school_id', $this->school_id);
+    }
+
+    public static function generateParentCode($schoolId)
+    {
+        $school = School::find($schoolId);
+        if (! $school) {
+            return null;
+        }
+
+        $lastParent = static::withoutGlobalScope('school')
+            ->where('school_id', $schoolId)
+            ->latest('id')
+            ->first();
+
+        $sequence = $lastParent ? $lastParent->id + 1 : 1;
+
+        return $school->code.'P'.str_pad($sequence, 5, '0', STR_PAD_LEFT);
     }
 }

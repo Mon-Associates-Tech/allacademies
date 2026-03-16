@@ -57,7 +57,7 @@
                                                 class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                                                 :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
                                         </a>--}}
-                <a href="#features"
+                <a href="{{ route('branding.features') }}"
                    class="font-semibold transition-colors duration-300 relative group flex items-center"
                    :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
                     <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -70,20 +70,20 @@
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
                 </a>
-                <a href="#modules"
+                <a href="{{ route('library.showcase') }}"
                    class="font-semibold transition-colors duration-300 relative group flex items-center"
                    :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
                     <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
+                              d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/>
                     </svg>
-                    Modules
+                    Books
                     <span
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
                 </a>
-                <a href="#pricing"
+                <a href="{{ route('branding.pricing') }}"
                    class="font-semibold transition-colors duration-300 relative group flex items-center"
                    :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
                     <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -96,15 +96,15 @@
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
                 </a>
-                <a href="#faq"
+                <a href="{{ route('public.financial-aid') }}"
                    class="font-semibold transition-colors duration-300 relative group flex items-center"
                    :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
                     <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+                              d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/>
                     </svg>
-                    FAQ
+                    Financial Aid
                     <span
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
@@ -183,18 +183,18 @@
                                 {{--                                        <a href="#home"--}}
                                 {{--                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"--}}
                                 {{--                                           x-on:click="open = false">Home</a>--}}
-                                <a href="#features"
+                                <a href="{{ route('branding.features') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                    x-on:click="open = false">Features</a>
-                                <a href="#modules"
+                                <a href="{{ route('library.showcase') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">Modules</a>
-                                <a href="#pricing"
+                                   x-on:click="open = false">Books</a>
+                                <a href="{{ route('branding.pricing') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                    x-on:click="open = false">Pricing</a>
-                                <a href="#faq"
+                                <a href="{{ route('public.financial-aid') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">FAQ</a>
+                                   x-on:click="open = false">Financial Aid</a>
                             </div>
                             <div class="py-6 space-y-3">
                                 <a href="{{ route('register') }}"

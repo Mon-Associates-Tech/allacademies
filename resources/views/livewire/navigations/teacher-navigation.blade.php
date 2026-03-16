@@ -70,7 +70,7 @@
         </li>
 
 
-        <!-- Assignments -->
+        <p class="px-3 mt-4 mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">Assignments</p>
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.assignments*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('teachers.assignments.index')}}">
@@ -86,7 +86,7 @@
             </a>
         </li>
 
-        <!-- Assignments -->
+        <!-- Book Assignments -->
         <li class="mb-0.5 last:mb-0">
             <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.book-assignments*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('teachers.book-assignments.create')}}">
@@ -98,6 +98,41 @@
                             d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-5 16h10v-2H7v2zm0-4h10v-2H7v2zm0-4h7v-2H7v2z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Book Assignments</span>
+                </div>
+            </a>
+        </li>
+
+        <p class="px-3 mt-4 mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">General Exams</p>
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.general-exams.index') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('teachers.general-exams.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('teachers.general-exams.index') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-5 16h10v-2H7v2zm0-4h10v-2H7v2zm0-4h10V7H7v4z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Manage General Exams</span>
+                </div>
+            </a>
+        </li>
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('general-exams.join*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('general-exams.join') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('general-exams.join*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14h-3v-2h3v2zm5-4h-8v-2h8v2zm0-4h-8V7h8v4z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Join General Exam</span>
+                </div>
+            </a>
+        </li>
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.general-exams.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('teachers.general-exams.create') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('teachers.general-exams.create') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M13 11h6v2h-6v6h-2v-6H5v-2h6V5h2v6zm8-6V5a2 2 0 0 0-2-2h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v1h16z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Create General Exam</span>
                 </div>
             </a>
         </li>
@@ -207,6 +242,21 @@
                         <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Performance</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- Report Cards -->
+        <li class="mb-0.5 last:mb-0">
+            <a class="block pl-3 pr-3 py-2 rounded-lg transition {{ Route::is('teachers.report-cards') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('teachers.report-cards')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('teachers.report-cards') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-3h8v2H8v-2zm0-3h5v2H8V9z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Report Cards</span>
                 </div>
             </a>
         </li>

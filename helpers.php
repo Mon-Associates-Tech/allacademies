@@ -348,6 +348,11 @@ if (! function_exists('getTimeRemaining')) {
                 return $school ? $school->id : null;
             }
 
+            // Fallback to their assigned school if they have one
+            if ($user->school_id) {
+                return $user->school_id;
+            }
+
             // No school selected - return null
             return null;
         }
@@ -443,7 +448,6 @@ if (! function_exists('getTimeRemaining')) {
      * @param  int|null  $student_id  The student's database ID to search by
      * @param  int|null  $school_id  The school ID to filter by
      * @param  bool  $withoutScopes  Whether to bypass global scopes
-     * @return \App\Models\Student|null
      */
     function getStudent($user_id = null, $student_id = null, $school_id = null, $withoutScopes = true): ?Student
     {

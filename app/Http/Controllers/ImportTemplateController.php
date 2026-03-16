@@ -12,6 +12,7 @@ class ImportTemplateController extends Controller
             'librarians' => $this->getLibrarianTemplate(),
             'administrators' => $this->getAdministratorTemplate(),
             'parents' => $this->getParentTemplate(),
+            'accountants' => $this->getAccountantTemplate(),
         ];
 
         if (! isset($templates[$type])) {
@@ -34,18 +35,19 @@ class ImportTemplateController extends Controller
         $formats = [
             'students' => [
                 'title' => 'Students Import Format',
-                'description' => 'Upload CSV file with student information',
+                'description' => 'Upload CSV file with student information. Student records will be linked to a user account.',
                 'required_columns' => [
                     'first_name' => 'Student\'s first name (required)',
                     'last_name' => 'Student\'s last name (required)',
-                    'email' => 'Student\'s email address (required, must be unique)',
+                    'email' => 'Student\'s email address (required, must be unique across the system)',
                     'academic_group_id' => 'ID of academic group (must exist in system)',
                     'academic_level_id' => 'ID of academic level (must exist in system)',
                 ],
                 'optional_columns' => [
-                    'phone', 'date_of_birth', 'gender', 'student_id', 'admission_date',
-                    'blood_group', 'address', 'parent_name', 'parent_phone', 'parent_email',
-                    'emergency_contact', 'city', 'state', 'country', 'postal_code',
+                    'other_name', 'username', 'password', 'phone', 'date_of_birth', 'gender', 'student_id',
+                    'admission_date', 'blood_group', 'address', 'city', 'region', 'country',
+                    'parent_name', 'parent_phone', 'parent_email', 'emergency_contact',
+                    'bio', 'favorite_subjects', 'learning_goals', 'school_name', 'student_group_name',
                 ],
             ],
             'teachers' => [
@@ -57,9 +59,9 @@ class ImportTemplateController extends Controller
                     'email' => 'Teacher\'s email address (required, must be unique)',
                 ],
                 'optional_columns' => [
-                    'phone', 'date_of_birth', 'gender', 'qualification', 'specialization',
-                    'employee_id', 'hire_date', 'address', 'city', 'state', 'country',
-                    'emergency_contact', 'subjects', 'academic_levels', 'department',
+                    'other_names', 'phone', 'date_of_birth', 'gender', 'qualification', 'specialization',
+                    'employee_id', 'hire_date', 'address', 'city', 'region', 'country',
+                    'emergency_contact', 'department',
                 ],
             ],
             'librarians' => [
@@ -72,8 +74,8 @@ class ImportTemplateController extends Controller
                 ],
                 'optional_columns' => [
                     'phone', 'date_of_birth', 'gender', 'qualification',
-                    'employee_id', 'hire_date', 'address', 'city', 'state', 'country',
-                    'emergency_contact', 'certification', 'specialization',
+                    'employee_id', 'hire_date', 'address', 'city', 'region', 'country',
+                    'emergency_contact',
                 ],
             ],
             'administrators' => [
@@ -86,8 +88,8 @@ class ImportTemplateController extends Controller
                 ],
                 'optional_columns' => [
                     'phone', 'date_of_birth', 'gender', 'position', 'department',
-                    'employee_id', 'hire_date', 'address', 'city', 'state', 'country',
-                    'emergency_contact', 'qualification', 'responsibilities',
+                    'employee_id', 'hire_date', 'address', 'city', 'region', 'country',
+                    'emergency_contact', 'qualification',
                 ],
             ],
             'parents' => [
@@ -100,8 +102,21 @@ class ImportTemplateController extends Controller
                     'student_id' => 'Student ID to link parent to (must exist)',
                 ],
                 'optional_columns' => [
-                    'phone', 'address', 'city', 'state', 'country', 'postal_code',
-                    'relationship', 'occupation', 'emergency_contact', 'secondary_phone',
+                    'phone', 'address', 'city', 'region', 'country',
+                    'relationship', 'occupation', 'emergency_contact',
+                ],
+            ],
+            'accountants' => [
+                'title' => 'Accountants Import Format',
+                'description' => 'Upload CSV file with accountant information',
+                'required_columns' => [
+                    'first_name' => 'Accountant\'s first name (required)',
+                    'last_name' => 'Accountant\'s last name (required)',
+                    'email' => 'Accountant\'s email address (required, must be unique)',
+                ],
+                'optional_columns' => [
+                    'phone', 'date_of_birth', 'gender',
+                    'employee_id', 'hire_date', 'address', 'city', 'region', 'country',
                 ],
             ],
         ];
@@ -114,7 +129,10 @@ class ImportTemplateController extends Controller
         $headers = [
             'first_name',
             'last_name',
+            'other_name',
             'email',
+            'username',
+            'password',
             'phone',
             'date_of_birth',
             'gender',
@@ -125,19 +143,26 @@ class ImportTemplateController extends Controller
             'blood_group',
             'address',
             'city',
-            'state',
+            'region',
             'country',
-            'postal_code',
             'parent_name',
             'parent_phone',
             'parent_email',
             'emergency_contact',
+            'bio',
+            'favorite_subjects',
+            'learning_goals',
+            'school_name',
+            'student_group_name',
         ];
 
         $example = [
             'John',
             'Doe',
+            'Junior',
             'john.doe@example.com',
+            'johndoe24',
+            'password123',
             '+233201234567',
             '2010-05-15',
             'Male',
@@ -150,11 +175,15 @@ class ImportTemplateController extends Controller
             'Accra',
             'Greater Accra',
             'Ghana',
-            '00233',
             'Jane Doe',
             '+233207654321',
             'jane.doe@example.com',
             '+233501234567',
+            'Interested in science and art.',
+            'Science, Mathematics',
+            'Improve coding skills.',
+            'Springfield Academy',
+            'Year 10A',
         ];
 
         return $this->generateCsv($headers, [$example]);
@@ -165,6 +194,7 @@ class ImportTemplateController extends Controller
         $headers = [
             'first_name',
             'last_name',
+            'other_names',
             'email',
             'phone',
             'date_of_birth',
@@ -175,7 +205,7 @@ class ImportTemplateController extends Controller
             'hire_date',
             'address',
             'city',
-            'state',
+            'region',
             'country',
             'emergency_contact',
             'department',
@@ -184,6 +214,7 @@ class ImportTemplateController extends Controller
         $example = [
             'Alice',
             'Smith',
+            '',
             'alice.smith@school.com',
             '+233301234567',
             '1985-03-20',
@@ -321,6 +352,43 @@ class ImportTemplateController extends Controller
             'STD2024001',
             '+233807654321',
             '+233901234567',
+        ];
+
+        return $this->generateCsv($headers, [$example]);
+    }
+
+    private function getAccountantTemplate()
+    {
+        $headers = [
+            'first_name',
+            'last_name',
+            'other_names',
+            'email',
+            'phone',
+            'date_of_birth',
+            'gender',
+            'employee_id',
+            'hire_date',
+            'address',
+            'city',
+            'region',
+            'country',
+        ];
+
+        $example = [
+            'Sarah',
+            'Miller',
+            '',
+            'sarah.miller@school.com',
+            '+233701234567',
+            '1985-06-20',
+            'Female',
+            'ACC2024001',
+            '2024-01-01',
+            '321 Finance Blvd',
+            'Accra',
+            'Greater Accra',
+            'Ghana',
         ];
 
         return $this->generateCsv($headers, [$example]);

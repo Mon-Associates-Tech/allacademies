@@ -21,19 +21,19 @@ class SignInController extends Controller
     public function store(SignInRequest $request): \Illuminate\Http\RedirectResponse
     {
         // Rate limiting for login attempts
-        $key = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
+        $key = Str::transliterate(Str::lower($request->input('login')).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
-                'email' => trans('auth.throttle', [
+                'login' => trans('auth.throttle', [
                     'seconds' => $seconds,
                     'minutes' => ceil($seconds / 60),
                 ]),
             ]);
         }
 
-        if (auth()->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        if (auth()->attempt($this->credentials($request), $request->boolean('remember'))) {
             RateLimiter::clear($key);
 
             $user = auth()->user();
@@ -65,7 +65,7 @@ class SignInController extends Controller
                 // Redirect to suspended account page
                 return redirect()->route('login')
                     ->withErrors([
-                        'email' => 'Your account has been suspended. Please contact the administrator for more information.',
+                        'login' => 'Your account has been suspended. Please contact the administrator for more information.',
                     ]);
             }
 
@@ -103,8 +103,19 @@ class SignInController extends Controller
         RateLimiter::hit($key);
 
         return back()->withErrors([
-            'email' => trans('auth.failed'),
-        ])->onlyInput('email');
+            'login' => trans('auth.failed'),
+        ])->onlyInput('login');
+    }
+
+    protected function credentials(Request $request): array
+    {
+        $login = $request->input('login');
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        return [
+            $field => $login,
+            'password' => $request->password,
+        ];
     }
 
     public function show2faForm()
@@ -114,7 +125,7 @@ class SignInController extends Controller
 
         if (! $otpEnabled) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Two-factor authentication is not enabled.',
+                'login' => 'Two-factor authentication is not enabled.',
             ]);
         }
 
@@ -132,7 +143,7 @@ class SignInController extends Controller
 
         if (! $otpEnabled) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Two-factor authentication is not enabled.',
+                'login' => 'Two-factor authentication is not enabled.',
             ]);
         }
 
@@ -141,7 +152,7 @@ class SignInController extends Controller
         // Check if user session exists
         if (! session('2fa:user:id')) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Session expired. Please sign in again.',
+                'login' => 'Session expired. Please sign in again.',
             ]);
         }
 
@@ -153,7 +164,7 @@ class SignInController extends Controller
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
 
             return redirect()->route('login')->withErrors([
-                'email' => 'Too many failed attempts. Please sign in again.',
+                'login' => 'Too many failed attempts. Please sign in again.',
             ]);
         }
 
@@ -164,7 +175,7 @@ class SignInController extends Controller
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend']);
 
             return redirect()->route('login')->withErrors([
-                'email' => 'User not found. Please sign in again.',
+                'login' => 'User not found. Please sign in again.',
             ]);
         }
 
@@ -190,7 +201,7 @@ class SignInController extends Controller
 
             return redirect()->route('login')
                 ->withErrors([
-                    'email' => 'Your account has been suspended. Please contact the administrator for more information.',
+                    'login' => 'Your account has been suspended. Please contact the administrator for more information.',
                 ]);
         }
 

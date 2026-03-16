@@ -1,0 +1,333 @@
+<?php
+
+namespace App\Livewire\Teachers;
+
+use App\Models\GeneralExam;
+use App\Models\GeneralExamQuestion;
+use App\Models\GeneralExamSubmission;
+use App\Services\GeneralExam\GeneralExamGradingService;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+
+class GradePublicAssignmentSubmission extends Component
+{
+    public GeneralExamSubmission $submission;
+
+    public GeneralExam $assignment;
+
+    public array $questionGrades = [];
+
+    public string $overallFeedback = '';
+
+    public int $currentQuestionIndex = 0;
+
+    public bool $showProctoringDetails = false;
+
+    protected GeneralExamGradingService $gradingService;
+
+    public function boot(GeneralExamGradingService $gradingService): void
+    {
+        $this->gradingService = $gradingService;
+    }
+
+    public function mount(GeneralExamSubmission $submission): void
+    {
+        $this->submission = $submission;
+        $this->assignment = $submission->assignment;
+
+        $user = Auth::user();
+        $ownsByUser = $this->assignment->user_id === $user->id;
+        $ownsByTeacher = $user?->teacher && $this->assignment->teacher_id === $user->teacher->id;
+
+        if (! ($ownsByUser || $ownsByTeacher)) {
+            abort(403, 'Unauthorized access to grade this submission.');
+        }
+
+        $this->overallFeedback = $submission->teacher_feedback ?? '';
+        $this->initializeQuestionGrades();
+    }
+
+    protected function initializeQuestionGrades(): void
+    {
+        $responses = $this->submission->responses ?? [];
+        $questions = $this->assignment->questions;
+
+        foreach ($questions as $question) {
+            $questionId = $question->id;
+            $response = $responses[$questionId] ?? [];
+
+            $this->questionGrades[$questionId] = [
+                'points' => $response['points_earned'] ?? 0,
+                'feedback' => $response['manual_feedback'] ?? $response['feedback'] ?? '',
+                'is_graded' => $response['manually_graded'] ?? false,
+            ];
+        }
+    }
+
+    public function nextQuestion(): void
+    {
+        $totalQuestions = $this->assignment->questions->count();
+        if ($this->currentQuestionIndex < $totalQuestions - 1) {
+            $this->currentQuestionIndex++;
+        }
+    }
+
+    public function previousQuestion(): void
+    {
+        if ($this->currentQuestionIndex > 0) {
+            $this->currentQuestionIndex--;
+        }
+    }
+
+    public function goToQuestion(int $index): void
+    {
+        $totalQuestions = $this->assignment->questions->count();
+        if ($index >= 0 && $index < $totalQuestions) {
+            $this->currentQuestionIndex = $index;
+        }
+    }
+
+    public function saveQuestionGrade(int $questionId): void
+    {
+        $question = GeneralExamQuestion::find($questionId);
+
+        if (! $question || $question->general_exam_id !== $this->assignment->id) {
+            session()->flash('error', 'Invalid question.');
+
+            return;
+        }
+
+        $gradeData = $this->questionGrades[$questionId] ?? null;
+
+        if (! $gradeData) {
+            session()->flash('error', 'Grade data not found.');
+
+            return;
+        }
+
+        // Determine points
+        $points = (float) ($gradeData['points'] ?? 0);
+
+        // Auto-grade objective types
+        if (in_array($question->type, ['multiple_choice', 'true_false'], true)) {
+            $response = $this->getResponseForQuestion($questionId);
+            $isCorrect = $this->isResponseCorrect($question, $response);
+            $points = $isCorrect ? $question->marks : 0;
+            $gradeData['feedback'] = $gradeData['feedback'] ?? ($isCorrect ? 'Auto-graded: correct' : 'Auto-graded: incorrect');
+        }
+
+        // Basic floor at 0
+        $points = max(0, $points);
+
+        try {
+            $this->gradingService->manualGradeQuestion(
+                $this->submission,
+                $questionId,
+                $points,
+                $gradeData['feedback'] ?? null,
+                Auth::id()
+            );
+
+            $this->questionGrades[$questionId]['is_graded'] = true;
+            $this->submission->refresh();
+
+            session()->flash('success', 'Question grade saved successfully.');
+
+            // Move to next question after save
+            $totalQuestions = $this->assignment->questions->count();
+            if ($this->currentQuestionIndex < $totalQuestions - 1) {
+                $this->currentQuestionIndex++;
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to save grade: '.$e->getMessage());
+        }
+    }
+
+    public function saveAllGrades(): void
+    {
+        $questions = $this->assignment->questions;
+
+        foreach ($questions as $question) {
+            $questionId = $question->id;
+            $gradeData = $this->questionGrades[$questionId] ?? null;
+
+            if ($gradeData) {
+                $points = (float) $gradeData['points'];
+                $points = max(0, min($question->marks, $points));
+
+                try {
+                    $this->gradingService->manualGradeQuestion(
+                        $this->submission,
+                        $questionId,
+                        $points,
+                        $gradeData['feedback'] ?? null,
+                        Auth::id()
+                    );
+                } catch (\Exception $e) {
+                    // Continue with other questions
+                }
+            }
+        }
+
+        $this->submission->refresh();
+        $this->initializeQuestionGrades();
+
+        session()->flash('success', 'All grades saved successfully.');
+    }
+
+    public function finalizeGrading(): void
+    {
+        try {
+            $this->gradingService->finalizeGrading(
+                $this->submission,
+                Auth::user(),
+                $this->overallFeedback
+            );
+
+            $this->submission->refresh();
+
+            session()->flash('success', 'Grading finalized successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to finalize grading: '.$e->getMessage());
+        }
+    }
+
+    public function toggleProctoringDetails(): void
+    {
+        $this->showProctoringDetails = ! $this->showProctoringDetails;
+    }
+
+    public function getQuestionsProperty()
+    {
+        return $this->assignment->questions()->orderBy('order')->get();
+    }
+
+    public function getCurrentQuestionProperty()
+    {
+        return $this->questions[$this->currentQuestionIndex] ?? null;
+    }
+
+    public function getResponseForQuestion(int $questionId): ?string
+    {
+        $responses = $this->submission->responses ?? [];
+
+        return $responses[$questionId]['response'] ?? null;
+    }
+
+    protected function isResponseCorrect(GeneralExamQuestion $question, mixed $response): bool
+    {
+        if ($response === null) {
+            return false;
+        }
+
+        if ($question->type === 'multiple_choice') {
+            $normalizedResponse = strtoupper(trim((string) $response));
+            $normalizedCorrect = strtoupper(trim((string) $question->correct_answer));
+            return $normalizedResponse === $normalizedCorrect;
+        }
+
+        if ($question->type === 'true_false') {
+            $trueValues = ['true', '1', 'yes', 't'];
+            $falseValues = ['false', '0', 'no', 'f'];
+            $normalizedResponse = strtolower(trim((string) $response));
+            $normalizedCorrect = strtolower(trim((string) $question->correct_answer));
+            $responseIsTrue = in_array($normalizedResponse, $trueValues, true);
+            $responseIsFalse = in_array($normalizedResponse, $falseValues, true);
+            $correctIsTrue = in_array($normalizedCorrect, $trueValues, true);
+            return ($responseIsTrue && $correctIsTrue) || ($responseIsFalse && ! $correctIsTrue);
+        }
+
+        return false;
+    }
+
+    public function getGradingProgressProperty(): array
+    {
+        $total = $this->assignment->questions->count();
+        $graded = 0;
+        $correct = 0;
+
+        // Count graded based on submission responses (auto-graded + manual)
+        foreach ($this->submission->responses ?? [] as $resp) {
+            if (array_key_exists('is_correct', $resp)) {
+                $graded++;
+                if ($resp['is_correct'] === true) {
+                    $correct++;
+                }
+            }
+        }
+
+        return [
+            'total' => $total,
+            'graded' => $graded,
+            'correct' => $correct,
+            'percentage' => $total > 0 ? round(($graded / $total) * 100) : 0,
+        ];
+    }
+
+    public function getParticipantInfoProperty(): array
+    {
+        $timeSpentSeconds = $this->submission->time_spent_seconds;
+        if ($this->submission->started_at && $this->submission->submitted_at) {
+            // Use absolute to guard against clock skew; fall back to stored value if available and positive
+            $diff = $this->submission->submitted_at->diffInSeconds($this->submission->started_at, true);
+            if ($diff > 0) {
+                $timeSpentSeconds = $diff;
+            }
+        }
+
+        return [
+            'name' => $this->submission->getParticipantName(),
+            'email' => $this->submission->getParticipantEmail(),
+            'started_at' => $this->submission->started_at?->format('M d, Y H:i'),
+            'submitted_at' => $this->submission->submitted_at?->format('M d, Y H:i'),
+            'time_spent' => $this->formatTimeSpent($timeSpentSeconds),
+            'attempt_number' => $this->submission->attempt_number,
+        ];
+    }
+
+    public function getProctoringInfoProperty(): ?array
+    {
+        $session = $this->submission->proctoringSession;
+
+        if (! $session) {
+            return null;
+        }
+
+        return [
+            'status' => $session->status,
+            'is_valid' => $session->is_valid,
+            'violations' => $session->getViolationSummary(),
+            'duration' => $this->formatTimeSpent($session->getDuration()),
+        ];
+    }
+
+    protected function formatTimeSpent(?int $seconds): string
+    {
+        if (! $seconds) {
+            return 'N/A';
+        }
+
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%dh %dm %ds', $hours, $minutes, $secs);
+        } elseif ($minutes > 0) {
+            return sprintf('%dm %ds', $minutes, $secs);
+        }
+
+        return sprintf('%ds', $secs);
+    }
+
+    public function render()
+    {
+        return view('livewire.teachers.grade-general-exam-submission', [
+            'questions' => $this->questions,
+            'currentQuestion' => $this->currentQuestion,
+            'gradingProgress' => $this->gradingProgress,
+            'participantInfo' => $this->participantInfo,
+            'proctoringInfo' => $this->proctoringInfo,
+        ]);
+    }
+}
