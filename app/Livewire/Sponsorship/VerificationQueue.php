@@ -162,7 +162,7 @@ class VerificationQueue extends Component
                 ->whereNotNull('rejected_at')->count(),
         ];
 
-        return view('livewire.sponsorship.verification-queue', [
+        return view('livewire.sponsorships.verification-queue', [
             'programs' => $programs,
             'types' => SponsorshipProject::getTypes(),
             'stats' => $stats,

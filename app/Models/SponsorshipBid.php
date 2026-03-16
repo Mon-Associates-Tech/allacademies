@@ -15,7 +15,7 @@ class SponsorshipBid extends Model
     const STATUS_REJECTED = 'rejected';
     protected $fillable = [
         'sponsorship_offer_id',
-        'sponsorship_project_id',
+        'sponsorship_program_id',
         'user_id',
         'message',
         'status',
@@ -43,7 +43,7 @@ class SponsorshipBid extends Model
      */
     public function sponsorshipOffer(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipOffer::class);
+        return $this->belongsTo(SponsorshipOffer::class, 'sponsor_offer_id');
     }
 
     /**

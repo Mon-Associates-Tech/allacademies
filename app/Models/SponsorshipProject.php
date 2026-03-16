@@ -13,6 +13,7 @@ class SponsorshipProject extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'sponsorship_programs';
     protected $fillable = [
         'user_id',
         'school_id',

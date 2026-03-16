@@ -17,7 +17,7 @@ class SponsorshipContribution extends Model
     const STATUS_REFUNDED = 'refunded';
     const PLATFORM_FEE_PERCENTAGE = 0.01;
     protected $fillable = [
-        'sponsorship_project_id',
+        'sponsorship_program_id',
         'sponsorship_offer_id',
         'user_id',
         'payer_name',
@@ -107,7 +107,7 @@ class SponsorshipContribution extends Model
      */
     public function sponsorshipProject(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipProject::class);
+        return $this->belongsTo(SponsorshipProject::class, 'sponsorship_program_id');
     }
 
     /**

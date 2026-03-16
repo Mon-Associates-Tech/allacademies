@@ -13,7 +13,7 @@
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Verification Queue</h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Review and approve sponsorship
-                        programs</p>
+                        projects</p>
                 </div>
             </div>
         </div>
@@ -137,7 +137,7 @@
                 </button>
                 <button wire:click="setTab('verified')"
                         class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'verified' ? 'border-emerald-600 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400' }}">
-                    Verified Programs
+                    Verified projects
                     @if($stats['verified_total'] > 0)
                         <span
                             class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full {{ $activeTab === 'verified' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }}">
@@ -147,7 +147,7 @@
                 </button>
                 <button wire:click="setTab('rejected')"
                         class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors {{ $activeTab === 'rejected' ? 'border-red-600 text-red-600 dark:border-red-400 dark:text-red-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400' }}">
-                    Rejected Programs
+                    Rejected projects
                     @if($stats['rejected_total'] > 0)
                         <span
                             class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full {{ $activeTab === 'rejected' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }}">
@@ -249,11 +249,11 @@
                     <path class="opacity-75" fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="text-slate-700 dark:text-slate-300 font-medium text-sm">Loading programs...</span>
+                <span class="text-slate-700 dark:text-slate-300 font-medium text-sm">Loading projects...</span>
             </div>
         </div>
 
-        <!-- Programs List -->
+        <!-- projects List -->
         <div class="space-y-6">
             @forelse($programs as $program)
                 <div
@@ -338,14 +338,14 @@
                             </div>
                         </div>
 
-                        <!-- Program Description Preview (Always Visible) -->
+                        <!-- Project Description Preview (Always Visible) -->
                         <div class="mb-5">
                             <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                Program Description
+                                Project Description
                             </h4>
                             <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                                 {{ in_array($program->id, $expandedPrograms) ? $program->description : Str::limit($program->description, 300) }}
@@ -487,8 +487,8 @@
                                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Programs Pending Review</h3>
-                    <p class="text-gray-500 dark:text-gray-400">All submitted programs have been verified!</p>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Projects Pending Review</h3>
+                    <p class="text-gray-500 dark:text-gray-400">All submitted Projects have been verified!</p>
                 </div>
             @endforelse
         </div>
@@ -516,11 +516,11 @@
                                       d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Reject Program</h3>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Reject Project</h3>
                     </div>
 
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Please provide a detailed reason for rejecting this program. This feedback will help the
+                        Please provide a detailed reason for rejecting this project. This feedback will help the
                         benefactor improve their submission.
                     </p>
 
@@ -531,7 +531,7 @@
                         <textarea wire:model="rejectionReason"
                                   rows="5"
                                   class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-                                  placeholder="Explain why this program does not meet the verification criteria..."></textarea>
+                                  placeholder="Explain why this project does not meet the verification criteria..."></textarea>
                         @error('rejectionReason')
                         <p class="text-rose-600 dark:text-rose-400 text-sm mt-1">{{ $message }}</p>
                         @enderror

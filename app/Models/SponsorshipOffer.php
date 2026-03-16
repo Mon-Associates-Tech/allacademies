@@ -13,6 +13,8 @@ class SponsorshipOffer extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'sponsor_offers';
+
     const STATUS_OPEN = 'open';
     const STATUS_CLOSED = 'closed';
     const STATUS_FULFILLED = 'fulfilled';
