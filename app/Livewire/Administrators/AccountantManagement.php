@@ -109,7 +109,7 @@ class AccountantManagement extends Component
                 'school_id' => $schoolId,
                 'phone' => $this->phone,
                 'address' => $this->address,
-                'date_of_birth' => $this->dateOfBirth,
+                'date_of_birth' => $this->dateOfBirth ?? now()->subYears(20),
                 'employee_id' => $this->employeeId,
                 'hire_date' => $this->hireDate ?: now(),
             ]);
