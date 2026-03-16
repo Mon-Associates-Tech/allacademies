@@ -152,7 +152,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $modelClass = self::ROLE_MODEL_MAP[$role];
         $data = ['user_id' => $this->id];
 
-        if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent']) && $this->school_id) {
+        if (in_array($role, ['student', 'teacher', 'librarian', 'author', 'parent', 'accountant']) && $this->school_id) {
             $data['school_id'] = $this->school_id;
             $data = array_merge($data, $this->getRoleSpecificData($role, $modelClass));
         }
