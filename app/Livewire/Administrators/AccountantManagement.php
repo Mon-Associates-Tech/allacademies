@@ -96,6 +96,7 @@ class AccountantManagement extends Component
                 'is_active' => $this->isActive,
                 'has_default_password' => true,
                 'email_verified_at' => now(),
+                'school_id' => $schoolId,
             ]);
 
             $accountantRole = Role::where('name', 'accountant')->first();
