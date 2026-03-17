@@ -140,25 +140,27 @@ class Overview extends Component
         $startDate = $this->getPeriodStartDate();
         $schoolId = $this->getSchoolId();
 
-        // Build base queries with school scoping
+        // Build base query with school scoping through books and students
         $bookQuery = Book::query();
         $borrowingQuery = BookBorrowing::query();
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            $borrowingQuery->where('school_id', $schoolId);
+            // Borrowings are scoped through the student's school
+            $borrowingQuery->whereHas('student', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
         }
 
         return [
             'total_books' => $bookQuery->count(),
-            'published_books' => (clone $bookQuery)->where('status', 'published')->count(),
+            'available_books' => (clone $bookQuery)->where('status', 'active')->count(),
             'pending_approval' => (clone $bookQuery)->where('status', 'pending')->orWhereNull('status')->count(),
-            'active_borrowings' => $borrowingQuery->where('status', 'active')->count(),
+            'total_borrowings' => $borrowingQuery->count(),
+            'active_borrowings' => (clone $borrowingQuery)->where('status', 'active')->count(),
             'overdue_books' => (clone $borrowingQuery)->where('status', 'active')
                 ->where('due_date', '<', now())->count(),
-            'new_borrowings' => (clone $borrowingQuery)->where('created_at', '>=', $startDate)->count(),
-            'returned_books' => (clone $borrowingQuery)->where('status', 'returned')
-                ->where('updated_at', '>=', $startDate)->count(),
+            'books_borrowed_period' => (clone $borrowingQuery)->where('created_at', '>=', $startDate)->count(),
         ];
     }
 
@@ -484,7 +486,10 @@ class Overview extends Component
 
         if ($schoolId) {
             $userQuery->where('school_id', $schoolId);
-            $borrowingQuery->where('school_id', $schoolId);
+            // Borrowings scoped through student's school
+            $borrowingQuery->whereHas('student', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
             $bookQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
@@ -520,11 +525,13 @@ class Overview extends Component
         $schoolId = $this->getSchoolId();
         $alerts = [];
 
-        // Check for overdue books (school-scoped)
+        // Check for overdue books (scoped through student's school)
         $overdueQuery = BookBorrowing::where('status', 'active')
             ->where('due_date', '<', now());
         if ($schoolId) {
-            $overdueQuery->where('school_id', $schoolId);
+            $overdueQuery->whereHas('student', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
         }
         $overdueCount = $overdueQuery->count();
         
@@ -635,7 +642,10 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            $borrowingQuery->where('school_id', $schoolId);
+            // Borrowings scoped through student's school
+            $borrowingQuery->whereHas('student', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
@@ -826,7 +836,11 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->whereHas('student', function ($subQ) use ($schoolId) {
+                    $subQ->where('school_id', $schoolId);
+                });
+            })
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -879,7 +893,12 @@ class Overview extends Component
             ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
             ->join('books', 'book_category.book_id', '=', 'books.id')
             ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
-            ->when($schoolId, fn ($q) => $q->where('book_borrowings.school_id', $schoolId))
+            ->when($schoolId, function ($q) use ($schoolId) {
+                // Filter by student's school since borrowings don't have school_id
+                $q->whereHas('student', function ($subQ) use ($schoolId) {
+                    $subQ->where('school_id', $schoolId);
+                });
+            })
             ->where('book_borrowings.created_at', '>=', $this->getPeriodStartDate())
             ->groupBy('book_categories.id', 'book_categories.name')
             ->orderBy('borrowings_count', 'desc')
