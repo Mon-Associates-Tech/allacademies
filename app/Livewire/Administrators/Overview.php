@@ -140,14 +140,14 @@ class Overview extends Component
         $startDate = $this->getPeriodStartDate();
         $schoolId = $this->getSchoolId();
 
-        // Build base query with school scoping through books and students
+        // Build base query with school scoping through books and users
         $bookQuery = Book::query();
         $borrowingQuery = BookBorrowing::query();
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            // Borrowings are scoped through the student's school
-            $borrowingQuery->whereHas('student', function ($q) use ($schoolId) {
+            // Borrowings are scoped through the user's school
+            $borrowingQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
             });
         }
@@ -486,8 +486,8 @@ class Overview extends Component
 
         if ($schoolId) {
             $userQuery->where('school_id', $schoolId);
-            // Borrowings scoped through student's school
-            $borrowingQuery->whereHas('student', function ($q) use ($schoolId) {
+            // Borrowings scoped through user's school
+            $borrowingQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
             });
             $bookQuery->where('school_id', $schoolId);
@@ -525,11 +525,11 @@ class Overview extends Component
         $schoolId = $this->getSchoolId();
         $alerts = [];
 
-        // Check for overdue books (scoped through student's school)
+        // Check for overdue books (scoped through user's school)
         $overdueQuery = BookBorrowing::where('status', 'active')
             ->where('due_date', '<', now());
         if ($schoolId) {
-            $overdueQuery->whereHas('student', function ($q) use ($schoolId) {
+            $overdueQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
             });
         }
@@ -642,8 +642,8 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            // Borrowings scoped through student's school
-            $borrowingQuery->whereHas('student', function ($q) use ($schoolId) {
+            // Borrowings scoped through user's school
+            $borrowingQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
             });
             $paymentQuery->where('school_id', $schoolId);
@@ -837,7 +837,7 @@ class Overview extends Component
             DB::raw('COUNT(*) as count')
         )
             ->when($schoolId, function ($q) use ($schoolId) {
-                $q->whereHas('student', function ($subQ) use ($schoolId) {
+                $q->whereHas('user', function ($subQ) use ($schoolId) {
                     $subQ->where('school_id', $schoolId);
                 });
             })
@@ -894,8 +894,8 @@ class Overview extends Component
             ->join('books', 'book_category.book_id', '=', 'books.id')
             ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
             ->when($schoolId, function ($q) use ($schoolId) {
-                // Filter by student's school since borrowings don't have school_id
-                $q->whereHas('student', function ($subQ) use ($schoolId) {
+                // Filter by user's school since borrowings have user_id
+                $q->whereHas('user', function ($subQ) use ($schoolId) {
                     $subQ->where('school_id', $schoolId);
                 });
             })

@@ -24,11 +24,6 @@ class BookBorrowing extends Model
         'return_date' => 'datetime',
     ];
 
-    public function student()
-    {
-        return $this->belongsTo(Student::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
