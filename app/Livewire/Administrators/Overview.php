@@ -524,10 +524,10 @@ class Overview extends Component
         $overdueQuery = BookBorrowing::where('status', 'active')
             ->where('due_date', '<', now());
         if ($schoolId) {
-            $overdueQuery->where('school_id', $schoolId);
+           // $overdueQuery->where('school_id', $schoolId);
         }
         $overdueCount = $overdueQuery->count();
-        
+
         if ($overdueCount > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -543,7 +543,7 @@ class Overview extends Component
             $pendingBooksQuery->where('school_id', $schoolId);
         }
         $pendingBooks = $pendingBooksQuery->count();
-        
+
         if ($pendingBooks > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -559,7 +559,7 @@ class Overview extends Component
             $unverifiedQuery->where('school_id', $schoolId);
         }
         $unverifiedUsers = $unverifiedQuery->count();
-        
+
         if ($unverifiedUsers > 10) {
             $alerts[] = [
                 'type' => 'warning',
@@ -575,7 +575,7 @@ class Overview extends Component
             $pendingPaymentsQuery->where('school_id', $schoolId);
         }
         $pendingPayments = $pendingPaymentsQuery->count();
-        
+
         if ($pendingPayments > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -593,7 +593,7 @@ class Overview extends Component
             });
         }
         $activeSessions = $activeSessionsQuery->count();
-        
+
         if ($activeSessions > 0) {
             $alerts[] = [
                 'type' => 'success',
@@ -806,7 +806,7 @@ class Overview extends Component
     private function getUserGrowthTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return User::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
@@ -821,7 +821,7 @@ class Overview extends Component
     private function getBorrowingTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return BookBorrowing::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
@@ -836,7 +836,7 @@ class Overview extends Component
     private function getPaymentTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return SchoolPayment::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('SUM(amount) as total'),
@@ -853,7 +853,7 @@ class Overview extends Component
     private function getLoginTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return UserLogin::select(
             DB::raw('DATE(login_at) as date'),
             DB::raw('COUNT(*) as count'),
@@ -873,7 +873,7 @@ class Overview extends Component
     private function getPopularBookCategories()
     {
         $schoolId = $this->getSchoolId();
-        
+
         return BookCategory::select('book_categories.id', 'book_categories.name')
             ->selectRaw('COUNT(book_borrowings.id) as borrowings_count')
             ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
