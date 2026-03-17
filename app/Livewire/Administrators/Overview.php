@@ -146,7 +146,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            $borrowingQuery->where('school_id', $schoolId);
+           // $borrowingQuery->where('school_id', $schoolId);
         }
 
         return [
