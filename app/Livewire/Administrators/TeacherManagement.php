@@ -225,6 +225,17 @@ class TeacherManagement extends Component
         }
     }
 
+    private function generateEmployeeId($schoolId, $schoolCode = 'SCH'): string
+    {
+        // Get the next sequence number for this school
+        $sequence = Teacher::where('school_id', $schoolId)
+            ->where('employee_id', 'like', "{$schoolCode}T%")
+            ->count() + 1;
+
+        // Generate employee ID in format: SCH001T0001
+        return $schoolCode . 'T' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
     public function create()
     {
         $schoolId = getSchoolId();
@@ -272,14 +283,22 @@ class TeacherManagement extends Component
                     $user->roles()->attach($teacherRole);
                 }
 
-                // Step 3: Create teacher record with school_id
+                // Step 3: Generate employee ID
+                $school = School::find($schoolId);
+                $employeeId = $this->generateEmployeeId($schoolId, $school?->code ?? 'SCH');
+
+                // Step 4: Create teacher record with school_id and employee_id
                 $teacher = Teacher::create([
                     'user_id' => $user->id,
                     'school_id' => $schoolId,
+                    'employee_id' => $employeeId,
                     'specialization' => $this->specialization,
+                    'hire_date' => now(),
+                    'employment_type' => 'full_time',
+                    'status' => 'active',
                 ]);
 
-                // Step 4: Associate with academic group
+                // Step 5: Associate with academic group
                 if ($this->academicGroupId) {
                     $teacher->academicGroups()->attach($this->academicGroupId, [
                         'is_primary' => true,
@@ -287,7 +306,7 @@ class TeacherManagement extends Component
                     ]);
                 }
 
-                // Step 5: Associate with academic level
+                // Step 6: Associate with academic level
                 if ($this->academicLevelId) {
                     $teacher->academicLevels()->attach($this->academicLevelId, [
                         'is_primary' => true,
@@ -295,7 +314,7 @@ class TeacherManagement extends Component
                     ]);
                 }
 
-                // Step 6: Associate with selected subjects
+                // Step 7: Associate with selected subjects
                 if (! empty($this->selectedSubjects)) {
                     $subjectData = [];
                     foreach ($this->selectedSubjects as $subjectId) {
@@ -307,7 +326,7 @@ class TeacherManagement extends Component
                     $teacher->subjects()->attach($subjectData);
                 }
 
-                // Step 7: Auto-assign all students at the same level
+                // Step 8: Auto-assign all students at the same level
                 $this->autoAssignStudents($teacher);
 
                 // Log the activity explicitly with meaningful context
