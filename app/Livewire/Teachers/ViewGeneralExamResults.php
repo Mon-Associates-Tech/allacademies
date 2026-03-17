@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ViewPublicAssignmentResults extends Component
+class ViewGeneralExamResults extends Component
 {
     use WithPagination;
 
