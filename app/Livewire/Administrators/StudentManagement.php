@@ -36,28 +36,48 @@ class StudentManagement extends Component
 
     // Extended user profile fields
     public $otherNames;
+
     public $phone;
+
     public $gender;
+
     public $countryCode;
+
     public $country;
+
     public $region;
+
     public $city;
+
     public $profileImageUrl;
+
     public $coverImage;
+
     public $userStatus = 'active';
+
     public $isActive = true;
 
     // Extended student profile fields
     public $dateOfBirth;
+
     public $bloodGroup;
+
     public $address;
+
     public $parentName;
+
     public $parentPhone;
+
     public $emergencyContact;
+
     public $idCardIssueDate;
+
     public $idCardExpiryDate;
+
     public $admissionDate;
+
     public $graduationDate;
+
     public $studentStatus = 'active';
 
     public $studentGroupId;
@@ -272,7 +292,6 @@ class StudentManagement extends Component
         $this->resetPage();
     }
 
-
     public function resetForm(): void
     {
 
@@ -374,7 +393,9 @@ class StudentManagement extends Component
         }
 
         $schoolId = getSchoolId();
-        if (!$schoolId) return;
+        if (! $schoolId) {
+            return;
+        }
 
         $group = AcademicGroup::with('teachers')->find($this->academicGroupId);
         $assignedTeacherIds = $group->teachers->pluck('id')->toArray();
@@ -419,6 +440,7 @@ class StudentManagement extends Component
             $this->availableTeachers = [];
         }
     }
+
     public function loadTeachersForLevelManagement(): void
     {
         if (! $this->academicLevelId) {
@@ -426,7 +448,9 @@ class StudentManagement extends Component
         }
 
         $schoolId = getSchoolId();
-        if (!$schoolId) return;
+        if (! $schoolId) {
+            return;
+        }
 
         $level = AcademicLevel::with('teachers')->find($this->academicLevelId);
         $assignedTeacherIds = $level->teachers->pluck('id')->toArray();
@@ -549,8 +573,9 @@ class StudentManagement extends Component
 
         $schoolId = getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             session()->flash('error', 'Please select a school before creating a teacher.');
+
             return;
         }
 
@@ -560,7 +585,7 @@ class StudentManagement extends Component
             'teacherPassword' => 'required|min:8',
         ]);
 
-        DB::transaction(function () {
+        DB::transaction(function () use ($schoolId) {
             // Create user
             $user = User::create([
                 'role' => 'teacher',
@@ -573,12 +598,14 @@ class StudentManagement extends Component
             $teacherRole = Role::where('name', 'teacher')->first();
             $user->roles()->attach($teacherRole);
 
-            // Get school ID from context
+            // Generate employee ID for teacher
+            $employeeId = Teacher::generateEmployeeId($schoolId);
 
             // Create teacher record
             $teacher = Teacher::create([
                 'user_id' => $user->id,
-                'school_id' => $schoolId, // ✅ Explicitly set school_id
+                'school_id' => $schoolId,
+                'employee_id' => $employeeId,
             ]);
 
             // Auto-assign to current academic group and level if selected
@@ -631,12 +658,13 @@ class StudentManagement extends Component
             $this->password = 'pass1234';
         }
 
-        //$this->validate();
+        // $this->validate();
 
         $schoolId = getSchoolId() ?? auth()->user()->school_id;
 
         if (! $schoolId) {
             session()->flash('error', 'Please select a school before creating a student.');
+
             return;
         }
 
@@ -648,7 +676,7 @@ class StudentManagement extends Component
                 "Cannot add more students. Remaining capacity: {$remaining}. ".
                 'Please renew your subscription or remove some students.'
             );
-           // return;
+            // return;
         }
 
         DB::transaction(function () use ($schoolId) {
@@ -661,7 +689,7 @@ class StudentManagement extends Component
                 'last_name' => $this->lastName,
                 'other_names' => $this->otherNames,
                 'email' => $this->email ?: null,
-                'login_type' => $this->email ? 'email': 'username',
+                'login_type' => $this->email ? 'email' : 'username',
                 'email_verified_at' => $this->email ? null : now(),
                 'password' => Hash::make($this->password),
                 'phone' => $this->phone,
@@ -705,7 +733,10 @@ class StudentManagement extends Component
                 'status' => $this->studentStatus,
             ]);
 
-            if(!$user->username || !$this->email){
+            // Initialize username variable to avoid undefined variable error
+            $generatedUsername = $user->username ?? '';
+
+            if (! $user->username || ! $this->email) {
                 // Generate and persist username now that student has an ID
                 $generatedUsername = app(StudentUsernameService::class)->generate($student);
                 $user->update([
@@ -713,7 +744,6 @@ class StudentManagement extends Component
                     'login_type' => 'username',
                 ]);
             }
-
 
             // Assign teachers to student
             if (! empty($this->selectedTeachers)) {
@@ -1034,7 +1064,7 @@ class StudentManagement extends Component
     {
         $schoolId = getSchoolId();
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             session()->flash('error', 'Please select a school to manage students.');
         }
 
