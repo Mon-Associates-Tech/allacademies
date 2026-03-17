@@ -13,6 +13,29 @@
 @endphp
 
 <x-layouts.app page-name="Users" :showTitleArea="false">
+    <!-- Success/Error Messages -->
+    @if (session()->has('success'))
+        <div class="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg shadow-sm">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ session('success') }}
+            </div>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg shadow-sm">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ session('error') }}
+            </div>
+        </div>
+    @endif
+
     <!-- Professional Header Section -->
     <div class=" mb-6">
         <!-- Header Card -->
@@ -253,6 +276,19 @@
                                 </button>
                             @endif
                         @endcan
+                        @if(!$user->email_verified_at)
+                            <form method="POST" action="{{ route('users.mark-as-verified', $user) }}" class="inline">
+                                @csrf
+                                <button type="submit" 
+                                        onclick="return confirm('Are you sure you want to mark this user as verified?')"
+                                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Verify
+                                </button>
+                            </form>
+                        @endif
                         @if($user->canBeImpersonated())
                             <a href="{{ route('impersonate', $user->id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
@@ -413,6 +449,22 @@
                                             </button>
                                         @endif
                                     @endcan
+
+                                    <!-- Mark as Verified Button -->
+                                    @if(!$user->email_verified_at)
+                                        <form method="POST" action="{{ route('users.mark-as-verified', $user) }}" class="inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    onclick="return confirm('Are you sure you want to mark this user as verified?')"
+                                                    class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
+                                                    title="Mark as Verified">
+                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                <span class="hidden sm:inline">Verify</span>
+                                            </button>
+                                        </form>
+                                    @endif
 
                                     <!-- Impersonate/Troubleshoot Button -->
                                     @if($user->canBeImpersonated())

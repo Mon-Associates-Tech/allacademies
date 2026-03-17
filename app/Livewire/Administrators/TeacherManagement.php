@@ -6,6 +6,7 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Enums\UserRole;
 use App\Models\Role;
 use App\Models\AcademicSubject;
 use App\Models\AcademicGroup;

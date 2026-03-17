@@ -172,6 +172,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
     Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');
+    Route::post('/users/{user}/mark-as-verified', [UserController::class, 'markAsVerified'])->name('users.mark-as-verified');
 
     /*
     |--------------------------------------------------------------------------

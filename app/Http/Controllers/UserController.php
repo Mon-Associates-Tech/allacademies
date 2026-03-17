@@ -76,11 +76,6 @@ class UserController extends Controller
                     $query->where('is_active', false);
                 }
             })
-            ->when($request->missing('all'), function ($query) {
-                if (! request()->hasAny(['verified', 'unverified'])) {
-                    $query->whereNotNull('email_verified_at');
-                }
-            })
             ->when($request->filled('sort_by'), function ($query) use ($request) {
                 $sortBy = $request->input('sort_by');
                 $sortDirection = $request->input('sort_direction', 'asc');
@@ -331,5 +326,35 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success',
             "Successfully changed {$user->name}'s role from {$oldRole} to {$user->role->value}."
         );
+    }
+
+    /**
+     * Mark a user's email as verified.
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function markAsVerified(User $user)
+    {
+        $this->authorize('administrate');
+
+        // Only allow verification if not already verified
+        if ($user->email_verified_at) {
+            return redirect()->route('users.index')
+                ->with('error', 'User is already verified.');
+        }
+
+        $user->update(['email_verified_at' => now()]);
+
+        // Log activity
+        $user->logActivity('update', 'User Verified', 'user', [
+            'user_name' => $user->name,
+            'email' => $user->email,
+            'verified_by' => auth()->user()?->name ?? 'Unknown',
+            'verified_at' => now(),
+        ]);
+
+        return redirect()->route('users.index')
+            ->with('success', "Successfully marked {$user->name} as verified.");
     }
 }
