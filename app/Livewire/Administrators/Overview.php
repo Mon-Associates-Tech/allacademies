@@ -484,7 +484,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $userQuery->where('school_id', $schoolId);
-            $borrowingQuery->where('school_id', $schoolId);
+           // $borrowingQuery->where('school_id', $schoolId);
             $bookQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
@@ -635,7 +635,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            $borrowingQuery->where('school_id', $schoolId);
+           // $borrowingQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
