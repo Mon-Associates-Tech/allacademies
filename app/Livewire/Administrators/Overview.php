@@ -179,7 +179,7 @@ class Overview extends Component
             $subjectQuery->where('school_id', $schoolId);
             $groupQuery->where('school_id', $schoolId);
             $levelQuery->where('school_id', $schoolId);
-            $subscriptionQuery->where('school_id', $schoolId);
+           // $subscriptionQuery->where('school_id', $schoolId);
             $assessmentQuery->where('school_id', $schoolId);
         }
 
