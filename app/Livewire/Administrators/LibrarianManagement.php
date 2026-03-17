@@ -146,20 +146,6 @@ class LibrarianManagement extends Component
         $this->resetPage();
     }
 
-    private function generateEmployeeId($schoolId): string
-    {
-        $school = School::find($schoolId);
-        $schoolCode = $school?->code ?? 'SCH';
-
-        // Get the next sequence number for this school
-        $sequence = Librarian::where('school_id', $schoolId)
-            ->where('employee_id', 'like', "{$schoolCode}L%")
-            ->count() + 1;
-
-        // Generate employee ID in format: SCH001L0001
-        return $schoolCode . 'L' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-    }
-
     public function create()
     {
         $schoolId = getSchoolId();
@@ -188,9 +174,6 @@ class LibrarianManagement extends Component
                 $user->roles()->attach($librarianRole);
             }
 
-            // Generate employee ID if not provided
-            $employeeId = $this->employeeId ?? $this->generateEmployeeId($schoolId);
-
             // Create librarian record
             $librarian = Librarian::create([
                 'user_id' => $user->id,
@@ -200,7 +183,7 @@ class LibrarianManagement extends Component
                 'phone' => $this->phone,
                 'address' => $this->address,
                 'date_of_birth' => $this->dateOfBirth,
-                'employee_id' => $employeeId,
+                'employee_id' => $this->employeeId,
                 'hire_date' => $this->hireDate ?: now(),
                 'qualifications' => $this->qualifications,
                 'specializations' => $this->specializations,

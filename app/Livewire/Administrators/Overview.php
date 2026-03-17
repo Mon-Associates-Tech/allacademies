@@ -38,32 +38,71 @@ class Overview extends Component
         $this->selectedPeriod = 'week';
     }
 
+    /**
+     * Get the school ID to filter statistics by.
+     * Returns null for owners/super_admins viewing all schools,
+     * or specific school_id for admins.
+     */
+    protected function getSchoolId(): ?int
+    {
+        $user = auth()->user();
+
+        // Owners and super admins can see all schools (no filtering)
+        if ($user->canAccessCrossSchool()) {
+            // Check if they have selected a specific school context
+            return getSchoolId();
+        }
+
+        // Admins and other school-bound users: restrict to their school
+        return $user->school_id;
+    }
+
     #[Computed]
     public function systemStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // Build base query for school-scoped users
+        $userQuery = User::query();
+        if ($schoolId) {
+            $userQuery->where('school_id', $schoolId);
+        }
 
         return [
-            'total_users' => User::count(),
-            'active_users' => User::where('last_seen_at', '>=', now()->subDays(7))->count(),
-            'verified_users' => User::whereNotNull('email_verified_at')->count(),
-            'pending_verification' => User::whereNull('email_verified_at')->count(),
-            'new_users_period' => User::where('created_at', '>=', $startDate)->count(),
-            'active_today' => User::where('last_seen_at', '>=', now()->startOfDay())->count(),
+            'total_users' => $userQuery->count(),
+            'active_users' => (clone $userQuery)->where('last_seen_at', '>=', now()->subDays(7))->count(),
+            'verified_users' => (clone $userQuery)->whereNotNull('email_verified_at')->count(),
+            'pending_verification' => (clone $userQuery)->whereNull('email_verified_at')->count(),
+            'new_users_period' => (clone $userQuery)->where('created_at', '>=', $startDate)->count(),
+            'active_today' => (clone $userQuery)->where('last_seen_at', '>=', now()->startOfDay())->count(),
         ];
     }
 
     #[Computed]
     public function userBreakdown()
     {
+        $schoolId = $this->getSchoolId();
+
+        // Build base queries with school scoping
+        $studentQuery = Student::query();
+        $teacherQuery = Teacher::query();
+        $userQuery = User::query();
+
+        if ($schoolId) {
+            $studentQuery->where('school_id', $schoolId);
+            $teacherQuery->where('school_id', $schoolId);
+            $userQuery->where('school_id', $schoolId);
+        }
+
         return [
-            'students' => Student::count(),
-            'teachers' => Teacher::count(),
-            'librarians' => User::where('role', 'librarian')->count(),
-            'authors' => User::where('role', 'author')->count(),
-            'parents' => User::where('role', 'parent')->count(),
-            'administrators' => User::whereIn('role', ['admin', 'owner'])->count(),
-            'moderators' => User::where('role', 'moderator')->count(),
+            'students' => $studentQuery->count(),
+            'teachers' => $teacherQuery->count(),
+            'librarians' => (clone $userQuery)->where('role', 'librarian')->count(),
+            'authors' => (clone $userQuery)->where('role', 'author')->count(),
+            'parents' => (clone $userQuery)->where('role', 'parent')->count(),
+            'administrators' => (clone $userQuery)->whereIn('role', ['admin', 'owner'])->count(),
+            'moderators' => (clone $userQuery)->where('role', 'moderator')->count(),
         ];
     }
 
@@ -99,16 +138,26 @@ class Overview extends Component
     public function libraryStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // Build base queries with school scoping
+        $bookQuery = Book::query();
+        $borrowingQuery = BookBorrowing::query();
+
+        if ($schoolId) {
+            $bookQuery->where('school_id', $schoolId);
+            $borrowingQuery->where('school_id', $schoolId);
+        }
 
         return [
-            'total_books' => Book::count(),
-            'published_books' => Book::where('status', 'published')->count(),
-            'pending_approval' => Book::where('status', 'pending')->orWhereNull('status')->count(),
-            'active_borrowings' => BookBorrowing::where('status', 'active')->count(),
-            'overdue_books' => BookBorrowing::where('status', 'active')
+            'total_books' => $bookQuery->count(),
+            'published_books' => (clone $bookQuery)->where('status', 'published')->count(),
+            'pending_approval' => (clone $bookQuery)->where('status', 'pending')->orWhereNull('status')->count(),
+            'active_borrowings' => $borrowingQuery->where('status', 'active')->count(),
+            'overdue_books' => (clone $borrowingQuery)->where('status', 'active')
                 ->where('due_date', '<', now())->count(),
-            'new_borrowings' => BookBorrowing::where('created_at', '>=', $startDate)->count(),
-            'returned_books' => BookBorrowing::where('status', 'returned')
+            'new_borrowings' => (clone $borrowingQuery)->where('created_at', '>=', $startDate)->count(),
+            'returned_books' => (clone $borrowingQuery)->where('status', 'returned')
                 ->where('updated_at', '>=', $startDate)->count(),
         ];
     }
@@ -117,16 +166,32 @@ class Overview extends Component
     public function academicStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // Build base queries with school scoping
+        $subjectQuery = AcademicSubject::query();
+        $groupQuery = AcademicGroup::query();
+        $levelQuery = AcademicLevel::query();
+        $subscriptionQuery = BookSubscription::query();
+        $assessmentQuery = Assessment::query();
+
+        if ($schoolId) {
+            $subjectQuery->where('school_id', $schoolId);
+            $groupQuery->where('school_id', $schoolId);
+            $levelQuery->where('school_id', $schoolId);
+            $subscriptionQuery->where('school_id', $schoolId);
+            $assessmentQuery->where('school_id', $schoolId);
+        }
 
         return [
-            'total_subjects' => AcademicSubject::count(),
-            'total_groups' => AcademicGroup::count(),
-            'total_levels' => AcademicLevel::count(),
-            'active_subscriptions' => BookSubscription::where('status', 'paid')
+            'total_subjects' => $subjectQuery->count(),
+            'total_groups' => $groupQuery->count(),
+            'total_levels' => $levelQuery->count(),
+            'active_subscriptions' => $subscriptionQuery->where('status', 'paid')
                 ->where('end_date', '>', now())->count(),
-            'recent_assessments' => Assessment::where('created_at', '>=', $startDate)->count(),
-            'average_performance' => Assessment::where('created_at', '>=', $startDate)->avg('score') ?? 0,
-            'total_assessments' => Assessment::count(),
+            'recent_assessments' => (clone $assessmentQuery)->where('created_at', '>=', $startDate)->count(),
+            'average_performance' => (clone $assessmentQuery)->where('created_at', '>=', $startDate)->avg('score') ?? 0,
+            'total_assessments' => $assessmentQuery->count(),
         ];
     }
 
@@ -134,23 +199,30 @@ class Overview extends Component
     public function paymentStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
 
-        $totalRevenue = SchoolPayment::where('status', 'succeeded')
+        // School payments are always school-scoped
+        $paymentQuery = SchoolPayment::query();
+        if ($schoolId) {
+            $paymentQuery->where('school_id', $schoolId);
+        }
+
+        $totalRevenue = $paymentQuery->where('status', 'succeeded')
             ->where('created_at', '>=', $startDate)
             ->sum('amount');
 
-        $pendingPayments = SchoolPayment::where('status', 'pending')
+        $pendingPayments = (clone $paymentQuery)->where('status', 'pending')
             ->sum('amount');
 
         return [
             'total_revenue_period' => $totalRevenue,
             'pending_amount' => $pendingPayments,
-            'successful_payments' => SchoolPayment::where('status', 'succeeded')
+            'successful_payments' => (clone $paymentQuery)->where('status', 'succeeded')
                 ->where('created_at', '>=', $startDate)->count(),
-            'pending_payments' => SchoolPayment::where('status', 'pending')->count(),
-            'failed_payments' => SchoolPayment::where('status', 'failed')
+            'pending_payments' => (clone $paymentQuery)->where('status', 'pending')->count(),
+            'failed_payments' => (clone $paymentQuery)->where('status', 'failed')
                 ->where('created_at', '>=', $startDate)->count(),
-            'total_transactions' => SchoolPayment::where('created_at', '>=', $startDate)->count(),
+            'total_transactions' => (clone $paymentQuery)->where('created_at', '>=', $startDate)->count(),
         ];
     }
 
@@ -158,11 +230,21 @@ class Overview extends Component
     public function messageStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // Messages are sent by users, scope by sender's school if needed
+        $messageQuery = Message::query();
+        if ($schoolId) {
+            // Messages sent by users in this school
+            $messageQuery->whereHas('sender', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
 
         return [
-            'total_messages' => Message::count(),
-            'messages_period' => Message::where('created_at', '>=', $startDate)->count(),
-            'unread_messages' => Message::whereDoesntHave('readReceipts')->count(),
+            'total_messages' => $messageQuery->count(),
+            'messages_period' => (clone $messageQuery)->where('created_at', '>=', $startDate)->count(),
+            'unread_messages' => (clone $messageQuery)->whereDoesntHave('readReceipts')->count(),
             'chat_groups' => ChatGroup::count(),
             'active_chat_groups' => ChatGroup::active()->count(),
             'chat_messages_period' => ChatMessage::where('created_at', '>=', $startDate)->count(),
@@ -173,14 +255,23 @@ class Overview extends Component
     public function loginStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // User logins should be scoped to school for admins
+        $loginQuery = UserLogin::query();
+        if ($schoolId) {
+            $loginQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
 
         return [
-            'total_logins_period' => UserLogin::where('login_at', '>=', $startDate)->count(),
-            'active_sessions' => UserLogin::activeSessions()->count(),
-            'logins_today' => UserLogin::today()->count(),
-            'unique_users_period' => UserLogin::where('login_at', '>=', $startDate)
+            'total_logins_period' => $loginQuery->where('login_at', '>=', $startDate)->count(),
+            'active_sessions' => (clone $loginQuery)->activeSessions()->count(),
+            'logins_today' => (clone $loginQuery)->today()->count(),
+            'unique_users_period' => (clone $loginQuery)->where('login_at', '>=', $startDate)
                 ->distinct('user_id')->count('user_id'),
-            'avg_session_duration' => round(UserLogin::where('login_at', '>=', $startDate)
+            'avg_session_duration' => round((clone $loginQuery)->where('login_at', '>=', $startDate)
                 ->whereNotNull('duration_minutes')
                 ->avg('duration_minutes') ?? 0, 1),
         ];
@@ -190,13 +281,27 @@ class Overview extends Component
     public function forumStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // Forum topics and posts should be scoped by user's school
+        $topicQuery = ForumTopic::query();
+        $postQuery = ForumPost::query();
+
+        if ($schoolId) {
+            $topicQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+            $postQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
 
         return [
-            'total_topics' => ForumTopic::count(),
-            'new_topics_period' => ForumTopic::where('created_at', '>=', $startDate)->count(),
-            'total_posts' => ForumPost::count(),
-            'new_posts_period' => ForumPost::where('created_at', '>=', $startDate)->count(),
-            'active_discussions' => ForumTopic::where('last_activity_at', '>=', $startDate)->count(),
+            'total_topics' => $topicQuery->count(),
+            'new_topics_period' => (clone $topicQuery)->where('created_at', '>=', $startDate)->count(),
+            'total_posts' => $postQuery->count(),
+            'new_posts_period' => (clone $postQuery)->where('created_at', '>=', $startDate)->count(),
+            'active_discussions' => (clone $topicQuery)->where('last_activity_at', '>=', $startDate)->count(),
         ];
     }
 
@@ -204,11 +309,27 @@ class Overview extends Component
     public function activityStats()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
+
+        // Activities should be scoped to school for admins
+        $activityQuery = Activity::query();
+        if ($schoolId) {
+            $activityQuery->where(function ($q) use ($schoolId) {
+                // Scope by causer (user who performed action)
+                $q->whereHasMorph('causer', [User::class], function ($q) use ($schoolId) {
+                    $q->where('school_id', $schoolId);
+                })
+                // Or scope by subject (the model being acted upon)
+                ->orWhereHasMorph('subject', '*', function ($q) use ($schoolId) {
+                    $q->where('school_id', $schoolId);
+                });
+            });
+        }
 
         return [
-            'total_activities' => Activity::where('created_at', '>=', $startDate)->count(),
-            'activities_today' => Activity::whereDate('created_at', today())->count(),
-            'recent_activities' => Activity::with('causer')
+            'total_activities' => $activityQuery->where('created_at', '>=', $startDate)->count(),
+            'activities_today' => (clone $activityQuery)->whereDate('created_at', today())->count(),
+            'recent_activities' => (clone $activityQuery)->with('causer')
                 ->orderBy('created_at', 'desc')
                 ->take(10)
                 ->get(),
@@ -219,22 +340,31 @@ class Overview extends Component
     public function loginChartData(): array
     {
         $days = $this->selectedPeriod === 'today' ? 24 : ($this->selectedPeriod === 'week' ? 7 : ($this->selectedPeriod === 'month' ? 30 : 12));
+        $schoolId = $this->getSchoolId();
         $labels = [];
         $data = [];
+
+        // Build base query with school scoping
+        $loginQuery = UserLogin::query();
+        if ($schoolId) {
+            $loginQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
 
         if ($this->selectedPeriod === 'today') {
             // Hourly data for today
             for ($i = 0; $i < 24; $i++) {
                 $hour = Carbon::today()->addHours($i);
                 $labels[] = $hour->format('H:00');
-                $data[] = UserLogin::whereBetween('login_at', [$hour, $hour->copy()->addHour()])->count();
+                $data[] = (clone $loginQuery)->whereBetween('login_at', [$hour, $hour->copy()->addHour()])->count();
             }
         } elseif ($this->selectedPeriod === 'year') {
             // Monthly data for the year
             for ($i = 11; $i >= 0; $i--) {
                 $month = Carbon::now()->subMonths($i);
                 $labels[] = $month->format('M');
-                $data[] = UserLogin::whereYear('login_at', $month->year)
+                $data[] = (clone $loginQuery)->whereYear('login_at', $month->year)
                     ->whereMonth('login_at', $month->month)
                     ->count();
             }
@@ -243,7 +373,7 @@ class Overview extends Component
             for ($i = $days - 1; $i >= 0; $i--) {
                 $date = Carbon::now()->subDays($i);
                 $labels[] = $date->format('M d');
-                $data[] = UserLogin::whereDate('login_at', $date)->count();
+                $data[] = (clone $loginQuery)->whereDate('login_at', $date)->count();
             }
         }
 
@@ -257,16 +387,22 @@ class Overview extends Component
     public function revenueChartData(): array
     {
         $days = $this->selectedPeriod === 'today' ? 24 : ($this->selectedPeriod === 'week' ? 7 : ($this->selectedPeriod === 'month' ? 30 : 12));
+        $schoolId = $this->getSchoolId();
         $labels = [];
         $data = [];
+
+        // Build base query with school scoping
+        $paymentQuery = SchoolPayment::where('status', 'succeeded');
+        if ($schoolId) {
+            $paymentQuery->where('school_id', $schoolId);
+        }
 
         if ($this->selectedPeriod === 'today') {
             // Hourly data for today
             for ($i = 0; $i < 24; $i++) {
                 $hour = Carbon::today()->addHours($i);
                 $labels[] = $hour->format('H:00');
-                $data[] = (float) SchoolPayment::where('status', 'succeeded')
-                    ->whereBetween('created_at', [$hour, $hour->copy()->addHour()])
+                $data[] = (float) (clone $paymentQuery)->whereBetween('created_at', [$hour, $hour->copy()->addHour()])
                     ->sum('amount');
             }
         } elseif ($this->selectedPeriod === 'year') {
@@ -274,8 +410,7 @@ class Overview extends Component
             for ($i = 11; $i >= 0; $i--) {
                 $month = Carbon::now()->subMonths($i);
                 $labels[] = $month->format('M');
-                $data[] = (float) SchoolPayment::where('status', 'succeeded')
-                    ->whereYear('created_at', $month->year)
+                $data[] = (float) (clone $paymentQuery)->whereYear('created_at', $month->year)
                     ->whereMonth('created_at', $month->month)
                     ->sum('amount');
             }
@@ -284,8 +419,7 @@ class Overview extends Component
             for ($i = $days - 1; $i >= 0; $i--) {
                 $date = Carbon::now()->subDays($i);
                 $labels[] = $date->format('M d');
-                $data[] = (float) SchoolPayment::where('status', 'succeeded')
-                    ->whereDate('created_at', $date)
+                $data[] = (float) (clone $paymentQuery)->whereDate('created_at', $date)
                     ->sum('amount');
             }
         }
@@ -338,21 +472,44 @@ class Overview extends Component
     #[Computed]
     public function recentActivity()
     {
+        $schoolId = $this->getSchoolId();
+
+        // Build queries with school scoping
+        $userQuery = User::query();
+        $borrowingQuery = BookBorrowing::query();
+        $bookQuery = Book::query();
+        $paymentQuery = SchoolPayment::query();
+        $loginQuery = UserLogin::query();
+        $messageQuery = Message::query();
+
+        if ($schoolId) {
+            $userQuery->where('school_id', $schoolId);
+            $borrowingQuery->where('school_id', $schoolId);
+            $bookQuery->where('school_id', $schoolId);
+            $paymentQuery->where('school_id', $schoolId);
+            $loginQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+            $messageQuery->whereHas('sender', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
+
         return [
-            'new_users' => User::where('created_at', '>=', now()->subDays(7))
+            'new_users' => $userQuery->where('created_at', '>=', now()->subDays(7))
                 ->orderBy('created_at', 'desc')->take(5)->get(),
-            'recent_borrowings' => BookBorrowing::with(['student.user', 'book'])
+            'recent_borrowings' => $borrowingQuery->with(['student.user', 'book'])
                 ->where('created_at', '>=', now()->subDays(3))
                 ->orderBy('created_at', 'desc')->take(5)->get(),
-            'pending_approvals' => Book::with(['author.user'])
+            'pending_approvals' => $bookQuery->with(['author.user'])
                 ->where('status', 'pending')
                 ->orWhereNull('status')
                 ->orderBy('created_at', 'desc')->take(5)->get(),
-            'recent_payments' => SchoolPayment::with(['student.user'])
+            'recent_payments' => $paymentQuery->with(['student.user'])
                 ->orderBy('created_at', 'desc')->take(5)->get(),
-            'recent_logins' => UserLogin::with('user')
+            'recent_logins' => $loginQuery->with('user')
                 ->orderBy('login_at', 'desc')->take(5)->get(),
-            'recent_messages' => Message::with('sender')
+            'recent_messages' => $messageQuery->with('sender')
                 ->orderBy('created_at', 'desc')->take(5)->get(),
         ];
     }
@@ -360,11 +517,17 @@ class Overview extends Component
     #[Computed]
     public function systemAlerts()
     {
+        $schoolId = $this->getSchoolId();
         $alerts = [];
 
-        // Check for overdue books
-        $overdueCount = BookBorrowing::where('status', 'active')
-            ->where('due_date', '<', now())->count();
+        // Check for overdue books (school-scoped)
+        $overdueQuery = BookBorrowing::where('status', 'active')
+            ->where('due_date', '<', now());
+        if ($schoolId) {
+            $overdueQuery->where('school_id', $schoolId);
+        }
+        $overdueCount = $overdueQuery->count();
+        
         if ($overdueCount > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -374,8 +537,13 @@ class Overview extends Component
             ];
         }
 
-        // Check for pending book approvals
-        $pendingBooks = Book::where('status', 'pending')->orWhereNull('status')->count();
+        // Check for pending book approvals (school-scoped)
+        $pendingBooksQuery = Book::where('status', 'pending')->orWhereNull('status');
+        if ($schoolId) {
+            $pendingBooksQuery->where('school_id', $schoolId);
+        }
+        $pendingBooks = $pendingBooksQuery->count();
+        
         if ($pendingBooks > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -385,8 +553,13 @@ class Overview extends Component
             ];
         }
 
-        // Check for unverified users
-        $unverifiedUsers = User::whereNull('email_verified_at')->count();
+        // Check for unverified users (school-scoped)
+        $unverifiedQuery = User::whereNull('email_verified_at');
+        if ($schoolId) {
+            $unverifiedQuery->where('school_id', $schoolId);
+        }
+        $unverifiedUsers = $unverifiedQuery->count();
+        
         if ($unverifiedUsers > 10) {
             $alerts[] = [
                 'type' => 'warning',
@@ -396,8 +569,13 @@ class Overview extends Component
             ];
         }
 
-        // Check for pending payments
-        $pendingPayments = SchoolPayment::where('status', 'pending')->count();
+        // Check for pending payments (school-scoped)
+        $pendingPaymentsQuery = SchoolPayment::where('status', 'pending');
+        if ($schoolId) {
+            $pendingPaymentsQuery->where('school_id', $schoolId);
+        }
+        $pendingPayments = $pendingPaymentsQuery->count();
+        
         if ($pendingPayments > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -407,8 +585,15 @@ class Overview extends Component
             ];
         }
 
-        // Check for active sessions
-        $activeSessions = UserLogin::activeSessions()->count();
+        // Check for active sessions (school-scoped)
+        $activeSessionsQuery = UserLogin::activeSessions();
+        if ($schoolId) {
+            $activeSessionsQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
+        $activeSessions = $activeSessionsQuery->count();
+        
         if ($activeSessions > 0) {
             $alerts[] = [
                 'type' => 'success',
@@ -425,12 +610,13 @@ class Overview extends Component
     public function performanceMetrics()
     {
         $startDate = $this->getPeriodStartDate();
+        $schoolId = $this->getSchoolId();
 
         return [
             'user_growth' => $this->getUserGrowthTrend($startDate),
             'borrowing_trend' => $this->getBorrowingTrend($startDate),
             'popular_categories' => $this->getPopularBookCategories(),
-            'active_teams' => Team::whereHas('members')->count(),
+            'active_teams' => Team::when($schoolId, fn ($q) => $q->where('school_id', $schoolId))->whereHas('members')->count(),
             'payment_trend' => $this->getPaymentTrend($startDate),
             'login_trend' => $this->getLoginTrend($startDate),
         ];
@@ -439,6 +625,23 @@ class Overview extends Component
     #[Computed]
     public function quickActionItems()
     {
+        $schoolId = $this->getSchoolId();
+
+        // Build queries with school scoping
+        $bookQuery = Book::query();
+        $borrowingQuery = BookBorrowing::query();
+        $paymentQuery = SchoolPayment::query();
+        $loginQuery = UserLogin::query();
+
+        if ($schoolId) {
+            $bookQuery->where('school_id', $schoolId);
+            $borrowingQuery->where('school_id', $schoolId);
+            $paymentQuery->where('school_id', $schoolId);
+            $loginQuery->whereHas('user', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
+
         return [
             [
                 'title' => 'Add New Student',
@@ -460,7 +663,7 @@ class Overview extends Component
                 'icon' => 'check-circle',
                 'route' => 'admin.book-approvals',
                 'color' => 'green',
-                'badge' => Book::where('status', 'pending')->orWhereNull('status')->count(),
+                'badge' => $bookQuery->where('status', 'pending')->orWhereNull('status')->count(),
             ],
             [
                 'title' => 'Manage Overdue',
@@ -468,7 +671,7 @@ class Overview extends Component
                 'icon' => 'exclamation-triangle',
                 'route' => 'admin.book-management',
                 'color' => 'red',
-                'badge' => BookBorrowing::where('status', 'active')
+                'badge' => $borrowingQuery->where('status', 'active')
                     ->where('due_date', '<', now())->count(),
             ],
             [
@@ -477,7 +680,7 @@ class Overview extends Component
                 'icon' => 'currency',
                 'route' => 'admin.payments.index',
                 'color' => 'emerald',
-                'badge' => SchoolPayment::where('status', 'pending')->count(),
+                'badge' => $paymentQuery->where('status', 'pending')->count(),
             ],
             [
                 'title' => 'Message Center',
@@ -499,7 +702,7 @@ class Overview extends Component
                 'icon' => 'shield-check',
                 'route' => 'admin.logins',
                 'color' => 'amber',
-                'badge' => UserLogin::activeSessions()->count(),
+                'badge' => $loginQuery->activeSessions()->count(),
             ],
             [
                 'title' => 'Activity Trail',
@@ -535,40 +738,53 @@ class Overview extends Component
     #[Computed]
     public function managementSummary()
     {
+        $schoolId = $this->getSchoolId();
+
+        // Build queries with school scoping
+        $studentQuery = Student::query();
+        $teacherQuery = Teacher::query();
+        $userQuery = User::query();
+
+        if ($schoolId) {
+            $studentQuery->where('school_id', $schoolId);
+            $teacherQuery->where('school_id', $schoolId);
+            $userQuery->where('school_id', $schoolId);
+        }
+
         return [
             'students' => [
-                'total' => Student::count(),
-                'active' => Student::whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
-                'new_this_period' => Student::where('created_at', '>=', $this->getPeriodStartDate())->count(),
+                'total' => $studentQuery->count(),
+                'active' => $studentQuery->whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
+                'new_this_period' => (clone $studentQuery)->where('created_at', '>=', $this->getPeriodStartDate())->count(),
                 'route' => 'admin.student-management',
                 'icon' => 'academic-cap',
                 'color' => 'blue',
             ],
             'teachers' => [
-                'total' => Teacher::count(),
-                'active' => Teacher::whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
-                'new_this_period' => Teacher::where('created_at', '>=', $this->getPeriodStartDate())->count(),
+                'total' => $teacherQuery->count(),
+                'active' => $teacherQuery->whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
+                'new_this_period' => (clone $teacherQuery)->where('created_at', '>=', $this->getPeriodStartDate())->count(),
                 'route' => 'admin.teacher-management',
                 'icon' => 'briefcase',
                 'color' => 'indigo',
             ],
             'librarians' => [
-                'total' => User::where('role', 'librarian')->count(),
-                'active' => User::where('role', 'librarian')->where('last_seen_at', '>=', now()->subDays(7))->count(),
+                'total' => (clone $userQuery)->where('role', 'librarian')->count(),
+                'active' => (clone $userQuery)->where('role', 'librarian')->where('last_seen_at', '>=', now()->subDays(7))->count(),
                 'route' => 'admin.librarian-management',
                 'icon' => 'library',
                 'color' => 'amber',
             ],
             'parents' => [
-                'total' => User::where('role', 'parent')->count(),
-                'active' => User::where('role', 'parent')->where('last_seen_at', '>=', now()->subDays(7))->count(),
+                'total' => (clone $userQuery)->where('role', 'parent')->count(),
+                'active' => (clone $userQuery)->where('role', 'parent')->where('last_seen_at', '>=', now()->subDays(7))->count(),
                 'route' => 'admin.parent-management',
                 'icon' => 'users',
                 'color' => 'green',
             ],
             'authors' => [
-                'total' => User::where('role', 'author')->count(),
-                'active' => User::where('role', 'author')->where('last_seen_at', '>=', now()->subDays(7))->count(),
+                'total' => (clone $userQuery)->where('role', 'author')->count(),
+                'active' => (clone $userQuery)->where('role', 'author')->where('last_seen_at', '>=', now()->subDays(7))->count(),
                 'route' => 'admin.author-management',
                 'icon' => 'pencil',
                 'color' => 'purple',
@@ -589,10 +805,13 @@ class Overview extends Component
 
     private function getUserGrowthTrend($startDate)
     {
+        $schoolId = $this->getSchoolId();
+        
         return User::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -601,10 +820,13 @@ class Overview extends Component
 
     private function getBorrowingTrend($startDate)
     {
+        $schoolId = $this->getSchoolId();
+        
         return BookBorrowing::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -613,12 +835,15 @@ class Overview extends Component
 
     private function getPaymentTrend($startDate)
     {
+        $schoolId = $this->getSchoolId();
+        
         return SchoolPayment::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('SUM(amount) as total'),
             DB::raw('COUNT(*) as count')
         )
             ->where('status', 'succeeded')
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -627,11 +852,18 @@ class Overview extends Component
 
     private function getLoginTrend($startDate)
     {
+        $schoolId = $this->getSchoolId();
+        
         return UserLogin::select(
             DB::raw('DATE(login_at) as date'),
             DB::raw('COUNT(*) as count'),
             DB::raw('COUNT(DISTINCT user_id) as unique_users')
         )
+            ->when($schoolId, function ($q) use ($schoolId) {
+                $q->whereHas('user', function ($subQ) use ($schoolId) {
+                    $subQ->where('school_id', $schoolId);
+                });
+            })
             ->where('login_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -640,11 +872,14 @@ class Overview extends Component
 
     private function getPopularBookCategories()
     {
+        $schoolId = $this->getSchoolId();
+        
         return BookCategory::select('book_categories.id', 'book_categories.name')
             ->selectRaw('COUNT(book_borrowings.id) as borrowings_count')
             ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
             ->join('books', 'book_category.book_id', '=', 'books.id')
             ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
+            ->when($schoolId, fn ($q) => $q->where('book_borrowings.school_id', $schoolId))
             ->where('book_borrowings.created_at', '>=', $this->getPeriodStartDate())
             ->groupBy('book_categories.id', 'book_categories.name')
             ->orderBy('borrowings_count', 'desc')
