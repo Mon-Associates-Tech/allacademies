@@ -272,6 +272,78 @@
                         <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Resources</span>
                     </li>
 
+                    @if(in_array($roleValue, ['admin', 'accountant']))
+                    <!-- Payroll Section -->
+                    <li class="px-3 py-2 rounded-sm mb-0.5 mt-4">
+                        <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Payroll</span>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Payroll Runs">
+                        <a :class="sidebarExpanded ? 'py-2' : ''"
+                           class="block pl-3 rounded-lg transition {{ Route::is('payroll.runs.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{ route('payroll.runs.index') }}">
+                            <div class="flex items-center">
+                                <svg class="shrink-0 fill-current {{ Route::is('payroll.runs.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                                </svg>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Payroll Runs</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Payroll Entries">
+                        <a :class="sidebarExpanded ? 'py-2' : ''"
+                           class="block pl-3 rounded-lg transition {{ Route::is('payroll.entries.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{ route('payroll.entries.index') }}">
+                            <div class="flex items-center">
+                                <svg class="shrink-0 fill-current {{ Route::is('payroll.entries.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                </svg>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Payroll Entries</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Schedules">
+                        <a :class="sidebarExpanded ? 'py-2' : ''"
+                           class="block pl-3 rounded-lg transition {{ Route::is('payroll.schedules.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{ route('payroll.schedules.index') }}">
+                            <div class="flex items-center">
+                                <svg class="shrink-0 fill-current {{ Route::is('payroll.schedules.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+                                </svg>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Schedules</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Audit Log">
+                        <a :class="sidebarExpanded ? 'py-2' : ''"
+                           class="block pl-3 rounded-lg transition {{ Route::is('payroll.audit*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{ route('payroll.audit') }}">
+                            <div class="flex items-center">
+                                <svg class="shrink-0 fill-current {{ Route::is('payroll.audit*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                </svg>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Audit Log</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="mb-0.5 last:mb-2" title="Payroll Roles">
+                        <a :class="sidebarExpanded ? 'py-2' : ''"
+                           class="block pl-3 rounded-lg transition {{ Route::is('payroll.roles.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                           href="{{ route('payroll.roles.index') }}">
+                            <div class="flex items-center">
+                                <svg class="shrink-0 fill-current {{ Route::is('payroll.roles.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+                                </svg>
+                                <span class="text-sm ml-2 sidebar-text duration-200">Payroll Roles</span>
+                            </div>
+                        </a>
+                    </li>
+                    @endif
+
                     <li class="mb-0.5 last:mb-2" title="Messenger Subscriptions">
                         <a :class="sidebarExpanded ? 'py-2' : ''"
                            class="block pl-3  rounded-lg transition {{ Route::is('token-subscriptions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"

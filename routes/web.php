@@ -473,9 +473,15 @@ include_once 'parent.php';
 include_once 'administrator.php';
 include_once 'accountant.php';
 include_once 'academic.php';
+include_once 'payroll.php';
 include_once 'guest.php';
 include_once 'sponsorship.php';
 include_once 'misc.php';
 
 // General Exams Routes (code-based assignments for teachers and participants)
 include_once 'general-exams.php';
+
+
+// Paystack Transfer Webhook (exclude from CSRF)
+Route::post('/webhooks/paystack/transfer', [App\Http\Controllers\PaystackWebhookController::class, 'handleTransferWebhook'])
+    ->name('webhooks.paystack.transfer');

@@ -53,6 +53,11 @@ class Kernel extends ConsoleKernel
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
 
+        $schedule->job(new \App\Jobs\DispatchScheduledPayrollRuns)
+            ->dailyAt('00:00')
+            ->name('dispatch-scheduled-payroll-runs')
+            ->withoutOverlapping();
+
     }
 
     /**

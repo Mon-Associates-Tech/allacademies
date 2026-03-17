@@ -17,6 +17,9 @@ return [
     /* Set up payment */
     'paystack' => [
         'env' => env('PAYSTACK_ENV', 'development'), // 'production' or 'development'
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'base_url' => 'https://api.paystack.co',
         'production' => [
             'secret_key' => env('PAYSTACK_LIVE_SECRET_KEY'),
             'public_key' => env('PAYSTACK_LIVE_PUBLIC_KEY'),
