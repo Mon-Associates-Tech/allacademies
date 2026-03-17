@@ -560,7 +560,7 @@ class StudentManagement extends Component
             'teacherPassword' => 'required|min:8',
         ]);
 
-        DB::transaction(function () {
+        DB::transaction(function () use ($schoolId) {
             // Create user
             $user = User::create([
                 'role' => 'teacher',
