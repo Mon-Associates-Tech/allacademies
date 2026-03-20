@@ -97,6 +97,10 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
         ->name('school-details');
 
+    Route::get('/artisan-commands', \App\Livewire\Owner\ArtisanCommands::class)
+        ->name('artisan-commands')
+        ->middleware('can:access-artisan-commands');
+
     Route::get('/change-log', CreateChangelog::class)->name('change-log');
     Route::get('/changelog', ChangelogList::class)->name('change-log.index');
 

@@ -79,5 +79,9 @@ class AuthServiceProvider extends ServiceProvider
                     ->wherePivot('role', 'admin')
                     ->exists();
         });
+
+        Gate::define('access-artisan-commands', static function (User $user) {
+            return $user->isSuperAdmin() || $user->isOwner();
+        });
     }
 }
