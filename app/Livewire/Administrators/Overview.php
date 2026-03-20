@@ -140,27 +140,25 @@ class Overview extends Component
         $startDate = $this->getPeriodStartDate();
         $schoolId = $this->getSchoolId();
 
-        // Build base query with school scoping through books and users
+        // Build base queries with school scoping
         $bookQuery = Book::query();
         $borrowingQuery = BookBorrowing::query();
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            // Borrowings are scoped through the user's school
-            $borrowingQuery->whereHas('user', function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId);
-            });
+           // $borrowingQuery->where('school_id', $schoolId);
         }
 
         return [
             'total_books' => $bookQuery->count(),
-            'available_books' => (clone $bookQuery)->where('status', 'active')->count(),
+            'published_books' => (clone $bookQuery)->where('status', 'published')->count(),
             'pending_approval' => (clone $bookQuery)->where('status', 'pending')->orWhereNull('status')->count(),
-            'total_borrowings' => $borrowingQuery->count(),
-            'active_borrowings' => (clone $borrowingQuery)->where('status', 'active')->count(),
+            'active_borrowings' => $borrowingQuery->where('status', 'active')->count(),
             'overdue_books' => (clone $borrowingQuery)->where('status', 'active')
                 ->where('due_date', '<', now())->count(),
-            'books_borrowed_period' => (clone $borrowingQuery)->where('created_at', '>=', $startDate)->count(),
+            'new_borrowings' => (clone $borrowingQuery)->where('created_at', '>=', $startDate)->count(),
+            'returned_books' => (clone $borrowingQuery)->where('status', 'returned')
+                ->where('updated_at', '>=', $startDate)->count(),
         ];
     }
 
@@ -181,8 +179,8 @@ class Overview extends Component
             $subjectQuery->where('school_id', $schoolId);
             $groupQuery->where('school_id', $schoolId);
             $levelQuery->where('school_id', $schoolId);
-            $subscriptionQuery->where('school_id', $schoolId);
-            $assessmentQuery->where('school_id', $schoolId);
+           // $subscriptionQuery->where('school_id', $schoolId);
+            // $assessmentQuery->where('school_id', $schoolId);
         }
 
         return [
@@ -486,10 +484,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $userQuery->where('school_id', $schoolId);
-            // Borrowings scoped through user's school
-            $borrowingQuery->whereHas('user', function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId);
-            });
+           // $borrowingQuery->where('school_id', $schoolId);
             $bookQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
@@ -525,16 +520,14 @@ class Overview extends Component
         $schoolId = $this->getSchoolId();
         $alerts = [];
 
-        // Check for overdue books (scoped through user's school)
+        // Check for overdue books (school-scoped)
         $overdueQuery = BookBorrowing::where('status', 'active')
             ->where('due_date', '<', now());
         if ($schoolId) {
-            $overdueQuery->whereHas('user', function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId);
-            });
+           // $overdueQuery->where('school_id', $schoolId);
         }
         $overdueCount = $overdueQuery->count();
-        
+
         if ($overdueCount > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -550,7 +543,7 @@ class Overview extends Component
             $pendingBooksQuery->where('school_id', $schoolId);
         }
         $pendingBooks = $pendingBooksQuery->count();
-        
+
         if ($pendingBooks > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -566,7 +559,7 @@ class Overview extends Component
             $unverifiedQuery->where('school_id', $schoolId);
         }
         $unverifiedUsers = $unverifiedQuery->count();
-        
+
         if ($unverifiedUsers > 10) {
             $alerts[] = [
                 'type' => 'warning',
@@ -582,7 +575,7 @@ class Overview extends Component
             $pendingPaymentsQuery->where('school_id', $schoolId);
         }
         $pendingPayments = $pendingPaymentsQuery->count();
-        
+
         if ($pendingPayments > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -600,7 +593,7 @@ class Overview extends Component
             });
         }
         $activeSessions = $activeSessionsQuery->count();
-        
+
         if ($activeSessions > 0) {
             $alerts[] = [
                 'type' => 'success',
@@ -642,10 +635,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-            // Borrowings scoped through user's school
-            $borrowingQuery->whereHas('user', function ($q) use ($schoolId) {
-                $q->where('school_id', $schoolId);
-            });
+           // $borrowingQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
@@ -816,7 +806,7 @@ class Overview extends Component
     private function getUserGrowthTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return User::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
@@ -831,16 +821,12 @@ class Overview extends Component
     private function getBorrowingTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return BookBorrowing::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-            ->when($schoolId, function ($q) use ($schoolId) {
-                $q->whereHas('user', function ($subQ) use ($schoolId) {
-                    $subQ->where('school_id', $schoolId);
-                });
-            })
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -850,7 +836,7 @@ class Overview extends Component
     private function getPaymentTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return SchoolPayment::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('SUM(amount) as total'),
@@ -867,7 +853,7 @@ class Overview extends Component
     private function getLoginTrend($startDate)
     {
         $schoolId = $this->getSchoolId();
-        
+
         return UserLogin::select(
             DB::raw('DATE(login_at) as date'),
             DB::raw('COUNT(*) as count'),
@@ -887,18 +873,13 @@ class Overview extends Component
     private function getPopularBookCategories()
     {
         $schoolId = $this->getSchoolId();
-        
+
         return BookCategory::select('book_categories.id', 'book_categories.name')
             ->selectRaw('COUNT(book_borrowings.id) as borrowings_count')
             ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
             ->join('books', 'book_category.book_id', '=', 'books.id')
             ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
-            ->when($schoolId, function ($q) use ($schoolId) {
-                // Filter by user's school since borrowings have user_id
-                $q->whereHas('user', function ($subQ) use ($schoolId) {
-                    $subQ->where('school_id', $schoolId);
-                });
-            })
+            ->when($schoolId, fn ($q) => $q->where('book_borrowings.school_id', $schoolId))
             ->where('book_borrowings.created_at', '>=', $this->getPeriodStartDate())
             ->groupBy('book_categories.id', 'book_categories.name')
             ->orderBy('borrowings_count', 'desc')

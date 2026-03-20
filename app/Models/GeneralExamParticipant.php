@@ -148,6 +148,7 @@ class GeneralExamParticipant extends Model
 
     public function getMorphClass(): string
     {
+        // Store new records with canonical alias; old aliases are covered in morph map
         return 'participant';
     }
 }
