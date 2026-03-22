@@ -272,7 +272,7 @@
                         <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Resources</span>
                     </li>
 
-                    @if(in_array($roleValue, ['admin', 'accountant']))
+                    @if(in_array($roleValue, ['admin', 'accountant', 'owner']))
                     <!-- Payroll Section -->
                     <li class="px-3 py-2 rounded-sm mb-0.5 mt-4">
                         <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Payroll</span>

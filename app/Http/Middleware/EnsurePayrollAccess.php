@@ -12,7 +12,7 @@ class EnsurePayrollAccess
     {
         $user = $request->user();
         
-        if (!$user || !in_array($user->role?->value ?? $user->role, ['admin', 'accountant'])) {
+        if (!$user || !in_array($user->role?->value ?? $user->role, ['admin', 'accountant', 'owner'])) {
             abort(403, 'You do not have permission to access payroll features.');
         }
         

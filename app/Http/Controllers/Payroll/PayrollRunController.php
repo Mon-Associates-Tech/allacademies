@@ -13,7 +13,7 @@ class PayrollRunController extends Controller
     public function __construct(
         protected PayrollRunService $runService
     ) {
-        $this->middleware('can:managePayroll,App\Models\User');
+       // $this->middleware('can:managePayroll,App\Models\User');
     }
 
     public function index()

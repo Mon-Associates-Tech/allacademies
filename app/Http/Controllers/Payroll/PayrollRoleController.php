@@ -10,7 +10,7 @@ class PayrollRoleController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:managePayrollRoles,App\Models\User');
+      //  $this->middleware('can:managePayrollRoles,App\Models\User');
     }
 
     public function index()
@@ -30,7 +30,7 @@ class PayrollRoleController extends Controller
             'description' => 'nullable|string',
         ]);
         
-        $validated['school_id'] = auth()->user()->school_id;
+        $validated['school_id'] = getSchoolId() ?? auth()->user()->school_id;
         
         PayrollRole::create($validated);
         

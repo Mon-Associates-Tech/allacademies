@@ -42,7 +42,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['public_assignment_id', 'order']);
-            $table->index(['public_assignment_section_id', 'order']);
+            // $table->index(['public_assignment_section_id', 'order']);
             $table->index('type');
         });
     }

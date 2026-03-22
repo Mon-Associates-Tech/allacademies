@@ -24,8 +24,10 @@ class EntryIndex extends Component
 
     public function render()
     {
+        $schoolId = getSchoolId() ?? auth()->user()->school_id;
+        
         $query = PayrollEntry::query()
-            ->where('school_id', auth()->user()->school_id)
+            ->where('school_id', $schoolId)
             ->with(['user', 'payrollRole', 'bankAccount']);
 
         if ($this->search) {
@@ -46,7 +48,7 @@ class EntryIndex extends Component
 
         $entries = $query->latest()->paginate(15);
         
-        $payrollRoles = PayrollRole::where('school_id', auth()->user()->school_id)->get();
+        $payrollRoles = PayrollRole::where('school_id', $schoolId)->get();
 
         return view('livewire.payroll.entry-index', [
             'entries' => $entries,

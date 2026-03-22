@@ -10,7 +10,7 @@ class PayslipController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:viewPayroll,App\Models\User');
+      //  $this->middleware('can:viewPayroll,App\Models\User');
     }
 
     public function show(PayrollDisbursement $disbursement)
