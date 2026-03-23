@@ -146,7 +146,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-           // $borrowingQuery->where('school_id', $schoolId);
+            // $borrowingQuery->where('school_id', $schoolId);
         }
 
         return [
@@ -179,7 +179,7 @@ class Overview extends Component
             $subjectQuery->where('school_id', $schoolId);
             $groupQuery->where('school_id', $schoolId);
             $levelQuery->where('school_id', $schoolId);
-           // $subscriptionQuery->where('school_id', $schoolId);
+            // $subscriptionQuery->where('school_id', $schoolId);
             // $assessmentQuery->where('school_id', $schoolId);
         }
 
@@ -319,10 +319,10 @@ class Overview extends Component
                 $q->whereHasMorph('causer', [User::class], function ($q) use ($schoolId) {
                     $q->where('school_id', $schoolId);
                 })
-                // Or scope by subject (the model being acted upon)
-                ->orWhereHasMorph('subject', '*', function ($q) use ($schoolId) {
-                    $q->where('school_id', $schoolId);
-                });
+                    // Or scope by subject (the model being acted upon)
+                    ->orWhereHasMorph('subject', '*', function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId);
+                    });
             });
         }
 
@@ -484,7 +484,7 @@ class Overview extends Component
 
         if ($schoolId) {
             $userQuery->where('school_id', $schoolId);
-           // $borrowingQuery->where('school_id', $schoolId);
+            // $borrowingQuery->where('school_id', $schoolId);
             $bookQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
@@ -524,7 +524,7 @@ class Overview extends Component
         $overdueQuery = BookBorrowing::where('status', 'active')
             ->where('due_date', '<', now());
         if ($schoolId) {
-           // $overdueQuery->where('school_id', $schoolId);
+            // $overdueQuery->where('school_id', $schoolId);
         }
         $overdueCount = $overdueQuery->count();
 
@@ -616,7 +616,7 @@ class Overview extends Component
             'user_growth' => $this->getUserGrowthTrend($startDate),
             'borrowing_trend' => $this->getBorrowingTrend($startDate),
             'popular_categories' => $this->getPopularBookCategories(),
-            'active_teams' => Team::when($schoolId, fn ($q) => $q->where('school_id', $schoolId))->whereHas('members')->count(),
+            'active_teams' => Team::when($schoolId, fn($q) => $q->where('school_id', $schoolId))->whereHas('members')->count(),
             'payment_trend' => $this->getPaymentTrend($startDate),
             'login_trend' => $this->getLoginTrend($startDate),
         ];
@@ -635,14 +635,15 @@ class Overview extends Component
 
         if ($schoolId) {
             $bookQuery->where('school_id', $schoolId);
-           // $borrowingQuery->where('school_id', $schoolId);
+            // $borrowingQuery->where('school_id', $schoolId);
             $paymentQuery->where('school_id', $schoolId);
             $loginQuery->whereHas('user', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
             });
         }
 
-        return [
+
+        $actions =  [
             [
                 'title' => 'Add New Student',
                 'description' => 'Register a new student in the system',
@@ -657,23 +658,8 @@ class Overview extends Component
                 'route' => 'admin.teacher-management',
                 'color' => 'indigo',
             ],
-            [
-                'title' => 'Approve Books',
-                'description' => 'Review and approve pending book submissions',
-                'icon' => 'check-circle',
-                'route' => 'admin.book-approvals',
-                'color' => 'green',
-                'badge' => $bookQuery->where('status', 'pending')->orWhereNull('status')->count(),
-            ],
-            [
-                'title' => 'Manage Overdue',
-                'description' => 'Handle overdue book returns',
-                'icon' => 'exclamation-triangle',
-                'route' => 'admin.book-management',
-                'color' => 'red',
-                'badge' => $borrowingQuery->where('status', 'active')
-                    ->where('due_date', '<', now())->count(),
-            ],
+
+
             [
                 'title' => 'View Payments',
                 'description' => 'Monitor and manage school payments',
@@ -688,13 +674,6 @@ class Overview extends Component
                 'icon' => 'mail',
                 'route' => 'admin.messages.index',
                 'color' => 'cyan',
-            ],
-            [
-                'title' => 'User Impersonation',
-                'description' => 'Login as another user for support',
-                'icon' => 'user-secret',
-                'route' => 'admin.users.impersonate',
-                'color' => 'purple',
             ],
             [
                 'title' => 'Login Activity',
@@ -718,13 +697,7 @@ class Overview extends Component
                 'route' => 'admin.student-groups',
                 'color' => 'teal',
             ],
-            [
-                'title' => 'Subject Management',
-                'description' => 'Configure academic subjects',
-                'icon' => 'book-open',
-                'route' => 'admin.subject-management',
-                'color' => 'rose',
-            ],
+
             [
                 'title' => 'Academic Settings',
                 'description' => 'Configure academic groups and levels',
@@ -733,6 +706,39 @@ class Overview extends Component
                 'color' => 'gray',
             ],
         ];
+
+        if (auth()->user()->role->value == 'owner') {
+            $actions[] =
+                [
+                    'title' => 'Subject Management',
+                    'description' => 'Configure academic subjects',
+                    'icon' => 'book-open',
+                    'route' => 'admin.subject-management',
+                    'color' => 'rose',
+                ];
+            $actions[] =
+                [
+                    'title' => 'Approve Books',
+                    'description' => 'Review and approve pending book submissions',
+                    'icon' => 'check-circle',
+                    'route' => 'admin.book-approvals',
+                    'color' => 'green',
+                    'badge' => $bookQuery->where('status', 'pending')->orWhereNull('status')->count(),
+                ];
+
+            $actions[] =
+                [
+                    'title' => 'Manage Overdue',
+                    'description' => 'Handle overdue book returns',
+                    'icon' => 'exclamation-triangle',
+                    'route' => 'admin.book-management',
+                    'color' => 'red',
+                    'badge' => $borrowingQuery->where('status', 'active')
+                        ->where('due_date', '<', now())->count(),
+                ];
+        }
+
+        return $actions;
     }
 
     #[Computed]
@@ -754,7 +760,7 @@ class Overview extends Component
         return [
             'students' => [
                 'total' => $studentQuery->count(),
-                'active' => $studentQuery->whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
+                'active' => $studentQuery->whereHas('user', fn($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
                 'new_this_period' => (clone $studentQuery)->where('created_at', '>=', $this->getPeriodStartDate())->count(),
                 'route' => 'admin.student-management',
                 'icon' => 'academic-cap',
@@ -762,7 +768,7 @@ class Overview extends Component
             ],
             'teachers' => [
                 'total' => $teacherQuery->count(),
-                'active' => $teacherQuery->whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
+                'active' => $teacherQuery->whereHas('user', fn($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
                 'new_this_period' => (clone $teacherQuery)->where('created_at', '>=', $this->getPeriodStartDate())->count(),
                 'route' => 'admin.teacher-management',
                 'icon' => 'briefcase',
@@ -811,7 +817,7 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -826,7 +832,7 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -843,7 +849,7 @@ class Overview extends Component
             DB::raw('COUNT(*) as count')
         )
             ->where('status', 'succeeded')
-            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -879,7 +885,7 @@ class Overview extends Component
             ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
             ->join('books', 'book_category.book_id', '=', 'books.id')
             ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
-            ->when($schoolId, fn ($q) => $q->where('book_borrowings.school_id', $schoolId))
+            ->when($schoolId, fn($q) => $q->where('book_borrowings.school_id', $schoolId))
             ->where('book_borrowings.created_at', '>=', $this->getPeriodStartDate())
             ->groupBy('book_categories.id', 'book_categories.name')
             ->orderBy('borrowings_count', 'desc')
