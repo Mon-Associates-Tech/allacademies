@@ -341,14 +341,43 @@
 
             // Load countries on page load
             fetch('/api/countries')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(countries => {
+                    console.log('Countries loaded:', countries);
+                    
+                    // Validate countries data
+                    if (countries == null || typeof countries !== 'object') {
+                        console.error('Invalid countries data:', countries);
+                        countrySelect.innerHTML = '<option value="">Select country</option><option disabled>Unable to load countries</option>';
+                        return;
+                    }
+                    
                     countrySelect.innerHTML = '<option value="">Select country</option>';
-                    Object.entries(countries).forEach(([code, name]) => {
-                        const option = new Option(name, code);
-                        if (code === '{{ old('country') }}') option.selected = true;
-                        countrySelect.appendChild(option);
-                    });
+                    
+                    // Safely use Object.entries with validation
+                    try {
+                        const entries = Object.entries(countries);
+                        if (entries.length === 0) {
+                            console.warn('Empty countries data');
+                            countrySelect.innerHTML += '<option disabled>No countries available</option>';
+                            return;
+                        }
+                        
+                        entries.forEach(([code, name]) => {
+                            const option = new Option(name, code);
+                            if (code === '{{ old('country') }}') option.selected = true;
+                            countrySelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        console.error('Error processing countries:', error);
+                        countrySelect.innerHTML += '<option disabled>Error loading countries</option>';
+                        return;
+                    }
 
                     if (countrySelect.value) {
                         loadRegions(countrySelect.value);

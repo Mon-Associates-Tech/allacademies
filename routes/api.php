@@ -19,15 +19,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::prefix('')->group(function () {
+    // Location API routes (no auth required)
+    Route::withoutMiddleware([\App\Http\Middleware\AutomaticSchoolScoping::class])->group(function () {
+        Route::get('/countries', [\App\Http\Controllers\Api\LocationController::class, 'countries']);
+        Route::get('/detect-country', [\App\Http\Controllers\Api\LocationController::class, 'detectCountry']);
+        Route::get('/regions', [\App\Http\Controllers\Api\LocationController::class, 'regions']);
+        Route::get('/cities', [\App\Http\Controllers\Api\LocationController::class, 'cities']);
+    });
+
     Route::get('/academic-groups', [\App\Http\Controllers\Api\ExaminationApiController::class, 'getGroups']);
     Route::get('/academic-groups/{group}/levels', [\App\Http\Controllers\Api\ExaminationApiController::class, 'getLevels']);
     Route::get('/academic-levels/{level}/subjects', [\App\Http\Controllers\Api\ExaminationApiController::class, 'getSubjects']);
     Route::get('/academic-subjects/{subject}/topics', [\App\Http\Controllers\Api\ExaminationApiController::class, 'getTopics']);
 
     Route::post('/questions/generate', [\App\Http\Controllers\Api\ExaminationApiController::class, 'generate']);
-
-    // Location API routes
-    Route::get('/countries', [\App\Http\Controllers\Api\LocationController::class, 'countries']);
-    Route::get('/regions', [\App\Http\Controllers\Api\LocationController::class, 'regions']);
-    Route::get('/cities', [\App\Http\Controllers\Api\LocationController::class, 'cities']);
 });

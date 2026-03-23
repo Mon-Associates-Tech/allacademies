@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const iti = intlTelInput(phoneInput, {
             initialCountry: "auto",
             geoIpLookup: function(callback) {
-                fetch("https://ipapi.co/json")
+                // Use Laravel API endpoint for IP-based country detection
+                fetch("/api/detect-country")
                     .then(function(res) { return res.json(); })
                     .then(function(data) { callback(data.country_code); })
                     .catch(function() { callback("ng"); });

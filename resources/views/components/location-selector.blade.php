@@ -124,11 +124,44 @@
 
             // Load countries
             fetch('/api/countries')
-                .then(res => res.json())
+                .then(res => {
+                    console.log('Countries fetch - status:', res.status);
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res;
+                })
+                .then(res => res.text())
+                .then(text => {
+                    console.log('Raw response text:', text.substring(0, 200));
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Parsed data:', data);
+                        console.log('Data type:', typeof data);
+                        console.log('Data is null:', data === null);
+                        console.log('Data is undefined:', data === undefined);
+                        return data;
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        console.error('Response text:', text);
+                        throw new Error('Invalid JSON response: ' + e.message);
+                    }
+                })
                 .then(countries => {
-                    countrySelect.innerHTML = '<option value=\"\">Select country</option>';
-
-                    // Support both {US: \"United States\"} and [{code:\"US\", name:\"United States\"}] shapes
+                    console.log('=== START Processing Countries ===');
+                    console.log('Value:', countries);
+                    console.log('Type:', typeof countries);
+                    console.log('IsNull:', countries === null);
+                    console.log('IsUndefined:', countries === undefined);
+                    
+                    countrySelect.innerHTML = '<option value="">Select country</option>';
+                    
+                    if (countries === null || countries === undefined) {
+                        console.error('ERROR: countries is null or undefined!');
+                        countrySelect.innerHTML += '<option disabled>No countries data</option>';
+                        return;
+                    }
+                    
                     const appendOption = (code, name) => {
                         if (!code || !name) return;
                         const option = new Option(name, code);
@@ -137,32 +170,110 @@
                     };
 
                     if (Array.isArray(countries)) {
+                        console.log('Processing as array with', countries.length, 'items');
                         countries.forEach(item => {
                             if (typeof item === 'string') {
                                 appendOption(item, item);
-                            } else {
+                            } else if (item && typeof item === 'object') {
                                 appendOption(item.code || item.iso2 || item.id || item.value, item.name || item.label || item.title);
                             }
                         });
+                    } else if (typeof countries === 'object') {
+                        console.log('Processing as object');
+                        // DEFENSIVE CHECK: Ensure it's safe for Object.entries
+                        if (Object(countries) !== countries) {
+                            console.error('ERROR: countries is not an object despite typeof check');
+                            return;
+                        }
+                        
+                        const keys = Object.keys(countries);
+                        console.log('Keys count:', keys.length);
+                        console.log('Sample keys:', keys.slice(0, 5));
+                        
+                        if (keys.length === 0) {
+                            console.warn('WARNING: Empty countries object');
+                            return;
+                        }
+                        
+                        try {
+                            const entries = Object.entries(countries);
+                            console.log('Entries count:', entries.length);
+                            console.log('Sample entries:', entries.slice(0, 3));
+                            entries.forEach(([code, name]) => appendOption(code, name));
+                        } catch (error) {
+                            console.error('CRITICAL ERROR in Object.entries:', error);
+                            console.error('Countries value at error:', countries);
+                            console.error('Countries type at error:', typeof countries);
+                            console.error('Countries constructor:', countries.constructor);
+                            throw error;
+                        }
                     } else {
-                        Object.entries(countries).forEach(([code, name]) => appendOption(code, name));
+                        console.error('Unexpected type:', typeof countries);
+                    }
+                    
+                    // Support both {US: "United States"} and [{code:"US", name:"United States"}] shapes
+                    const appendOption = (code, name) => {
+                        if (!code || !name) return;
+                        const option = new Option(name, code);
+                        if (code === initialCountry) option.selected = true;
+                        countrySelect.appendChild(option);
+                    };
+
+                    if (Array.isArray(countries)) {
+                        console.log('Processing countries as array, length:', countries.length);
+                        countries.forEach(item => {
+                            if (typeof item === 'string') {
+                                console.log('Processing string country item:', item);
+                                appendOption(item, item);
+                            } else if (item && typeof item === 'object') {
+                                console.log('Processing object country item:', item);
+                                appendOption(item.code || item.iso2 || item.id || item.value, item.name || item.label || item.title);
+                            }
+                        });
+                    } else if (typeof countries === 'object') {
+                        console.log('Processing countries as object, keys:', Object.keys(countries));
+                        try {
+                            const entries = Object.entries(countries);
+                            console.log('Entries from countries:', entries);
+                            entries.forEach(([code, name]) => {
+                                console.log('Processing country entry:', {code, name});
+                                appendOption(code, name);
+                            });
+                        } catch (error) {
+                            console.error('Failed to process countries object:', error);
+                            console.error('Countries value:', countries);
+                            countrySelect.innerHTML += '<option disabled>Error loading countries</option>';
+                            return;
+                        }
+                    } else {
+                        console.error('Unexpected countries data type:', typeof countries);
+                        countrySelect.innerHTML += '<option disabled>Invalid data format</option>';
+                        return;
                     }
 
+                    console.log('Country select populated with options:', countrySelect.options.length);
+                    
                     if (countrySelect.value) {
                         countryCodeInput.value = countrySelect.value;
                         loadRegions(countrySelect.value, initialRegion, initialCity);
                     }
                 })
-                .catch(err => console.error('Error loading countries:', err));
+                .catch(err => {
+                    console.error('❌ Error in countries fetch chain:', err);
+                    console.error('Error name:', err.name);
+                    console.error('Error message:', err.message);
+                    console.error('Error stack:', err.stack);
+                    countrySelect.innerHTML = '<option value="">Select country</option><option disabled>Failed to load</option>';
+                });
 
             countrySelect.addEventListener('change', function () {
                 countryCodeInput.value = this.value || '';
                 if (this.value) {
                     loadRegions(this.value);
                 } else {
-                    regionSelect.innerHTML = '<option value=\"\">Select region</option>';
+                    regionSelect.innerHTML = '<option value="">Select region</option>';
                     regionSelect.disabled = true;
-                    citySelect.innerHTML = '<option value=\"\">Select city</option>';
+                    citySelect.innerHTML = '<option value="">Select city</option>';
                     citySelect.disabled = true;
                     regionCustom.classList.add('hidden');
                     cityCustom.classList.add('hidden');
@@ -183,39 +294,123 @@
             });
 
             function loadRegions(countryCode, selectedRegion = null, selectedCity = null) {
+                console.log('Loading regions for:', countryCode);
                 fetch(`/api/regions?country=${countryCode}`)
-                    .then(res => res.json())
+                    .then(res => {
+                        console.log('Regions fetch response status:', res.status);
+                        console.log('Regions fetch response ok:', res.ok);
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
                     .then(regions => {
-                        regionSelect.innerHTML = '<option value=\"\">Select region</option>';
-                        regions.forEach(region => {
+                        console.log('Regions response:', regions);
+                        console.log('Regions type:', typeof regions);
+                        console.log('Regions is null?:', regions === null);
+                        console.log('Regions is undefined?:', regions === undefined);
+                        console.log('Regions isArray?:', Array.isArray(regions));
+                        
+                        if (regions == null) {
+                            console.error('Regions data is null or undefined');
+                            return;
+                        }
+                        
+                        if (!Array.isArray(regions)) {
+                            console.error('Invalid regions data format - expected array, got:', typeof regions, regions);
+                            console.log('Attempting to convert to array if possible...');
+                            if (Array.isArray(Object.values(regions))) {
+                                regions = Object.values(regions);
+                                console.log('Converted regions to array:', regions);
+                            } else {
+                                console.error('Could not convert regions data to array');
+                                return;
+                            }
+                        }
+                        
+                        console.log('Regions array length:', regions.length);
+                        regionSelect.innerHTML = '<option value="">Select region</option>';
+                        regions.forEach((region, index) => {
+                            console.log(`Processing region ${index}:`, region);
                             const option = new Option(region, region);
-                            if (region === selectedRegion) option.selected = true;
+                            if (region === selectedRegion) {
+                                option.selected = true;
+                                console.log('Selected region matched:', region);
+                            }
                             regionSelect.appendChild(option);
                         });
                         regionSelect.appendChild(new Option('Other', 'other'));
                         regionSelect.disabled = false;
+                        console.log('Region select now has options:', regionSelect.options.length);
 
                         if (regionSelect.value && regionSelect.value !== 'other') {
                             loadCities(countryCode, regionSelect.value, selectedCity);
                         }
                     })
-                    .catch(err => console.error('Error loading regions:', err));
+                    .catch(err => {
+                        console.error('Error loading regions:', err);
+                        console.error('Error stack:', err.stack);
+                        console.error('Error name:', err.name);
+                        console.error('Error message:', err.message);
+                    });
             }
 
             function loadCities(countryCode, regionCode, selectedCity = null) {
+                console.log('Loading cities for:', {countryCode, regionCode});
                 fetch(`/api/cities?country=${countryCode}&region=${regionCode}`)
-                    .then(res => res.json())
+                    .then(res => {
+                        console.log('Cities fetch response status:', res.status);
+                        console.log('Cities fetch response ok:', res.ok);
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
                     .then(cities => {
-                        citySelect.innerHTML = '<option value=\"\">Select city</option>';
-                        cities.forEach(city => {
+                        console.log('Cities response:', cities);
+                        console.log('Cities type:', typeof cities);
+                        console.log('Cities is null?:', cities === null);
+                        console.log('Cities is undefined?:', cities === undefined);
+                        console.log('Cities isArray?:', Array.isArray(cities));
+                        
+                        if (cities == null) {
+                            console.error('Cities data is null or undefined');
+                            return;
+                        }
+                        
+                        if (!Array.isArray(cities)) {
+                            console.error('Invalid cities data format - expected array, got:', typeof cities, cities);
+                            console.log('Attempting to convert to array if possible...');
+                            if (Array.isArray(Object.values(cities))) {
+                                cities = Object.values(cities);
+                                console.log('Converted cities to array:', cities);
+                            } else {
+                                console.error('Could not convert cities data to array');
+                                return;
+                            }
+                        }
+                        
+                        console.log('Cities array length:', cities.length);
+                        citySelect.innerHTML = '<option value="">Select city</option>';
+                        cities.forEach((city, index) => {
+                            console.log(`Processing city ${index}:`, city);
                             const option = new Option(city, city);
-                            if (city === selectedCity) option.selected = true;
+                            if (city === selectedCity) {
+                                option.selected = true;
+                                console.log('Selected city matched:', city);
+                            }
                             citySelect.appendChild(option);
                         });
                         citySelect.appendChild(new Option('Other', 'other'));
                         citySelect.disabled = false;
+                        console.log('City select now has options:', citySelect.options.length);
                     })
-                    .catch(err => console.error('Error loading cities:', err));
+                    .catch(err => {
+                        console.error('Error loading cities:', err);
+                        console.error('Error stack:', err.stack);
+                        console.error('Error name:', err.name);
+                        console.error('Error message:', err.message);
+                    });
             }
 
             citySelect.addEventListener('change', function () {
@@ -233,18 +428,41 @@
     <script>
         (function registerLocationSelector() {
             const runAll = () => {
-                document.querySelectorAll('[data-location-selector="true"]').forEach(el => {
-                    const prefix = el.dataset.prefix;
-                    const country = el.dataset.countryValue || el.querySelector(`#${prefix}-country`)?.dataset.value || '';
-                    const region = el.dataset.regionValue || '';
-                    const city = el.dataset.cityValue || '';
-                    const code = el.dataset.countryCodeValue || '';
-                    initLocationSelector(prefix, country, region, city, code);
+                console.log('Initializing location selectors...');
+                const selectors = document.querySelectorAll('[data-location-selector="true"]');
+                console.log('Found selectors:', selectors.length);
+                selectors.forEach(el => {
+                    try {
+                        const prefix = el.dataset.prefix;
+                        if (!prefix) {
+                            console.warn('Skipping selector without prefix');
+                            return;
+                        }
+                        
+                        const countryEl = el.querySelector(`#${prefix}-country`);
+                        const country = el.dataset.countryValue || countryEl?.dataset?.value || '';
+                        const region = el.dataset.regionValue || '';
+                        const city = el.dataset.cityValue || '';
+                        const code = el.dataset.countryCodeValue || '';
+                        
+                        console.log('Initializing selector with prefix:', prefix);
+                        console.log('Initial values - country:', country, 'region:', region, 'city:', city, 'code:', code);
+                        
+                        initLocationSelector(prefix, country, region, city, code);
+                    } catch (error) {
+                        console.error('Error initializing location selector:', error);
+                        console.error('Element:', el);
+                    }
                 });
             };
 
             // Initial load
-            document.addEventListener('DOMContentLoaded', runAll);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', runAll);
+            } else {
+                // DOM already loaded, run immediately
+                runAll();
+            }
 
             // Livewire re-renders
             if (window.Livewire && typeof window.Livewire.hook === 'function') {
