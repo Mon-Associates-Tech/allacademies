@@ -14,7 +14,7 @@ class SponsorshipBid extends Model
     const STATUS_ACCEPTED = 'accepted';
     const STATUS_REJECTED = 'rejected';
     protected $fillable = [
-        'sponsorship_offer_id',
+        'sponsor_offer_id',
         'sponsorship_program_id',
         'user_id',
         'message',
@@ -43,7 +43,7 @@ class SponsorshipBid extends Model
      */
     public function sponsorshipOffer(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipOffer::class, 'sponsor_offer_id');
+        return $this->belongsTo(SponsorshipOffer::class, );
     }
 
     /**
@@ -51,7 +51,7 @@ class SponsorshipBid extends Model
      */
     public function sponsorshipProject(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipProject::class);
+        return $this->belongsTo(SponsorshipProject::class, 'sponsorship_program_id');
     }
 
     /**
