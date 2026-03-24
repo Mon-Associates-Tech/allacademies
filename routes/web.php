@@ -477,6 +477,7 @@ include_once 'academic.php';
 include_once 'guest.php';
 include_once 'sponsorship.php';
 include_once 'misc.php';
+include_once 'lms.php';
 
 // General Exams Routes (code-based assignments for teachers and participants)
 include_once 'general-exams.php';
