@@ -151,39 +151,39 @@
 
 
                     <!-- Sponsorship Section -->
-                    <template class="hidden">
+                    <span class="">
                         <li class="px-3 py-2 rounded-sm mb-0.5">
-                            <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Sponsorship</span>
+                            <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Sponsorships</span>
                         </li>
 
-                        <li class="mb-0.5 last:mb-2" title="Programs">
+                        <li class="mb-0.5 last:mb-2" title="Sponsorship Projects">
                             <a :class="sidebarExpanded ? 'py-2' : ''"
-                               class="block pl-3 rounded-lg transition {{ Route::is('sponsorship.programs*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                               href="{{ route('sponsorship.programs.index') }}">
+                               class="block pl-3 rounded-lg transition {{ Route::is('sponsorships.projects*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('sponsorships.projects.index') }}">
                                 <div class="flex items-center">
                                     <svg
-                                        class="shrink-0 fill-current {{ Route::is('sponsorship.programs*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                        class="shrink-0 fill-current {{ Route::is('sponsorships.projects.index*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path
                                             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
                                     </svg>
-                                    <span class="text-sm ml-2 sidebar-text duration-200">Programs</span>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Sponsorship Projects</span>
                                 </div>
                             </a>
                         </li>
 
-                        <li class="mb-0.5 last:mb-2" title="Sponsor Offers">
+                        <li class="mb-0.5 last:mb-2" title="Sponsorship Offers">
                             <a :class="sidebarExpanded ? 'py-2' : ''"
-                               class="block pl-3 rounded-lg transition {{ Route::is('sponsorship.offers*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                               href="{{ route('sponsorship.offers.index') }}">
+                               class="block pl-3 rounded-lg transition {{ Route::is('sponsorships.offers*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('sponsorships.offers.index') }}">
                                 <div class="flex items-center">
                                     <svg
-                                        class="shrink-0 fill-current {{ Route::is('sponsorship.offers*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                        class="shrink-0 fill-current {{ Route::is('sponsorships.offers*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path
                                             d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/>
                                     </svg>
-                                    <span class="text-sm ml-2 sidebar-text duration-200">Sponsor Offers</span>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Sponsorship Offers</span>
                                 </div>
                             </a>
                         </li>
@@ -191,11 +191,11 @@
                         @auth
                             <li class="mb-0.5 last:mb-2" title="My Contributions">
                                 <a :class="sidebarExpanded ? 'py-2' : ''"
-                                   class="block pl-3 rounded-lg transition {{ Route::is('sponsorship.contributions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                                   href="{{ route('sponsorship.contributions.mine') }}">
+                                   class="block pl-3 rounded-lg transition {{ Route::is('sponsorships.contributions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                   href="{{ route('sponsorships.contributions.mine') }}">
                                     <div class="flex items-center">
                                         <svg
-                                            class="shrink-0 fill-current {{ Route::is('sponsorship.contributions*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                            class="shrink-0 fill-current {{ Route::is('sponsorships.contributions*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                                             xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                             viewBox="0 0 24 24">
                                             <path
@@ -210,7 +210,7 @@
                             <li class="mb-0.5 last:mb-2" title="Benefactor Dashboard">
                                 <a :class="sidebarExpanded ? 'py-2' : ''"
                                    class="block pl-3 rounded-lg transition {{ Route::is('benefactor.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                                   href="{{ route('benefactor.dashboard') }}">
+                                   href="{{ route('benefactors.index') }}">
                                     <div class="flex items-center">
                                         <svg
                                             class="shrink-0 fill-current {{ Route::is('benefactor.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
@@ -229,11 +229,11 @@
                             <!-- Sponsor Dashboard -->
                             <li class="mb-0.5 last:mb-2" title="Sponsor Dashboard">
                                 <a :class="sidebarExpanded ? 'py-2' : ''"
-                                   class="block pl-3 rounded-lg transition {{ Route::is('sponsor.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                                   href="{{ route('sponsor.dashboard') }}">
+                                   class="block pl-3 rounded-lg transition {{ Route::is('sponsorships.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                   href="{{ route('sponsorships.index') }}">
                                     <div class="flex items-center">
                                         <svg
-                                            class="shrink-0 fill-current {{ Route::is('sponsor.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                            class="shrink-0 fill-current {{ Route::is('sponsorships.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                                             xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                             viewBox="0 0 24 24">
                                             <path
@@ -264,7 +264,7 @@
                                 </li>
                             @endif
                         @endauth
-                    </template>
+                    </span>
 
 
                     <!-- Other Sections -->

@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Sponsorship;
 
-use App\Models\SponsorOffer;
+use App\Models\SponsorshipOffer;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -10,12 +10,20 @@ use Livewire\Component;
 class SponsorOfferForm extends Component
 {
     public $offerId = null;
+
     public $title = '';
+
     public $description = '';
+
     public $amount_offered = '';
+
     public $criteria = '';
+
     public $accepts_bids = true;
+
     public $expires_at = '';
+
+    protected $listeners = ['markdown-updated' => 'handleMarkdownUpdate'];
 
     protected $rules = [
         'title' => 'required|string|min:3|max:255',
@@ -26,19 +34,27 @@ class SponsorOfferForm extends Component
         'expires_at' => 'nullable|date|after:today',
     ];
 
-    public function mount($offerId = null)
+    public function mount($offer = null)
     {
-        if ($offerId) {
-            $offer = SponsorOffer::where('user_id', Auth::id())
-                ->findOrFail($offerId);
 
-            $this->offerId = $offer->id;
-            $this->title = $offer->title;
-            $this->description = $offer->description;
-            $this->amount_offered = $offer->amount_offered;
-            $this->criteria = $offer->criteria;
-            $this->accepts_bids = $offer->accepts_bids;
-            $this->expires_at = $offer->expires_at?->format('Y-m-d');
+        if ($offer) {
+            $offerModel = SponsorshipOffer::where('user_id', Auth::id())
+                ->findOrFail($offer);
+
+            $this->offerId = $offerModel->id;
+            $this->title = $offerModel->title;
+            $this->description = $offerModel->description;
+            $this->amount_offered = $offerModel->amount_offered;
+            $this->criteria = $offerModel->criteria;
+            $this->accepts_bids = $offerModel->accepts_bids;
+            $this->expires_at = $offerModel->expires_at?->format('Y-m-d');
+        }
+    }
+
+    public function handleMarkdownUpdate($data)
+    {
+        if (isset($data['name']) && isset($data['value'])) {
+            $this->{$data['name']} = $data['value'];
         }
     }
 
@@ -63,22 +79,22 @@ class SponsorOfferForm extends Component
         ];
 
         if ($this->offerId) {
-            $offer = SponsorOffer::where('user_id', Auth::id())
+            $offer = SponsorshipOffer::where('user_id', Auth::id())
                 ->findOrFail($this->offerId);
 
-            $sponsorshipService->updateSponsorOffer($offer, $data);
+            $sponsorshipService->updateSponsorshipOffer($offer, $data);
             session()->flash('message', 'Offer updated successfully.');
         } else {
-            $sponsorshipService->createSponsorOffer(Auth::user(), $data);
+            $sponsorshipService->createSponsorshipOffer(Auth::user(), $data);
             session()->flash('message', 'Offer created successfully.');
         }
 
-        return redirect()->route('sponsor.dashboard');
+        return redirect()->route('sponsorships.index');
     }
 
     public function render()
     {
-        return view('livewire.sponsorship.sponsor-offer-form', [
+        return view('livewire.sponsorships.sponsor-offer-form', [
             'isEditing' => !is_null($this->offerId),
         ]);
     }

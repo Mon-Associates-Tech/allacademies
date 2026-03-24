@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-class SponsorshipProgram extends Model
+class SponsorshipProject extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'sponsorship_programs';
     protected $fillable = [
         'user_id',
         'school_id',
@@ -30,6 +31,8 @@ class SponsorshipProgram extends Model
         'rejection_reason',
         'rejected_at',
         'metadata',
+        'images',
+        'videos',
     ];
 
     protected $casts = [
@@ -39,32 +42,41 @@ class SponsorshipProgram extends Model
         'verified_at' => 'datetime',
         'rejected_at' => 'datetime',
         'metadata' => 'array',
+        'images' => 'array',
+        'videos' => 'array',
     ];
 
     public const TYPE_PROJECT = 'project';
+
     public const TYPE_CAUSE = 'cause';
+
     public const TYPE_SCHOLARSHIP = 'scholarship';
+
     public const TYPE_EMERGENCY = 'emergency';
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_PENDING_VERIFICATION = 'pending_verification';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     protected static function boot()
     {
         parent::boot();
 
-        static::creating(function ($program) {
-            if (empty($program->code)) {
-                $program->code = strtoupper('SPP-' . Str::random(8));
+        static::creating(function ($project) {
+            if (empty($project->code)) {
+                $project->code = strtoupper('SPP-'.Str::random(8));
             }
         });
     }
 
     /**
-     * Get the creator/benefactor of the program
+     * Get the creator/benefactor of the project
      */
     public function user(): BelongsTo
     {
@@ -80,7 +92,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Get the school if program is tied to one
+     * Get the school if project is tied to one
      */
     public function school(): BelongsTo
     {
@@ -88,7 +100,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Get the user who verified the program
+     * Get the user who verified the project
      */
     public function verifier(): BelongsTo
     {
@@ -96,7 +108,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Get the beneficiaries of this program
+     * Get the beneficiaries of this project
      */
     public function beneficiaries(): HasMany
     {
@@ -104,7 +116,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Get the bids submitted for this program
+     * Get the bids submitted for this project
      */
     public function bids(): HasMany
     {
@@ -112,7 +124,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Get the contributions made to this program
+     * Get the contributions made to this project
      */
     public function contributions(): HasMany
     {
@@ -132,12 +144,15 @@ class SponsorshipProgram extends Model
      */
     public function getProgressPercentageAttribute(): float
     {
-        if ($this->amount_goal <= 0) return 0;
+        if ($this->amount_goal <= 0) {
+            return 0;
+        }
+
         return min(100, round(($this->amount_raised / $this->amount_goal) * 100, 1));
     }
 
     /**
-     * Check if the program is active
+     * Check if the project is active
      */
     public function isActive(): bool
     {
@@ -145,7 +160,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Check if the program is pending verification
+     * Check if the project is pending verification
      */
     public function isPendingVerification(): bool
     {
@@ -169,7 +184,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Submit the program for verification
+     * Submit the project for verification
      */
     public function submitForVerification(): bool
     {
@@ -178,11 +193,12 @@ class SponsorshipProgram extends Model
         }
 
         $this->update(['status' => self::STATUS_PENDING_VERIFICATION]);
+
         return true;
     }
 
     /**
-     * Verify/approve the program
+     * Verify/approve the project
      */
     public function verify(User $verifier): bool
     {
@@ -201,7 +217,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Reject the program
+     * Reject the project
      */
     public function reject(User $verifier, string $reason): bool
     {
@@ -219,7 +235,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Scope to get only active programs
+     * Scope to get only active projects
      */
     public function scopeActive($query)
     {
@@ -227,7 +243,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Scope to get programs pending verification
+     * Scope to get projects pending verification
      */
     public function scopePendingVerification($query)
     {
@@ -235,7 +251,7 @@ class SponsorshipProgram extends Model
     }
 
     /**
-     * Scope to get programs by type
+     * Scope to get projects by type
      */
     public function scopeOfType($query, string $type)
     {

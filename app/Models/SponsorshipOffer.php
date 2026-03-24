@@ -9,10 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-class SponsorOffer extends Model
+class SponsorshipOffer extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'sponsor_offers';
+
+    const STATUS_OPEN = 'open';
+    const STATUS_CLOSED = 'closed';
+    const STATUS_FULFILLED = 'fulfilled';
     protected $fillable = [
         'user_id',
         'title',
@@ -25,7 +30,6 @@ class SponsorOffer extends Model
         'expires_at',
         'metadata',
     ];
-
     protected $casts = [
         'amount_offered' => 'decimal:2',
         'accepts_bids' => 'boolean',
@@ -33,9 +37,17 @@ class SponsorOffer extends Model
         'metadata' => 'array',
     ];
 
-    const STATUS_OPEN = 'open';
-    const STATUS_CLOSED = 'closed';
-    const STATUS_FULFILLED = 'fulfilled';
+    /**
+     * Get available statuses
+     */
+    public static function getStatuses(): array
+    {
+        return [
+            self::STATUS_OPEN => 'Open',
+            self::STATUS_CLOSED => 'Closed',
+            self::STATUS_FULFILLED => 'Fulfilled',
+        ];
+    }
 
     protected static function boot()
     {
@@ -65,22 +77,6 @@ class SponsorOffer extends Model
     }
 
     /**
-     * Get the bids submitted for this offer
-     */
-    public function bids(): HasMany
-    {
-        return $this->hasMany(SponsorshipBid::class);
-    }
-
-    /**
-     * Get the contributions made through this offer
-     */
-    public function contributions(): HasMany
-    {
-        return $this->hasMany(SponsorshipContribution::class);
-    }
-
-    /**
      * Get pending bids
      */
     public function pendingBids(): HasMany
@@ -89,11 +85,27 @@ class SponsorOffer extends Model
     }
 
     /**
+     * Get the bids submitted for this offer
+     */
+    public function bids(): HasMany
+    {
+        return $this->hasMany(SponsorshipBid::class);
+    }
+
+    /**
      * Get accepted bids
      */
     public function acceptedBids(): HasMany
     {
         return $this->bids()->where('status', SponsorshipBid::STATUS_ACCEPTED);
+    }
+
+    /**
+     * Check if the offer accepts bids
+     */
+    public function canAcceptBids(): bool
+    {
+        return $this->accepts_bids && $this->isOpen();
     }
 
     /**
@@ -110,14 +122,6 @@ class SponsorOffer extends Model
     public function isExpired(): bool
     {
         return $this->expires_at && $this->expires_at->isPast();
-    }
-
-    /**
-     * Check if the offer accepts bids
-     */
-    public function canAcceptBids(): bool
-    {
-        return $this->accepts_bids && $this->isOpen();
     }
 
     /**
@@ -166,6 +170,14 @@ class SponsorOffer extends Model
     }
 
     /**
+     * Get the contributions made through this offer
+     */
+    public function contributions(): HasMany
+    {
+        return $this->hasMany(SponsorshipContribution::class);
+    }
+
+    /**
      * Get remaining amount to offer
      */
     public function getRemainingAmountAttribute(): float
@@ -191,17 +203,5 @@ class SponsorOffer extends Model
     public function scopeAcceptingBids($query)
     {
         return $query->open()->where('accepts_bids', true);
-    }
-
-    /**
-     * Get available statuses
-     */
-    public static function getStatuses(): array
-    {
-        return [
-            self::STATUS_OPEN => 'Open',
-            self::STATUS_CLOSED => 'Closed',
-            self::STATUS_FULFILLED => 'Fulfilled',
-        ];
     }
 }

@@ -80,7 +80,7 @@
 
     <!-- Main Footer Content -->
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-6 gap-12">
 
             <!-- Brand Section -->
             <div class="lg:col-span-2 space-y-6">
@@ -261,6 +261,43 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                             Status Page
+                        </a></li>
+                </ul>
+            </div>
+
+            <!-- Sponsorship -->
+            <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Sponsorship
+                </h3>
+                <ul class="space-y-3">
+                    <li><a href="{{ route('sponsorships.projects.index') }}"
+                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                            <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            Browse Projects
+                        </a></li>
+                    <li><a href="{{ route('sponsorships.offers.index') }}"
+                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                            <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            Sponsorships
+                        </a></li>
+                    <li><a href="{{ route('financial-aid') }}"
+                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                            <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            Financial Aid
                         </a></li>
                 </ul>
             </div>

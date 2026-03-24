@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Sponsorship;
 
-use App\Models\SponsorOffer;
 use App\Models\SponsorshipBid;
-use App\Models\SponsorshipContribution;
+use App\Models\SponsorshipOffer;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -37,22 +36,22 @@ class SponsorDashboard extends Component
 
     public function closeOffer($offerId)
     {
-        $offer = SponsorOffer::where('user_id', Auth::id())->findOrFail($offerId);
+        $offer = SponsorshipOffer::where('user_id', Auth::id())->findOrFail($offerId);
         $offer->close();
         session()->flash('message', 'Offer closed successfully.');
     }
 
     public function reopenOffer($offerId)
     {
-        $offer = SponsorOffer::where('user_id', Auth::id())->findOrFail($offerId);
+        $offer = SponsorshipOffer::where('user_id', Auth::id())->findOrFail($offerId);
         $offer->reopen();
         session()->flash('message', 'Offer reopened successfully.');
     }
 
     public function deleteOffer($offerId)
     {
-        $offer = SponsorOffer::where('user_id', Auth::id())
-            ->where('status', SponsorOffer::STATUS_CLOSED)
+        $offer = SponsorshipOffer::where('user_id', Auth::id())
+            ->where('status', SponsorshipOffer::STATUS_CLOSED)
             ->findOrFail($offerId);
 
         $offer->bids()->delete();
@@ -76,7 +75,7 @@ class SponsorDashboard extends Component
 
     public function acceptBid($bidId)
     {
-        $bid = SponsorshipBid::whereHas('sponsorOffer', function ($q) {
+        $bid = SponsorshipBid::whereHas('sponsorshipOffer', function ($q) {
             $q->where('user_id', Auth::id());
         })->findOrFail($bidId);
 
@@ -91,7 +90,7 @@ class SponsorDashboard extends Component
 
     public function rejectBid($bidId)
     {
-        $bid = SponsorshipBid::whereHas('sponsorOffer', function ($q) {
+        $bid = SponsorshipBid::whereHas('sponsorshipOffer', function ($q) {
             $q->where('user_id', Auth::id());
         })->findOrFail($bidId);
 
@@ -112,7 +111,7 @@ class SponsorDashboard extends Component
         $bidsForModal = collect();
 
         if ($this->activeTab === 'offers') {
-            $query = SponsorOffer::where('user_id', Auth::id())
+            $query = SponsorshipOffer::where('user_id', Auth::id())
                 ->withCount(['bids', 'pendingBids', 'acceptedBids']);
 
             if ($this->search) {
@@ -128,15 +127,15 @@ class SponsorDashboard extends Component
 
             $offers = $query->orderBy('created_at', 'desc')->paginate(10);
         } elseif ($this->activeTab === 'bids') {
-            $query = SponsorshipBid::whereHas('sponsorOffer', function ($q) {
+            $query = SponsorshipBid::whereHas('sponsorshipOffer', function ($q) {
                 $q->where('user_id', Auth::id());
-            })->with(['sponsorshipProgram.user', 'sponsorOffer', 'user']);
+            })->with(['sponsorshipProgram.user', 'sponsorshipOffer', 'user']);
 
             if ($this->search) {
                 $query->where(function ($q) {
                     $q->whereHas('sponsorshipProgram', function ($pq) {
                         $pq->where('name', 'like', "%{$this->search}%");
-                    })->orWhereHas('sponsorOffer', function ($oq) {
+                    })->orWhereHas('sponsorshipOffer', function ($oq) {
                         $oq->where('title', 'like', "%{$this->search}%");
                     });
                 });
@@ -158,15 +157,15 @@ class SponsorDashboard extends Component
         }
 
         // Stats - passing individual variables instead of array
-        $totalOffers = SponsorOffer::where('user_id', Auth::id())->count();
-        $openOffers = SponsorOffer::where('user_id', Auth::id())
-            ->where('status', SponsorOffer::STATUS_OPEN)->count();
-        $pendingBids = SponsorshipBid::whereHas('sponsorOffer', function ($q) {
+        $totalOffers = SponsorshipOffer::where('user_id', Auth::id())->count();
+        $openOffers = SponsorshipOffer::where('user_id', Auth::id())
+            ->where('status', SponsorshipOffer::STATUS_OPEN)->count();
+        $pendingBids = SponsorshipBid::whereHas('sponsorshipOffer', function ($q) {
             $q->where('user_id', Auth::id());
         })->where('status', SponsorshipBid::STATUS_PENDING)->count();
-        $totalCommitted = SponsorOffer::where('user_id', Auth::id())->sum('amount_offered');
+        $totalCommitted = SponsorshipOffer::where('user_id', Auth::id())->sum('amount_offered');
 
-        return view('livewire.sponsorship.sponsor-dashboard', [
+        return view('livewire.sponsorships.sponsors-dashboard', [
             'offers' => $offers,
             'bids' => $bids,
             'bidsForModal' => $bidsForModal,
@@ -174,7 +173,7 @@ class SponsorDashboard extends Component
             'openOffers' => $openOffers,
             'pendingBids' => $pendingBids,
             'totalCommitted' => $totalCommitted,
-            'offerStatuses' => SponsorOffer::getStatuses(),
+            'offerStatuses' => SponsorshipOffer::getStatuses(),
         ]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Sponsorship;
 
-use App\Models\SponsorOffer;
-use App\Models\SponsorshipProgram;
+use App\Models\SponsorshipOffer;
+use App\Models\SponsorshipProject;
 use App\Services\SponsorshipService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -14,12 +14,16 @@ class PublicSponsorOfferList extends Component
     use WithPagination;
 
     public $search = '';
+
     public $sortBy = 'latest';
 
     // Bid submission
     public $showBidModal = false;
+
     public $selectedOfferId = null;
-    public $selectedProgramId = '';
+
+    public $selectedProjectId = '';
+
     public $bidMessage = '';
 
     protected $queryString = [
@@ -35,38 +39,30 @@ class PublicSponsorOfferList extends Component
     public function openBidModal($offerId)
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('sign-in');
         }
 
         $this->selectedOfferId = $offerId;
-        $this->selectedProgramId = '';
+        $this->selectedProjectId = '';
         $this->bidMessage = '';
         $this->showBidModal = true;
-    }
-
-    public function closeBidModal()
-    {
-        $this->showBidModal = false;
-        $this->selectedOfferId = null;
-        $this->selectedProgramId = '';
-        $this->bidMessage = '';
     }
 
     public function submitBid()
     {
         $this->validate([
-            'selectedProgramId' => 'required|exists:sponsorship_programs,id',
+            'selectedProjectId' => 'required|exists:sponsorship_projects,id',
             'bidMessage' => 'nullable|string|max:1000',
         ]);
 
-        $offer = SponsorOffer::open()->findOrFail($this->selectedOfferId);
-        $program = SponsorshipProgram::where('user_id', Auth::id())
+        $offer = SponsorshipOffer::open()->findOrFail($this->selectedOfferId);
+        $project = SponsorshipProject::where('user_id', Auth::id())
             ->active()
-            ->findOrFail($this->selectedProgramId);
+            ->findOrFail($this->selectedProjectId);
 
         $sponsorshipService = app(SponsorshipService::class);
 
-        $bid = $sponsorshipService->submitBid($offer, $program, Auth::user(), $this->bidMessage);
+        $bid = $sponsorshipService->submitBid($offer, $project, Auth::user(), $this->bidMessage);
 
         if ($bid) {
             session()->flash('message', 'Bid submitted successfully. The sponsor will review your application.');
@@ -76,9 +72,17 @@ class PublicSponsorOfferList extends Component
         }
     }
 
+    public function closeBidModal()
+    {
+        $this->showBidModal = false;
+        $this->selectedOfferId = null;
+        $this->selectedProjectId = '';
+        $this->bidMessage = '';
+    }
+
     public function render()
     {
-        $query = SponsorOffer::open()
+        $query = SponsorshipOffer::open()
             ->with('user')
             ->withCount(['bids', 'acceptedBids']);
 
@@ -109,17 +113,17 @@ class PublicSponsorOfferList extends Component
 
         $offers = $query->paginate(12);
 
-        // Get user's active programs for bidding
-        $userPrograms = collect();
+        // Get user's active projects for bidding
+        $userProjects = collect();
         if (Auth::check()) {
-            $userPrograms = SponsorshipProgram::where('user_id', Auth::id())
+            $userProjects = SponsorshipProject::where('user_id', Auth::id())
                 ->active()
                 ->get();
         }
 
-        return view('livewire.sponsorship.public-sponsor-offer-list', [
+        return view('livewire.sponsorships.public-sponsor-offer-list', [
             'offers' => $offers,
-            'userPrograms' => $userPrograms,
+            'userProjects' => $userProjects,
         ])->layout('components.layouts.guest', ['pageName' => 'Sponsor Offers']);
     }
 }

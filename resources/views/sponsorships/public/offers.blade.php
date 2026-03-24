@@ -6,10 +6,24 @@
             <!-- Breadcrumb -->
             <nav class="mb-6">
                 <ol class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                    <li><a href="{{ route('sponsorship.programs.index') }}" class="hover:text-blue-600">Programs</a></li>
-                    <li><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg></li>
-                    <li><a href="{{ route('sponsorship.programs.show', $program) }}" class="hover:text-blue-600">{{ $program->name }}</a></li>
-                    <li><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg></li>
+                    <li><a href="{{ route('sponsorships.projects.index') }}" class="hover:text-blue-600">Programs</a>
+                    </li>
+                    <li>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                  clip-rule="evenodd"></path>
+                        </svg>
+                    </li>
+                    <li><a href="{{ route('sponsorships.programs.show', $program) }}"
+                           class="hover:text-blue-600">{{ $program->name }}</a></li>
+                    <li>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                  clip-rule="evenodd"></path>
+                        </svg>
+                    </li>
                     <li class="text-gray-900 dark:text-white">Contribute</li>
                 </ol>
             </nav>
@@ -28,7 +42,8 @@
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Make a Contribution</h1>
 
                 @if($errors->any())
-                    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg">
+                    <div
+                        class="mb-6 p-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg">
                         <ul class="list-disc list-inside text-sm text-red-800 dark:text-red-200">
                             @foreach($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -37,7 +52,8 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('sponsorship.programs.contribute.initialize', $program) }}" id="donationForm">
+                <form method="POST" action="{{ route('sponsorships.programs.contribute.initialize', $program) }}"
+                      id="donationForm">
                     @csrf
                     <input type="hidden" name="sponsorship_program_id" value="{{ $program->id }}">
 
@@ -52,14 +68,17 @@
                     </div>
 
                     <!-- Sponsor Covers Fee -->
-                    <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <div
+                        class="mb-6 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
                         <label class="flex items-start cursor-pointer">
                             <input type="checkbox" name="sponsor_covers_fee" id="sponsor_covers_fee" value="1"
                                    class="mt-1 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
                             <div class="ml-3">
-                                <span class="text-sm font-medium text-gray-900 dark:text-white">Cover the platform fee</span>
+                                <span
+                                    class="text-sm font-medium text-gray-900 dark:text-white">Cover the platform fee</span>
                                 <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                    A {{ $platformFeePercentage }} platform fee helps us maintain and improve the service.
+                                    A {{ $platformFeePercentage }} platform fee helps us maintain and improve the
+                                    service.
                                     Check this box to cover this fee so 100% of your contribution goes to the program.
                                 </p>
                             </div>
@@ -108,7 +127,8 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-600 dark:text-gray-400">Contribution Amount:</span>
-                                <span class="font-medium text-gray-900 dark:text-white" id="summaryAmount">GHS 0.00</span>
+                                <span class="font-medium text-gray-900 dark:text-white"
+                                      id="summaryAmount">GHS 0.00</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600 dark:text-gray-400">Platform Fee ({{ $platformFeePercentage }}):</span>
@@ -116,11 +136,13 @@
                             </div>
                             <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
                                 <span class="font-semibold text-gray-900 dark:text-white">Total Charged:</span>
-                                <span class="font-bold text-blue-600 dark:text-blue-400" id="summaryTotal">GHS 0.00</span>
+                                <span class="font-bold text-blue-600 dark:text-blue-400"
+                                      id="summaryTotal">GHS 0.00</span>
                             </div>
                             <div class="flex justify-between text-xs pt-2">
                                 <span class="text-gray-600 dark:text-gray-400">Benefactor Receives:</span>
-                                <span class="font-medium text-green-600 dark:text-green-400" id="summaryNet">GHS 0.00</span>
+                                <span class="font-medium text-green-600 dark:text-green-400"
+                                      id="summaryNet">GHS 0.00</span>
                             </div>
                         </div>
                     </div>
@@ -128,7 +150,8 @@
                     <!-- Terms -->
                     <div class="mb-6">
                         <label class="flex items-start">
-                            <input type="checkbox" required class="mt-1 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                            <input type="checkbox" required
+                                   class="mt-1 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
                             <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                             I agree to the <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and confirm that my contribution is voluntary.
                         </span>
@@ -150,13 +173,16 @@
             <!-- Security Note -->
             <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div class="flex items-start">
-                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 mr-3" fill="none"
+                         stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                     </svg>
                     <div>
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">Secure Payment</h4>
                         <p class="text-xs text-gray-600 dark:text-gray-400">
-                            Your payment information is processed securely through Paystack. We do not store your card details.
+                            Your payment information is processed securely through Paystack. We do not store your card
+                            details.
                         </p>
                     </div>
                 </div>
@@ -165,7 +191,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const amountInput = document.getElementById('amount');
             const coversFeeCheckbox = document.getElementById('sponsor_covers_fee');
             const summary = document.getElementById('paymentSummary');

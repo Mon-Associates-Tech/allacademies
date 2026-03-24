@@ -10,9 +10,15 @@ class SponsorshipContribution extends Model
 {
     use HasFactory;
 
+    const STATUS_PLEDGED = 'pledged';
+    const STATUS_PENDING = 'pending';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_FAILED = 'failed';
+    const STATUS_REFUNDED = 'refunded';
+    const PLATFORM_FEE_PERCENTAGE = 0.01;
     protected $fillable = [
         'sponsorship_program_id',
-        'sponsor_offer_id',
+        'sponsorship_offer_id',
         'user_id',
         'payer_name',
         'payer_email',
@@ -31,7 +37,6 @@ class SponsorshipContribution extends Model
         'metadata',
         'paid_at',
     ];
-
     protected $casts = [
         'amount' => 'decimal:2',
         'platform_fee' => 'decimal:2',
@@ -41,30 +46,76 @@ class SponsorshipContribution extends Model
         'paystack_response' => 'array',
         'metadata' => 'array',
         'paid_at' => 'datetime',
-    ];
-
-    const STATUS_PLEDGED = 'pledged';
-    const STATUS_PENDING = 'pending';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_FAILED = 'failed';
-    const STATUS_REFUNDED = 'refunded';
-
-    const PLATFORM_FEE_PERCENTAGE = 0.01; // 1%
+    ]; // 1%
 
     /**
-     * Get the sponsorship program this contribution is for
+     * Calculate net amount (what benefactor receives)
      */
-    public function sponsorshipProgram(): BelongsTo
+    public static function calculateNetAmount(float $amount, bool $sponsorCoversFee = false): float
     {
-        return $this->belongsTo(SponsorshipProgram::class);
+        if ($sponsorCoversFee) {
+            return $amount;
+        }
+
+        return $amount - self::calculatePlatformFee($amount);
+    }
+
+    /**
+     * Calculate platform fee for a given amount
+     */
+    public static function calculatePlatformFee(float $amount): float
+    {
+        return round($amount * self::PLATFORM_FEE_PERCENTAGE, 2);
+    }
+
+    /**
+     * Calculate total to charge sponsor
+     */
+    public static function calculateTotalCharged(float $amount, bool $sponsorCoversFee = false): float
+    {
+        if ($sponsorCoversFee) {
+            return $amount + self::calculatePlatformFee($amount);
+        }
+
+        return $amount;
+    }
+
+    /**
+     * Get available statuses
+     */
+    public static function getStatuses(): array
+    {
+        return [
+            self::STATUS_PLEDGED => 'Pledged',
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_COMPLETED => 'Completed',
+            self::STATUS_FAILED => 'Failed',
+            self::STATUS_REFUNDED => 'Refunded',
+        ];
+    }
+
+    /**
+     * Get the platform fee percentage as a display string
+     */
+    public static function getPlatformFeePercentageDisplay(): string
+    {
+        return (self::PLATFORM_FEE_PERCENTAGE * 100) . '%';
+    }
+
+    /**
+     * Get the sponsorships program this contribution is for
+     */
+    public function sponsorshipProject(): BelongsTo
+    {
+        return $this->belongsTo(SponsorshipProject::class, 'sponsorship_program_id');
     }
 
     /**
      * Get the sponsor offer this contribution is through
      */
-    public function sponsorOffer(): BelongsTo
+    public function sponsorshipOffer(): BelongsTo
     {
-        return $this->belongsTo(SponsorOffer::class);
+        return $this->belongsTo(SponsorshipOffer::class);
     }
 
     /**
@@ -81,36 +132,6 @@ class SponsorshipContribution extends Model
     public function sponsor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
-    }
-
-    /**
-     * Calculate platform fee for a given amount
-     */
-    public static function calculatePlatformFee(float $amount): float
-    {
-        return round($amount * self::PLATFORM_FEE_PERCENTAGE, 2);
-    }
-
-    /**
-     * Calculate net amount (what benefactor receives)
-     */
-    public static function calculateNetAmount(float $amount, bool $sponsorCoversFee = false): float
-    {
-        if ($sponsorCoversFee) {
-            return $amount;
-        }
-        return $amount - self::calculatePlatformFee($amount);
-    }
-
-    /**
-     * Calculate total to charge sponsor
-     */
-    public static function calculateTotalCharged(float $amount, bool $sponsorCoversFee = false): float
-    {
-        if ($sponsorCoversFee) {
-            return $amount + self::calculatePlatformFee($amount);
-        }
-        return $amount;
     }
 
     /**
@@ -208,27 +229,5 @@ class SponsorshipContribution extends Model
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
-    }
-
-    /**
-     * Get available statuses
-     */
-    public static function getStatuses(): array
-    {
-        return [
-            self::STATUS_PLEDGED => 'Pledged',
-            self::STATUS_PENDING => 'Pending',
-            self::STATUS_COMPLETED => 'Completed',
-            self::STATUS_FAILED => 'Failed',
-            self::STATUS_REFUNDED => 'Refunded',
-        ];
-    }
-
-    /**
-     * Get the platform fee percentage as a display string
-     */
-    public static function getPlatformFeePercentageDisplay(): string
-    {
-        return (self::PLATFORM_FEE_PERCENTAGE * 100) . '%';
     }
 }
