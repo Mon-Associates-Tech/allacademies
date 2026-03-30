@@ -151,6 +151,7 @@
 
 
                     <!-- Sponsorship Section -->
+                    @if(in_array(auth()->user()->role->value, ['owner', 'admin', 'accountant']))
                     <span class="">
                         <li class="px-3 py-2 rounded-sm mb-0.5">
                             <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Sponsorships</span>
@@ -265,6 +266,7 @@
                             @endif
                         @endauth
                     </span>
+                    @endif
 
 
                     <!-- Other Sections -->

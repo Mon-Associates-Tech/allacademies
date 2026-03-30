@@ -103,6 +103,7 @@ class Overview extends Component
             'parents' => (clone $userQuery)->where('role', 'parent')->count(),
             'administrators' => (clone $userQuery)->whereIn('role', ['admin', 'owner'])->count(),
             'moderators' => (clone $userQuery)->where('role', 'moderator')->count(),
+            'accountants' => (clone $userQuery)->where('role', 'accountant')->count(),
         ];
     }
 
@@ -112,7 +113,7 @@ class Overview extends Component
         $breakdown = $this->userBreakdown;
 
         return [
-            'labels' => ['Students', 'Teachers', 'Librarians', 'Authors', 'Parents', 'Administrators', 'Moderators'],
+            'labels' => ['Students', 'Teachers', 'Librarians', 'Authors', 'Parents', 'Administrators', 'Moderators', 'Accountants'],
             'data' => [
                 $breakdown['students'],
                 $breakdown['teachers'],
@@ -121,6 +122,7 @@ class Overview extends Component
                 $breakdown['parents'],
                 $breakdown['administrators'],
                 $breakdown['moderators'],
+                $breakdown['accountants'],
             ],
             'colors' => [
                 '#6366F1', // Indigo - Students
@@ -130,6 +132,7 @@ class Overview extends Component
                 '#EC4899', // Pink - Parents
                 '#3B82F6', // Blue - Administrators
                 '#EF4444', // Red - Moderators
+                '#fefefe', //
             ],
         ];
     }

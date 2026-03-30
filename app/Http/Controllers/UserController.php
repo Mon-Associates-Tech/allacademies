@@ -88,10 +88,10 @@ class UserController extends Controller
                 if (in_array($sortBy, $allowedSortColumns)) {
                     $query->orderBy($sortBy, $sortDirection);
                 } else {
-                    $query->orderBy('name', 'asc');
+                    $query->orderBy('created_at', 'desc');
                 }
             }, function ($query) {
-                $query->orderBy('name', 'asc');
+                $query->orderBy('created_at', 'desc');
             })
             ->paginate(15)
             ->withQueryString();
