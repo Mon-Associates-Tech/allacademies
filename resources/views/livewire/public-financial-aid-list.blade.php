@@ -1,12 +1,92 @@
-<div class="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
+<div class="py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-                Financial Aid Programs
-            </h1>
-            <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
-                Supporting education through community contribution.
-            </p>
+        <!-- Header Section -->
+        <div class="mb-10">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
+                    Financial Aid Programs
+                </h1>
+                <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
+                    Supporting education through community contribution.
+                </p>
+            </div>
+            
+            <!-- Filters Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- School Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Filter by Schools
+                        </label>
+                        <livewire:common.searchable-multi-select 
+                            :items="$schools->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray()" 
+                            :selected="$selectedSchools"
+                            placeholder="Select schools..." 
+                            :multiple="true"
+                            size="sm"
+                            name="selectedSchools"
+                        />
+                    </div>
+                    
+                    <!-- Search Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Search Programs
+                        </label>
+                        <input 
+                            type="text" 
+                            wire:model.live="search"
+                            placeholder="Search by name, code, or description..." 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:text-white"
+                        >
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Status
+                        </label>
+                        <select 
+                            wire:model.live="status"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:text-white"
+                        >
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Sort Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Sort By
+                        </label>
+                        <select 
+                            wire:model.live="sortBy"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:bg-gray-700 dark:text-white"
+                        >
+                            <option value="latest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="name">Alphabetical</option>
+                            <option value="progress">Progress (Least to Most)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Clear Filters Button -->
+                @if($selectedSchools || $search || $status || $sortBy !== 'latest')
+                <div class="mt-4 flex justify-end">
+                    <button 
+                        wire:click="clearFilters"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500"
+                    >
+                        Clear Filters
+                    </button>
+                </div>
+                @endif
+            </div>
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -126,28 +206,42 @@
 
                             <!-- Heading -->
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                No Active Projects
+                                No Needy Students Found
                             </h3>
 
                             <!-- Description -->
-                            <p class="text-gray-600 dark:text-gray-400 mb-6">
-                                No listing of needy students at the moment. However, you can still pay now if you
-                                already have the ID of the child/student you want to pay for
+                            <p class="text-gray-600 dark:text-gray-400 mb-6 text-lg">
+                                @if($selectedSchools || $search || $status)
+                                    No programs match your current filters. Try adjusting your search criteria.
+                                @else
+                                    No needy students at the moment. Check back soon! If  you are looking to
+                                    make other payments, click the button below.
+                                @endif
                             </p>
 
                             <!-- CTA Button -->
-                            <a href="{{ route('payments.public.lookup') }}"
-                               class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                Make Payment
-                            </a>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                                <a href="{{ route('payments.public.lookup') }}"
+                                   class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    Make Payment
+                                </a>
+                                
+                                @if($selectedSchools || $search || $status)
+                                <button
+                                    wire:click="clearFilters"
+                                    class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500">
+                                    Clear Filters
+                                </button>
+                                @endif
+                            </div>
 
                             <!-- Secondary Info -->
-                            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                                Check back soon for new financial aid opportunities
+                            <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                                Your support makes a difference in students' educational journeys
                             </p>
                         </div>
                     </div>

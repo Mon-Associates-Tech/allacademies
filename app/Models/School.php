@@ -194,6 +194,11 @@ class School extends Model
         return $this->hasMany(StudentParent::class);
     }
 
+    public function financialAids(): HasMany
+    {
+        return $this->hasMany(FinancialAid::class);
+    }
+
     public function scopeInactive($query)
     {
         return $query->where('status', 'inactive');
