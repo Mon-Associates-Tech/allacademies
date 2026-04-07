@@ -61,7 +61,7 @@
                 <div
                     class="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 transform rotate-2 hover:rotate-0 transition-all duration-500">
                     <img
-                        src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                        src="{{ asset('images/school_children_in_class.jpg') }}?crop&w=800&q=80"
                         alt="Student paying fees"
                         class="w-full h-full object-cover">
                 </div>
