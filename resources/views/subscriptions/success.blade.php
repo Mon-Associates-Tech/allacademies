@@ -49,7 +49,7 @@
     <div class="success-container">
         <h1>Payment Successful!</h1>
         <p>Thank you for your payment. Here are your transaction details:</p>
-        
+
         <div class="details">
             <div class="detail-item">
                 <span class="detail-label">Name:</span>
@@ -72,8 +72,8 @@
                 <span>{{ $reference }}</span>
             </div>
         </div>
-        
-        <a href="{{ route('payment.form') }}" class="btn">Make Another Payment</a>
+
+        <a href="{{ route('payments.public.lookup') }}" class="btn">Make Another Payment</a>
     </div>
 </body>
 </html>
