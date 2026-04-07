@@ -5,122 +5,45 @@
         @include('branding.partials.header')
 
         <!-- Hero Section -->
-        <div id="home"
-             class="relative h-screen overflow-hidden pb-5 flex flex-col flex-1 mt-auto items-center justify-center">
-            <!-- Video Background -->
+        <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
             <div class="absolute inset-0 z-0">
                 <video autoplay muted loop class="w-full h-full object-cover">
-                    <!-- Local video file -->
                     <source src="{{ asset('media/video/header-background-video.mp4') }}" type="video/mp4">
-                    Your browser does not support the video tag.
                 </video>
-                <div
-                    class="absolute inset-0 bg-gradient-to-r from-blue-400/50 via-indigo-400/50 to-green-400/40 dark:from-blue-400/55 dark:via-indigo-400/50 dark:to-green-400/50"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/60 via-indigo-600/50 to-purple-600/60"></div>
             </div>
 
-            <!-- Animated Background Elements (kept for visual enhancement) -->
-            <div class="absolute inset-0 hidden">
-                <div
-                    class="absolute top-10 left-10 w-72 h-72 bg-blue-300/20 dark:bg-blue-500/10 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-                <div
-                    class="absolute top-10 right-10 w-72 h-72 bg-green-300/20 dark:bg-green-500/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-                <div
-                    class="absolute -bottom-8 left-20 w-72 h-72 bg-purple-300/20 dark:bg-purple-500/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-            </div>
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+                <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+                    Join <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Users<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">Using AllAcademies</span>
+                </h1>
 
-            <!-- Content -->
-            <div class="z-10 w-full mt-24 max-h-[1044px] flex items-center">
-                <div class="flex flex-col w-full h-full  mt-auto items-center justify-center">
-                    <!-- Text Content -->
-                    <div class="text-center space-y-8">
-                        <div class="text-white">
-                            <div
-                                class="inline-flex hidden items-center px-3 py-1 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 text-white">
-                                <svg class="w-4 h-4 mr-2 text-green-400" fill="none" stroke="currentColor"
-                                     viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="text-xs font-medium">Trusted by Thousands of Students Worldwide</span>
-                            </div>
+                <p class="text-xl md:text-2xl text-gray-100 mb-12 max-w-3xl mx-auto">
+                    Access comprehensive digital resources, expert content, and cutting-edge learning tools
+                </p>
 
-                            <!-- Standalone User Count -->
-                            <div class="mb-6 hidden">
-                                <span class="relative inline-block">
-                                    <span class="text-6xl sm:text-7xl md:text-8xl text-white font-black animate-pulse drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] [text-shadow:_0_0_20px_rgba(255,255,255,0.9),_0_0_40px_rgba(255,255,255,0.6),_0_0_60px_rgba(56,189,248,0.5)]">{{ number_format($usersCount ?? 0) }} Users</span>
-                                    <span class="absolute -inset-4 bg-white/20 blur-xl rounded-lg -z-10"></span>
-                                </span>
-                            </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                    <a href="{{ route('register') }}" class="px-10 py-5 bg-white text-blue-600 font-bold text-lg rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                        Start Learning Today
+                    </a>
+                    <a href="#features" class="px-10 py-5 border-2 border-white text-white font-bold text-lg rounded-2xl hover:bg-white/10 backdrop-blur-sm transition-all duration-300">
+                        Explore Features
+                    </a>
+                </div>
 
-                            <!-- Hero Heading -->
-                            <h1 class="text-4xl font-extrabold pt-2 tracking-tight text-white sm:text-5xl md:text-6xl">
-                                <span class="block">Join {{ number_format($usersCount ?? 0) }} Users Transforming Education</span>
-                                <span
-                                    class="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-green-300">With All Academies</span>
-                            </h1>
-                        </div>
-
-                        <p class="max-w-xl text-xl hidden lg:block text-gray-200 leading-relaxed mx-auto">
-                            Access a comprehensive digital ecosystem of educational resources,
-                            expert-authored content, and cutting-edge learning tools designed for academic and
-                            professional excellence.
-                        </p>
-
-                        <div class="flex flex-col sm:flex-row gap-4 px-4 lg:px-0 justify-center">
-                            <a href="#features"
-                               class="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-                                <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none"
-                                     stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                Start Learning Today
-                            </a>
-                            <a href="#modules"
-                               class="inline-flex items-center justify-center px-8 py-4 border-2 border-white/70 text-base font-semibold rounded-xl text-white bg-white/10 backdrop-blur-sm hover:bg-white hover:text-gray-900 shadow-lg hover:shadow-xl transition-all duration-300">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                Explore Modules
-                            </a>
-                        </div>
-
-                        <!-- Trust Indicators -->
-                        <div
-                            class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4">
-                            <div class="flex items-center space-x-1">
-                                <div class="flex space-x-1">
-                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                                    </svg>
-                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                                    </svg>
-                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                                    </svg>
-                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                                    </svg>
-                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                                    </svg>
-                                </div>
-                                <span class="text-white font-semibold text-lg ml-2">4.9/5 Rating</span>
-                            </div>
-                        </div>
+                <div class="flex items-center justify-center space-x-2">
+                    <div class="flex">
+                        @for($i = 0; $i < 5; $i++)
+                            <svg class="w-6 h-6 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                            </svg>
+                        @endfor
                     </div>
+                    <span class="text-white font-semibold text-lg ml-3">4.9/5 Rating</span>
                 </div>
             </div>
-        </div>
+        </section>
 
         <section>
             <!-- Video Demo Section -->
@@ -158,9 +81,7 @@
                             class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
                             <!-- Video Player -->
                             <div class="aspect-w-16 aspect-h-9">
-                                <video class="w-full h-full object-cover" controls preload="none"
-                                       poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=675&fit=crop">
-                                    <!-- Replace with your actual demo video path -->
+                                <video class="w-full h-full object-cover" controls preload="none" poster="{{ asset('images/students-crowded-around-computer.jpeg') }}?w=1280&h=720&fit=crop">
                                     <source src="{{ asset('media/video/platform-demo.mp4') }}" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
