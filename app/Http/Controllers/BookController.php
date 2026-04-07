@@ -224,6 +224,74 @@ class BookController extends Controller
         );
     }
 
+    /**
+     * Display kids books filtered by younger age groups
+     */
+    public function kidsBooks(Request $request)
+    {
+        $user = Auth::user();
+
+        // Kids age groups: 1-5, 6-9, 10-12
+        $kidsAgeGroups = ['1-5', '6-9', '10-12'];
+
+        $query = Book::with([
+            'author',
+            'categories',
+            'bookCategory',
+        ])
+            ->whereStatus(PublishingStatus::PUBLISHED->value)
+            ->where(function ($q) {
+                // Filter books that have any of the kids age groups
+                foreach (['1-5', '6-9', '10-12'] as $ageGroup) {
+                    $q->orWhereJsonContains('age_groups', $ageGroup);
+                }
+            });
+
+        // Search filter (title or author)
+        if ($request->query('search')) {
+            $searchTerm = $request->query('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', '%'.$searchTerm.'%')->orWhereHas(
+                    'author',
+                    function ($authorQuery) use ($searchTerm) {
+                        $authorQuery->where(
+                            'name',
+                            'like',
+                            '%'.$searchTerm.'%',
+                        );
+                    },
+                );
+            });
+        }
+
+        // Age group filter - only for kids age groups
+        if ($request->filled('age_groups')) {
+            $ageGroups = is_array($request->age_groups)
+                ? $request->age_groups
+                : [$request->age_groups];
+            // Only allow kids age groups
+            $ageGroups = array_intersect($ageGroups, $kidsAgeGroups);
+            if (!empty($ageGroups)) {
+                $query->where(function ($q) use ($ageGroups) {
+                    foreach ($ageGroups as $ageGroup) {
+                        $q->orWhereJsonContains('age_groups', $ageGroup);
+                    }
+                });
+            }
+        }
+
+        $books = $query->orderBy('title')->paginate(12)->appends($request->query());
+        $ageGroups = $kidsAgeGroups;
+
+        return view(
+            'books.kids-index',
+            compact(
+                'books',
+                'ageGroups',
+            ),
+        );
+    }
+
     public function show(Book $book)
     {
         $book->load([
