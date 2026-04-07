@@ -9,13 +9,15 @@
                 <video autoplay muted loop class="w-full h-full object-cover">
                     <source src="{{ asset('media/video/header-background-video.mp4') }}" type="video/mp4">
                 </video>
-                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/60 via-indigo-600/50 to-purple-600/60"></div>
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-blue-600/60 via-indigo-600/50 to-purple-600/60"></div>
             </div>
 
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
                 <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
                     Join <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Users<br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">Using AllAcademies</span>
+                    <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">Using AllAcademies</span>
                 </h1>
 
                 <p class="text-xl md:text-2xl text-gray-100 mb-12 max-w-3xl mx-auto">
@@ -23,10 +25,12 @@
                 </p>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                    <a href="{{ route('register') }}" class="px-10 py-5 bg-white text-blue-600 font-bold text-lg rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                    <a href="{{ route('register') }}"
+                       class="px-10 py-5 bg-white text-blue-600 font-bold text-lg rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
                         Start Learning Today
                     </a>
-                    <a href="#features" class="px-10 py-5 border-2 border-white text-white font-bold text-lg rounded-2xl hover:bg-white/10 backdrop-blur-sm transition-all duration-300">
+                    <a href="#features"
+                       class="px-10 py-5 border-2 border-white text-white font-bold text-lg rounded-2xl hover:bg-white/10 backdrop-blur-sm transition-all duration-300">
                         Explore Features
                     </a>
                 </div>
@@ -35,7 +39,8 @@
                     <div class="flex">
                         @for($i = 0; $i < 5; $i++)
                             <svg class="w-6 h-6 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                <path
+                                    d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                             </svg>
                         @endfor
                     </div>
@@ -80,7 +85,8 @@
                             class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
                             <!-- Video Player -->
                             <div class="aspect-w-16 aspect-h-9">
-                                <video class="w-full h-full object-cover" controls preload="none" poster="{{ asset('images/students-crowded-around-computer.jpeg') }}?w=1280&h=720&fit=crop">
+                                <video class="w-full h-full object-cover" controls preload="none"
+                                       poster="{{ asset('images/students-crowded-around-computer.jpeg') }}?w=1280&h=720&fit=crop">
                                     <source src="{{ asset('media/video/platform-demo.mp4') }}" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
@@ -232,9 +238,9 @@
                                     class="absolute -inset-4 bg-gradient-to-r from-green-500 to-blue-500 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
                                 <div class="relative">
                                     <img
-                                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop&crop=center"
+                                        src="{{asset('images/professional-teacher.jpg')}}?w=full&h=400&fit=crop&crop=top"
                                         alt="Expert authors and educators"
-                                        class="rounded-2xl shadow-2xl w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-700">
+                                        class="rounded-2xl shadow-2xl w-full h-80 object-cover object-top transform group-hover:scale-105 transition-transform duration-700">
                                     <div
                                         class="absolute inset-0 bg-gradient-to-tl from-green-600/20 to-blue-600/10 rounded-2xl"></div>
 
@@ -244,7 +250,7 @@
                                             class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                                             <div class="flex items-center space-x-2">
                                                 <img class="w-6 h-6 rounded-full"
-                                                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=24&h=24&fit=crop&crop=face"
+                                                     src="{{asset('images/professional-teacher.jpg')}}?w=24&h=24&fit=crop&crop=face"
                                                      alt="Expert">
                                                 <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">Dr. Smith - AI Expert</span>
                                             </div>
@@ -253,7 +259,7 @@
                                             class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                                             <div class="flex items-center space-x-2">
                                                 <img class="w-6 h-6 rounded-full"
-                                                     src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=24&h=24&fit=crop&crop=face"
+                                                     src="{{asset('images/professional-teacher.jpg')}}?w=24&h=24&fit=crop&crop=face"
                                                      alt="Expert">
                                                 <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">Prof. Johnson - PhD</span>
                                             </div>
@@ -353,7 +359,7 @@
                                     class="absolute -inset-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
                                 <div class="relative">
                                     <img
-                                        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop&crop=center"
+                                        src="{{asset('images/students-with-a-laptop.jpg')}}?w=600&h=400&fit=crop&crop=center"
                                         alt="Interactive learning platform with students collaborating"
                                         class="rounded-2xl shadow-2xl w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-700">
                                     <div
@@ -879,210 +885,60 @@
                                 </div>
                             </div>
 
-                            <!-- Call to Action for Modules -->
-                            <div class="mt-20 relative overflow-hidden">
-                                <!-- Subtle Background Elements -->
-                                <div class="absolute inset-0 overflow-hidden pointer-events-none">
-                                    <div
-                                        class="absolute top-0 right-0 w-80 h-80 bg-blue-50/30 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
-                                    <div
-                                        class="absolute bottom-0 left-0 w-80 h-80 bg-gray-50/40 dark:bg-gray-800/20 rounded-full blur-3xl"></div>
-                                </div>
-
-                                <div class="relative max-w-6xl mx-auto text-center">
-                                    <!-- Clean CTA Card -->
-                                    <div
-                                        class="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:scale-105 transition-all duration-500">
-                                        <!-- Subtle Pattern Overlay -->
-                                        <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
-                                            <div
-                                                class="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-600"></div>
-                                        </div>
-
-                                        <!-- Minimal Border Effect -->
-                                        <div
-                                            class="absolute inset-0 rounded-3xl ring-1 ring-gray-200/50 dark:ring-gray-700/50 group-hover:ring-blue-200/50 dark:group-hover:ring-blue-700/50 transition-all duration-500"></div>
-
-                                        <!-- Subtle Shine Effect -->
-                                        <div class="absolute inset-0 rounded-3xl overflow-hidden">
-                                            <div
-                                                class="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 dark:via-white/5 to-transparent"></div>
-                                        </div>
-
-                                        <div class="relative p-12 lg:p-16 text-gray-900 dark:text-white">
-                                            <!-- Simple Icon -->
-                                            <div class="mb-8 flex justify-center">
-                                                <div class="relative">
-                                                    <div
-                                                        class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center shadow-sm border border-blue-100 dark:border-blue-800/50">
-                                                        <svg class="w-10 h-10 text-blue-600 dark:text-blue-400"
-                                                             fill="none"
-                                                             stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                  stroke-width="2"
-                                                                  d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                                        </svg>
-                                                    </div>
-                                                    <!-- Single accent dot -->
-                                                    <div
-                                                        class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"></div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Clean Heading -->
-                                            <h3 class="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-                                                Ready to
-                                                <span class="relative inline-block text-blue-600 dark:text-blue-400">
-                        Transform
-                        <svg class="absolute -bottom-2 left-0 w-full h-2 text-blue-200 dark:text-blue-800/50"
-                             viewBox="0 0 100 8" fill="none">
-                            <path d="M2 6C20 2 40 2 60 6C70 2 80 2 98 6" stroke="currentColor" stroke-width="2"
-                                  stroke-linecap="round"/>
-                        </svg>
-                    </span>
-                                                <br>Education?
-                                            </h3>
-
-                                            <!-- Simple Description -->
-                                            <div class="max-w-3xl mx-auto mb-10">
-                                                <p class="text-xl lg:text-2xl mb-6 text-gray-600 dark:text-gray-300 leading-relaxed">
-                                                    Join <span class="font-bold text-blue-600 dark:text-blue-400">thousands</span>
-                                                    of educators and learners who are already experiencing the power of
-                                                    our
-                                                    comprehensive platform.
-                                                </p>
-
-                                                <!-- Clean Stats Row -->
-                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                                                    <div
-                                                        class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                                                        <div
-                                                            class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                            Thousands
-                                                        </div>
-                                                        <div class="text-sm text-gray-600 dark:text-gray-400">Resources
-                                                            Available
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                                                        <div
-                                                            class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                            500+
-                                                        </div>
-                                                        <div class="text-sm text-gray-600 dark:text-gray-400">Expert
-                                                            Authors
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="text-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                                                        <div
-                                                            class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                            4.9★
-                                                        </div>
-                                                        <div class="text-sm text-gray-600 dark:text-gray-400">User
-                                                            Rating
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Clean Action Buttons -->
-                                            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                                                <!-- Primary CTA -->
-                                                <a href="{{ route('register') }}"
-                                                   class="group relative inline-flex items-center justify-center px-10 py-5 text-lg font-bold rounded-2xl bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
-                                                    <svg
-                                                        class="w-6 h-6 mr-3 transform group-hover:translate-x-1 transition-transform duration-300"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                                    </svg>
-                                                    <span>Start Your Journey</span>
-                                                </a>
-
-                                                <!-- Secondary CTA -->
-                                                <a href="{{route('branding.features')}}"
-                                                   class="group inline-flex items-center justify-center px-10 py-5 text-lg font-semibold rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/30 hover:border-blue-300 dark:hover:border-blue-600 shadow-md hover:shadow-lg transition-all duration-300 min-w-[200px]">
-                                                    <svg
-                                                        class="w-6 h-6 mr-3 transform group-hover:rotate-12 transition-transform duration-300"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                                    </svg>
-                                                    Explore Features
-                                                </a>
-                                            </div>
-
-                                            <!-- Simple Trust Indicators -->
-                                            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-                                                <div
-                                                    class="flex items-center justify-center space-x-8 text-sm text-gray-500 dark:text-gray-400">
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-4 h-4 text-green-500" fill="currentColor"
-                                                             viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                  clip-rule="evenodd"/>
-                                                        </svg>
-                                                        <span>Free 30-day trial</span>
-                                                    </div>
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-4 h-4 text-green-500" fill="currentColor"
-                                                             viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                  clip-rule="evenodd"/>
-                                                        </svg>
-                                                        <span>No credit card required</span>
-                                                    </div>
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-4 h-4 text-green-500" fill="currentColor"
-                                                             viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                  clip-rule="evenodd"/>
-                                                        </svg>
-                                                        <span>Cancel anytime</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                            <!-- CTA Section -->
+                            <section class="py-24 bg-gradient-to-r">
+                                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                                    <h2 class="text-4xl md:text-5xl font-black  mb-6">Ready to Transform Education?</h2>
+                                    <p class="text-xl mb-8">Join thousands of learners and educators already on the
+                                        platform</p>
+                                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                        <a href="{{ route('register') }}"
+                                           class="px-10 py-5 bg-white text-blue-600 font-bold text-lg rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                                            Start Your Journey
+                                        </a>
+                                        <a href="{{ route('branding.features') }}"
+                                           class="px-10 py-5 border-2 bg-blue-500 border-white text-white font-bold text-lg rounded-2xl hover:bg-white/10 transition-all duration-300">
+                                            Explore Features
+                                        </a>
                                     </div>
-
-                                    <!-- Minimal Social Proof Section -->
-                                    <div
-                                        class="mt-12 flex items-center justify-center space-x-6 text-gray-500 dark:text-gray-400">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="text-sm font-medium">Trusted by leading institutions:</span>
+                                    <div class="mt-8 flex items-center justify-center space-x-6 text-sm ">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 text-green-300 mr-2" fill="currentColor"
+                                                 viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                      clip-rule="evenodd"/>
+                                            </svg>
+                                            Free 30-day trial
                                         </div>
-                                        <div class="flex -space-x-2">
-                                            <div
-                                                class="w-8 h-8 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-full flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">
-                                                U1
-                                            </div>
-                                            <div
-                                                class="w-8 h-8 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-400">
-                                                S2
-                                            </div>
-                                            <div
-                                                class="w-8 h-8 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-full flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">
-                                                C3
-                                            </div>
-                                            <div
-                                                class="w-8 h-8 bg-gray-100 dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-500 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-                                                +50
-                                            </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 text-green-300 mr-2" fill="currentColor"
+                                                 viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                      clip-rule="evenodd"/>
+                                            </svg>
+                                            No credit card required
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 text-green-300 mr-2" fill="currentColor"
+                                                 viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                      clip-rule="evenodd"/>
+                                            </svg>
+                                            Cancel anytime
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
+                        <!-- FAQ Section -->
+                        <section id="faq" class="py-24 bg-white dark:bg-gray-900">
+                            @include('faq')
+                        </section>
+
+                        <x-layouts.footer/>
 
                         <style>
                             .animation-delay-1000 {
@@ -1104,117 +960,614 @@
                                 }
                             }
 
-        <!-- Financial Aid Section -->
-        @include('branding.partials.donation-support')
+                            <!--
+                            Financial Aid Section
 
-        <!-- Pricing Section -->
-        <section id="pricing" class="py-24 bg-white dark:bg-gray-900">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
-                        Simple, Transparent <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">Pricing</span>
-                    </h2>
-                    <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                        Choose the plan that fits your needs. Full access, no hidden fees, cancel anytime
-                    </p>
-                </div>
-                @include('branding.partials.pricing')
-            </div>
-        </section>
+                            -->
+                            @include('branding.partials.donation-support')
 
-        <!-- Testimonials Section -->
-        <section class="py-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
-                        Trusted by <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Thousands</span>
-                    </h2>
-                    <p class="text-xl text-gray-600 dark:text-gray-300">See what our community says</p>
-                </div>
 
-                <div class="grid md:grid-cols-3 gap-8">
-                    @php
-                        $testimonials = [
-                            ['name' => 'Sarah Johnson', 'role' => 'Data Scientist', 'image' => 'photo-1472099645785-5658abf4ff4e', 'text' => 'All Academies has revolutionized my learning experience. The vast library and expert authors have helped me advance my career significantly.'],
-                            ['name' => 'Dr. Michael Chen', 'role' => 'University Professor', 'image' => 'photo-1507003211169-0a1dd7228f2d', 'text' => 'The quality and depth of content available is impressive. The interactive features have transformed how I teach my courses.'],
-                            ['name' => 'Emily Rodriguez', 'role' => 'MBA Student', 'image' => 'photo-1494790108755-2616b612b786', 'text' => 'The mobile app makes learning so convenient. I can study during my commute and the offline feature is a game-changer.'],
-                        ];
-                    @endphp
+                            <!--
+                            Pricing Section
 
-                    @foreach($testimonials as $testimonial)
-                        <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg">
-                            <div class="flex space-x-1 mb-4">
-                                @for($i = 0; $i < 5; $i++)
-                                    <svg class="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                                    </svg>
-                                @endfor
-                            </div>
-                            <p class="text-gray-600 dark:text-gray-300 mb-6">{{ $testimonial['text'] }}</p>
-                            <div class="flex items-center">
-                                <img class="w-12 h-12 rounded-full mr-4" src="https://images.unsplash.com/{{ $testimonial['image'] }}?w=48&h=48&fit=crop&crop=face" alt="{{ $testimonial['name'] }}">
-                                <div>
-                                    <div class="font-bold text-gray-900 dark:text-white">{{ $testimonial['name'] }}</div>
-                                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ $testimonial['role'] }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </section>
+                            -->
+                            <
+                            section id
 
-        <!-- CTA Section -->
-        <section class="py-24 bg-gradient-to-r from-blue-600 to-purple-600">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl md:text-5xl font-black text-white mb-6">Ready to Transform Education?</h2>
-                <p class="text-xl text-blue-100 mb-8">Join thousands of learners and educators already on the platform</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ route('register') }}" class="px-10 py-5 bg-white text-blue-600 font-bold text-lg rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-                        Start Your Journey
-                    </a>
-                    <a href="{{ route('branding.features') }}" class="px-10 py-5 border-2 border-white text-white font-bold text-lg rounded-2xl hover:bg-white/10 transition-all duration-300">
-                        Explore Features
-                    </a>
-                </div>
-                <div class="mt-8 flex items-center justify-center space-x-6 text-sm text-blue-100">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-green-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        Free 30-day trial
+                            =
+                            "pricing"
+                            class
+
+                            =
+                            "py-24 bg-white dark:bg-gray-900"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "text-center mb-16"
+                            >
+
+                            <
+                            h2 class
+
+                            =
+                            "text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4"
+                            >
+                            Simple, Transparent
+
+                            <
+                            span class
+
+                            =
+                            "text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600"
+                            > Pricing
+
+                            <
+                            /
+                            span >
+
+                            <
+                            /
+                            h2 >
+
+                            <
+                            p class
+
+                            =
+                            "text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
+                            >
+                            Choose the plan that fits your needs. Full access, no hidden fees, cancel anytime
+
+                            <
+                            /
+                            p >
+
+                            <
+                            /
+                            div >
+
+                            @include('branding.partials.pricing')
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            section >
+
+                            <!--
+                            Testimonials Section
+
+                            -->
+                            <
+                            section class
+
+                            =
+                            "py-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "text-center mb-16"
+                            >
+
+                            <
+                            h2 class
+
+                            =
+                            "text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4"
+                            >
+                            Trusted by
+
+                            <
+                            span class
+
+                            =
+                            "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"
+                            > Thousands
+
+                            <
+                            /
+                            span >
+
+                            <
+                            /
+                            h2 >
+
+                            <
+                            p class
+
+                            =
+                            "text-xl text-gray-600 dark:text-gray-300"
+                            > See what our community says
+
+                            <
+                            /
+                            p >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            div class
+
+                            =
+                            "grid md:grid-cols-3 gap-8"
+                            >
+
+                            @php
+                                $testimonials = [
+                                    ['name' => 'Sarah Johnson', 'role' => 'Data Scientist', 'image' => 'photo-1472099645785-5658abf4ff4e', 'text' => 'All Academies has revolutionized my learning experience. The vast library and expert authors have helped me advance my career significantly.'],
+                                    ['name' => 'Dr. Michael Chen', 'role' => 'University Professor', 'image' => 'photo-1507003211169-0a1dd7228f2d', 'text' => 'The quality and depth of content available is impressive. The interactive features have transformed how I teach my courses.'],
+                                    ['name' => 'Emily Rodriguez', 'role' => 'MBA Student', 'image' => 'photo-1494790108755-2616b612b786', 'text' => 'The mobile app makes learning so convenient. I can study during my commute and the offline feature is a game-changer.'],
+                                ];
+                            @endphp
+
+                            @foreach($testimonials as $testimonial)
+
+                            <
+                            div class
+
+                            =
+                            "bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "flex space-x-1 mb-4"
+                            >
+
+                            @for($i = 0; $i < 5; $i++)
+
+                            <
+                            svg class
+
+                            =
+                            "w-5 h-5 text-yellow-400 fill-current"
+                            viewBox
+
+                            =
+                            "0 0 20 20"
+                            >
+
+                            <
+                            path d
+
+                            =
+                            "M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"
+                            /
+                            >
+
+                            <
+                            /
+                            svg >
+
+                            @endfor
+
+                            <
+                            /
+                            div >
+
+                            <
+                            p class
+
+                            =
+                            "text-gray-600 dark:text-gray-300 mb-6"
+                            >
+
+                            {{ $testimonial['text'] }}
+                            <
+                            /
+                            p >
+
+                            <
+                            div class
+
+                            =
+                            "flex items-center"
+                            >
+
+                            <
+                            img class
+
+                            =
+                            "w-12 h-12 rounded-full mr-4"
+                            src
+
+                            =
+                            "https://images.unsplash.com/
+                            {{ $testimonial['image'] }}
+                            ?w=48&h=48&fit=crop&crop=face"
+                            alt
+
+                            =
+                            "
+                            {{ $testimonial['name'] }}
+                            "
+                            >
+
+                            <
+                            div >
+
+                            <
+                            div class
+
+                            =
+                            "font-bold text-gray-900 dark:text-white"
+                            >
+
+                            {{ $testimonial['name'] }}
+                            <
+                            /
+                            div >
+
+                            <
+                            div class
+
+                            =
+                            "text-sm text-gray-600 dark:text-gray-400"
+                            >
+
+                            {{ $testimonial['role'] }}
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            div >
+
+                            @endforeach
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            section >
+
+                            <!--
+                            CTA Section
+
+                            -->
+                            <
+                            section class
+
+                            =
+                            "py-24 bg-gradient-to-r from-blue-600 to-purple-600"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+                            >
+
+                            <
+                            h2 class
+
+                            =
+                            "text-4xl md:text-5xl font-black text-white mb-6"
+                            > Ready to Transform Education?
+
+                            <
+                            /
+                            h2 >
+
+                            <
+                            p class
+
+                            =
+                            "text-xl text-blue-100 mb-8"
+                            > Join thousands of learners and educators already on the platform
+
+                            <
+                            /
+                            p >
+
+                            <
+                            div class
+
+                            =
+                            "flex flex-col sm:flex-row gap-4 justify-center"
+                            >
+
+                            <
+                            a href
+
+                            =
+                            "
+                            {{ route('register') }}
+                            "
+                            class
+
+                            =
+                            "px-10 py-5 bg-white text-blue-600 font-bold text-lg rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                            >
+                            Start Your Journey
+
+                            <
+                            /
+                            a >
+
+                            <
+                            a href
+
+                            =
+                            "
+                            {{ route('branding.features') }}
+                            "
+                            class
+
+                            =
+                            "px-10 py-5 border-2 border-white text-white font-bold text-lg rounded-2xl hover:bg-white/10 transition-all duration-300"
+                            >
+                            Explore Features
+
+                            <
+                            /
+                            a >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            div class
+
+                            =
+                            "mt-8 flex items-center justify-center space-x-6 text-sm text-blue-100"
+                            >
+
+                            <
+                            div class
+
+                            =
+                            "flex items-center"
+                            >
+
+                            <
+                            svg class
+
+                            =
+                            "w-5 h-5 text-green-300 mr-2"
+                            fill
+
+                            =
+                            "currentColor"
+                            viewBox
+
+                            =
+                            "0 0 20 20"
+                            >
+
+                            <
+                            path fill-rule
+
+                            =
+                            "evenodd"
+                            d
+
+                            =
+                            "M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule
+
+                            =
+                            "evenodd"
+                            /
+                            >
+
+                            <
+                            /
+                            svg >
+                            Free
+
+                            30
+                            -day trial
+
+                            <
+                            /
+                            div >
+
+                            <
+                            div class
+
+                            =
+                            "flex items-center"
+                            >
+
+                            <
+                            svg class
+
+                            =
+                            "w-5 h-5 text-green-300 mr-2"
+                            fill
+
+                            =
+                            "currentColor"
+                            viewBox
+
+                            =
+                            "0 0 20 20"
+                            >
+
+                            <
+                            path fill-rule
+
+                            =
+                            "evenodd"
+                            d
+
+                            =
+                            "M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule
+
+                            =
+                            "evenodd"
+                            /
+                            >
+
+                            <
+                            /
+                            svg >
+                            No credit card required
+
+                            <
+                            /
+                            div >
+
+                            <
+                            div class
+
+                            =
+                            "flex items-center"
+                            >
+
+                            <
+                            svg class
+
+                            =
+                            "w-5 h-5 text-green-300 mr-2"
+                            fill
+
+                            =
+                            "currentColor"
+                            viewBox
+
+                            =
+                            "0 0 20 20"
+                            >
+
+                            <
+                            path fill-rule
+
+                            =
+                            "evenodd"
+                            d
+
+                            =
+                            "M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule
+
+                            =
+                            "evenodd"
+                            /
+                            >
+
+                            <
+                            /
+                            svg >
+                            Cancel anytime
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            /
+                            section >
+
+                            <!--
+                            FAQ Section
+
+                            -->
+                            <
+                            section id
+
+                            =
+                            "faq"
+                            class
+
+                            =
+                            "py-24 bg-white dark:bg-gray-900"
+                            >
+
+                            @include('faq')
+
+                            <
+                            /
+                            section >
+
+                            <
+                            x-layouts.footer
+
+                            /
+                            >
+
+                            <
+                            /
+                            div >
+
+                            <
+                            style >
+
+                            @keyframes blob {
+                                0%, 100% {
+                                    transform: translate(0, 0) scale(1);
+                                }
+                                33% {
+                                    transform: translate(30px, -50px) scale(1.1);
+                                }
+                                66% {
+                                    transform: translate(-20px, 20px) scale(0.9);
+                                }
+                            }
+
+                            .animate-blob {
+                                animation: blob 7s infinite;
+                            }
+
+                            html {
+                                scroll-behavior: smooth;
+                            }
+                        </style>
                     </div>
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-green-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        No credit card required
-                    </div>
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-green-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        Cancel anytime
-                    </div>
                 </div>
             </div>
-        </section>
-
-        <!-- FAQ Section -->
-        <section id="faq" class="py-24 bg-white dark:bg-gray-900">
-            @include('faq')
-        </section>
-
-        <x-layouts.footer/>
+        </div>
     </div>
-
-    <style>
-        @keyframes blob {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        .animate-blob { animation: blob 7s infinite; }
-        html { scroll-behavior: smooth; }
-    </style>
 </x-app>
