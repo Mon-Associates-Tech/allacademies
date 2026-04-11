@@ -23,6 +23,7 @@ Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('
 Route::middleware(['auth'])->group(function () {
     // Book Browsing and Reading
     Route::get('books', [BookController::class, 'index'])->name('books.index');
+    Route::get('kids-books', [BookController::class, 'kidsBooks'])->name('kids-books.index');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show')->middleware('token.subscription');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
