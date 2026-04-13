@@ -17,7 +17,7 @@
                 <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
                     Join <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Users<br>
                     <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">Using AllAcademies</span>
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">Using All Academies</span>
                 </h1>
 
                 <p class="text-xl md:text-2xl text-gray-100 mb-12 max-w-3xl mx-auto">
@@ -141,7 +141,7 @@
 
                                     <!-- Floating Elements -->
                                     <div
-                                        class="absolute top-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                                        class="absolute hidden top-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                                         <div class="flex items-center space-x-2">
                                             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                             <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">15,000+ Books</span>
