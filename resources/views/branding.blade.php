@@ -377,7 +377,7 @@
                                     <div
                                         class="absolute top-4 right-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                                         <span
-                                            class="text-sm font-semibold text-gray-900 dark:text-gray-100">24 Online</span>
+                                            class="text-sm font-semibold text-gray-900 dark:text-gray-100">24/7 Online</span>
                                     </div>
 
                                     <div
