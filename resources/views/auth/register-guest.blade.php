@@ -15,7 +15,7 @@
             <aside class="relative hidden h-32 sm:block lg:order-last lg:col-span-5 lg:h-screen lg:sticky lg:top-0 xl:col-span-6">
                 <img
                     alt="Students studying together"
-                    src="https://images.pexels.com/photos/3769999/pexels-photo-3769999.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                    src="{{ asset('images/guest-page.jpg') }}"
                     class="absolute inset-0 h-full w-full object-cover"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent lg:bg-gradient-to-l"></div>
