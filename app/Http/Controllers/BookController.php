@@ -232,7 +232,7 @@ class BookController extends Controller
         $user = Auth::user();
 
         // Kids age groups: 1-5, 6-9, 10-12
-        $kidsAgeGroups = ['1-5', '6-9', '10-12'];
+        $kidsAgeGroups = ['0-3', '4-6', '7-9', '10-12', '13-15', '16-18', '18+'];
 
         $query = Book::with([
             'author',
