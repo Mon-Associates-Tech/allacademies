@@ -17,7 +17,7 @@
                 <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
                     Join <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Users<br>
                     <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">Using All Academies</span>
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-500">Using All Academies</span>
                 </h1>
 
                 <p class="text-xl md:text-2xl text-gray-100 mb-12 max-w-3xl mx-auto">
