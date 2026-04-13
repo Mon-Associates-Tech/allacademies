@@ -242,7 +242,8 @@ class BookController extends Controller
             ->whereStatus(PublishingStatus::PUBLISHED->value)
             ->where(function ($q) {
                 // Filter books that have any of the kids age groups
-                foreach (['1-5', '6-9', '10-12'] as $ageGroup) {
+                
+                foreach ([ '0-3', '4-6','7-9', '10-12', '13-15', '16-18', '18+'] as $ageGroup) {
                     $q->orWhereJsonContains('age_groups', $ageGroup);
                 }
             });
