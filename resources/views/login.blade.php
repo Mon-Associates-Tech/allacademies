@@ -37,8 +37,8 @@
                     class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-green-600/20 dark:from-blue-800/40 dark:to-green-800/40 backdrop-blur-sm"></div>
                 <img
                     alt="Students learning online"
-                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80"
-                    class="absolute inset-0 h-full w-full object-cover"
+                    src="{{ asset('images/login-page-2.jpg') }}"
+                    class="absolute object-center inset-0 h-full w-full object-cover"
                 />
                 <!-- Overlay content -->
                 <div
