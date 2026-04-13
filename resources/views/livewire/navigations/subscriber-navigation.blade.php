@@ -50,7 +50,7 @@
                         <path
                             d="M6 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM5 9h6v1H5V9zm1 2h4v1H6v-1z"/>
                     </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Kids Books</span>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Children's Books</span>
                 </div>
             </a>
         </li>

@@ -150,7 +150,7 @@
                         <path d="M4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
                         <path d="M6 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM5 9h6v1H5V9zm1 2h4v1H6v-1z"/>
                     </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Kids Books</span>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Children's Books</span>
                 </div>
             </a>
         </li>

@@ -30,7 +30,7 @@
             </a>
         </li>
 
-        <li class="mb-0.5 last:mb-0 " title="Kids Books">
+        <li class="mb-0.5 last:mb-0 " title="Children Books">
             <a class="block px-3 py-2 rounded-lg transition {{ Route::is('kids-books*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('kids-books.index')}}">
                 <div class="flex items-center">
@@ -42,7 +42,7 @@
                         <path
                             d="M6 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm4 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM5 9h6v1H5V9zm1 2h4v1H6v-1z"/>
                     </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Kids Books</span>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Children Books</span>
                 </div>
             </a>
         </li>
