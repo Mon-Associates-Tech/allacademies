@@ -1,4 +1,4 @@
-<x-layouts.app page-name="Kids Books Library" :show-title-area="false" :full-width="true">
+<x-layouts.app page-name="Children's Library" :show-title-area="false" :full-width="true">
 
     <div class="min-h-screen bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900">
 
@@ -15,7 +15,7 @@
                 <!-- Fun Title -->
                 <h1 class="text-3xl md:text-6xl font-black leading-tight mb-6">
                     <span class="bg-gradient-to-r from-yellow-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">
-                        🌈 Kids Books Library 📚
+                        🌈 Children's Library 📚
                     </span>
                 </h1>
 
