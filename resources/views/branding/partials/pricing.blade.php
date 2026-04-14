@@ -1,7 +1,7 @@
 @php
     $pricing = \App\Models\PricingSetting::brandingPricing();
 @endphp
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-start">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto items-start px-4">
     <!-- Basic Plan -->
     <div
         class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 relative overflow-hidden hover:shadow-2xl transition-all duration-500 group">
