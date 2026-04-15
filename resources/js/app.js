@@ -7,6 +7,19 @@ window.Chart = Chart;
 // Import chart helpers (must be after Chart.js is available)
 import './charts/helpers.js';
 
+// Import AOS for scroll animations
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+
+// Initialize AOS
+AOS.init({
+    duration: 800,
+    easing: 'ease-in-out',
+    once: false,
+    mirror: true,
+    offset: 100,
+});
+
 import {gsap} from 'gsap';
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";

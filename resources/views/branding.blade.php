@@ -14,17 +14,17 @@
             </div>
 
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold sm:font-black text-white mb-4 sm:mb-6 leading-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold sm:font-black text-white mb-4 sm:mb-6 leading-tight" data-aos="fade-down" data-aos-delay="100">
                     Join <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Users<br>
                     <span
                         class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-500">Using All Academies</span>
                 </h1>
 
-                <p class="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-100 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+                <p class="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-100 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed" data-aos="fade-up" data-aos-delay="300">
                     Access comprehensive digital resources, expert content, and cutting-edge learning tools
                 </p>
 
-                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8" data-aos="zoom-in" data-aos-delay="500">
                     <a href="{{ route('register') }}"
                         class="px-6 py-3 sm:px-10 sm:py-5 bg-white text-blue-600 font-bold text-base sm:text-lg rounded-xl sm:rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
                         Start Learning Today
@@ -35,7 +35,7 @@
                     </a>
                 </div>
 
-                <div class="flex items-center justify-center space-x-2">
+                <div class="flex items-center justify-center space-x-2" data-aos="fade-up" data-aos-delay="700">
                     <div class="flex">
                         @for($i = 0; $i < 5; $i++)
                             <svg class="w-4 h-4 sm:w-6 sm:h-6 text-yellow-400 fill-current" viewBox="0 0 20 20">
@@ -51,73 +51,73 @@
 
         <!-- Video Demo Section -->
         <section id="demo" class="py-16 sm:py-20 lg:py-24 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-12 sm:mb-16">
-                        <div
-                            class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4">
-                            <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Watch Demo
-                        </div>
-                        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6 px-4">
-                            See the Platform <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">In Action</span>
-                        </h2>
-                        <p class="max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed px-4">
-                            Take a guided tour through our features and see how we transform the learning
-                            experience for students and educators.
-                        </p>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 sm:mb-16">
+                    <div
+                        class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4" data-aos="fade-down">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Watch Demo
                     </div>
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6 px-4" data-aos="fade-up" data-aos-delay="100">
+                        See the Platform <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">In Action</span>
+                    </h2>
+                    <p class="max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed px-4" data-aos="fade-up" data-aos-delay="200">
+                        Take a guided tour through our features and see how we transform the learning
+                        experience for students and educators.
+                    </p>
+                </div>
 
-                    <div class="relative max-w-5xl mx-auto overflow-hidden">
-                        <!-- Decorative Elements -->
-                        <div
-                            class="absolute top-0 left-0 w-40 h-40 bg-red-300 dark:bg-red-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                        <div
-                            class="absolute bottom-0 right-0 w-40 h-40 bg-orange-300 dark:bg-orange-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                <div class="relative max-w-5xl mx-auto overflow-hidden" data-aos="zoom-in" data-aos-delay="300">
+                    <!-- Decorative Elements -->
+                    <div
+                        class="absolute top-0 left-0 w-40 h-40 bg-red-300 dark:bg-red-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                    <div
+                        class="absolute bottom-0 right-0 w-40 h-40 bg-orange-300 dark:bg-orange-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
-                        <div
-                            class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
-                            <!-- Video Player -->
-                            <div class="aspect-w-16 aspect-h-9">
-                                <video class="w-full h-full object-cover" controls preload="none"
-                                    poster="{{ asset('images/students-crowded-around-computer.jpeg') }}?w=1280&h=720&fit=crop">
-                                    <source src="{{ asset('media/video/platform-demo.mp4') }}" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
+                    <div
+                        class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-gray-900 group">
+                        <!-- Video Player -->
+                        <div class="aspect-w-16 aspect-h-9">
+                            <video class="w-full h-full object-cover" controls preload="none"
+                                poster="{{ asset('images/students-crowded-around-computer.jpeg') }}?w=1280&h=720&fit=crop">
+                                <source src="{{ asset('media/video/platform-demo.mp4') }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Public Payment Section -->
+        <section class="">
+            @include('branding.partials.donation-support')
         </section>
 
         <!-- Features Section -->
         <section id="features" class="py-16 sm:py-20 lg:py-24 bg-white dark:bg-gray-900 transition-colors duration-300">
             <div class="max-w-7xl mx-auto">
 
-                <!-- Public Payment Section -->
-                <section class="py-16 sm:py-20 lg:py-24">
-                    @include('branding.partials.donation-support')
-                </section>
-                
                 <div class="text-center mb-12 sm:mb-16 lg:mb-20 px-4">
                     <div
-                        class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4">
+                        class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4" data-aos="fade-down">
                         <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                         Platform Features
                     </div>
-                    <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6" data-aos="fade-up" data-aos-delay="100">
                         Everything You Need to <span
                             class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">Excel</span>
                     </h2>
-                    <p class="max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                    <p class="max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed" data-aos="fade-up" data-aos-delay="200">
                         Our comprehensive platform combines cutting-edge technology with educational expertise to
                         deliver an unparalleled learning experience that adapts to your unique goals.
                     </p>
@@ -126,7 +126,7 @@
                 <div class="space-y-16 sm:space-y-24 lg:space-y-32">
                     <!-- Feature 1: Comprehensive Library -->
                     <div class="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-16 px-4 sm:px-6 lg:px-8">
-                        <div class="lg:w-1/2 w-full">
+                        <div class="lg:w-1/2 w-full" data-aos="fade-right" data-aos-delay="100">
                             <div class="relative group">
                                 <div
                                     class="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-blue-500 to-green-500 rounded-2xl sm:rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
@@ -155,7 +155,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="lg:w-1/2 space-y-3 sm:space-y-4 lg:space-y-6 w-full">
+                        <div class="lg:w-1/2 space-y-3 sm:space-y-4 lg:space-y-6 w-full" data-aos="fade-left" data-aos-delay="200">
                             <div class="flex items-center space-x-3 sm:space-x-4">
                                 <div
                                     class="flex items-center justify-center h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex-shrink-0">
@@ -231,7 +231,7 @@
 
                     <!-- Feature 2: Expert Authors -->
                     <div class="flex flex-col lg:flex-row-reverse items-center gap-6 sm:gap-8 lg:gap-16 px-4 sm:px-6 lg:px-8">
-                        <div class="lg:w-1/2 w-full">
+                        <div class="lg:w-1/2 w-full" data-aos="fade-left" data-aos-delay="100">
                             <div class="relative group">
                                 <div
                                     class="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl sm:rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
@@ -272,7 +272,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="lg:w-1/2 space-y-3 sm:space-y-4 lg:space-y-6 w-full">
+                        <div class="lg:w-1/2 space-y-3 sm:space-y-4 lg:space-y-6 w-full" data-aos="fade-right" data-aos-delay="200">
                             <div class="flex items-center space-x-3 sm:space-x-4">
                                 <div
                                     class="flex items-center justify-center h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg flex-shrink-0">
@@ -352,7 +352,7 @@
 
                     <!-- Feature 3: Interactive Learning -->
                     <div class="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-16 px-4 sm:px-6 lg:px-8">
-                        <div class="lg:w-1/2 w-full">
+                        <div class="lg:w-1/2 w-full" data-aos="fade-right" data-aos-delay="100">
                             <div class="relative group">
                                 <div
                                     class="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl sm:rounded-3xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
@@ -386,7 +386,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="lg:w-1/2 space-y-3 sm:space-y-4 lg:space-y-6 w-full">
+                        <div class="lg:w-1/2 space-y-3 sm:space-y-4 lg:space-y-6 w-full" data-aos="fade-left" data-aos-delay="200">
                             <div class="flex items-center space-x-3 sm:space-x-4">
                                 <div
                                     class="flex items-center justify-center h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg flex-shrink-0">
@@ -486,18 +486,18 @@
                         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div class="text-center mb-12 sm:mb-16 lg:mb-20 px-4">
                                 <div
-                                    class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4">
+                                    class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4" data-aos="fade-down">
                                     <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                     </svg>
                                     Platform Modules
                                 </div>
-                                <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6">
+                                <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6" data-aos="fade-up" data-aos-delay="100">
                                     Comprehensive Learning <span
                                         class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600">Ecosystem</span>
                                 </h2>
-                                <p class="max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed">
+                                <p class="max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mx-auto leading-relaxed" data-aos="fade-up" data-aos-delay="200">
                                     Discover our integrated modules designed to support every aspect of your educational
                                     journey,
                                     from administration to assessment and beyond.
@@ -508,7 +508,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
                                 <!-- Administration Module -->
                                 <div
-                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 p-6 sm:p-8 transform hover:scale-105">
+                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 p-6 sm:p-8 transform hover:scale-105" data-aos="flip-left" data-aos-delay="100">
                                     <div
                                         class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                                         <svg class="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -553,7 +553,7 @@
 
                                 <!-- Teaching Module -->
                                 <div
-                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 p-6 sm:p-8 transform hover:scale-105">
+                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 p-6 sm:p-8 transform hover:scale-105" data-aos="flip-left" data-aos-delay="200">
                                     <div
                                         class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-green-500 to-emerald-600 text-white mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                                         <svg class="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,7 +597,7 @@
 
                                 <!-- Quizzes Module -->
                                 <div
-                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 p-6 sm:p-8 transform hover:scale-105">
+                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 p-6 sm:p-8 transform hover:scale-105" data-aos="flip-left" data-aos-delay="300">
                                     <div
                                         class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-purple-500 to-violet-600 text-white mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                                         <svg class="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,7 +641,7 @@
 
                                 <!-- Examinations Module -->
                                 <div
-                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 p-6 sm:p-8 transform hover:scale-105">
+                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 p-6 sm:p-8 transform hover:scale-105" data-aos="flip-left" data-aos-delay="100">
                                     <div
                                         class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-500 to-red-600 text-white mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                                         <svg class="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -685,7 +685,7 @@
 
                                 <!-- Monitoring & Reporting Module -->
                                 <div
-                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 p-6 sm:p-8 transform hover:scale-105">
+                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 p-6 sm:p-8 transform hover:scale-105" data-aos="flip-left" data-aos-delay="200">
                                     <div
                                         class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-indigo-500 to-blue-600 text-white mb-4 sm:mb-6 lg:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                                         <svg class="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -730,7 +730,7 @@
 
                                 <!-- Books & Marketplace Module -->
                                 <div
-                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600 p-6 sm:p-8 transform hover:scale-105">
+                                    class="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600 p-6 sm:p-8 transform hover:scale-105" data-aos="flip-left" data-aos-delay="300">
                                     <div
                                         class="flex items-center justify-center h-16 w-16 sm:h-20 sm:w-20 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white mb-6 sm:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                                         <svg class="h-8 w-8 sm:h-10 sm:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -777,7 +777,7 @@
 
                             <!-- Additional Modules Grid -->
                             <div
-                                class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700">
+                                class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700" data-aos="fade-up" data-aos-delay="400">
                                 <div class="text-center mb-8 sm:mb-12">
                                     <h3 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Additional Platform
                                         Features</h3>
@@ -885,7 +885,7 @@
                             </div>
 
                             <!-- CTA Section -->
-                            <div class="py-16 sm:py-20 lg:py-24 bg-gradient-to-r">
+                            <div class="py-16 sm:py-20 lg:py-24 bg-gradient-to-r" data-aos="zoom-in" data-aos-delay="200">
                                 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                                     <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold sm:font-black mb-4 sm:mb-6">Ready to Transform Education?</h2>
                                     <p class="text-base sm:text-lg md:text-xl mb-6 sm:mb-8">Join thousands of learners and educators already on the
@@ -931,64 +931,64 @@
                                     </div>
                                 </div>
                             </div>
-                        </section>
-                        
-                        <!-- FAQ Section -->
-                        <section id="faq" class="py-16 sm:py-20 lg:py-24 bg-white dark:bg-gray-900">
-                            @include('faq')
-                        </section>
+                    </section>
 
 
-                        <style>
-                            .animation-delay-1000 {
-                                animation-delay: 1s;
+                    <style>
+                        .animation-delay-1000 {
+                            animation-delay: 1s;
+                        }
+
+                        .animation-delay-2000 {
+                            animation-delay: 2s;
+                        }
+
+                        @keyframes pulse-slow {
+
+                            0%,
+                            100% {
+                                opacity: 1;
+                                transform: scale(1);
                             }
 
-                            .animation-delay-2000 {
-                                animation-delay: 2s;
+                            50% {
+                                opacity: 0.95;
+                                transform: scale(1.02);
+                            }
+                        }
+
+
+
+                        @keyframes blob {
+
+                            0%,
+                            100% {
+                                transform: translate(0, 0) scale(1);
                             }
 
-                            @keyframes pulse-slow {
-
-                                0%,
-                                100% {
-                                    opacity: 1;
-                                    transform: scale(1);
-                                }
-
-                                50% {
-                                    opacity: 0.95;
-                                    transform: scale(1.02);
-                                }
+                            33% {
+                                transform: translate(30px, -50px) scale(1.1);
                             }
 
-
-
-                            @keyframes blob {
-
-                                0%,
-                                100% {
-                                    transform: translate(0, 0) scale(1);
-                                }
-
-                                33% {
-                                    transform: translate(30px, -50px) scale(1.1);
-                                }
-
-                                66% {
-                                    transform: translate(-20px, 20px) scale(0.9);
-                                }
+                            66% {
+                                transform: translate(-20px, 20px) scale(0.9);
                             }
+                        }
 
-                            .animate-blob {
-                                animation: blob 7s infinite;
-                            }
+                        .animate-blob {
+                            animation: blob 7s infinite;
+                        }
 
-                            html {
-                                scroll-behavior: smooth;
-                            }
-                        </style>
-                        </section>
+                        html {
+                            scroll-behavior: smooth;
+                        }
+                    </style>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="bg-white dark:bg-gray-900">
+            @include('faq')
+        </section>
     </div>
 
     <x-layouts.footer />

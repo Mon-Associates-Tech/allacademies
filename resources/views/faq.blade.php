@@ -1,16 +1,16 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header Section -->
     <div class="text-center mb-12 sm:mb-16">
-        <div class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4">
+        <div class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-semibold text-xs sm:text-sm mb-3 sm:mb-4" data-aos="fade-down">
             <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             FAQ
         </div>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-black text-gray-900 dark:text-white mb-3 sm:mb-4">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold sm:font-black text-gray-900 dark:text-white mb-3 sm:mb-4" data-aos="fade-up" data-aos-delay="100">
             Frequently Asked <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Questions</span>
         </h2>
-        <p class="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+        <p class="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
             Everything you need to know about All Academies. Can't find what you're looking for?
             <a href="{{route('branding.contact')}}" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">Contact us</a>.
         </p>
@@ -61,7 +61,7 @@
     }">
 
         <!-- Search Bar -->
-        <div class="mb-8 sm:mb-12 max-w-2xl mx-auto">
+        <div class="mb-8 sm:mb-12 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="300">
             <div class="relative">
                 <input type="text"
                        x-model="searchQuery"
@@ -74,7 +74,7 @@
         </div>
 
         <!-- Category Filter -->
-        <div class="mb-8 sm:mb-12 flex flex-wrap justify-center gap-2 sm:gap-3">
+        <div class="mb-8 sm:mb-12 flex flex-wrap justify-center gap-2 sm:gap-3" data-aos="fade-up" data-aos-delay="400">
             <button @click="selectedCategory = 'all'"
                     :class="selectedCategory === 'all' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'"
                     class="px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105">
@@ -114,7 +114,7 @@
         <!-- FAQ Items -->
         <div class="space-y-2 sm:space-y-3">
             <template x-for="faq in filteredFaqs" :key="faq.id">
-                <div class="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400">
+                <div class="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400" data-aos="fade-up" data-aos-delay="100">
                     <button @click="openFaq = openFaq === faq.id ? null : faq.id"
                             class="w-full px-4 py-4 sm:px-6 sm:py-5 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <span class="text-sm sm:text-base lg:text-lg font-bold text-gray-900 dark:text-white pr-4 sm:pr-8" x-text="faq.question"></span>
@@ -145,7 +145,7 @@
         </div>
 
         <!-- Contact Support Section -->
-        <div class="mt-12 sm:mt-16 lg:mt-20 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700">
+        <div class="mt-12 sm:mt-16 lg:mt-20 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700" data-aos="zoom-in" data-aos-delay="200">
             <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
                 <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
