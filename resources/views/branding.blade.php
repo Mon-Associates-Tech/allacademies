@@ -141,7 +141,7 @@
                                     <!-- Floating Elements -->
                                     <div
                                         class="absolute hidden sm:block top-4 left-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
-                                        <div class="flex items-center space-x-2">
+                                        <div class="flexd hidden items-center space-x-2">
                                             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                             <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">15,000+ Books</span>
                                         </div>
