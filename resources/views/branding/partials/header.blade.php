@@ -44,19 +44,6 @@
 
             <!-- Desktop Navigation -->
             <nav class="hidden lg:flex items-center space-x-8">
-                {{--                        <a href="#home"
-                                           class="font-semibold transition-colors duration-300 relative group flex items-center"
-                                           :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
-                                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                                 stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
-                                            </svg>
-                                            Home
-                                            <span
-                                                class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
-                                                :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
-                                        </a>--}}
                 <a href="{{ route('branding.features') }}"
                    class="font-semibold transition-colors duration-300 relative group flex items-center"
                    :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
@@ -193,9 +180,6 @@
                     <div class="mt-6 flow-root">
                         <div class="-my-6 divide-y divide-gray-500/10 dark:divide-gray-400/10">
                             <div class="space-y-2 py-6">
-                                {{--                                        <a href="#home"--}}
-                                {{--                                           class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"--}}
-                                {{--                                           x-on:click="open = false">Home</a>--}}
                                 <a href="{{ route('branding.features') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                    x-on:click="open = false">Features</a>
