@@ -18,6 +18,6 @@ function ping() {
 ['mousemove', 'keydown', 'click'].forEach(evt => {
     window.addEventListener(evt, () => {
         clearTimeout(timeout);
-        timeout = setTimeout(ping, 10000); // ping every 10s after activity
+      //  timeout = setTimeout(ping, 10000); // ping every 10s after activity
     });
 });

@@ -109,6 +109,19 @@
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
                 </a>
+                <a href="{{ route('branding.contact') }}"
+                   class="font-semibold transition-colors duration-300 relative group flex items-center"
+                   :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+                    </svg>
+                    Contact
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                        :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
+                </a>
             </nav>
 
             <!-- Right side actions -->
@@ -195,6 +208,9 @@
                                 <a href="{{ route('public.financial-aid') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                    x-on:click="open = false">Financial Aid</a>
+                                <a href="{{ route('branding.contact') }}"
+                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                   x-on:click="open = false">Contact</a>
                             </div>
                             <div class="py-6 space-y-3">
                                 <a href="{{ route('register') }}"

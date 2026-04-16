@@ -20,12 +20,12 @@ AOS.init({
     offset: 100,
 });
 
-import {gsap} from 'gsap';
+//import {gsap} from 'gsap';
 
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+//import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
-
+//gsap.registerPlugin(ScrollTrigger);
+/* 
 gsap.from(".article", {
     y: 100,               // Start each card 100px below its natural position
     opacity: 0,           // Start with opacity at 0 for a fade-in effect
@@ -109,3 +109,4 @@ gsap.from(".fade-in-text", {
         toggleActions: "play none none none", // Play only once
     }
 });
+ */

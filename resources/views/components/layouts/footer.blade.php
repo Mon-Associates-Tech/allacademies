@@ -1,19 +1,19 @@
-<footer class="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+<footer class="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
     <!-- Background Elements -->
-    <div class="absolute inset-0 opacity-10">
+    <div class="absolute inset-0 opacity-5">
         <div
-            class="absolute top-0 left-0 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            class="absolute top-0 left-0 w-96 h-96 bg-gray-600 rounded-full mix-blend-multiply filter blur-3xl"></div>
         <div
-            class="absolute bottom-0 right-0 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2000"></div>
+            class="absolute bottom-0 right-0 w-96 h-96 bg-gray-700 rounded-full mix-blend-multiply filter blur-3xl"></div>
     </div>
 
     <!-- Newsletter CTA Section -->
-    <div class="relative border-b border-white/10 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm">
+    <div class="relative border-b border-white/10 bg-gray-800/50 backdrop-blur-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="text-center max-w-3xl mx-auto">
                 <h3 class="text-2xl md:text-3xl font-bold mb-4">
                     Stay Updated with
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                    <span class="text-blue-400">
                         All Academies
                     </span>
                 </h3>
@@ -35,7 +35,7 @@
                                    required>
                         </div>
                         <button type="submit"
-                                class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-semibold rounded-full hover:from-yellow-300 hover:to-orange-400 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                class="px-8 py-4 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                             Subscribe
                             <svg class="inline-block ml-2 w-4 h-4" fill="none" stroke="currentColor"
                                  viewBox="0 0 24 24">
@@ -51,7 +51,8 @@
                 <div class="mt-6 text-sm text-gray-400">
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
                         <div class="flex items-center w-full sm:w-auto justify-center sm:justify-start">
-                            <svg class="w-4 h-4 mr-2 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 mr-2 text-green-400 flex-shrink-0" fill="currentColor"
+                                 viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                       clip-rule="evenodd"/>
@@ -59,7 +60,8 @@
                             <span>No spam, ever</span>
                         </div>
                         <div class="flex items-center w-full sm:w-auto justify-center sm:justify-start">
-                            <svg class="w-4 h-4 mr-2 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 mr-2 text-green-400 flex-shrink-0" fill="currentColor"
+                                 viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                       clip-rule="evenodd"/>
@@ -67,7 +69,8 @@
                             <span>Unsubscribe anytime</span>
                         </div>
                         <div class="flex items-center w-full sm:w-auto justify-center sm:justify-start">
-                            <svg class="w-4 h-4 mr-2 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 mr-2 text-green-400 flex-shrink-0" fill="currentColor"
+                                 viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                       clip-rule="evenodd"/>
@@ -88,7 +91,7 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="flex items-center space-x-3">
                     <div
-                        class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                        class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                         <img src="{{ asset('img/logo.png') }}" alt="{{ config('app.name') }} Logo" class="w-8 h-8">
                     </div>
                     <div>
@@ -98,25 +101,10 @@
                 </div>
 
                 <p class="text-gray-300 leading-relaxed max-w-md">
-                    Empowering education through innovative digital learning solutions. Join thousands of students,
+                    Empowering education across Ghana through innovative digital learning solutions. Join thousands of
+                    students,
                     teachers, and institutions in transforming the way we learn and teach.
                 </p>
-
-                <!-- Key Stats -->
-                <div class="grid grid-cols-3 gap-4 pt-6">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-400">5K+</div>
-                        <div class="text-sm text-gray-400">Active Users</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-400">500+</div>
-                        <div class="text-sm text-gray-400">Institutions</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-400">98%</div>
-                        <div class="text-sm text-gray-400">Satisfaction</div>
-                    </div>
-                </div>
 
                 <!-- Social Links -->
                 <div class="flex space-x-4 pt-6">
@@ -155,10 +143,11 @@
                 </div>
             </div>
 
+
             <!-- Quick Links -->
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
@@ -166,7 +155,7 @@
                 </h3>
                 <ul class="space-y-3">
                     <li><a href="{{ route('branding.features') }}"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -174,7 +163,7 @@
                             Features & Modules
                         </a></li>
                     <li><a href="{{ route('register') }}"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -182,7 +171,7 @@
                             Get Started Free
                         </a></li>
                     <li><a href="{{ route('dashboard') }}"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -190,7 +179,7 @@
                             Dashboard
                         </a></li>
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -198,7 +187,7 @@
                             Pricing Plans
                         </a></li>
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -217,7 +206,7 @@
             <!-- Resources -->
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
@@ -225,7 +214,7 @@
                 </h3>
                 <ul class="space-y-3">
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -233,7 +222,7 @@
                             Help Center
                         </a></li>
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -241,7 +230,7 @@
                             Documentation
                         </a></li>
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -249,7 +238,7 @@
                             API Reference
                         </a></li>
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -257,7 +246,7 @@
                             Community Forum
                         </a></li>
                     <li><a href="#"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -270,7 +259,7 @@
             <!-- Sponsorship -->
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -278,7 +267,7 @@
                 </h3>
                 <ul class="space-y-3">
                     <li><a href="{{ route('sponsorships.projects.index') }}"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -286,7 +275,7 @@
                             Browse Projects
                         </a></li>
                     <li><a href="{{ route('sponsorships.offers.index') }}"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -294,7 +283,7 @@
                             Sponsorships
                         </a></li>
                     <li><a href="{{ route('financial-aid') }}"
-                           class="text-gray-300 hover:text-yellow-400 transition-colors duration-200 flex items-center group">
+                           class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -307,7 +296,7 @@
             <!-- Support & Contact -->
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 11-9.75 9.75A9.75 9.75 0 0112 2.25z"/>
                     </svg>
@@ -317,9 +306,9 @@
                 <!-- Contact Methods -->
                 <div class="space-y-4">
                     <a href="mailto:{{ config('company.email') }}"
-                       class="flex items-center text-gray-300 hover:text-yellow-400 transition-colors duration-200 group">
+                       class="flex items-center text-gray-300 hover:text-blue-400 transition-colors duration-200 group">
                         <div
-                            class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-lg p-3 flex items-center justify-center mr-3 group-hover:bg-yellow-400/20 transition-colors duration-200">
+                            class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-lg p-3 flex items-center justify-center mr-3 group-hover:bg-blue-400/20 transition-colors duration-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -332,9 +321,9 @@
                     </a>
 
                     <a href="tel:{{ config('company.phone') }}"
-                       class="flex items-center text-gray-300 hover:text-yellow-400 transition-colors duration-200 group">
+                       class="flex items-center text-gray-300 hover:text-blue-400 transition-colors duration-200 group">
                         <div
-                            class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-lg flex items-center justify-center mr-3 group-hover:bg-yellow-400/20 transition-colors duration-200">
+                            class="w-10 h-10 bg-white/10 backdrop-blur-md rounded-lg flex items-center justify-center mr-3 group-hover:bg-blue-400/20 transition-colors duration-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
@@ -353,55 +342,56 @@
                     <div class="text-sm text-gray-400 space-y-1">
                         <div>Mon-Fri: 9:00 AM - 6:00 PM</div>
                         <div>Weekend: 10:00 AM - 4:00 PM</div>
-                        <div class="text-yellow-400">24/7 Emergency Support</div>
+                        <div class="text-blue-400">24/7 Emergency Support</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bottom Section -->
-    <div class="relative border-t border-white/10 bg-black/20 backdrop-blur-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
 
-                <!-- Copyright -->
-                <div class="text-center md:text-left">
-                    <p class="text-gray-400">
-                        &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-                    </p>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Transforming education, one innovation at a time.
-                    </p>
+        <!-- Bottom Section -->
+        <div class="relative border-t border-white/10 bg-black/20 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+
+                    <!-- Copyright -->
+                    <div class="text-center md:text-left">
+                        <p class="text-gray-400">
+                            &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Transforming education, one innovation at a time.
+                        </p>
+                    </div>
+
+                    <!-- Legal Links -->
+                    <div class="flex flex-wrap items-center justify-center space-x-6 text-sm">
+                        <a href="{{ route('branding.privacy') }}"
+                           class="text-gray-400 hover:text-blue-400 transition-colors duration-200">
+                            Privacy Policy
+                        </a>
+                        <a href="{{ route('branding.terms') }}"
+                           class="text-gray-400 hover:text-blue-400 transition-colors duration-200">
+                            Terms of Service
+                        </a>
+                        <a href="{{ route('branding.contact') }}"
+                           class="text-gray-400 hover:text-blue-400 transition-colors duration-200">
+                            Cookie Policy
+                        </a>
+                        <a href="{{ route('branding.contact') }}"
+                           class="text-gray-400 hover:text-blue-400 transition-colors duration-200">
+                            Security
+                        </a>
+                    </div>
+
+                    <!-- Back to Top -->
+                    <button onclick="scrollToTop()"
+                            class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transform hover:scale-110 transition-all duration-300 shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                        </svg>
+                    </button>
                 </div>
-
-                <!-- Legal Links -->
-                <div class="flex flex-wrap items-center justify-center space-x-6 text-sm">
-                    <a href="{{ route('branding.privacy') }}"
-                       class="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                        Privacy Policy
-                    </a>
-                    <a href="{{ route('branding.terms') }}"
-                       class="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                        Terms of Service
-                    </a>
-                    <a href="{{ route('branding.contact') }}"
-                       class="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                        Cookie Policy
-                    </a>
-                    <a href="{{ route('branding.contact') }}"
-                       class="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                        Security
-                    </a>
-                </div>
-
-                <!-- Back to Top -->
-                <button onclick="scrollToTop()"
-                        class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-full flex items-center justify-center hover:from-yellow-300 hover:to-orange-400 transform hover:scale-110 transition-all duration-300 shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                    </svg>
-                </button>
             </div>
         </div>
     </div>
@@ -420,7 +410,7 @@
     /* Enhanced focus styles for accessibility */
     footer a:focus,
     footer button:focus {
-        outline: 2px solid #fbbf24;
+        outline: 2px solid #3b82f6;
         outline-offset: 2px;
         border-radius: 4px;
     }
