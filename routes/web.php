@@ -68,6 +68,7 @@ Route::view('/pricing', 'branding.pricing')->name('branding.pricing');
 Route::get('/library', [\App\Http\Controllers\LibraryShowcaseController::class, 'index'])->name('library.showcase');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+Route::view('/landing', 'landing')->name('landing');
 
 // Account Suspended
 Route::view('/account/suspended', 'auth.suspended')->name('account.suspended');
