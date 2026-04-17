@@ -214,11 +214,7 @@ class BookManagement extends Component
         $book->delete();
 
         // Log activity
-        Book::logActivityForModel('delete', 'Book Deleted', 'book', [
-            'book_title' => $bookTitle,
-            'book_id' => $bookId,
-            'deleted_by' => auth()->user()?->name ?? 'Unknown',
-        ]);
+        Book::logModelActivity($book, 'delete', 'Book deleted');
 
         session()->flash('message', 'Book deleted successfully!');
         $this->dispatch('refreshBooks');
