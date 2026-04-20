@@ -10,7 +10,7 @@
                     <source src="{{ asset('media/video/header-background-video.mp4') }}" type="video/mp4">
                 </video>
                 <div
-                    class="absolute inset-0 bg-gradient-to-r from-blue-600/60 via-indigo-600/50 to-purple-600/60"></div>
+                    class="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10"></div>
             </div>
 
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center">
@@ -55,7 +55,7 @@
 
         <!-- Video Demo Section -->
         <section id="demo"
-                 class="relative py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 overflow-hidden">
+                 class="relative py-20 bg-gradient-to-br from-gray-900 via-purple-500 to-gray-900 overflow-hidden">
             <!-- Animated Background Pattern -->
             <div class="absolute inset-0 opacity-10">
                 <div class="absolute inset-0"
@@ -64,9 +64,9 @@
 
             <!-- Gradient Orbs -->
             <div
-                class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+                class="absolute top-0 left-1/4 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
             <div
-                class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+                class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
                 style="animation-delay: 2s;"></div>
 
             <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
