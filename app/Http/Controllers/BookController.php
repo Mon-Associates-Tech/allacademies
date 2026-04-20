@@ -146,18 +146,18 @@ class BookController extends Controller
         $ageGroups = ['1-5', '6-9', '10-12', '13-15', '16-18', '18+'];
 
         // Get top categories with books for homepage display
-        if (
-            ! $request->hasAny([
-                'search',
-                'categories',
-                'format',
-                'price',
-                'age_groups',
-                'academic_groups',
-                'academic_levels',
-                'academic_subjects',
-            ])
-        ) {
+        $showCategories = !$request->hasAny([
+            'search',
+            'categories',
+            'format',
+            'price',
+            'age_groups',
+            'academic_groups',
+            'academic_levels',
+            'academic_subjects',
+        ]) && (!$request->has('page') || $request->get('page') == 1);
+
+        if ($showCategories) {
             $topCategories = BookCategory::withCount('books')
                 ->having('books_count', '>', 6)
                 ->orderBy('books_count', 'desc')
