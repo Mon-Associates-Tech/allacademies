@@ -328,6 +328,72 @@
             @endif
 
             @if($books->count() > 0)
+                @php
+                    $activeFilters = [];
+                    if(request('search')) $activeFilters[] = ['label' => 'Search', 'value' => request('search')];
+                    if(request('categories')) {
+                        $catNames = $categories->whereIn('id', request('categories'))->pluck('name')->toArray();
+                        foreach($catNames as $name) {
+                            $activeFilters[] = ['label' => 'Category', 'value' => $name];
+                        }
+                    }
+                    if(request('format')) $activeFilters[] = ['label' => 'Format', 'value' => ucfirst(str_replace('_', ' ', request('format')))];
+                    if(request('price')) $activeFilters[] = ['label' => 'Price', 'value' => ucfirst(request('price'))];
+                    if(request('age_groups')) {
+                        foreach((array)request('age_groups') as $age) {
+                            $activeFilters[] = ['label' => 'Age Group', 'value' => $age . ' years'];
+                        }
+                    }
+                    if(request('academic_groups')) {
+                        $groupNames = $academicGroups->whereIn('id', request('academic_groups'))->pluck('name')->toArray();
+                        foreach($groupNames as $name) {
+                            $activeFilters[] = ['label' => 'Academic Group', 'value' => $name];
+                        }
+                    }
+                    if(request('academic_levels')) {
+                        $levelNames = $academicLevels->whereIn('id', request('academic_levels'))->pluck('name')->toArray();
+                        foreach($levelNames as $name) {
+                            $activeFilters[] = ['label' => 'Academic Level', 'value' => $name];
+                        }
+                    }
+                    if(request('academic_subjects')) {
+                        $subjectNames = $academicSubjects->whereIn('id', request('academic_subjects'))->pluck('name')->toArray();
+                        foreach($subjectNames as $name) {
+                            $activeFilters[] = ['label' => 'Subject', 'value' => $name];
+                        }
+                    }
+                @endphp
+
+                @if(count($activeFilters) > 0)
+                    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                                </svg>
+                                Active Filters
+                            </h3>
+                            <a href="{{ route('books.index') }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Clear All
+                            </a>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($activeFilters as $filter)
+                                <span class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                    <span class="font-semibold">{{ $filter['label'] }}:</span>
+                                    <span>{{ $filter['value'] }}</span>
+                                </span>
+                            @endforeach
+                        </div>
+                        <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                            Showing {{ $books->total() }} {{ Str::plural('result', $books->total()) }}
+                        </p>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     @foreach($books as $book)
                         @include('livewire.books.partials.book-card', ['book' => $book])
