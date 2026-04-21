@@ -2,14 +2,17 @@
 
 namespace App\Livewire\Students;
 
+use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\LibraryCard;
 use App\Models\ReportCard;
 use App\Models\ReportCardGrade;
+use App\Models\ReportCardConfiguration;
 use App\Models\Student;
 use App\Models\StudentIdCard;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class DocumentGenerator extends Component
@@ -37,6 +40,16 @@ class DocumentGenerator extends Component
 
     public $subjectIds = [];
 
+    public $availableSubjects = [];
+
+    public $assignedSubjects = [];
+
+    public $selectedAssignedSubjectIds = [];
+
+    public $minSubjectLimit = null;
+
+    public $maxSubjectLimit = null;
+
     // ID Card data
     public $cardExpiryMonths = 12;
 
@@ -60,6 +73,8 @@ class DocumentGenerator extends Component
         'grades.*.quizzes_score' => 'nullable|numeric|min:0|max:10',
         'grades.*.final_exam_score' => 'nullable|numeric|min:0|max:50',
         'grades.*.remarks' => 'nullable|string|max:255',
+        'selectedAssignedSubjectIds' => 'nullable|array',
+        'selectedAssignedSubjectIds.*' => 'exists:academic_subjects,id',
     ];
 
     protected $messages = [
@@ -95,6 +110,7 @@ class DocumentGenerator extends Component
         }
 
         $this->loadExistingData();
+        $this->loadSubjectAssignmentData();
         $this->initializeGrades();
         $this->calculateAttendanceSummary();
     }
@@ -112,13 +128,59 @@ class DocumentGenerator extends Component
     public function updatedSelectedAcademicYearId()
     {
         $this->loadExistingData();
+        $this->loadSubjectAssignmentData();
         $this->initializeGrades();
     }
 
     public function updatedSelectedTerm()
     {
         $this->loadExistingData();
+        $this->loadSubjectAssignmentData();
         $this->initializeGrades();
+    }
+
+    private function loadSubjectAssignmentData(): void
+    {
+        $levelSubjects = AcademicSubject::query()
+            ->where('academic_level_id', $this->student->academic_level_id)
+            ->orderBy('name')
+            ->get();
+
+        $assignedSubjects = $this->student->individualSubjects()
+            ->wherePivot('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $this->availableSubjects = $levelSubjects
+            ->merge($assignedSubjects)
+            ->unique('id')
+            ->values();
+
+        $this->assignedSubjects = $assignedSubjects;
+        $this->selectedAssignedSubjectIds = $assignedSubjects->pluck('id')->values()->all();
+
+        $this->resolveSubjectLimits();
+    }
+
+    private function resolveSubjectLimits(): void
+    {
+        $configQuery = ReportCardConfiguration::query()
+            ->where('school_id', getSchoolId())
+            ->where('academic_level_id', $this->student->academic_level_id);
+
+        if ($this->selectedAcademicYearId && $this->selectedTerm) {
+            $configQuery->whereHas('academicPeriod', function ($query): void {
+                $query->where('academic_year_id', $this->selectedAcademicYearId)
+                    ->where('name', $this->selectedTerm);
+            });
+        }
+
+        $config = $configQuery
+            ->latest('id')
+            ->first();
+
+        $this->minSubjectLimit = $config?->min_subjects;
+        $this->maxSubjectLimit = $config?->max_subjects;
     }
 
     private function loadExistingData()
@@ -139,8 +201,8 @@ class DocumentGenerator extends Component
 
     private function initializeGrades()
     {
-        // Get accessible subjects for the student
-        $subjects = $this->student->getAllAccessibleSubjects();
+        // Report cards are restricted to explicitly assigned subjects only.
+        $subjects = collect($this->assignedSubjects);
 
         // Check if there's an existing report card
         $existingReportCard = ReportCard::where([
@@ -178,6 +240,84 @@ class DocumentGenerator extends Component
                 'remarks' => $existingGrade->remarks ?? '',
             ];
         }
+    }
+
+    public function saveAssignedSubjects(): void
+    {
+        $this->validate([
+            'selectedAssignedSubjectIds' => 'nullable|array',
+            'selectedAssignedSubjectIds.*' => 'exists:academic_subjects,id',
+        ]);
+
+        $selectedCount = count($this->selectedAssignedSubjectIds);
+
+        if ($this->minSubjectLimit !== null && $selectedCount < $this->minSubjectLimit) {
+            session()->flash('error', "At least {$this->minSubjectLimit} subjects must be assigned for this level.");
+
+            return;
+        }
+
+        if ($this->maxSubjectLimit !== null && $selectedCount > $this->maxSubjectLimit) {
+            session()->flash('error', "At most {$this->maxSubjectLimit} subjects can be assigned for this level.");
+
+            return;
+        }
+
+        DB::transaction(function (): void {
+            $currentActive = $this->student->individualSubjects()
+                ->wherePivot('is_active', true)
+                ->pluck('academic_subjects.id')
+                ->all();
+
+            foreach ($this->selectedAssignedSubjectIds as $subjectId) {
+                $exists = DB::table('student_subject')
+                    ->where('student_id', $this->student->id)
+                    ->where('academic_subject_id', $subjectId)
+                    ->exists();
+
+                if ($exists) {
+                    DB::table('student_subject')
+                        ->where('student_id', $this->student->id)
+                        ->where('academic_subject_id', $subjectId)
+                        ->update([
+                            'is_active' => true,
+                            'assigned_by' => Auth::id(),
+                            'notes' => 'Assigned for report card',
+                            'assigned_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    $this->student->individualSubjects()->attach($subjectId, [
+                        'is_active' => true,
+                        'assigned_by' => Auth::id(),
+                        'notes' => 'Assigned for report card',
+                        'assigned_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            $toDeactivate = array_diff($currentActive, $this->selectedAssignedSubjectIds);
+            if (! empty($toDeactivate)) {
+                DB::table('student_subject')
+                    ->where('student_id', $this->student->id)
+                    ->whereIn('academic_subject_id', $toDeactivate)
+                    ->update([
+                        'is_active' => false,
+                        'assigned_by' => Auth::id(),
+                        'notes' => 'Removed from report card subject assignment',
+                        'assigned_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
+        });
+
+        $this->student->refresh();
+        $this->loadSubjectAssignmentData();
+        $this->initializeGrades();
+
+        session()->flash('success', 'Assigned subjects updated successfully.');
     }
 
     public function updatedGrades($value, $key)
@@ -325,6 +465,24 @@ class DocumentGenerator extends Component
         $this->validate();
 
         try {
+            if (empty($this->selectedAssignedSubjectIds)) {
+                session()->flash('error', 'No subjects assigned. Assign at least one subject before generating a report card.');
+
+                return null;
+            }
+
+            if ($this->minSubjectLimit !== null && count($this->selectedAssignedSubjectIds) < $this->minSubjectLimit) {
+                session()->flash('error', "This level requires at least {$this->minSubjectLimit} assigned subjects.");
+
+                return null;
+            }
+
+            if ($this->maxSubjectLimit !== null && count($this->selectedAssignedSubjectIds) > $this->maxSubjectLimit) {
+                session()->flash('error', "This level allows a maximum of {$this->maxSubjectLimit} assigned subjects.");
+
+                return null;
+            }
+
             // Resolve a teacher to attribute grades to (required by DB schema)
             $teacherId = $this->student->primary_teacher?->id;
             if (!$teacherId) {

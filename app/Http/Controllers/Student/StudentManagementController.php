@@ -145,6 +145,24 @@ class StudentManagementController extends Controller
         return $pdf->download("report-card-{$reportCard->student->user->name}.pdf");
     }
 
+    public function previewReportCardAsStudent(ReportCard $reportCard)
+    {
+        $reportCard->load([
+            'student.user',
+            'student.academicLevel',
+            'student.school',
+            'grades.subject',
+            'configuration.academicPeriod',
+        ]);
+
+        $pdf = Pdf::loadView('reports.report-card-pdf', [
+            'reportCard' => $reportCard,
+            'school' => $reportCard->student->school,
+        ]);
+
+        return $pdf->stream("report-card-{$reportCard->student->user->name}-{$reportCard->term}.pdf");
+    }
+
     public function import(Request $request)
     {
         $request->validate([

@@ -9,6 +9,7 @@ use App\Models\AssessmentResponse;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\Student;
+use App\Services\Students\StudentProgressQueryService;
 use App\Support\GradingSystemResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -62,21 +63,30 @@ class AssignmentTakingComponent extends Component
 
     public $restrictNavigation = false;
 
+    public array $studentSnapshot = [];
+
     // Services
     protected RandomQuestionSelectionService $questionService;
+
+    protected StudentProgressQueryService $studentProgressQueryService;
 
     protected $rules = [
         'responses.*' => 'nullable',
     ];
 
-    public function boot(RandomQuestionSelectionService $questionService)
+    public function boot(
+        RandomQuestionSelectionService $questionService,
+        StudentProgressQueryService $studentProgressQueryService
+    )
     {
         $this->questionService = $questionService;
+        $this->studentProgressQueryService = $studentProgressQueryService;
     }
 
     public function mount($assignment = null)
     {
         $this->darkMode = request()->cookie('theme') === 'dark';
+        $this->loadStudentSnapshot();
 
         if ($assignment) {
             $this->assignmentId = $assignment;
@@ -99,6 +109,8 @@ class AssignmentTakingComponent extends Component
 
             return redirect()->route('students.assignments');
         }
+
+        $this->loadStudentSnapshot($student);
 
         // Load the assignment
         $this->assignment = Assignment::with(['academicSubject', 'teacher.user'])
@@ -141,6 +153,23 @@ class AssignmentTakingComponent extends Component
         } else {
             $this->startAssessment();
         }
+    }
+
+    protected function loadStudentSnapshot(?Student $student = null): void
+    {
+        $student ??= Auth::user()?->student;
+
+        if (! $student) {
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
+
+        if (! $student) {
+            $this->studentSnapshot = [];
+
+            return;
+        }
+
+        $this->studentSnapshot = $this->studentProgressQueryService->buildSnapshot($student);
     }
 
     public function recordTabSwitch()

@@ -38,6 +38,21 @@ class ReportCard extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function subjects()
+    {
+        return $this->belongsToMany(AcademicSubject::class, 'report_card_grades', 'report_card_id', 'subject_id')
+            ->withPivot([
+                'assessments_score',
+                'quizzes_score',
+                'final_exam_score',
+                'total_score',
+                'grade_label',
+                'remarks',
+                'teacher_id',
+                'updated_at',
+            ]);
+    }
+
     public function academicYear(): BelongsTo
     {
         return $this->belongsTo(AcademicYear::class);

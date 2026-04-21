@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.30s="refreshBadges">
     <ul class="mt-3">
         <!-- Main -->
         <li class="mb-0.5 last:mb-0" title="Dashboard">
@@ -68,13 +68,20 @@
         <li class="mb-0.5 last:mb-0" title="Learning Center">
             <a class="block px-3 py-2 rounded-lg transition {{ Route::is('students.assessments') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('students.assessments')}}">
-                <div class="flex items-center">
-                    <svg
-                        class="shrink-0 fill-current {{ Route::is('students.assessments') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
-                        width="16" height="16" viewBox="0 0 24 24">
-                        <path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/>
-                    </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Quiz Generator</span>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('students.assessments') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Quiz Generator</span>
+                    </div>
+                    @if($totalQuizzesCount > 0)
+                        <span class="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-semibold dark:bg-indigo-900/40 dark:text-indigo-300">
+                            {{ $totalQuizzesCount > 99 ? '99+' : $totalQuizzesCount }}
+                        </span>
+                    @endif
                 </div>
             </a>
         </li>
@@ -97,14 +104,21 @@
         <li class="mb-0.5 last:mb-0" title="Assignments">
             <a class="block px-3 py-2 rounded-lg transition {{ Route::is('students.assignments') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('students.assignments')}}">
-                <div class="flex items-center">
-                    <svg
-                        class="shrink-0 fill-current {{ Route::is('students.assignments') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
-                        width="16" height="16" viewBox="0 0 24 24">
-                        <path
-                            d="M17 12H7v-2h10v2zm-4 2H7v2h6v-2zm8-8v12c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2zm-2 0H5v12h14V6z"/>
-                    </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Assignments</span>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('students.assignments') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            width="16" height="16" viewBox="0 0 24 24">
+                            <path
+                                d="M17 12H7v-2h10v2zm-4 2H7v2h6v-2zm8-8v12c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2zm-2 0H5v12h14V6z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Assignments</span>
+                    </div>
+                    @if($upcomingAssignmentsCount > 0)
+                        <span class="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-semibold dark:bg-orange-900/40 dark:text-orange-300">
+                            {{ $upcomingAssignmentsCount > 99 ? '99+' : $upcomingAssignmentsCount }}
+                        </span>
+                    @endif
                 </div>
             </a>
         </li>
@@ -134,6 +148,11 @@
                         </svg>
                         <span class="text-sm ml-2 sidebar-text duration-200">Message Center</span>
                     </div>
+                    @if($unreadMessagesCount > 0)
+                        <span class="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-pink-100 text-pink-700 text-[10px] font-semibold dark:bg-pink-900/40 dark:text-pink-300">
+                            {{ $unreadMessagesCount > 99 ? '99+' : $unreadMessagesCount }}
+                        </span>
+                    @endif
                 </div>
             </a>
         </li>
@@ -253,14 +272,21 @@
         <li class="mb-0.5 last:mb-0" title="Notifications">
             <a class="block px-3 py-2 rounded-lg transition {{ Route::is('students.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('students.notifications')}}">
-                <div class="flex items-center">
-                    <svg
-                        class="shrink-0 fill-current {{ Route::is('notifications*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
-                        width="16" height="16" viewBox="0 0 24 24">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg
+                            class="shrink-0 fill-current {{ Route::is('notifications*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                            width="16" height="16" viewBox="0 0 24 24">
                         <path
                             d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
-                    </svg>
-                    <span class="text-sm ml-2 sidebar-text duration-200">Notifications</span>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Notifications</span>
+                    </div>
+                    @if($unreadNotificationsCount > 0)
+                        <span class="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-red-100 text-red-700 text-[10px] font-semibold dark:bg-red-900/40 dark:text-red-300">
+                            {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+                        </span>
+                    @endif
                 </div>
             </a>
         </li>

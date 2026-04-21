@@ -39,6 +39,34 @@
             </div>
         </div>
 
+        @if(!empty($studentSnapshot))
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Assignments Snapshot</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ $studentSnapshot['assignments']['completion_rate'] ?? 0 }}%</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ $studentSnapshot['assignments']['completed'] ?? 0 }} completed, {{ $studentSnapshot['assignments']['upcoming'] ?? 0 }} due soon
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Self Assessments</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ $studentSnapshot['quizzes']['average_score'] ?? 0 }}%</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ $studentSnapshot['quizzes']['total'] ?? 0 }} attempts, best {{ $studentSnapshot['quizzes']['best_score'] ?? 0 }}%
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Reading Progress</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ $studentSnapshot['reading']['books_in_progress'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ $studentSnapshot['reading']['books_completed'] ?? 0 }} completed books, {{ $studentSnapshot['reading']['total_pages_read'] ?? 0 }} pages read
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <!-- Stats Cards Grid -->
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <!-- Total Assignments -->
@@ -105,6 +133,31 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow col-span-2 lg:col-span-1">
                 <div class="flex items-center justify-center h-full">
                     <livewire:charts.gauge-chart :value="$gaugeValue" :min="$gaugeMin" :max="$gaugeMax" :thresholds="$gaugeThresholds" center-label="Completion" height-class="h-28" />
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Submission Pipeline</p>
+                <div class="mt-2 flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Submitted</span>
+                    <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ $submittedAssignments }}</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Graded</span>
+                    <span class="text-lg font-semibold text-green-600 dark:text-green-400">{{ $gradedAssignments }}</span>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Assigned Scope</p>
+                <div class="mt-2 flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Total Assigned</span>
+                    <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ $totalAssignments }}</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Active Now</span>
+                    <span class="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{{ $studentSnapshot['assignments']['total_available_now'] ?? 0 }}</span>
                 </div>
             </div>
         </div>

@@ -196,8 +196,50 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-6 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Assigned Subjects</h4>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                                            Selected {{ count($selectedAssignedSubjectIds) }}
+                                            @if($minSubjectLimit !== null || $maxSubjectLimit !== null)
+                                                (Min: {{ $minSubjectLimit ?? 'N/A' }}, Max: {{ $maxSubjectLimit ?? 'N/A' }})
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                        Report cards are generated from explicitly assigned subjects only.
+                                    </p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        @forelse($availableSubjects as $subject)
+                                            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                                <input type="checkbox"
+                                                       wire:model="selectedAssignedSubjectIds"
+                                                       value="{{ $subject->id }}"
+                                                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span>{{ $subject->name }}</span>
+                                            </label>
+                                        @empty
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">No level subjects available for assignment.</p>
+                                        @endforelse
+                                    </div>
+                                    <div class="mt-4">
+                                        <button wire:click="saveAssignedSubjects" type="button"
+                                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                                            Save Assigned Subjects
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if(empty($selectedAssignedSubjectIds))
+                                    <div class="mb-6 rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4">
+                                        <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                            No subjects assigned yet. Assign subjects above before generating report cards.
+                                        </p>
+                                    </div>
+                                @endif
+
                                 <!-- Grades Table -->
-                                <div class="overflow-x-auto mb-6">
+                                <div class="overflow-x-auto mb-6 {{ empty($selectedAssignedSubjectIds) ? 'opacity-50 pointer-events-none' : '' }}">
                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead class="bg-gray-50 dark:bg-gray-700">
                                         <tr>

@@ -21,6 +21,12 @@ class ReportCardConfiguration extends Model
         'available_from',
         'available_until',
         'preparation_mode',
+        'principal_name',
+        'principal_signature_path',
+        'class_teacher_name',
+        'class_teacher_signature_path',
+        'min_subjects',
+        'max_subjects',
     ];
 
     protected $casts = [
@@ -28,6 +34,8 @@ class ReportCardConfiguration extends Model
         'is_published' => 'boolean',
         'available_from' => 'datetime',
         'available_until' => 'datetime',
+        'min_subjects' => 'integer',
+        'max_subjects' => 'integer',
     ];
 
     public function academicPeriod(): BelongsTo

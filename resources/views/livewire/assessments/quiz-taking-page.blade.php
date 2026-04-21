@@ -1,6 +1,35 @@
 <section x-data="{ showNewAssessment: false }">
     <!-- Header with Previous Assessments -->
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        @if(!empty($studentSnapshot))
+            <div class="container mx-auto px-3 sm:px-4 pt-4 sm:pt-6 max-w-6xl">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Assignments</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $studentSnapshot['assignments']['completion_rate'] ?? 0 }}%</p>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {{ $studentSnapshot['assignments']['upcoming'] ?? 0 }} due soon
+                        </p>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Quiz Performance</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $studentSnapshot['quizzes']['average_score'] ?? 0 }}%</p>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {{ $studentSnapshot['quizzes']['total'] ?? 0 }} attempts
+                        </p>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Reading Progress</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $studentSnapshot['reading']['books_in_progress'] ?? 0 }}</p>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {{ $studentSnapshot['reading']['books_completed'] ?? 0 }} completed books
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         @if($step === 'selection' && !empty($previousAssessments))
             <!-- Previous Assessments Dashboard -->

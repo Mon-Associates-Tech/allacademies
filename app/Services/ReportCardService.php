@@ -8,6 +8,7 @@ use App\Models\ReportCardGrade;
 use App\Models\ScoreWeighting;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ReportCardService
 {
@@ -28,13 +29,20 @@ class ReportCardService
         $teachers = [];
 
         foreach ($weightings as $weighting) {
-            // Map weighting name to assignment type
-            // Default mapping: 'Quiz' -> 'quiz', 'Examination' -> 'examination'
-            // If weighting name doesn't match, we might need a more flexible way to map
-            $assignmentType = strtolower($weighting->name);
+            $sourceType = strtolower((string) ($weighting->source_type ?: $weighting->name));
+            $scoreKey = $weighting->score_key ?: Str::slug($weighting->name, '_');
 
-            $relevantSubmissions = $submissions->filter(function ($submission) use ($assignmentType) {
-                return strtolower($submission->assignment->type) === $assignmentType;
+            if ($sourceType === 'manual') {
+                $scores[$scoreKey] = 0;
+                continue;
+            }
+
+            $relevantSubmissions = $submissions->filter(function ($submission) use ($sourceType) {
+                if (in_array($sourceType, ['assignment', 'mixed'], true)) {
+                    return true;
+                }
+
+                return strtolower((string) $submission->assignment->type) === $sourceType;
             });
 
             // Keep track of teachers who graded these submissions
@@ -49,9 +57,9 @@ class ReportCardService
 
             if ($totalPossible > 0) {
                 $percentage = ($totalObtained / $totalPossible) * 100;
-                $scores[$weighting->name] = ($percentage / 100) * $weighting->weight_percentage;
+                $scores[$scoreKey] = ($percentage / 100) * $weighting->weight_percentage;
             } else {
-                $scores[$weighting->name] = 0;
+                $scores[$scoreKey] = 0;
             }
         }
 
@@ -72,6 +80,13 @@ class ReportCardService
     {
         return DB::transaction(function () use ($student, $configurationId, $mode) {
             $config = \App\Models\ReportCardConfiguration::findOrFail($configurationId);
+            $subjects = $this->getAssignedSubjectsForStudent($student);
+
+            if ($subjects->isEmpty()) {
+                throw new \RuntimeException("No subjects assigned for student {$student->id}. Assign subjects before generating report cards.");
+            }
+
+            $this->assertSubjectLimits($subjects->count(), $config->min_subjects, $config->max_subjects);
 
             $reportCard = ReportCard::create([
                 'student_id' => $student->id,
@@ -82,8 +97,6 @@ class ReportCardService
                 'status' => 'draft',
                 'generated_at' => now(),
             ]);
-
-            $subjects = $student->getAllAccessibleSubjects();
 
             foreach ($subjects as $subject) {
                 $scores = [];
@@ -187,11 +200,35 @@ class ReportCardService
                 ->exists();
 
             if (! $exists) {
-                $this->generateReportCard($student, $configurationId, $mode);
-                $count++;
+                try {
+                    $this->generateReportCard($student, $configurationId, $mode);
+                    $count++;
+                } catch (\RuntimeException $exception) {
+                    // Skip students without eligible/assigned subjects or outside configured limits.
+                    continue;
+                }
             }
         }
 
         return $count;
+    }
+
+    public function getAssignedSubjectsForStudent(Student $student)
+    {
+        return $student->individualSubjects()
+            ->wherePivot('is_active', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function assertSubjectLimits(int $count, ?int $min, ?int $max): void
+    {
+        if ($min !== null && $count < $min) {
+            throw new \RuntimeException("Assigned subjects ({$count}) is below required minimum ({$min}).");
+        }
+
+        if ($max !== null && $count > $max) {
+            throw new \RuntimeException("Assigned subjects ({$count}) exceeds maximum allowed ({$max}).");
+        }
     }
 }

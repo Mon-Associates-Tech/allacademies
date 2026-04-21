@@ -12,6 +12,28 @@
     <!-- Taking Assessment -->
     @if($step === 'taking')
         <div class="container mx-auto px-4 py-6">
+            @if(!empty($studentSnapshot))
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Assignment Completion</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $studentSnapshot['assignments']['completion_rate'] ?? 0 }}%</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $studentSnapshot['assignments']['upcoming'] ?? 0 }} upcoming</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Self Assessment Avg</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $studentSnapshot['quizzes']['average_score'] ?? 0 }}%</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $studentSnapshot['quizzes']['total'] ?? 0 }} total quizzes</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Reading Progress</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $studentSnapshot['reading']['books_in_progress'] ?? 0 }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $studentSnapshot['reading']['books_completed'] ?? 0 }} completed books</p>
+                    </div>
+                </div>
+            @endif
+
             <!-- Header -->
             <div
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">

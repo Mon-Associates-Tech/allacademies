@@ -74,6 +74,15 @@
                                 <div>
                                     <h4 class="font-medium text-gray-900 dark:text-white">{{ $config->academicLevel->name }}</h4>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ $config->academicPeriod->name }} - {{ $config->academicPeriod->academic_year }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Subject limits:
+                                        Min {{ $config->min_subjects ?? 'N/A' }},
+                                        Max {{ $config->max_subjects ?? 'N/A' }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Principal: {{ $config->principal_name ?: 'Not set' }} |
+                                        Class Teacher Label: {{ $config->class_teacher_name ?: 'Class Teacher' }}
+                                    </p>
                                     <div class="flex gap-2 mt-2">
                                         <span class="px-2 py-1 text-xs rounded {{ $config->is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                             {{ $config->is_published ? 'Published' : 'Draft' }}
@@ -157,6 +166,12 @@
                                     <td class="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         @if($rc->status !== 'approved')
                                             <button wire:click="approveReportCard({{ $rc->id }})" class="text-green-600 hover:text-green-900 mr-2">Approve</button>
+                                        @endif
+                                        <a href="{{ route('admin.report-cards.student-preview', $rc->id) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900 mr-2">
+                                            View as Student
+                                        </a>
+                                        @if($rc->canBeEditedBy(auth()->user()))
+                                            <button wire:click="openReportCardModal({{ $rc->id }})" class="text-blue-600 hover:text-blue-800 ml-2">Edit</button>
                                         @endif
                                     </td>
                                 </tr>
@@ -279,6 +294,9 @@
                     <thead>
                         <tr>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Score Key</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Source</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Max Score</th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Weight %</th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Scope</th>
                             <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
@@ -288,6 +306,9 @@
                         @forelse($weightings as $weighting)
                             <tr>
                                 <td class="px-3 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $weighting->name }}</td>
+                                <td class="px-3 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $weighting->score_key ?: '-' }}</td>
+                                <td class="px-3 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $weighting->source_type ? ucfirst($weighting->source_type) : '-' }}</td>
+                                <td class="px-3 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $weighting->max_score !== null ? number_format((float) $weighting->max_score, 2) : '-' }}</td>
                                 <td class="px-3 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $weighting->weight_percentage }}%</td>
                                 <td class="px-3 py-3 text-sm">
                                     <span class="px-2 py-1 text-xs rounded {{ $weighting->is_default ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
@@ -300,7 +321,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No weightings found</td>
+                                <td colspan="7" class="px-3 py-8 text-center text-gray-500 dark:text-gray-400">No weightings found</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -361,6 +382,55 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Available Until</label>
                         <input type="datetime-local" wire:model="availableUntil" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Min Subjects per Student</label>
+                        <input type="number" min="1" max="30" wire:model="minSubjects" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Subjects per Student</label>
+                        <input type="number" min="1" max="30" wire:model="maxSubjects" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Principal Name</label>
+                        <input type="text" wire:model="principalName" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="e.g. Mrs. Akosua Mensah">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Class Teacher Label</label>
+                        <input type="text" wire:model="classTeacherName" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Default: Class Teacher">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Principal Signature</label>
+                        <input type="file" wire:model="principalSignatureUpload" accept="image/*" class="mt-1 block w-full text-sm text-gray-700 dark:text-gray-300">
+                        @if($principalSignatureUpload)
+                            <img src="{{ $principalSignatureUpload->temporaryUrl() }}" alt="Principal Signature Preview" class="mt-2 h-16 object-contain border rounded bg-white p-1">
+                        @elseif($principalSignaturePath)
+                            <img src="{{ asset('storage/' . $principalSignaturePath) }}" alt="Principal Signature" class="mt-2 h-16 object-contain border rounded bg-white p-1">
+                        @endif
+                        @if($principalSignaturePath || $principalSignatureUpload)
+                            <button type="button" wire:click="removePrincipalSignature" class="mt-2 text-sm text-red-600 hover:text-red-800">Remove Signature</button>
+                        @endif
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Class Teacher Signature</label>
+                        <input type="file" wire:model="classTeacherSignatureUpload" accept="image/*" class="mt-1 block w-full text-sm text-gray-700 dark:text-gray-300">
+                        @if($classTeacherSignatureUpload)
+                            <img src="{{ $classTeacherSignatureUpload->temporaryUrl() }}" alt="Class Teacher Signature Preview" class="mt-2 h-16 object-contain border rounded bg-white p-1">
+                        @elseif($classTeacherSignaturePath)
+                            <img src="{{ asset('storage/' . $classTeacherSignaturePath) }}" alt="Class Teacher Signature" class="mt-2 h-16 object-contain border rounded bg-white p-1">
+                        @endif
+                        @if($classTeacherSignaturePath || $classTeacherSignatureUpload)
+                            <button type="button" wire:click="removeClassTeacherSignature" class="mt-2 text-sm text-red-600 hover:text-red-800">Remove Signature</button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -439,6 +509,94 @@
         </x-slot>
     </x-modal-component>
 
+    <!-- Report Card Edit Modal -->
+    <x-modal-component name="reportCardModal" title="Edit Report Card" size="2xl">
+        <x-slot name="body">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Student</label>
+                    <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $reportCard?->student?->user?->name ?? 'N/A' }}</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Academic Level</label>
+                    <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $reportCard?->configuration?->academicLevel?->name ?? 'N/A' }}</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Configuration</label>
+                    <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $reportCard?->configuration?->academicLevel?->name ?? 'N/A' }}</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <select wire:model="status" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="approved">Approved</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Available From</label>
+                    <input type="datetime-local" wire:model="availableFrom" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Available Until</label>
+                    <input type="datetime-local" wire:model="availableUntil" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" wire:model="isPublished" class="rounded border-gray-300">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Published</span>
+                    </label>
+
+                    <label class="flex items-center">
+                        <input type="checkbox" wire:model="requiresApproval" class="rounded border-gray-300">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Requires Approval</span>
+                    </label>
+                </div>
+
+                <div>
+                    <h4 class="font-medium text-gray-900 dark:text-white">Subject Grades</h4>
+                    @if($reportCard)
+                        <div class="mt-4 space-y-4">
+                            @forelse($reportCard?->grades as $grade)
+                                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h5 class="font-medium text-gray-900 dark:text-white">{{ $grade->subject?->name ?? 'N/A' }}</h5>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $grade->subject?->code ?? '' }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <input type="number" wire:model="subjectGrades.{{ $grade->id }}" class="w-20 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                            <button wire:click="saveSubjectGrade({{ $grade->id }})" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-gray-500 dark:text-gray-400 text-center py-8">No subjects found</p>
+                            @endforelse
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="actions">
+            <button @click="$dispatch('close-modal', { name: 'reportCardModal' })" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                Cancel
+            </button>
+            <button wire:click="saveReportCard" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Save All Changes
+            </button>
+        </x-slot>
+    </x-modal-component>
+
     <!-- Weighting Modal -->
     <x-modal-component name="weightingModal" title="{{ $weightingId ? 'Edit' : 'Add' }} Score Weighting" size="2xl">
         <x-slot name="body">
@@ -451,6 +609,31 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Weight Percentage</label>
                     <input type="number" wire:model="weightPercentage" step="0.01" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Score Key</label>
+                        <input type="text" wire:model="weightingScoreKey" placeholder="e.g. class_score" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Used to map this heading to stored scores.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Raw Score (Optional)</label>
+                        <input type="number" wire:model="weightingMaxScore" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Score Source</label>
+                    <select wire:model="weightingSourceType" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                        <option value="">None / Manual Entry</option>
+                        <option value="quiz">Quiz</option>
+                        <option value="examination">Examination</option>
+                        <option value="practice">Practice</option>
+                        <option value="assignment">All Assignment Types</option>
+                        <option value="mixed">Mixed</option>
+                        <option value="manual">Manual</option>
+                    </select>
                 </div>
 
                 <div>

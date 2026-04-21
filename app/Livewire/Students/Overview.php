@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Students;
 
-use App\Models\Assessment;
-use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\QuizSession;
+use App\Services\Students\StudentProgressQueryService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -25,6 +24,10 @@ class Overview extends Component
     public $overdueAssignments = 0;
 
     public $upcomingAssignments = 0;
+
+    public $submittedAssignments = 0;
+
+    public $gradedAssignments = 0;
 
     // Self-Assessment (Book-based) Stats
     public $totalSelfAssessments = 0;
@@ -96,6 +99,15 @@ class Overview extends Component
 
     public $quizzesByType = [];
 
+    public array $studentSnapshot = [];
+
+    protected StudentProgressQueryService $studentProgressQueryService;
+
+    public function boot(StudentProgressQueryService $studentProgressQueryService): void
+    {
+        $this->studentProgressQueryService = $studentProgressQueryService;
+    }
+
     public function mount()
     {
         $user = Auth::user();
@@ -119,6 +131,7 @@ class Overview extends Component
 
     protected function loadAll(): void
     {
+        $this->loadSnapshot();
         $this->loadAssignmentStats();
         $this->loadSelfAssessmentStats();
         $this->loadPerformanceData();
@@ -127,66 +140,28 @@ class Overview extends Component
         $this->prepareCharts();
     }
 
+    protected function loadSnapshot(): void
+    {
+        $snapshot = $this->studentProgressQueryService->buildSnapshot($this->student, $this->rangeStart());
+        $this->studentSnapshot = $snapshot;
+    }
+
     protected function loadAssignmentStats()
     {
         $student = getStudent();
+        $assignmentSnapshot = $this->studentSnapshot['assignments'] ?? [];
 
-        // Get all assignments available to student
-        $availableAssignments = $this->getAvailableAssignments();
+        $this->totalAssignments = (int) ($assignmentSnapshot['total_assigned'] ?? 0);
+        $this->completedAssignments = (int) ($assignmentSnapshot['completed'] ?? 0);
+        $this->submittedAssignments = (int) ($assignmentSnapshot['submitted'] ?? 0);
+        $this->gradedAssignments = (int) ($assignmentSnapshot['graded'] ?? 0);
+        $this->ongoingAssignments = (int) ($assignmentSnapshot['ongoing'] ?? 0);
+        $this->overdueAssignments = (int) ($assignmentSnapshot['overdue'] ?? 0);
+        $this->upcomingAssignments = (int) ($assignmentSnapshot['upcoming'] ?? 0);
+        $this->averageAssignmentScore = (float) ($assignmentSnapshot['average_score'] ?? 0);
 
-        $this->totalAssignments = $availableAssignments->count();
-
-        // Get student's submissions
-        $submissions = AssignmentSubmission::where('student_id', $student->id)
-            ->with('assignment')
-            ->get();
-
-        // Completed assignments
-        $this->completedAssignments = $submissions
-            ->whereIn('status', ['completed', 'submitted', 'graded'])
-            ->count();
-
-        // Ongoing assignments
-        $this->ongoingAssignments = $submissions
-            ->where('status', 'in_progress')
-            ->count();
-
-        // Overdue assignments
-        $this->overdueAssignments = $availableAssignments
-            ->filter(function ($assignment) use ($submissions) {
-                $submission = $submissions->where('assignment_id', $assignment->id)->first();
-
-                return $assignment->ends_at < now() &&
-                    (! $submission || ! in_array($submission->status, ['completed', 'submitted', 'graded']));
-            })
-            ->count();
-
-        // Upcoming assignments (due within 7 days)
-        $this->upcomingAssignments = $availableAssignments
-            ->filter(function ($assignment) use ($submissions) {
-                $submission = $submissions->where('assignment_id', $assignment->id)->first();
-
-                return $assignment->ends_at >= now() &&
-                    $assignment->ends_at <= now()->addDays(7) &&
-                    (! $submission || ! in_array($submission->status, ['completed', 'submitted', 'graded']));
-            })
-            ->count();
-
-        // Average assignment score
-        $gradedSubmissions = $submissions->whereIn('status', ['graded', 'completed']);
-
-        if ($gradedSubmissions->count() > 0) {
-            $this->averageAssignmentScore = round(
-                $gradedSubmissions->avg(function ($submission) {
-                    if ($submission->total_marks > 0) {
-                        return ($submission->score / $submission->total_marks) * 100;
-                    }
-
-                    return 0;
-                }),
-                1
-            );
-        }
+        // Keep short-period trend counters
+        $submissions = AssignmentSubmission::where('student_id', $student->id)->get();
 
         // Assignments this week
         $this->assignmentsThisWeek = $submissions
@@ -203,89 +178,8 @@ class Overview extends Component
 
     protected function getAvailableAssignments()
     {
-        $student = $this->student;
-
-        // Get the academic group ID that the student's academic level belongs to
-        // This is important because assignments can be assigned to academic groups,
-        // and all students whose academic level belongs to that group should see them
-        $academicLevelGroupId = null;
-        if ($student->academic_level_id) {
-            $academicLevel = \App\Models\AcademicLevel::find($student->academic_level_id);
-            $academicLevelGroupId = $academicLevel?->academic_group_id;
-        }
-
-        return Assignment::where('status', 'published')
-            ->where('ends_at', '>', now())
-            // Include assignments where start time is in the past (or now) but end time is in the future
-            // This ensures we show currently active assignments
-            ->where(function ($query) use ($student, $academicLevelGroupId) {
-                $hasCondition = false;
-
-                // Check academic level
-                if ($student->academic_level_id) {
-                    $query->whereHas('academicLevels', function ($q) use ($student) {
-                        $q->where('academic_levels.id', $student->academic_level_id);
-                    });
-                    $hasCondition = true;
-                }
-
-                // Check if assigned to the academic group that the student's academic level belongs to
-                // This matches the logic in AssignmentNotificationService
-                if ($academicLevelGroupId) {
-                    if ($hasCondition) {
-                        $query->orWhereHas('academicGroups', function ($q) use ($academicLevelGroupId) {
-                            $q->where('academic_groups.id', $academicLevelGroupId);
-                        });
-                    } else {
-                        $query->whereHas('academicGroups', function ($q) use ($academicLevelGroupId) {
-                            $q->where('academic_groups.id', $academicLevelGroupId);
-                        });
-                        $hasCondition = true;
-                    }
-                }
-
-                // Check academic groups (direct many-to-many relationship)
-                $academicGroupIds = $student->academicGroups?->pluck('id')->toArray() ?? [];
-                if (! empty($academicGroupIds)) {
-                    if ($hasCondition) {
-                        $query->orWhereHas('academicGroups', function ($q) use ($academicGroupIds) {
-                            $q->whereIn('academic_groups.id', $academicGroupIds);
-                        });
-                    } else {
-                        $query->whereHas('academicGroups', function ($q) use ($academicGroupIds) {
-                            $q->whereIn('academic_groups.id', $academicGroupIds);
-                        });
-                        $hasCondition = true;
-                    }
-                }
-
-                // Check student groups
-                $studentGroupIds = $student->studentGroups?->pluck('id')->toArray() ?? [];
-                if (! empty($studentGroupIds)) {
-                    if ($hasCondition) {
-                        $query->orWhereHas('studentGroups', function ($q) use ($studentGroupIds) {
-                            $q->whereIn('student_groups.id', $studentGroupIds);
-                        });
-                    } else {
-                        $query->whereHas('studentGroups', function ($q) use ($studentGroupIds) {
-                            $q->whereIn('student_groups.id', $studentGroupIds);
-                        });
-                        $hasCondition = true;
-                    }
-                }
-
-                // Check direct assignment (always check this)
-                if ($hasCondition) {
-                    $query->orWhereHas('students', function ($q) use ($student) {
-                        $q->where('students.id', $student->id);
-                    });
-                } else {
-                    $query->whereHas('students', function ($q) use ($student) {
-                        $q->where('students.id', $student->id);
-                    });
-                }
-            })
-            ->with(['academicSubject', 'teacher.user'])
+        return $this->studentProgressQueryService
+            ->availableAssignmentsQuery($this->student)
             ->get();
     }
 

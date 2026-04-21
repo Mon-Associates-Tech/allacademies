@@ -5,6 +5,8 @@ namespace App\Livewire\Assessment;
 use App\Enums\Grade;
 use App\Models\Assessment;
 use App\Models\AssessmentResponse;
+use App\Models\Student;
+use App\Services\Students\StudentProgressQueryService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -74,10 +76,14 @@ class QuizTakingPage extends Component
 
     public $previousAssessments = [];
 
+    public array $studentSnapshot = [];
+
     // Services
     protected RandomQuestionSelectionService $questionService;
 
     protected SubjectSelectionService $subjectService;
+
+    protected StudentProgressQueryService $studentProgressQueryService;
 
     protected $rules = [
         'selectedSubject' => 'required',
@@ -87,10 +93,12 @@ class QuizTakingPage extends Component
 
     public function boot(
         RandomQuestionSelectionService $questionService,
-        SubjectSelectionService $subjectService
+        SubjectSelectionService $subjectService,
+        StudentProgressQueryService $studentProgressQueryService
     ) {
         $this->questionService = $questionService;
         $this->subjectService = $subjectService;
+        $this->studentProgressQueryService = $studentProgressQueryService;
     }
 
     public function mount()
@@ -98,6 +106,7 @@ class QuizTakingPage extends Component
         $this->darkMode = request()->cookie('theme') === 'dark';
         $this->loadSubjects();
         $this->loadPreviousAssessments();
+        $this->loadStudentSnapshot();
     }
 
     // Subject Selection Methods
@@ -651,6 +660,23 @@ class QuizTakingPage extends Component
                 ->get()
                 ->toArray();
         }
+    }
+
+    protected function loadStudentSnapshot(): void
+    {
+        $student = Auth::user()?->student;
+
+        if (! $student) {
+            $student = Student::withoutGlobalScopes()->where('user_id', Auth::id())->first();
+        }
+
+        if (! $student) {
+            $this->studentSnapshot = [];
+
+            return;
+        }
+
+        $this->studentSnapshot = $this->studentProgressQueryService->buildSnapshot($student);
     }
 
     public function render()

@@ -15,13 +15,17 @@ class ScoreWeighting extends Model
         'academic_level_id',
         'academic_subject_id',
         'name',
+        'score_key',
         'weight_percentage',
+        'source_type',
+        'max_score',
         'sort_order',
         'is_default',
     ];
 
     protected $casts = [
         'weight_percentage' => 'decimal:2',
+        'max_score' => 'decimal:2',
         'is_default' => 'boolean',
     ];
 

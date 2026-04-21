@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityTrailController;
 use App\Http\Controllers\Admin\SchoolPaymentController;
 use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\Student\StudentManagementController;
 use App\Livewire\Administrators\AccountantManagement;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
@@ -52,6 +53,8 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
 
     // Report Card Management
     Route::get('/report-cards', ReportCardManagement::class)->name('report-cards');
+    Route::get('/report-cards/{reportCard}/student-preview', [StudentManagementController::class, 'previewReportCardAsStudent'])
+        ->name('report-cards.student-preview');
 
     // Main activity trail page
     Route::get('/admin/activity-trail', [ActivityTrailController::class, 'index'])
