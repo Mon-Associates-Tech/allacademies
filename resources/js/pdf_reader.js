@@ -1368,9 +1368,10 @@ container.innerHTML = `
     }
 
     close() {
-        this.isDestroyed = true;
-
+        // Persist one final snapshot before teardown.
         this.saveProgress();
+
+        this.isDestroyed = true;
 
         // Cancel all render tasks
         this.cancelAllRenderTasks();

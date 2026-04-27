@@ -190,6 +190,30 @@
 
                         <!-- Action Buttons -->
                         <div class="mt-6 space-y-3">
+                            @auth
+                                <div class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Reading Progress</h4>
+                                        <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ $readingProgressPercentage }}%</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="h-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300"
+                                             style="width: {{ $readingProgressPercentage }}%"></div>
+                                    </div>
+                                    @if($userReadingProgress)
+                                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                            Page {{ min((int) ($userReadingProgress->current_page ?? 0), max((int) ($userReadingProgress->total_pages ?: $book->pages ?: 1), 1)) }}
+                                            of {{ (int) ($userReadingProgress->total_pages ?: $book->pages ?: 1) }}
+                                        </p>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                                            Last read {{ optional($userReadingProgress->last_read_at)->diffForHumans() ?? 'recently' }}
+                                        </p>
+                                    @else
+                                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">No reading activity yet.</p>
+                                    @endif
+                                </div>
+                            @endauth
+
                             <!-- Primary Action -->
                             @if($canRead)
 

@@ -7,6 +7,7 @@ use App\Enums\SubscriptionStatus;
 use App\Models\Book;
 use App\Models\BookBorrowing;
 use App\Models\BookCategory;
+use App\Models\BookReadingProgress;
 use App\Models\BookSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -337,6 +338,8 @@ class BookController extends Controller
         $isBorrowed = false;
         $subscription = null;
         $borrowing = null;
+        $userReadingProgress = null;
+        $readingProgressPercentage = 0;
 
         if ($user) {
             $subscription = $user
@@ -352,6 +355,23 @@ class BookController extends Controller
                 ->where('status', 'borrowed')
                 ->first();
             $isBorrowed = (bool) $borrowing;
+
+            $userReadingProgress = BookReadingProgress::query()
+                ->where('book_id', $book->id)
+                ->where('user_id', $user->id)
+                ->orderByDesc('last_read_at')
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if ($userReadingProgress) {
+                $totalPages = max(
+                    (int) ($userReadingProgress->total_pages ?: $book->pages ?: 1),
+                    1
+                );
+                $currentPage = max((int) ($userReadingProgress->current_page ?? 0), 0);
+                $currentPage = min($currentPage, $totalPages);
+                $readingProgressPercentage = (int) round(($currentPage / $totalPages) * 100);
+            }
         }
 
         $canRead =
@@ -369,6 +389,8 @@ class BookController extends Controller
                 'borrowing',
                 'canRead',
                 'recentReviews',
+                'userReadingProgress',
+                'readingProgressPercentage',
             ),
         );
     }

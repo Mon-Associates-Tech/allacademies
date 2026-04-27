@@ -9,16 +9,17 @@ export class PDFReaderWrapper {
 
     initialize(config) {
         try {
+            const payload = Array.isArray(config) ? (config[0] ?? {}) : (config ?? {});
             // Destroy existing reader if any
 
-            console.log('about to instantiate::', config)
+            console.log('about to instantiate::', payload)
             // Create new PDF reader instance
             this.pdfReader = new PDFReader({
                 container: '#pdf-reader-container',
-                pdfUrl: config[0].pdfUrl,
-                initialPage: config[0].currentPage || 1,
-                bookId: config[0].bookId,
-                book: config[0].book,
+                pdfUrl: payload.pdfUrl,
+                initialPage: payload.currentPage || 1,
+                bookId: payload.bookId,
+                book: payload.book,
                 onPageChange: this.handlePageChange.bind(this),
                 onProgressUpdate: this.handleProgressUpdate.bind(this),
                 onError: this.handleError.bind(this),
@@ -49,17 +50,26 @@ export class PDFReaderWrapper {
     handlePageChange(currentPage, totalPages) {
         // Dispatch Livewire event to update component state
         if (window.Livewire) {
-            // window.Livewire.dispatch('updatePageProgress', {
-            //     currentPage,
-            //     totalPages,
-            //     progressPercentage: Math.round((currentPage / totalPages) * 100)
-            // });
+            window.Livewire.dispatch('updatePageProgress', {
+                currentPage,
+                totalPages,
+                progressPercentage: Math.round((currentPage / totalPages) * 100)
+            });
         }
     }
 
     handleProgressUpdate(currentPage, totalPages, progressPercentage) {
         // This can be used for additional progress tracking if needed
         console.log(`Reading progress: ${progressPercentage}% (Page ${currentPage} of ${totalPages})`);
+
+        // Backup sync path: some navigation patterns update progress without triggering onPageChange consistently.
+        if (window.Livewire) {
+            window.Livewire.dispatch('updatePageProgress', {
+                currentPage,
+                totalPages,
+                progressPercentage
+            });
+        }
     }
 
     handleError(message, error) {

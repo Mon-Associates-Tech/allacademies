@@ -133,15 +133,17 @@ class PDFReaderComponent extends Component
     #[On('closePDFReader')]
     public function closeReader(): void
     {
-        $this->saveProgressFinal();
+        // JS reader already persists progress on close; avoid stale Livewire state overwriting newer client progress.
         $this->isVisible = false;
         $this->dispatch('destroyPDFReader');
         $this->resetReaderState();
     }
 
     #[On('updatePageProgress')]
-    public function handlePageProgress($data): void
+    public function handlePageProgress($data = []): void
     {
+        $data = is_array($data) ? $data : [];
+
         $currentPage = $data['currentPage'] ?? $data[0] ?? null;
         $totalPages = $data['totalPages'] ?? $data[1] ?? null;
         $progressPercentage = $data['progressPercentage'] ?? $data[2] ?? null;
@@ -151,11 +153,15 @@ class PDFReaderComponent extends Component
             $this->totalPages = (int) $totalPages;
             $this->saveProgress($this->currentPage, $this->totalPages);
         }
+
+        $this->skipRender();
     }
 
     #[On('updateReaderState')]
-    public function handleReaderStateUpdate($data): void
+    public function handleReaderStateUpdate($data = []): void
     {
+        $data = is_array($data) ? $data : [];
+
         if (isset($data['scale'])) {
             $this->scale = max($this->minZoom, min($this->maxZoom, (float) $data['scale']));
         }
@@ -163,11 +169,15 @@ class PDFReaderComponent extends Component
         if (isset($data['isFullscreen'])) {
             $this->isFullscreen = (bool) $data['isFullscreen'];
         }
+
+        $this->skipRender();
     }
 
     #[On('pdfReaderError')]
-    public function handleReaderError($error): void
+    public function handleReaderError($error = []): void
     {
+        $error = is_array($error) ? $error : [];
+
         $this->errorMessage = $error['message'] ?? 'PDF reader encountered an error';
         $this->isLoading = false;
 
@@ -305,17 +315,20 @@ class PDFReaderComponent extends Component
 
         $this->userProgress = BookReadingProgress::where('book_id', $this->bookId)
             ->where('user_id', $user->id)
+            ->orderByDesc('last_read_at')
+            ->orderByDesc('updated_at')
             ->first();
 
         if ($this->userProgress) {
-            $this->currentPage = $this->userProgress->current_page;
-            $this->totalPages = $this->userProgress->total_pages;
+            $this->currentPage = (int) ($this->userProgress->current_page ?? 1);
+            $this->totalPages = (int) ($this->userProgress->total_pages ?: ($this->book->pages ?? 0));
         }
     }
 
     private function saveProgress($currentPage, $totalPages): void
     {
         $user = Auth::user();
+        $progressPercentage = $totalPages > 0 ? round(($currentPage / $totalPages) * 100, 2) : 0;
 
         try {
             BookReadingProgress::updateOrCreate(
@@ -326,6 +339,7 @@ class PDFReaderComponent extends Component
                 [
                     'current_page' => $currentPage,
                     'total_pages' => $totalPages,
+                    'progress_percentage' => $progressPercentage,
                     'last_read_at' => now(),
                 ]
             );
@@ -339,7 +353,7 @@ class PDFReaderComponent extends Component
                         'action' => 'reading_progress_updated',
                         'current_page' => $currentPage,
                         'total_pages' => $totalPages,
-                        'progress_percentage' => $totalPages > 0 ? round(($currentPage / $totalPages) * 100, 2) : 0,
+                        'progress_percentage' => $progressPercentage,
                         'access_type' => $this->accessType,
                     ])
                     ->log('Reading progress updated');
