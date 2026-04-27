@@ -346,7 +346,7 @@ class StudentManagement extends Component
     {
         if ($this->standaloneForm) {
             $this->resetForm();
-            redirect()->route('admin.student-management')->send();
+            redirect()->route('admin.student-management');
         } else {
             $this->showFormModal = false;
             $this->resetForm();

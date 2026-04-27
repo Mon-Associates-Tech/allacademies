@@ -7,7 +7,7 @@ use Livewire\Component;
 
 class SearchableMultiSelect extends Component
 {
-    public string $search = '';
+    public $search = '';
 
     public array $selected = [];
 
@@ -113,26 +113,28 @@ class SearchableMultiSelect extends Component
     #[Computed]
     public function filteredItems()
     {
+        $searchTerm = $this->searchTerm();
+
         // Lazy load from database when model class is provided
         if ($this->lazyLoad && $this->modelClass) {
-            return $this->loadItemsFromDatabase();
+            return $this->loadItemsFromDatabase($searchTerm);
         }
 
         // Standard filtering for pre-loaded items
-        if (empty($this->search)) {
+        if ($searchTerm === '') {
             return $this->hierarchical ? $this->buildHierarchy($this->items) : $this->items;
         }
 
-        $filtered = array_filter($this->items, function ($item) {
+        $filtered = array_filter($this->items, function ($item) use ($searchTerm) {
             $label = is_array($item) ? ($item[$this->labelKey] ?? '') : $item->label ?? $item->name ?? '';
 
-            return stripos($label, $this->search) !== false;
+            return stripos($label, $searchTerm) !== false;
         });
 
         return $this->hierarchical ? $this->buildHierarchy($filtered) : array_values($filtered);
     }
 
-    private function loadItemsFromDatabase(): array
+    private function loadItemsFromDatabase(string $searchTerm): array
     {
         if (! class_exists($this->modelClass)) {
             return [];
@@ -163,12 +165,12 @@ class SearchableMultiSelect extends Component
         }
 
         // Apply search filter - only load when user searches
-        if (! empty($this->search)) {
+        if ($searchTerm !== '') {
             $searchColumns = is_array($this->searchColumn) ? $this->searchColumn : [$this->searchColumn];
 
-            $query->where(function ($q) use ($searchColumns) {
+            $query->where(function ($q) use ($searchColumns, $searchTerm) {
                 foreach ($searchColumns as $column) {
-                    $q->orWhere($column, 'LIKE', '%'.$this->search.'%');
+                    $q->orWhere($column, 'LIKE', '%'.$searchTerm.'%');
                 }
             });
         } elseif (! $this->dropdownOpen) {
@@ -357,8 +359,10 @@ class SearchableMultiSelect extends Component
         ]);
     }
 
-    public function updatedSearch(): void
+    public function updatedSearch($value = null): void
     {
+        $this->search = $this->normalizeSearchValue($value ?? $this->search);
+
         if (! $this->dropdownOpen) {
             $this->dropdownOpen = true;
         }
@@ -420,6 +424,30 @@ class SearchableMultiSelect extends Component
     private function getChildren($item): array
     {
         return is_array($item) ? ($item[$this->childrenKey] ?? []) : $item->{$this->childrenKey} ?? [];
+    }
+
+    private function searchTerm(): string
+    {
+        if (is_array($this->search)) {
+            $this->search = $this->normalizeSearchValue($this->search);
+        }
+
+        return trim((string) $this->search);
+    }
+
+    private function normalizeSearchValue(mixed $value): string
+    {
+        if (is_array($value)) {
+            \Log::warning('SearchableMultiSelect received array search payload; normalizing to string.', [
+                'component' => static::class,
+                'name' => $this->name,
+                'url' => request()?->fullUrl(),
+                'route' => request()?->route()?->getName(),
+            ]);
+            $value = reset($value);
+        }
+
+        return trim((string) ($value ?? ''));
     }
 
     public function render()

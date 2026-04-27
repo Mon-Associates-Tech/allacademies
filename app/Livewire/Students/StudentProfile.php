@@ -54,7 +54,7 @@ class StudentProfile extends Component
         'date_of_birth' => 'nullable|date',
         'emergency_contact_name' => 'nullable|string|max:255',
         'emergency_contact_phone' => 'nullable|string|max:20',
-        'avatar' => 'nullable|image|max:2048',
+        'avatar' => 'nullable|image|max:20480',
         'bio' => 'nullable|string|max:500',
         'favorite_subjects' => 'nullable|string|max:255',
         'learning_goals' => 'nullable|string|max:1000',
