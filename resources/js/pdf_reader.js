@@ -1,5 +1,5 @@
-import * as pdfjsLib from 'pdfjs-dist/build/pdf.min';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min?url';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url';
 
 export class PDFReader {
     constructor(config) {
@@ -14,8 +14,9 @@ export class PDFReader {
             onError: null,
             continuousMode: true,
             maxConcurrentRenders: 3,
-            showTableOfContents: true, // New option
-            tableOfContents: null, // TOC data
+            showTableOfContents: true,
+            tableOfContents: null,
+            enableAnnotations: true,
             ...config
         };
 
@@ -26,6 +27,14 @@ export class PDFReader {
         this.viewerContainer = null;
         this.tocSidebar = null;
         this.tocVisible = false;
+
+        // Annotation state
+        this.annotationMode = false;
+        this.isDrawing = false;
+        this.startX = 0;
+        this.startY = 0;
+        this.annotations = [];
+        this.currentAnnotationColor = '#f59e0b';
 
         // Render management
         this.renderTasks = new Map();
@@ -52,6 +61,8 @@ export class PDFReader {
             await this.createUI();
             await this.loadPDF();
             await this.loadTableOfContents();
+            await this.loadAnnotations();
+            this.exposeGlobally();
         } catch (error) {
             this.handleError('Failed to initialize PDF reader', error);
         }
@@ -76,78 +87,90 @@ container.innerHTML = `
     <div class="pdf-reader bg-gray-900 text-white rounded-lg shadow-lg flex flex-col h-full">
         <!-- Toolbar -->
         <div class="pdf-toolbar flex flex-wrap items-center justify-between bg-gray-800 p-2 rounded-t-lg gap-2">
-            <div class="flex items-center space-x-2 w-full sm:w-auto justify-between">
-                <span class="block sm:hidden truncate max-w-[120px]" title="${this.config.book.title}">${this.config.book.title.substring(0, 15)}${this.config.book.title.length > 15 ? '...' : ''}</span>
+            <div class="flex items-center space-x-1 sm:space-x-2">
+                <span class="block sm:hidden truncate max-w-[80px] text-xs" title="${this.config.book.title}">${this.config.book.title.substring(0, 10)}${this.config.book.title.length > 10 ? '...' : ''}</span>
                 <span class="hidden sm:block truncate max-w-[150px]" title="${this.config.book.title}">${this.config.book.title.substring(0, 20)}${this.config.book.title.length > 20 ? '...' : ''}</span>
 
                 ${this.config.showTableOfContents ? `
-                <button id="toggle-toc" class="px-2 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors sm:mr-2">
+                <button id="toggle-toc" class="px-2 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors" title="Table of Contents">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
                     </svg>
                 </button>
                 ` : ''}
+                
+                ${this.config.enableAnnotations ? `
+                <button id="toggle-annotations-list" class="px-2 py-1 bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors" title="Annotations">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                    </svg>
+                </button>
+                <button id="toggle-comments" class="px-2 py-1 bg-teal-600 rounded-md hover:bg-teal-700 transition-colors" title="Comments Panel">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                </button>
+                <button onclick="window.Modal.open('book-notes', {})" class="px-2 py-1 bg-amber-600 rounded-md hover:bg-amber-700 transition-colors" title="Notes">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                </button>
+                ` : ''}
             </div>
 
-            <div>
-              <button
-
-                                        onclick="window.Modal.open('book-notes', {})"
-                                        class="flex items-center justify-center px-3 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
-                                        <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none"
-                                             stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                        <span class="text-sm font-medium">Notes</span>
-                                    </button>
+            <div class="flex items-center space-x-1">
+                <button id="toggle-annotation" class="flex items-center justify-center px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                    <svg class="w-4 h-4 sm:mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    <span class="hidden sm:inline text-sm font-medium">Annotate</span>
+                </button>
 </div>
 
             <!-- Page Navigation -->
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-1 sm:space-x-2">
                 <button id="prev-page" class="px-2 py-1 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
                 <div class="flex items-center space-x-1">
-                    <input type="number" id="page-input" class="w-12 sm:w-16 px-2 py-1 text-center bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:bg-gray-700 outline-none transition-all duration-200 hover:border-gray-500 shadow-sm text-sm" min="1" value="${this.currentPage}" onwheel="this.blur()">
-                    <span class="text-sm">of</span>
-                    <span id="total-pages" class="text-sm">--</span>
+                    <input type="number" id="page-input" class="w-10 sm:w-16 px-1 sm:px-2 py-1 text-center bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:bg-gray-700 outline-none transition-all duration-200 hover:border-gray-500 shadow-sm text-xs sm:text-sm" min="1" value="${this.currentPage}" onwheel="this.blur()">
+                    <span class="text-xs sm:text-sm">of</span>
+                    <span id="total-pages" class="text-xs sm:text-sm">--</span>
                 </div>
                 <button id="next-page" class="px-2 py-1 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </button>
             </div>
 
             <!-- View Mode Toggle -->
-            <div class="flex items-center space-x-1">
+            <div class="hidden sm:flex items-center space-x-1">
                 <button id="toggle-continuous" class="px-2 py-1 text-xs sm:text-sm bg-green-600 rounded-md hover:bg-green-700 transition-colors">
-                    <span class="continuous-text hidden sm:inline">Continuous</span>
-                    <span class="single-text hidden sm:inline">Single Page</span>
-                    <span class="sm:hidden">View</span>
+                    <span class="continuous-text">Continuous</span>
+                    <span class="single-text hidden">Single Page</span>
                 </button>
             </div>
 
             <!-- Zoom Controls -->
             <div class="flex items-center space-x-1">
-                <button id="zoom-out" class="px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">-</button>
-                <span id="zoom-level" class="text-xs">${Math.round(this.scale * 100)}%</span>
-                <button id="zoom-in" class="px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">+</button>
+                <button id="zoom-out" class="px-1.5 sm:px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">-</button>
+                <span id="zoom-level" class="text-xs hidden sm:inline">${Math.round(this.scale * 100)}%</span>
+                <button id="zoom-in" class="px-1.5 sm:px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50">+</button>
                 <button id="fit-width" class="hidden sm:block px-2 py-1 text-xs bg-gray-700 rounded-md hover:bg-gray-600">Fit</button>
             </div>
 
             <!-- Actions -->
             <div class="flex items-center space-x-1">
-                <button id="fullscreen" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors" title="Toggle Fullscreen">
+                <button id="fullscreen" class="hidden sm:block px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors" title="Toggle Fullscreen">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"/>
                     </svg>
                 </button>
                 <button id="close-reader" class="px-2 py-1 bg-red-600 rounded-md hover:bg-red-700">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                     </svg>
                 </button>
@@ -158,7 +181,7 @@ container.innerHTML = `
         <div class="flex flex-1 overflow-hidden relative">
             <!-- Table of Contents Sidebar -->
             ${this.config.showTableOfContents ? `
-            <div id="toc-sidebar" class="absolute sm:relative z-10 w-64 sm:w-80 bg-gray-800 border-r border-gray-700 flex flex-col h-full transform transition-transform duration-300 -translate-x-full sm:translate-x-0">
+            <div id="toc-sidebar" class="absolute sm:relative z-10 w-64 sm:w-80 bg-gray-800 border-r border-gray-700 flex flex-col h-full transform transition-transform duration-300 -translate-x-full hidden">
                 <!-- TOC Header -->
                 <div class="p-3 border-b border-gray-700">
                     <div class="flex items-center justify-between">
@@ -204,8 +227,47 @@ container.innerHTML = `
             </div>
             ` : ''}
 
+            <!-- Annotations List Sidebar -->
+            ${this.config.enableAnnotations ? `
+            <div id="annotations-sidebar" class="absolute sm:relative z-10 w-64 sm:w-80 bg-gray-800 border-r border-gray-700 flex flex-col h-full transform transition-transform duration-300 -translate-x-full hidden">
+                <div class="p-3 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-base font-semibold text-white">Annotations</h3>
+                        <button id="close-annotations" class="text-gray-400 hover:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="annotations-content" class="flex-1 overflow-y-auto p-2">
+                    <div class="text-gray-400 text-center py-4">
+                        <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                        </svg>
+                        <p class="text-xs">No annotations yet</p>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+
             <!-- PDF Viewer Area -->
             <div class="pdf-viewer-area flex-1 overflow-auto bg-gray-200 relative" id="viewer-container">
+                <!-- Comments Panel (overlays on right side) -->
+                <div id="comments-panel" class="hidden absolute top-0 right-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col border-l border-gray-300 dark:border-gray-700">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Comments</h3>
+                        <button id="close-comments" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="comments-content" class="flex-1 overflow-y-auto p-4">
+                        <!-- Livewire component will be loaded here -->
+                    </div>
+                </div>
                 <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-10">
                     <div class="text-gray-800 font-bold">Loading PDF...</div>
                 </div>
@@ -256,6 +318,7 @@ container.innerHTML = `
         document.getElementById('fit-width').addEventListener('click', () => this.fitToWidth());
         document.getElementById('fullscreen').addEventListener('click', () => this.toggleFullscreen());
         document.getElementById('close-reader').addEventListener('click', () => this.close());
+        document.getElementById('toggle-annotation').addEventListener('click', () => this.toggleAnnotationMode());
 
         // New TOC event listeners
         if (this.config.showTableOfContents) {
@@ -282,6 +345,27 @@ container.innerHTML = `
             }
         }
 
+        // Annotations sidebar event listeners
+        if (this.config.enableAnnotations) {
+            const toggleAnnotationsBtn = document.getElementById('toggle-annotations-list');
+            const closeAnnotationsBtn = document.getElementById('close-annotations');
+            const toggleCommentsBtn = document.getElementById('toggle-comments');
+            const closeCommentsBtn = document.getElementById('close-comments');
+
+            if (toggleAnnotationsBtn) {
+                toggleAnnotationsBtn.addEventListener('click', () => this.toggleAnnotationsList());
+            }
+            if (closeAnnotationsBtn) {
+                closeAnnotationsBtn.addEventListener('click', () => this.hideAnnotationsList());
+            }
+            if (toggleCommentsBtn) {
+                toggleCommentsBtn.addEventListener('click', () => this.toggleCommentsPanel());
+            }
+            if (closeCommentsBtn) {
+                closeCommentsBtn.addEventListener('click', () => this.hideCommentsPanel());
+            }
+        }
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
 
@@ -303,14 +387,14 @@ container.innerHTML = `
 
     showTableOfContents() {
         if (this.tocSidebar) {
-            this.tocSidebar.classList.remove('hidden');
+            this.tocSidebar.classList.remove('hidden', '-translate-x-full');
             this.tocVisible = true;
         }
     }
 
     hideTableOfContents() {
         if (this.tocSidebar) {
-            this.tocSidebar.classList.add('hidden');
+            this.tocSidebar.classList.add('hidden', '-translate-x-full');
             this.tocVisible = false;
         }
     }
@@ -1412,6 +1496,11 @@ container.innerHTML = `
         }
     }
 
+    // Make instance globally accessible for annotations sidebar
+    exposeGlobally() {
+        window.pdfReader = this;
+    }
+
 
     getCurrentPage() {
         return this.currentPage;
@@ -1423,5 +1512,335 @@ container.innerHTML = `
 
     getProgress() {
         return Math.round((this.currentPage / this.totalPages) * 100);
+    }
+
+
+    // ==================== ANNOTATION METHODS ====================
+
+    async loadAnnotations() {
+        if (!this.config.bookId || !this.config.enableAnnotations) return;
+
+        try {
+            const response = await fetch(`/books/${this.config.bookId}/annotations`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.annotations = data.annotations || [];
+                this.renderAnnotations();
+            }
+        } catch (error) {
+            console.warn('Failed to load annotations:', error);
+        }
+    }
+
+    toggleAnnotationMode() {
+        this.annotationMode = !this.annotationMode;
+        const btn = document.getElementById('toggle-annotation');
+        
+        if (this.annotationMode) {
+            btn.classList.add('bg-blue-600', 'text-white');
+            btn.classList.remove('bg-white', 'dark:bg-gray-800');
+            this.viewerContainer.style.cursor = 'crosshair';
+            this.attachAnnotationListeners();
+        } else {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-gray-800');
+            this.viewerContainer.style.cursor = 'default';
+            this.detachAnnotationListeners();
+        }
+    }
+
+    attachAnnotationListeners() {
+        this.viewerContainer.addEventListener('mousedown', this.handleAnnotationStart);
+        this.viewerContainer.addEventListener('mousemove', this.handleAnnotationDraw);
+        this.viewerContainer.addEventListener('mouseup', this.handleAnnotationEnd);
+    }
+
+    detachAnnotationListeners() {
+        this.viewerContainer.removeEventListener('mousedown', this.handleAnnotationStart);
+        this.viewerContainer.removeEventListener('mousemove', this.handleAnnotationDraw);
+        this.viewerContainer.removeEventListener('mouseup', this.handleAnnotationEnd);
+    }
+
+    handleAnnotationStart = (e) => {
+        if (!this.annotationMode) return;
+
+        const canvas = e.target.closest('canvas');
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        this.isDrawing = true;
+        this.startX = e.clientX - rect.left;
+        this.startY = e.clientY - rect.top;
+        this.currentCanvas = canvas;
+    }
+
+    handleAnnotationDraw = (e) => {
+        if (!this.isDrawing || !this.currentCanvas) return;
+
+        const rect = this.currentCanvas.getBoundingClientRect();
+        const currentX = e.clientX - rect.left;
+        const currentY = e.clientY - rect.top;
+
+        // Draw temporary rectangle
+        this.drawTempAnnotation(this.startX, this.startY, currentX, currentY);
+    }
+
+    handleAnnotationEnd = async (e) => {
+        if (!this.isDrawing || !this.currentCanvas) return;
+
+        const rect = this.currentCanvas.getBoundingClientRect();
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
+
+        this.isDrawing = false;
+
+        // Calculate percentages
+        const x_pct = (Math.min(this.startX, endX) / rect.width) * 100;
+        const y_pct = (Math.min(this.startY, endY) / rect.height) * 100;
+        const width_pct = (Math.abs(endX - this.startX) / rect.width) * 100;
+        const height_pct = (Math.abs(endY - this.startY) / rect.height) * 100;
+
+        // Only save if annotation has meaningful size
+        if (width_pct > 1 && height_pct > 1) {
+            const pageNum = parseInt(this.currentCanvas.id.replace('page-canvas-', '')) || this.currentPage;
+            await this.saveAnnotation(pageNum, x_pct, y_pct, width_pct, height_pct);
+        }
+
+        this.currentCanvas = null;
+    }
+
+    drawTempAnnotation(x1, y1, x2, y2) {
+        // This would draw a temporary overlay - simplified for now
+        console.log('Drawing annotation:', {x1, y1, x2, y2});
+    }
+
+    async saveAnnotation(pageNumber, x_pct, y_pct, width_pct, height_pct) {
+        try {
+            const response = await fetch(`/books/${this.config.bookId}/annotations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    page_number: pageNumber,
+                    x_pct,
+                    y_pct,
+                    width_pct,
+                    height_pct,
+                    color: this.currentAnnotationColor
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.annotations.push(data.annotation);
+                this.renderAnnotations();
+                
+                // Dispatch event for Livewire
+                if (window.Livewire) {
+                    window.Livewire.dispatch('annotationCreated');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to save annotation:', error);
+        }
+    }
+
+    renderAnnotations() {
+        // Remove existing annotation overlays
+        document.querySelectorAll('.pdf-annotation-overlay').forEach(el => el.remove());
+
+        this.annotations.forEach(annotation => {
+            const pageElements = this.pageElements.get(annotation.page_number);
+            if (!pageElements) return;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'pdf-annotation-overlay absolute border-2 cursor-pointer hover:opacity-75 transition-opacity';
+            overlay.style.borderColor = annotation.color;
+            overlay.style.backgroundColor = annotation.color + '20';
+            overlay.style.left = `${annotation.x_pct}%`;
+            overlay.style.top = `${annotation.y_pct}%`;
+            overlay.style.width = `${annotation.width_pct}%`;
+            overlay.style.height = `${annotation.height_pct}%`;
+            overlay.dataset.annotationId = annotation.id;
+
+            overlay.addEventListener('click', () => {
+                this.showCommentsPanel(annotation.id);
+                if (window.Livewire) {
+                    window.Livewire.dispatch('book-annotation-selected', {annotationId: annotation.id});
+                }
+            });
+
+            pageElements.container.style.position = 'relative';
+            pageElements.container.appendChild(overlay);
+        });
+
+        // Update annotations list
+        this.updateAnnotationsList();
+    }
+
+    toggleAnnotationsList() {
+        const sidebar = document.getElementById('annotations-sidebar');
+        if (!sidebar) return;
+
+        if (sidebar.classList.contains('hidden')) {
+            sidebar.classList.remove('hidden', '-translate-x-full');
+        } else {
+            sidebar.classList.add('hidden', '-translate-x-full');
+        }
+    }
+
+    hideAnnotationsList() {
+        const sidebar = document.getElementById('annotations-sidebar');
+        if (sidebar) {
+            sidebar.classList.add('hidden');
+            sidebar.classList.add('-translate-x-full');
+        }
+    }
+
+    updateAnnotationsList() {
+        const content = document.getElementById('annotations-content');
+        if (!content) return;
+
+        if (this.annotations.length === 0) {
+            content.innerHTML = `
+                <div class="text-gray-400 text-center py-8">
+                    <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                    </svg>
+                    <p class="text-sm">No annotations yet</p>
+                    <p class="text-xs mt-2">Click "Annotate" to add</p>
+                </div>
+            `;
+            return;
+        }
+
+        const annotationsByPage = {};
+        this.annotations.forEach(ann => {
+            if (!annotationsByPage[ann.page_number]) {
+                annotationsByPage[ann.page_number] = [];
+            }
+            annotationsByPage[ann.page_number].push(ann);
+        });
+
+        let html = '<div class="space-y-2">';
+        Object.keys(annotationsByPage).sort((a, b) => a - b).forEach(pageNum => {
+            const pageAnnotations = annotationsByPage[pageNum];
+            html += `
+                <div class="bg-gray-700 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-white">Page ${pageNum}</span>
+                        <span class="text-xs text-gray-400">${pageAnnotations.length} annotation${pageAnnotations.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="space-y-2">
+            `;
+
+            pageAnnotations.forEach(ann => {
+                const isResolved = ann.resolved_at;
+                const statusColor = isResolved ? 'emerald' : 'amber';
+                html += `
+                    <button 
+                        onclick="window.pdfReader.goToAnnotation(${ann.id}, ${ann.page_number})"
+                        class="w-full text-left p-2 rounded bg-gray-800 hover:bg-gray-600 transition-colors border-l-2 border-${statusColor}-500">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full" style="background-color: ${ann.color}"></div>
+                                    <span class="text-xs text-gray-300">${isResolved ? 'Resolved' : 'Open'}</span>
+                                </div>
+                                ${ann.comments_count > 0 ? `
+                                <div class="flex items-center gap-1 mt-1">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span class="text-xs text-gray-400">${ann.comments_count}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </button>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        content.innerHTML = html;
+    }
+
+    goToAnnotation(annotationId, pageNumber) {
+        // Navigate to the page
+        this.goToPage(pageNumber);
+
+        // Highlight and open the annotation
+        setTimeout(() => {
+            const overlay = document.querySelector(`[data-annotation-id="${annotationId}"]`);
+            if (overlay) {
+                overlay.click();
+                overlay.classList.add('ring-4', 'ring-blue-500');
+                setTimeout(() => {
+                    overlay.classList.remove('ring-4', 'ring-blue-500');
+                }, 2000);
+            }
+        }, 500);
+    }
+
+    showCommentsPanel(annotationId) {
+        const panel = document.getElementById('comments-panel');
+        const commentsContent = document.getElementById('comments-content');
+        const livewireContainer = document.getElementById('livewire-comments-container');
+        
+        if (!panel || !commentsContent || !livewireContainer) return;
+
+        // Move Livewire component into comments panel
+        if (livewireContainer.children.length > 0) {
+            commentsContent.innerHTML = '';
+            commentsContent.appendChild(livewireContainer.children[0]);
+        }
+
+        panel.classList.remove('hidden');
+
+        // Dispatch event to Livewire to load comments for this annotation
+        if (window.Livewire) {
+            window.Livewire.dispatch('book-annotation-selected', {annotationId});
+        }
+    }
+
+    hideCommentsPanel() {
+        const panel = document.getElementById('comments-panel');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+    }
+
+    toggleCommentsPanel() {
+        const panel = document.getElementById('comments-panel');
+        if (!panel) return;
+
+        if (panel.classList.contains('hidden')) {
+            // Show panel
+            panel.classList.remove('hidden');
+        } else {
+            // Hide panel
+            panel.classList.add('hidden');
+        }
     }
 }
