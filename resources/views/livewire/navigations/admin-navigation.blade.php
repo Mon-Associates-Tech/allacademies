@@ -307,16 +307,32 @@
         <!-- Payments -->
         <li class="mb-0.5 last:mb-0" title="School Payments">
             <a :class="sidebarExpanded ? 'py-2' : ''"
-               class="block pl-3 rounded-lg transition {{ Route::is('admin.payments*') || Route::is('parent.fees*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.payments*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('admin.payments.index')}}">
                 <div class="flex items-center">
                     <svg
-                        class="shrink-0 fill-current {{ Route::is('admin.payments*') || Route::is('parent.fees*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        class="shrink-0 fill-current {{ Route::is('admin.payments*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                         width="16" height="16" viewBox="0 0 24 24">
                         <path
                             d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
                     </svg>
                     <span class="text-sm ml-2 sidebar-text duration-200">Payments</span>
+                </div>
+            </a>
+        </li>
+
+        <!-- Transactions -->
+        <li class="mb-0.5 last:mb-0" title="Payment Transactions">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('admin.transactions*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{route('admin.transactions.index')}}">
+                <div class="flex items-center">
+                    <svg
+                        class="shrink-0 fill-current {{ Route::is('admin.transactions*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                        width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Transactions</span>
                 </div>
             </a>
         </li>

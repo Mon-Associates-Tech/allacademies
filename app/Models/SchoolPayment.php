@@ -46,6 +46,7 @@ class SchoolPayment extends Model
         'verified_by',
         'verified_at',
         'payment_structure_id',
+        'student_payment_record_id',
         'subaccount_id',
     ];
 
@@ -332,5 +333,10 @@ class SchoolPayment extends Model
     public function financialAid()
     {
         return $this->belongsTo(FinancialAid::class);
+    }
+
+    public function studentPaymentRecord(): BelongsTo
+    {
+        return $this->belongsTo(StudentPaymentRecord::class);
     }
 }

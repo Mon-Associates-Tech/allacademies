@@ -152,7 +152,7 @@
                             <span>Users</span>
                         </a>
 
-                        <a href="{{ route('payments.index') }}"
+                        <a href="{{ route('admin.payments.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div
                                 class="flex items-center justify-center w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg mr-3 group-hover:bg-yellow-200 dark:group-hover:bg-yellow-900/50 transition-colors duration-200">
