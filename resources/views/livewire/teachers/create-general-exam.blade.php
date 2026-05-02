@@ -10,6 +10,49 @@
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create General Exam</h1>
         </div>
 
+        <!-- Subscription Selector -->
+        @if($activeSubscriptions->isEmpty())
+            <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-700 dark:text-amber-300">No active exam subscription</p>
+                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">You need an active subscription to create exams.</p>
+                        <a href="{{ route('general-exams.subscription.dashboard') }}"
+                           class="inline-block mt-2 px-3 py-1.5 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700">
+                            Get a Subscription
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="mb-6 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Exam Subscription *</label>
+                <select wire:model="subscriptionId"
+                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
+                    <option value="">Select subscription...</option>
+                    @foreach($activeSubscriptions as $sub)
+                        <option value="{{ $sub->id }}">
+                            {{ $sub->plan->name }} — {{ $sub->subjects->pluck('name')->join(', ') }}
+                            ({{ ucfirst($sub->type) }}
+                            @if($sub->type === 'online'), {{ $sub->availableParticipantSlots() }} slots left @endif
+                            @if($sub->max_exams), {{ $sub->max_exams - $sub->exams_used }} exams left @endif)
+                        </option>
+                    @endforeach
+                </select>
+                @if($selectedSubscription)
+                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        Delivery: <strong>{{ ucfirst($selectedSubscription->type) }}</strong>
+                        @if($selectedSubscription->expires_at)
+                            &nbsp;|&nbsp; Expires: {{ $selectedSubscription->expires_at->format('d M Y') }}
+                        @endif
+                    </p>
+                @endif
+            </div>
+        @endif
+
         <!-- Progress Steps -->
         <div class="mb-8">
             <div class="flex items-center justify-between">

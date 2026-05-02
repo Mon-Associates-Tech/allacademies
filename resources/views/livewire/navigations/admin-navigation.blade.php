@@ -348,7 +348,20 @@
        </li>
 
 
-        <li class="mb-0.5 last:mb-0" title="Messages">
+       <li class="mb-0.5 last:mb-0" title="Exam Subscriptions">
+           <a :class="sidebarExpanded ? 'py-2' : ''"
+              class="block pl-3 rounded-lg transition {{ Route::is('general-exams.subscription.dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+              href="{{ route('general-exams.subscription.dashboard') }}">
+               <div class="flex items-center">
+                   <svg class="shrink-0 fill-current {{ Route::is('general-exams.subscription.dashboard') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                       <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                   </svg>
+                   <span class="text-sm ml-2 sidebar-text duration-200">Exam Subscriptions</span>
+               </div>
+           </a>
+       </li>
+
+        <li class="mb-0.5 last:mb-0 hidden" title="Messages">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('admin.messages*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{route('admin.messages.index')}}">
@@ -571,6 +584,34 @@
                                 d="M8 0a4 4 0 0 1 4 4v1h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2v1a4 4 0 0 1-8 0v-1H2a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a4 4 0 0 1 4-4zm-2 6h4V4a2 2 0 0 0-4 0v2zm-2 2v2h2v-2H4zm6 0v2h2v-2h-2z"/>
                         </svg>
                         <span class="text-sm ml-2 sidebar-text duration-200">Pricing Settings</span>
+                    </div>
+                </a>
+            </li>
+
+            <li class="mb-0.5 last:mb-0" title="Exam Subscription Management">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('admin.general-exams.subscriptions') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('admin.general-exams.subscriptions') }}">
+                    <div class="flex items-center">
+                        <svg class="shrink-0 fill-current {{ Route::is('admin.general-exams.subscriptions') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Exam Subscriptions</span>
+                    </div>
+                </a>
+            </li>
+
+            <li class="mb-0.5 last:mb-0" title="Exam Pricing Tiers">
+                <a :class="sidebarExpanded ? 'py-2' : ''"
+                   class="block pl-3 rounded-lg transition {{ Route::is('admin.general-exams.pricing-tiers') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                   href="{{ route('admin.general-exams.pricing-tiers') }}">
+                    <div class="flex items-center">
+                        <svg class="shrink-0 fill-current {{ Route::is('admin.general-exams.pricing-tiers') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Exam Pricing Tiers</span>
                     </div>
                 </a>
             </li>

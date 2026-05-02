@@ -2,12 +2,12 @@
 
 namespace App\Services\GeneralExam;
 
-use App\Models\ProctoringSession;
 use App\Models\GeneralExam;
 use App\Models\GeneralExamParticipant;
 use App\Models\GeneralExamQuestion;
 use App\Models\GeneralExamSection;
 use App\Models\GeneralExamSubmission;
+use App\Models\ProctoringSession;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -213,6 +213,13 @@ class GeneralExamService
             return ['can_take' => false, 'reason' => 'Assignment is not active'];
         }
 
+        if ($assignment->delivery_type === 'online' && $assignment->general_exam_subscription_id) {
+            $subscription = $assignment->subscription;
+            if ($subscription && ! $subscription->hasAvailableParticipantSlots()) {
+                return ['can_take' => false, 'reason' => 'This exam has reached its maximum participant limit'];
+            }
+        }
+
         $participantType = Student::class;
         $participantId = $student->id;
 
@@ -237,6 +244,13 @@ class GeneralExamService
 
         if (! $participant->isEmailVerified()) {
             return ['can_take' => false, 'reason' => 'Email not verified'];
+        }
+
+        if ($assignment->delivery_type === 'online' && $assignment->general_exam_subscription_id) {
+            $subscription = $assignment->subscription;
+            if ($subscription && ! $subscription->hasAvailableParticipantSlots()) {
+                return ['can_take' => false, 'reason' => 'This exam has reached its maximum participant limit'];
+            }
         }
 
         $participantType = GeneralExamParticipant::class;
@@ -269,11 +283,19 @@ class GeneralExamService
     }
 
     /**
-     * Create a submission
+     * Create a submission — enforces participant slot limits for online subscriptions.
      */
     protected function createSubmission(GeneralExam $assignment, string $participantType, int $participantId, array $metadata = []): GeneralExamSubmission
     {
         return DB::transaction(function () use ($assignment, $participantType, $participantId, $metadata) {
+            // Enforce subscription slot limit for online exams
+            if ($assignment->delivery_type === 'online' && $assignment->general_exam_subscription_id) {
+                $subscription = $assignment->subscription;
+                if ($subscription && ! $subscription->hasAvailableParticipantSlots()) {
+                    throw new \RuntimeException('This exam has reached its maximum participant limit.');
+                }
+            }
+
             $attemptNumber = $assignment->getParticipantAttemptCount($participantType, $participantId) + 1;
 
             $submission = GeneralExamSubmission::create([
@@ -285,6 +307,11 @@ class GeneralExamService
                 'user_agent' => $metadata['user_agent'] ?? null,
                 'status' => GeneralExamSubmission::STATUS_NOT_STARTED,
             ]);
+
+            // Track participant usage on the subscription
+            if ($assignment->delivery_type === 'online' && $assignment->general_exam_subscription_id) {
+                $assignment->subscription?->incrementParticipantUsage();
+            }
 
             // Create proctoring session if enabled
             if ($assignment->proctoring_enabled) {

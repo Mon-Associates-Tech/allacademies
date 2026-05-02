@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +12,7 @@ use Illuminate\Support\Str;
 class GeneralExam extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'title',
         'description',
@@ -83,6 +83,11 @@ class GeneralExam extends Model
         } while (self::where('access_code', $code)->exists());
 
         return $code;
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(GeneralExamSubscription::class, 'general_exam_subscription_id');
     }
 
     public function teacher(): BelongsTo
