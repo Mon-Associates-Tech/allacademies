@@ -3,8 +3,9 @@
 use App\Http\Controllers\GeneralExamController;
 use App\Http\Controllers\Student\GeneralExamController as StudentGeneralExamController;
 use App\Http\Controllers\Teachers\GeneralExamController as TeacherGeneralExamController;
+use App\Services\GeneralExam\GeneralExamAnswerSheetService;
 use App\Services\GeneralExam\GeneralExamParticipantVerificationService;
-use App\Services\GeneralExam\GeneralExamService;
+use App\Services\GeneralExam\GeneralExamSubscriptionService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -156,6 +157,73 @@ Route::middleware(['auth', 'verified'])->prefix('teachers/general-exams')->name(
         // TODO: Implement CSV/Excel export
         return response()->json(['message' => 'Export functionality coming soon']);
     })->name('export');
+
+    // Download answer sheet (print subscriptions only)
+    Route::get('/{assignment}/answer-sheet', function ($assignment, GeneralExamAnswerSheetService $service) {
+        $assignment = \App\Models\GeneralExam::with(['questions', 'sections.questions', 'subscription'])
+            ->where('user_id', auth()->id())
+            ->findOrFail($assignment);
+
+        if ($assignment->delivery_type !== 'print') {
+            abort(403, 'Answer sheets are only available for print exams.');
+        }
+
+        return $service->download($assignment);
+    })->name('answer-sheet');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Subscription Routes (Authentication Required)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified'])->prefix('general-exams/subscriptions')->name('general-exams.subscription.')->group(function () {
+    // Teacher subscription dashboard
+    Route::get('/', function () {
+        return view('teachers.general-exam-subscription-dashboard');
+    })->name('dashboard');
+
+    // Paystack payment callback
+    Route::get('/payment/callback', function (GeneralExamSubscriptionService $service) {
+        $reference = request('reference');
+        if (! $reference) {
+            return redirect()->route('general-exams.subscription.dashboard')->with('error', 'No payment reference found.');
+        }
+
+        $payment = \App\Models\GeneralExamSubscriptionPayment::where('paystack_reference', $reference)->first();
+        if (! $payment) {
+            return redirect()->route('general-exams.subscription.dashboard')->with('error', 'Payment record not found.');
+        }
+
+        if ($payment->payment_type === 'topup') {
+            $result = $service->verifyTopUp($reference);
+        } else {
+            $result = $service->verifyAndActivate($reference);
+        }
+
+        if ($result['success']) {
+            return redirect()->route('general-exams.subscription.dashboard')->with('success', 'Payment successful! Your subscription is now active.');
+        }
+
+        return redirect()->route('general-exams.subscription.dashboard')->with('error', 'Payment could not be verified. Please contact support.');
+    })->name('payment.callback');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Owner Subscription Management Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified'])->prefix('admin/general-exams')->name('admin.general-exams.')->group(function () {
+    Route::get('/subscriptions', function () {
+        return view('admin.general-exam-subscriptions');
+    })->name('subscriptions');
+
+    Route::get('/pricing-tiers', function () {
+        return view('admin.general-exam-pricing-tiers');
+    })->name('pricing-tiers');
 });
 
 /*

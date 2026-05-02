@@ -86,6 +86,11 @@ class GeneralExamSubmission extends Model
         return $this->hasOne(ProctoringSession::class);
     }
 
+    public function scoreAuditLogs()
+    {
+        return $this->hasMany(GeneralExamScoreAuditLog::class);
+    }
+
     public function isInProgress(): bool
     {
         return $this->status === self::STATUS_IN_PROGRESS;

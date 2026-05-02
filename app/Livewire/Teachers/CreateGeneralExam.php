@@ -8,6 +8,7 @@ use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
+use App\Models\GeneralExamSubscription;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
 use App\Services\GeneralExam\GeneralExamAIService;
@@ -26,6 +27,9 @@ class CreateGeneralExam extends Component
     public int $currentStep = 1;
 
     public int $totalSteps = 5;
+
+    // Subscription
+    public ?int $subscriptionId = null;
 
     // Step 1: Basic Information
     public string $title = '';
@@ -149,7 +153,7 @@ class CreateGeneralExam extends Component
     ];
 
     public function boot(
-        GeneralExamService        $assignmentService,
+        GeneralExamService $assignmentService,
         GeneralExamAIService $aiService
     ): void {
         $this->assignmentService = $assignmentService;
@@ -158,13 +162,34 @@ class CreateGeneralExam extends Component
 
     public function mount(): void
     {
-        // Set default dates
         $this->starts_at = Carbon::now()->addHour()->format('Y-m-d\TH:i');
         $this->ends_at = Carbon::now()->addWeek()->format('Y-m-d\TH:i');
-
-        // Initialize with one empty section if using sections
         $this->sections = [];
         $this->questions = [];
+
+        // Pre-select the first active subscription if only one exists
+        $active = $this->activeSubscriptions;
+        if ($active->count() === 1) {
+            $this->subscriptionId = $active->first()->id;
+        }
+    }
+
+    public function getActiveSubscriptionsProperty()
+    {
+        return GeneralExamSubscription::with(['plan', 'subjects'])
+            ->where('user_id', Auth::id())
+            ->active()
+            ->get()
+            ->filter(fn ($s) => $s->canCreateExam());
+    }
+
+    public function getSelectedSubscriptionProperty(): ?GeneralExamSubscription
+    {
+        if (! $this->subscriptionId) {
+            return null;
+        }
+
+        return $this->activeSubscriptions->firstWhere('id', $this->subscriptionId);
     }
 
     // Academic Hierarchy Cascading Methods
@@ -838,38 +863,28 @@ class CreateGeneralExam extends Component
             return;
         }
 
-        try {
-            $data = [
-                'title' => $this->title,
-                'description' => $this->description,
-                'type' => $this->type,
-                'instructions' => $this->instructions,
-                'duration_in_minutes' => $this->duration_in_minutes,
-                'starts_at' => $this->starts_at ? Carbon::parse($this->starts_at) : null,
-                'ends_at' => $this->ends_at ? Carbon::parse($this->ends_at) : null,
-                'max_attempts' => $this->max_attempts,
-                'is_randomized' => $this->is_randomized,
-                'result_visibility' => $this->result_visibility,
-                'show_correct_answers' => $this->show_correct_answers,
-                'show_score_breakdown' => $this->show_score_breakdown,
-                'proctoring_enabled' => $this->proctoring_enabled,
-                'restrict_navigation' => $this->restrict_navigation,
-                'max_tab_switches' => $this->max_tab_switches,
-                'auto_submit_on_violation' => $this->auto_submit_on_violation,
-                'require_webcam' => $this->require_webcam,
-                'require_fullscreen' => $this->require_fullscreen,
-            ];
+        if (! $this->subscriptionId) {
+            session()->flash('error', 'Please select an active exam subscription before creating an exam.');
 
-            if ($this->useSections && ! empty($this->sections)) {
-                $data['sections'] = $this->sections;
-            } else {
-                $data['questions'] = $this->questions;
-            }
+            return;
+        }
+
+        $subscription = $this->selectedSubscription;
+        if (! $subscription || ! $subscription->canCreateExam()) {
+            session()->flash('error', 'Your selected subscription has no available exam slots.');
+
+            return;
+        }
+
+        try {
+            $data = $this->prepareAssignmentData();
+            $data['general_exam_subscription_id'] = $this->subscriptionId;
+            $data['delivery_type'] = $subscription->type;
 
             $assignment = $this->assignmentService->createAssignment(Auth::user(), $data);
+            $subscription->incrementExamUsage();
 
             session()->flash('success', 'Assignment created successfully! Access code: '.$assignment->access_code);
-
             $this->redirect(route('teachers.general-exams.show', $assignment));
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to create assignment: '.$e->getMessage());
@@ -883,13 +898,29 @@ class CreateGeneralExam extends Component
 
     public function publishAssignment(): void
     {
+        if (! $this->subscriptionId) {
+            session()->flash('error', 'Please select an active exam subscription before publishing.');
+
+            return;
+        }
+
+        $subscription = $this->selectedSubscription;
+        if (! $subscription || ! $subscription->canCreateExam()) {
+            session()->flash('error', 'Your selected subscription has no available exam slots.');
+
+            return;
+        }
+
         try {
             $data = $this->prepareAssignmentData();
+            $data['general_exam_subscription_id'] = $this->subscriptionId;
+            $data['delivery_type'] = $subscription->type;
+
             $assignment = $this->assignmentService->createAssignment(Auth::user(), $data);
             $this->assignmentService->publishAssignment($assignment);
+            $subscription->incrementExamUsage();
 
             session()->flash('success', 'Assignment published successfully! Access code: '.$assignment->access_code);
-
             $this->redirect(route('teachers.general-exams.show', $assignment));
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to publish assignment: '.$e->getMessage());
@@ -900,6 +931,7 @@ class CreateGeneralExam extends Component
     {
         $normalizeDifficulty = function ($value): string {
             $value = strtolower($value ?? 'medium');
+
             return in_array($value, ['easy', 'medium', 'hard'], true) ? $value : 'medium';
         };
 
@@ -932,8 +964,10 @@ class CreateGeneralExam extends Component
                     $q['keywords'] = $q['keywords'] ?? null;
                     $q['grading_rubric'] = $q['grading_rubric'] ?? null;
                     $q['difficulty'] = $normalizeDifficulty($q['difficulty'] ?? null);
+
                     return $q;
                 }, $section['questions'] ?? []);
+
                 return $section;
             }, $this->sections);
         } else {
@@ -943,6 +977,7 @@ class CreateGeneralExam extends Component
                 $q['keywords'] = $q['keywords'] ?? null;
                 $q['grading_rubric'] = $q['grading_rubric'] ?? null;
                 $q['difficulty'] = $normalizeDifficulty($q['difficulty'] ?? null);
+
                 return $q;
             }, $this->questions);
         }
@@ -976,6 +1011,8 @@ class CreateGeneralExam extends Component
         return view('livewire.teachers.create-general-exam', [
             'totalQuestions' => $this->getTotalQuestionsCount(),
             'totalMarks' => $this->getTotalMarks(),
+            'activeSubscriptions' => $this->activeSubscriptions,
+            'selectedSubscription' => $this->selectedSubscription,
         ]);
     }
 }
