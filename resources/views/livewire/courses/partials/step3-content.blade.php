@@ -116,15 +116,175 @@
                                     </div>
                                 @endif
 
-                                {{-- Quiz Selector --}}
-                                @if($newContentType === 'quiz')
+                                {{-- Feedback Field --}}
+                                @if($newContentType === 'feedback')
                                     <div>
-                                        <label class="block text-sm font-semibold text-slate-300 mb-2">Select Quiz</label>
-                                        <select wire:model="newContentQuizId"
-                                                class="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300">
-                                            <option value="" class="bg-slate-800">-- Select a Quiz --</option>
-                                            {{-- Quiz options would be populated here --}}
-                                        </select>
+                                        <label class="block text-sm font-semibold text-slate-300 mb-2">Feedback Prompt <span class="text-pink-400">*</span></label>
+                                        <textarea wire:model="feedbackPrompt" rows="4"
+                                                  placeholder="e.g. What did you find most challenging about this section? Share your thoughts..."
+                                                  class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300 resize-none"></textarea>
+                                        @error('feedbackPrompt') <span class="text-pink-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                                        <p class="text-slate-500 text-xs mt-1">Course takers will see this prompt and fill in a textarea response.</p>
+                                    </div>
+                                @endif
+
+                                {{-- Quiz Builder --}}
+                                @if($newContentType === 'quiz')
+                                    <div class="space-y-5">
+                                        {{-- Quiz Source --}}
+                                        <div>
+                                            <label class="block text-sm font-semibold text-slate-300 mb-3">Question Source</label>
+                                            <div class="grid grid-cols-3 gap-3">
+                                                @foreach(['manual' => ['label' => 'Manual', 'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'], 'ai' => ['label' => 'AI Generate', 'icon' => 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z'], 'both' => ['label' => 'Both', 'icon' => 'M4 6h16M4 10h16M4 14h16M4 18h16']] as $src => $cfg)
+                                                    <button type="button" wire:click="$set('quizSource', '{{ $src }}')"
+                                                            class="p-3 rounded-xl border-2 text-center transition-all duration-200
+                                                            {{ $quizSource === $src ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/30' }}">
+                                                        <svg class="w-5 h-5 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $cfg['icon'] }}"/></svg>
+                                                        <span class="text-xs font-medium">{{ $cfg['label'] }}</span>
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+
+                                        {{-- Question Type --}}
+                                        <div>
+                                            <label class="block text-sm font-semibold text-slate-300 mb-2">Question Type</label>
+                                            <select wire:model="quizQuestionType"
+                                                    class="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300">
+                                                <option value="multiple_choice" class="bg-slate-800">Multiple Choice</option>
+                                                <option value="true_false" class="bg-slate-800">True / False</option>
+                                                <option value="essay" class="bg-slate-800">Essay</option>
+                                            </select>
+                                        </div>
+
+                                        {{-- AI Generation Panel --}}
+                                        @if(in_array($quizSource, ['ai', 'both']))
+                                            <div class="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-3">
+                                                <h4 class="text-sm font-semibold text-emerald-300 flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                                    AI Question Generation
+                                                </h4>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Number of Questions</label>
+                                                    <input type="number" wire:model="quizQuestionCount" min="1" max="50"
+                                                           class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500 transition-all">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-slate-400 mb-1">Section Context <span class="text-slate-500">(optional — helps AI generate relevant questions)</span></label>
+                                                    <textarea wire:model="quizSectionContext" rows="3"
+                                                              placeholder="Paste or summarise the section content here..."
+                                                              class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all resize-none"></textarea>
+                                                </div>
+                                                <button type="button" wire:click="generateQuizQuestions" wire:loading.attr="disabled"
+                                                        class="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg text-white text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                                                    <span wire:loading.remove wire:target="generateQuizQuestions">
+                                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                        Generate Questions
+                                                    </span>
+                                                    <span wire:loading wire:target="generateQuizQuestions" class="flex items-center gap-2">
+                                                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        Generating...
+                                                    </span>
+                                                </button>
+                                                @if($quizGenerationError)
+                                                    <p class="text-pink-400 text-xs flex items-center gap-1">
+                                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        {{ $quizGenerationError }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        {{-- Manual Question Entry --}}
+                                        @if(in_array($quizSource, ['manual', 'both']))
+                                            <div>
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <label class="text-sm font-semibold text-slate-300">Questions</label>
+                                                    <button type="button" wire:click="addQuizQuestion"
+                                                            class="flex items-center gap-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-slate-300 transition-all">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                        Add Question
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        {{-- Questions List (shared for both manual and AI-generated) --}}
+                                        @if(!empty($quizQuestions))
+                                            <div class="space-y-4 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                                                @foreach($quizQuestions as $qi => $q)
+                                                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl space-y-3" wire:key="quiz-q-{{ $qi }}">
+                                                        <div class="flex items-start justify-between gap-2">
+                                                            <span class="text-xs font-bold text-slate-400 mt-1">Q{{ $qi + 1 }}</span>
+                                                            <button type="button" wire:click="removeQuizQuestion({{ $qi }})" class="text-slate-500 hover:text-pink-400 transition-colors flex-shrink-0">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                            </button>
+                                                        </div>
+                                                        <textarea wire:model="quizQuestions.{{ $qi }}.question" rows="2"
+                                                                  placeholder="Question text..."
+                                                                  class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-all resize-none"></textarea>
+
+                                                        @if(($q['type'] ?? '') === 'multiple_choice')
+                                                            <div class="grid grid-cols-2 gap-2">
+                                                                @foreach($q['options'] ?? ['','','',''] as $oi => $opt)
+                                                                    <input type="text" wire:model="quizQuestions.{{ $qi }}.options.{{ $oi }}"
+                                                                           placeholder="Option {{ chr(65 + $oi) }}"
+                                                                           class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-all">
+                                                                @endforeach
+                                                            </div>
+                                                            <div>
+                                                                <label class="text-xs text-slate-400 mb-1 block">Correct Answer</label>
+                                                                <select wire:model="quizQuestions.{{ $qi }}.correct_answer"
+                                                                        class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-pink-500 transition-all">
+                                                                    <option value="" class="bg-slate-800">-- Select --</option>
+                                                                    @foreach($q['options'] ?? [] as $opt)
+                                                                        @if($opt)
+                                                                            <option value="{{ $opt }}" class="bg-slate-800">{{ $opt }}</option>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        @elseif(($q['type'] ?? '') === 'true_false')
+                                                            <div>
+                                                                <label class="text-xs text-slate-400 mb-1 block">Correct Answer</label>
+                                                                <select wire:model="quizQuestions.{{ $qi }}.correct_answer"
+                                                                        class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-pink-500 transition-all">
+                                                                    <option value="" class="bg-slate-800">-- Select --</option>
+                                                                    <option value="True" class="bg-slate-800">True</option>
+                                                                    <option value="False" class="bg-slate-800">False</option>
+                                                                </select>
+                                                            </div>
+                                                        @else
+                                                            <div>
+                                                                <label class="text-xs text-slate-400 mb-1 block">Model Answer <span class="text-slate-500">(for grading reference)</span></label>
+                                                                <textarea wire:model="quizQuestions.{{ $qi }}.correct_answer" rows="2"
+                                                                          placeholder="Expected answer..."
+                                                                          class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-all resize-none"></textarea>
+                                                            </div>
+                                                        @endif
+
+                                                        <div class="flex gap-2">
+                                                            <div class="flex-1">
+                                                                <label class="text-xs text-slate-400 mb-1 block">Explanation <span class="text-slate-500">(optional)</span></label>
+                                                                <input type="text" wire:model="quizQuestions.{{ $qi }}.explanation"
+                                                                       placeholder="Why is this the correct answer?"
+                                                                       class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-all">
+                                                            </div>
+                                                            <div class="w-20">
+                                                                <label class="text-xs text-slate-400 mb-1 block">Points</label>
+                                                                <input type="number" wire:model="quizQuestions.{{ $qi }}.points" min="1"
+                                                                       class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-pink-500 transition-all">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <p class="text-xs text-slate-500">{{ count($quizQuestions) }} question(s) added</p>
+                                        @elseif($quizSource !== 'ai')
+                                            <p class="text-xs text-slate-500 text-center py-4">No questions yet. Click "Add Question" or generate with AI.</p>
+                                        @endif
+
+                                        @error('quizQuestions') <span class="text-pink-400 text-sm">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
 

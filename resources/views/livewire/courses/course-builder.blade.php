@@ -141,7 +141,7 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-300 mb-2">Price</label>
                     <div class="relative">
-                        <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+                        <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">GHS</span>
                         <input type="number" wire:model="price" step="0.01" min="0" placeholder="0.00"
                                class="w-full pl-10 pr-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300">
                     </div>

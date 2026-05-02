@@ -16,9 +16,9 @@
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center">
                 <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold sm:font-black text-white mb-4 sm:mb-6 leading-tight"
                     data-aos="fade-down" data-aos-delay="100">
-                    Join <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Individuals<br>
+                    Live Count: <span class="text-yellow-300">{{ number_format($usersCount ?? 0) }}</span> Users<br>
                     <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-500">Using All Academies</span>
+                        class="text-transparent hidden bg-clip-text bg-gradient-to-r from-blue-200 via-purple-200 to-pink-500">Using All Academies</span>
                 </h1>
 
                 <p class="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-100 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed"

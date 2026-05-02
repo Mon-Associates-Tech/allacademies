@@ -6,6 +6,7 @@ use App\Models\Lms\Course;
 use App\Models\Lms\CourseChapter;
 use App\Models\Lms\CourseContent;
 use App\Models\Lms\CourseSection;
+use App\Services\AcademicChatService;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -70,6 +71,24 @@ class CourseBuilder extends Component
 
     public ?int $editingContentId = null;
 
+    // Quiz content fields
+    public string $quizSource = 'manual'; // 'ai', 'manual', 'both'
+
+    public string $quizQuestionType = 'multiple_choice'; // 'multiple_choice', 'essay', 'true_false'
+
+    public int $quizQuestionCount = 5;
+
+    public string $quizSectionContext = ''; // section content for AI context
+
+    public array $quizQuestions = []; // manually entered or AI-generated questions
+
+    public bool $isGeneratingQuiz = false;
+
+    public string $quizGenerationError = '';
+
+    // Feedback content fields
+    public string $feedbackPrompt = ''; // the textarea prompt shown to course takers
+
     // UI state
     public string $activeTab = 'details';
 
@@ -85,6 +104,8 @@ class CourseBuilder extends Component
         'is_free' => 'boolean',
         'estimated_duration_minutes' => 'nullable|integer|min:1',
         'thumbnail' => 'nullable|image|max:20480',
+        'quizQuestionCount' => 'integer|min:1|max:50',
+        'feedbackPrompt' => 'nullable|string|max:1000',
     ];
 
     public function mount(?Course $course = null): void
@@ -381,6 +402,25 @@ class CourseBuilder extends Component
             $contentData['media_path'] = $this->newContentMedia->store('course-media', 'public');
         }
 
+        if ($this->newContentType === 'quiz') {
+            if (empty($this->quizQuestions)) {
+                $this->addError('quizQuestions', 'Please add at least one question.');
+
+                return;
+            }
+
+            $contentData['content'] = json_encode([
+                'questions' => $this->quizQuestions,
+                'question_type' => $this->quizQuestionType,
+                'source' => $this->quizSource,
+            ]);
+        }
+
+        if ($this->newContentType === 'feedback') {
+            $this->validate(['feedbackPrompt' => 'required|string|min:5']);
+            $contentData['content'] = json_encode(['prompt' => $this->feedbackPrompt]);
+        }
+
         $section->contents()->create($contentData);
 
         $this->resetContentForm();
@@ -399,6 +439,132 @@ class CourseBuilder extends Component
         $this->newContentType = 'text';
         $this->newContentBody = '';
         $this->newContentMedia = null;
+        $this->quizSource = 'manual';
+        $this->quizQuestionType = 'multiple_choice';
+        $this->quizQuestionCount = 5;
+        $this->quizSectionContext = '';
+        $this->quizQuestions = [];
+        $this->feedbackPrompt = '';
+        $this->quizGenerationError = '';
+    }
+
+    public function generateQuizQuestions(AcademicChatService $chatService): void
+    {
+        $this->quizGenerationError = '';
+
+        if (! auth()->user()?->hasOpenAiTokens()) {
+            $this->quizGenerationError = 'You need an active AI token subscription to generate questions.';
+
+            return;
+        }
+
+        $this->validate([
+            'quizQuestionCount' => 'required|integer|min:1|max:50',
+            'quizQuestionType' => 'required|in:multiple_choice,essay,true_false',
+        ]);
+
+        $this->isGeneratingQuiz = true;
+
+        $section = CourseSection::find($this->selectedSectionId);
+        $context = $this->quizSectionContext ?: ($section?->title ?? 'the course section');
+
+        $questionCount = $this->quizQuestionCount;
+        $questionType = $this->quizQuestionType;
+
+        $prompt = "Generate a quiz based on the following course section content.\n\n";
+        $prompt .= "SECTION CONTEXT:\n{$context}\n\n";
+        $prompt .= "QUIZ REQUIREMENTS:\n";
+        $prompt .= "⚠️ CRITICAL: Generate EXACTLY {$questionCount} complete questions.\n";
+        $prompt .= "- Total Questions: {$questionCount}\n";
+        $prompt .= "- Question Type: {$questionType}\n\n";
+        $prompt .= "=== RESPONSE FORMAT (JSON ONLY) ===\n";
+        $prompt .= "Return ONLY valid JSON:\n{\n  \"questions\": [\n";
+
+        if ($questionType === 'multiple_choice') {
+            $prompt .= '    {"question": "...", "type": "multiple_choice", "options": ["A", "B", "C", "D"], "correct_answer": "A", "explanation": "...", "points": 1}'."\n";
+        } elseif ($questionType === 'true_false') {
+            $prompt .= '    {"question": "...", "type": "true_false", "options": ["True", "False"], "correct_answer": "True", "explanation": "...", "points": 1}'."\n";
+        } else {
+            $prompt .= '    {"question": "...", "type": "essay", "correct_answer": "Expected answer...", "explanation": "...", "points": 3}'."\n";
+        }
+
+        $prompt .= "  ]\n}\n\n";
+        $prompt .= "RULES:\n";
+        $prompt .= "1. Generate ALL {$questionCount} questions\n";
+        $prompt .= "2. For multiple_choice: exactly 4 options\n";
+        $prompt .= "3. For true_false: options are [\"True\", \"False\"]\n";
+        $prompt .= "4. For essay: no options field\n";
+        $prompt .= "5. Return ONLY JSON, no markdown\n";
+
+        $result = $chatService->chat([
+            'input' => $prompt,
+            'request_type' => 'quiz_generation',
+            'creativity_level' => 0.7,
+            'response_length' => $questionCount * 500 + 500,
+        ]);
+
+        $this->isGeneratingQuiz = false;
+
+        if (! $result['success']) {
+            $this->quizGenerationError = 'Failed to generate questions: '.($result['error'] ?? 'Unknown error');
+
+            return;
+        }
+
+        $parsed = $this->parseGeneratedQuestions($result['content']);
+
+        if (empty($parsed)) {
+            $this->quizGenerationError = 'Could not parse generated questions. Please try again.';
+
+            return;
+        }
+
+        if ($this->quizSource === 'ai') {
+            $this->quizQuestions = $parsed;
+        } else {
+            // 'both' — append AI questions to existing manual ones
+            $this->quizQuestions = array_merge($this->quizQuestions, $parsed);
+        }
+
+        session()->flash('message', count($parsed).' questions generated successfully.');
+    }
+
+    protected function parseGeneratedQuestions(string $content): array
+    {
+        $content = preg_replace('/```(?:json)?\s*/', '', $content);
+        $content = trim($content);
+
+        $firstBrace = strpos($content, '{');
+        $lastBrace = strrpos($content, '}');
+
+        if ($firstBrace !== false && $lastBrace !== false) {
+            $json = substr($content, $firstBrace, $lastBrace - $firstBrace + 1);
+            $parsed = json_decode($json, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && isset($parsed['questions'])) {
+                return $parsed['questions'];
+            }
+        }
+
+        return [];
+    }
+
+    public function addQuizQuestion(): void
+    {
+        $this->quizQuestions[] = [
+            'question' => '',
+            'type' => $this->quizQuestionType,
+            'options' => $this->quizQuestionType !== 'essay' ? ['', '', '', ''] : [],
+            'correct_answer' => '',
+            'explanation' => '',
+            'points' => $this->quizQuestionType === 'essay' ? 3 : 1,
+        ];
+    }
+
+    public function removeQuizQuestion(int $index): void
+    {
+        array_splice($this->quizQuestions, $index, 1);
+        $this->quizQuestions = array_values($this->quizQuestions);
     }
 
     public function publishCourse(): void
