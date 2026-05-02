@@ -148,7 +148,7 @@ class GeneralExamSubscriptionManager extends Component
         $this->dispatch('flash', type: 'success', message: 'Subscription cancelled.');
     }
 
-    public function getUserSearchResultsProperty(): \Illuminate\Database\Eloquent\Collection
+    public function getUserSearchResultsProperty(): \Illuminate\Support\Collection
     {
         if (strlen($this->userSearch) < 2) {
             return collect();
