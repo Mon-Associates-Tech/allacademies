@@ -262,6 +262,11 @@ class Book extends Model
         return $this->hasMany(BookBorrowing::class);
     }
 
+    public function annotations(): HasMany
+    {
+        return $this->hasMany(BookAnnotation::class);
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(BookSubscription::class);

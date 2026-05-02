@@ -229,24 +229,6 @@
                                     <span>Read Now</span>
                                 </x-button.primary>
 
-                                <a href="{{ route('books.read', $book) }}"
-                                   class="hidden items-center justify-center w-full px-6 py-4 text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
-                                   x-data="{ loading: false }"
-                                   @click="loading = true">
-                                    <svg x-show="!loading" class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                    </svg>
-                                    <svg x-show="loading" class="animate-spin w-5 h-5 mr-2" fill="none"
-                                         viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span x-text="loading ? 'Opening...' : 'Read Now'"></span>
-                                </a>
                             @else
                                 <form method="POST"
                                       action="{{ route('books.subscribe.store', ['book' => $book]) }}">
@@ -830,14 +812,16 @@
         class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-40">
         <div class="flex space-x-3">
             @if($canRead)
-                <a href="{{ route('books.read', $book) }}"
-                   class="flex-1 flex items-center justify-center px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-xl font-medium">
+                <button
+                    type="button"
+                    onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
+                    class="flex-1 flex items-center justify-center px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-xl font-medium">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
                     Read Now
-                </a>
+                </button>
             @else
                 <form method="POST" action="{{ route('books.subscribe.store', $book) }}" class="flex-1">
                     @csrf

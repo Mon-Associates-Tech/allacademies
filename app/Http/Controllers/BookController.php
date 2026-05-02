@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Enums\PublishingStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\Book;
+use App\Models\BookAnnotation;
 use App\Models\BookBorrowing;
 use App\Models\BookCategory;
 use App\Models\BookReadingProgress;
 use App\Models\BookSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BookController extends Controller
 {
@@ -510,27 +514,123 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        if (! $book->has_softcopy) {
-            // todo: uncomment
-            // return redirect()->route('books.show', $book)->with('error', 'This book is not available for online reading');
+        if (! $this->canReadBook($user, $book)) {
+            return redirect()
+                ->route('books.show', $book)
+                ->with('error', 'Subscription required to read this book');
         }
 
-        // Check subscription for paid books
-        if ($book->annual_subscription_fee > 0) {
-            $subscription = $user
-                ->bookSubscriptions()
-                ->where('book_id', $book->id)
-                ->where('status', 'paid')
-                ->first();
+        $annotations = BookAnnotation::query()
+            ->where('book_id', $book->id)
+            ->withCount('comments')
+            ->get([
+                'id',
+                'book_id',
+                'user_id',
+                'page_number',
+                'x_pct',
+                'y_pct',
+                'width_pct',
+                'height_pct',
+                'color',
+                'resolved_at',
+            ])
+            ->map(fn (BookAnnotation $annotation) => [
+                'id' => $annotation->id,
+                'book_id' => $annotation->book_id,
+                'user_id' => $annotation->user_id,
+                'page_number' => $annotation->page_number,
+                'x_pct' => (float) $annotation->x_pct,
+                'y_pct' => (float) $annotation->y_pct,
+                'width_pct' => (float) $annotation->width_pct,
+                'height_pct' => (float) $annotation->height_pct,
+                'color' => $annotation->color,
+                'resolved_at' => $annotation->resolved_at?->toISOString(),
+                'comments_count' => $annotation->comments_count,
+            ]);
 
-            if (! $subscription && $book->author->user->id !== $user->id) {
-                return redirect()
-                    ->route('books.show', $book)
-                    ->with('error', 'Subscription required to read this book');
-            }
+        $canDownload = $this->canDownloadBook($user, $book);
+
+        $signedDownloadUrl = $canDownload
+            ? URL::temporarySignedRoute('books.file.download', now()->addMinutes(10), ['book' => $book->id])
+            : null;
+
+        return view('books.read', [
+            'book' => $book,
+            'streamUrl' => route('books.file.stream', $book),
+            'canDownload' => $canDownload,
+            'signedDownloadUrl' => $signedDownloadUrl,
+            'initialAnnotations' => $annotations,
+        ]);
+    }
+
+    public function streamFile(Book $book): StreamedResponse
+    {
+        $user = Auth::user();
+        abort_unless($this->canReadBook($user, $book), 403);
+
+        $path = $book->getRawOriginal('content_url');
+        if (! $path) {
+            $samplePath = public_path('sample.pdf');
+            abort_unless(file_exists($samplePath), 404, 'PDF file not found');
+
+            return response()->stream(function () use ($samplePath): void {
+                $stream = fopen($samplePath, 'rb');
+                fpassthru($stream);
+                fclose($stream);
+            }, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="sample.pdf"',
+            ]);
         }
 
-        return view('books.read', compact('book'));
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404, 'PDF file not found');
+        }
+
+        $stream = Storage::disk('public')->readStream($path);
+        if (! $stream) {
+            abort(404, 'Unable to open PDF file');
+        }
+
+        $headers = [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+            'Cache-Control' => 'private, max-age=0, must-revalidate',
+            'Pragma' => 'public',
+        ];
+
+        return response()->stream(function () use ($stream): void {
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, $headers);
+    }
+
+    public function downloadFile(Book $book): StreamedResponse
+    {
+        $user = Auth::user();
+        abort_unless($this->canReadBook($user, $book), 403);
+        abort_unless($this->canDownloadBook($user, $book), 403);
+
+        $path = $book->getRawOriginal('content_url');
+        if (! $path) {
+            $samplePath = public_path('sample.pdf');
+            abort_unless(file_exists($samplePath), 404, 'PDF file not found');
+
+            return response()->streamDownload(function () use ($samplePath): void {
+                $stream = fopen($samplePath, 'rb');
+                fpassthru($stream);
+                fclose($stream);
+            }, 'sample.pdf', [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404, 'PDF file not found');
+        }
+
+        return Storage::disk('public')->download($path, basename($path));
     }
 
     public function preview(Book $book)
@@ -613,5 +713,55 @@ class BookController extends Controller
             ->get();
 
         return view('books.public-show', compact('book', 'recentReviews'));
+    }
+
+    private function canReadBook($user, Book $book): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if (! $book->has_softcopy) {
+            return false;
+        }
+
+        if ($user->hasAnyRole(['owner', 'admin'])) {
+            return true;
+        }
+
+        if ((float) $book->annual_subscription_fee <= 0) {
+            return true;
+        }
+
+        $isBookAuthor = (int) ($book->author?->user?->id ?? 0) === (int) $user->id;
+        if ($isBookAuthor) {
+            return true;
+        }
+
+        return $user
+            ->bookSubscriptions()
+            ->where('book_id', $book->id)
+            ->where('status', 'paid')
+            ->exists();
+    }
+
+    private function canDownloadBook($user, Book $book): bool
+    {
+        if (! $this->canReadBook($user, $book)) {
+            return false;
+        }
+
+        if ($user->hasAnyRole(['owner', 'admin'])) {
+            return true;
+        }
+
+        $activeCycle = $user->getCurrentActiveCycle();
+        if (! $activeCycle) {
+            return false;
+        }
+
+        $activeCycle->loadMissing('pricingTier');
+
+        return (bool) $activeCycle->pricingTier?->isPremium();
     }
 }

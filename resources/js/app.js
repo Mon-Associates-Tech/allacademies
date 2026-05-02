@@ -1,5 +1,8 @@
 import './bootstrap';
 
+// Import PDF annotation viewer
+import './book_pdf_annotation_viewer.js';
+
 // Import Chart.js and make it globally available
 import Chart from 'chart.js/auto';
 window.Chart = Chart;

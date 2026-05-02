@@ -23,6 +23,7 @@ import './activity'; // Import activity tracking
 import renderMathInElement from 'katex/dist/contrib/auto-render';
 
 import './pdf_reader_wrapper'
+import './book_pdf_annotation_viewer'
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import 'videojs-markers';

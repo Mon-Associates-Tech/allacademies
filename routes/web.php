@@ -337,6 +337,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
     Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
     Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
+    Route::get('books/{book}/file', [BookController::class, 'streamFile'])->name('books.file.stream');
+    Route::get('books/{book}/download', [BookController::class, 'downloadFile'])->middleware('signed')->name('books.file.download');
 
     // Book Subscription Routes
     Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])->name('books.payment-instructions');
@@ -352,6 +354,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
     Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
     Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
+
+    // Book Annotations Routes
+    Route::get('/books/{book}/annotations', [\App\Http\Controllers\BookAnnotationController::class, 'index'])->name('books.annotations.index');
+    Route::post('/books/{book}/annotations', [\App\Http\Controllers\BookAnnotationController::class, 'store'])->name('books.annotations.store');
+    Route::delete('/books/{book}/annotations/{annotation}', [\App\Http\Controllers\BookAnnotationController::class, 'destroy'])->name('books.annotations.destroy');
 
     // Activity Tracker Routes
     Route::get('/activities', \App\Livewire\Activities\ActivityTracker::class)->name('activities.index');
