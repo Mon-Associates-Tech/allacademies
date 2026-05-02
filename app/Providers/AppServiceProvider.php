@@ -25,6 +25,9 @@ use App\Models\Note;
 use App\Models\Payment;
 use App\Models\GeneralExamParticipant;
 use App\Models\Role;
+use App\Models\AcademicFeeStructure;
+use App\Models\SchoolPayment;
+use App\Models\SchoolPaymentStructure;
 use App\Models\Student;
 use App\Models\StudentGroup;
 use App\Models\Subscription;
@@ -33,6 +36,9 @@ use App\Models\Team;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
 use App\Models\UserBook;
+use App\Observers\AcademicFeeStructureObserver;
+use App\Observers\SchoolPaymentObserver;
+use App\Observers\SchoolPaymentStructureObserver;
 use App\Services\ErrorNotificationService;
 use App\Services\Sms\NullSmsProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -83,6 +89,11 @@ class AppServiceProvider extends ServiceProvider
         Route::resourceVerbs([
             'create' => 'new',
         ]);
+
+        // Register observers
+        AcademicFeeStructure::observe(AcademicFeeStructureObserver::class);
+        SchoolPayment::observe(SchoolPaymentObserver::class);
+        SchoolPaymentStructure::observe(SchoolPaymentStructureObserver::class);
 
         $this->app->singleton(\App\Services\MediaService::class);
         // In AppServiceProvider boot method

@@ -229,6 +229,11 @@
                                 class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
                             Documents
                         </button>
+                        <button @click="activeTab = 'payments'"
+                                :class="{ 'border-indigo-500 text-indigo-600 dark:text-indigo-400': activeTab === 'payments', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300': activeTab !== 'payments' }"
+                                class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            Payments
+                        </button>
                     </nav>
                 </div>
 
@@ -486,6 +491,11 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Payments Tab -->
+                    <div x-show="activeTab === 'payments'" x-transition>
+                        @livewire('administrators.student-payment-details', ['student' => $student])
                     </div>
                 </div>
             </div>

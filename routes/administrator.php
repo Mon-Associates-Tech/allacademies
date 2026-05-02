@@ -11,10 +11,13 @@ use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
+use App\Livewire\Administrators\PaymentManagement;
+use App\Livewire\Administrators\PaymentSetup;
 use App\Livewire\Administrators\ReportCardManagement;
 use App\Livewire\Administrators\SchoolSwitcherPage;
 use App\Livewire\Administrators\StudentGroupManagement;
 use App\Livewire\Administrators\StudentManagement;
+use App\Livewire\Administrators\StudentPaymentDetails;
 use App\Livewire\Administrators\SubjectManagement;
 use App\Livewire\Administrators\TeacherManagement;
 use App\Livewire\Administrators\UserImpersonation;
@@ -114,6 +117,9 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
         ->name('school-settings.letterhead');
 
     // School Payments/Transactions
+    Route::get('/payments', PaymentManagement::class)->name('payments.index');
+    Route::get('/payments/setup', PaymentSetup::class)->name('payments.setup');
+    Route::get('/students/{student}/payments', StudentPaymentDetails::class)->name('students.payments');
     Route::get('/transactions', [SchoolPaymentController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{payment}', [SchoolPaymentController::class, 'show'])->name('transactions.show');
     Route::post('/transactions/export', [SchoolPaymentController::class, 'export'])->name('transactions.export');

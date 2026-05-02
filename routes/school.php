@@ -49,9 +49,11 @@ Route::middleware(['auth'])->group(function () {
     // School Onboarding
     Route::get('onboarding/school-setup', \App\Livewire\SchoolOnboarding::class)->name('onboarding.school-setup');
 
-    // Admin Payment Routes
+    // Admin Payment Routes (Legacy - kept for backward compatibility)
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('payments', App\Http\Controllers\Admin\SchoolPaymentController::class);
+        // Redirect old /admin/payments to new /payments route
+        Route::redirect('/payments', '/payments', 301);
+        
         Route::get('payments/export', [App\Http\Controllers\Admin\SchoolPaymentController::class, 'export'])->name('payments.export');
         Route::resource('school-payment-structures', App\Http\Controllers\Admin\SchoolPaymentStructureController::class);
     });
