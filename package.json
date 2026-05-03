@@ -22,6 +22,7 @@
     },
     "dependencies": {
         "@alpinejs/persist": "^3.14.9",
+        "@christianliebel/paint": "^1.3.0",
         "@fullcalendar/core": "^6.1.17",
         "@fullcalendar/daygrid": "^6.1.17",
         "@fullcalendar/interaction": "^6.1.17",

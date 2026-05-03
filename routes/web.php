@@ -1,12 +1,10 @@
 <?php
 
 use App\Http\Controllers\AcademicChatController;
+use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuditTeamController;
-use App\Http\Controllers\Auth\RegisterAuthorController;
-use App\Http\Controllers\Auth\RegisterGuestController;
-use App\Http\Controllers\Auth\RegisterSchoolController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookCategoryController;
 use App\Http\Controllers\BookController;
@@ -15,7 +13,6 @@ use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonNoteController;
@@ -24,19 +21,16 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SignInController;
 use App\Http\Controllers\StudentGroupController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Livewire\Chats\ChatInterface;
 use App\Livewire\Forums\ForumManagement;
 use App\Services\LocationService;
@@ -87,7 +81,6 @@ Route::get('/test-error-notification', function () {
 // Newsletter Routes
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
-
 
 // Public Payment Routes
 Route::prefix('general/pay')->name('payments.public.')->group(function () {
@@ -337,6 +330,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
     Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
     Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
+    Route::get('books/{book}/paint', [BookController::class, 'paint'])->name('books.paint');
+    Route::get('books/{book}/pdf-page-png', [BookController::class, 'pdfPageToPng'])->name('books.pdf-page-png');
 
     // Book Subscription Routes
     Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])->name('books.payment-instructions');

@@ -276,6 +276,51 @@
                                     <span class="text-sm font-medium">Notes</span>
                                 </button>
                             </div>
+                            <!-- Open in Paint -->
+                            @if($book->has_softcopy && $canRead)
+                                <div x-data="paintLauncher({{ $book->id }}, {{ $book->pages ?? 1 }})">
+                                    <button @click="launch()"
+                                            class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
+                                        <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                        </svg>
+                                        Open in Paint
+                                    </button>
+
+                                    <!-- Page picker modal -->
+                                    <div x-show="showPicker"
+                                         x-transition
+                                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                                         @click.self="showPicker = false">
+                                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-80">
+                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Select Page to Open</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Paint only supports images. Choose a page to convert to PNG.</p>
+                                            <div class="flex items-center gap-3 mb-6">
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Page:</label>
+                                                <input type="number" x-model="page" min="1" :max="totalPages"
+                                                       class="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                                <span class="text-sm text-gray-500 dark:text-gray-400">of <span x-text="totalPages"></span></span>
+                                            </div>
+                                            <div class="flex gap-3">
+                                                <button @click="openPaint()"
+                                                        :disabled="loading"
+                                                        class="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium">
+                                                    <svg x-show="loading" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                    </svg>
+                                                    <span x-text="loading ? 'Opening...' : 'Open in Paint'"></span>
+                                                </button>
+                                                <button @click="showPicker = false"
+                                                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                             <!-- Share Button -->
                             <div class="relative" x-data="{ open: false }">
                                 <button @click="open = !open"
@@ -855,4 +900,46 @@
     </div>
     </div>
     @livewire('common.p-d-f-reader-component', ['bookId' => $book->id, 'config' => ['book' => $book]])
+
+    <script>
+        function paintLauncher(bookId, totalPages) {
+            return {
+                bookId,
+                totalPages,
+                showPicker: false,
+                page: 1,
+                loading: false,
+                launch() {
+                    if (totalPages > 1) {
+                        // Show picker if there are multiple pages
+                        this.showPicker = true;
+                    } else {
+                        // If there's only one page, open directly
+                        this.openPaintWithPage(1);
+                    }
+                },
+                openPaint() {
+                    this.openPaintWithPage(this.page);
+                },
+                openPaintWithPage(pageNum) {
+                    this.loading = true;
+                    
+                    // Validate page number
+                    const page = Math.max(1, Math.min(pageNum, this.totalPages));
+                    const pageIndex = page - 1;
+                    
+                    // Construct the URL to get the PNG version of the page
+                    const pngUrl = `/books/${this.bookId}/pdf-page-png?page=${pageIndex}`;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    // Open the paint app in a new tab with the image
+                    const paintUrl = `/books/${this.bookId}/paint?imageUrl=` + encodeURIComponent(pngUrl);
+                    window.open(paintUrl, '_blank');
+                    
+                    this.loading = false;
+                    this.showPicker = false;
+                },
+            };
+        }
+    </script>
 </x-layouts.app>

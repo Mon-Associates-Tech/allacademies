@@ -10,6 +10,7 @@ use App\Models\BookCategory;
 use App\Models\BookSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -146,7 +147,7 @@ class BookController extends Controller
         $ageGroups = ['1-5', '6-9', '10-12', '13-15', '16-18', '18+'];
 
         // Get top categories with books for homepage display
-        $showCategories = !$request->hasAny([
+        $showCategories = ! $request->hasAny([
             'search',
             'categories',
             'format',
@@ -155,7 +156,7 @@ class BookController extends Controller
             'academic_groups',
             'academic_levels',
             'academic_subjects',
-        ]) && (!$request->has('page') || $request->get('page') == 1);
+        ]) && (! $request->has('page') || $request->get('page') == 1);
 
         if ($showCategories) {
             $topCategories = BookCategory::withCount('books')
@@ -242,8 +243,8 @@ class BookController extends Controller
             ->whereStatus(PublishingStatus::PUBLISHED->value)
             ->where(function ($q) {
                 // Filter books that have any of the kids age groups
-                
-                foreach ([ '0-3', '4-6','7-9', '10-12', '13-15', '16-18', '18+'] as $ageGroup) {
+
+                foreach (['0-3', '4-6', '7-9', '10-12', '13-15', '16-18', '18+'] as $ageGroup) {
                     $q->orWhereJsonContains('age_groups', $ageGroup);
                 }
             });
@@ -272,7 +273,7 @@ class BookController extends Controller
                 : [$request->age_groups];
             // Only allow kids age groups
             $ageGroups = array_intersect($ageGroups, $kidsAgeGroups);
-            if (!empty($ageGroups)) {
+            if (! empty($ageGroups)) {
                 $query->where(function ($q) use ($ageGroups) {
                     foreach ($ageGroups as $ageGroup) {
                         $q->orWhereJsonContains('age_groups', $ageGroup);
@@ -511,9 +512,41 @@ class BookController extends Controller
         return view('books.read', compact('book'));
     }
 
-    public function preview(Book $book)
+    public function preview(Book $book): \Illuminate\View\View
     {
         return view('books.preview', compact('book'));
+    }
+
+    public function paint(Book $book): \Illuminate\View\View
+    {
+        return view('books.paint', compact('book'));
+    }
+
+    public function pdfPageToPng(Request $request, Book $book): \Illuminate\Http\Response
+    {
+        abort_unless($book->has_softcopy && $book->content_url, 404);
+
+        $page = max(0, (int) $request->query('page', 0));
+        $pdfPath = Storage::disk('public')->path($book->getRawOriginal('content_url'));
+
+        abort_unless(file_exists($pdfPath), 404);
+
+        $imagick = new \Imagick;
+        $imagick->setResolution(150, 150);
+        $imagick->readImage($pdfPath.'['.($page).']');
+        $imagick->setImageFormat('png');
+        $imagick->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+        $imagick->setImageBackgroundColor('white');
+        $imagick->flattenImages();
+
+        $png = $imagick->getImageBlob();
+        $imagick->destroy();
+
+        return response($png, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="page-'.($page + 1).'.png"',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     /**
