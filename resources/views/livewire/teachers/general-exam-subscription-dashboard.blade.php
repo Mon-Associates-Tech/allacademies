@@ -48,12 +48,38 @@
                 <div class="mb-4">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Subjects (select all that apply)</label>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Academic Group</label>
+                            <select wire:model.live="selectedAcademicGroupId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                <option value="">Select group...</option>
+                                @foreach($this->academicGroups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Academic Level</label>
+                            <select wire:model.live="selectedAcademicLevelId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" {{ !$selectedAcademicGroupId ? 'disabled' : '' }}>
+                                <option value="">Select level...</option>
+                                @foreach($this->academicLevels as $level)
+                                    <option value="{{ $level->id }}">{{ $level->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     @if($this->selectedSubjects->isNotEmpty())
                         <div class="flex flex-wrap gap-1.5 mb-2">
                             @foreach($this->selectedSubjects as $subject)
                                 <span wire:key="sel-{{ $subject->id }}"
                                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
                                     {{ $subject->name }}
+                                    @if($subject->academicLevel)
+                                        <span class="opacity-80">
+                                            ({{ $subject->academicLevel->academicGroup->name ?? 'N/A' }} • {{ $subject->academicLevel->name }})
+                                        </span>
+                                    @endif
                                     <button wire:click="removeSubject({{ $subject->id }})" class="hover:text-red-500">&times;</button>
                                 </span>
                             @endforeach
@@ -62,7 +88,7 @@
 
                     <div class="relative">
                         <input type="text" wire:model.live="subjectSearch"
-                               placeholder="Type to search subjects..."
+                               placeholder="Type to search subjects in selected level..."
                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
 
                         @if($this->subjectSearchResults->isNotEmpty())
@@ -80,6 +106,19 @@
                             </div>
                         @endif
                     </div>
+
+                    @if($selectedAcademicLevelId)
+                        <div class="mt-2 max-h-44 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                            @forelse($this->filteredSubjects as $subject)
+                                <button wire:click="addSubject({{ $subject->id }})"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-violet-50 dark:hover:bg-violet-900/20 text-gray-700 dark:text-gray-300 border-b last:border-b-0 border-gray-100 dark:border-gray-700">
+                                    {{ $subject->name }}
+                                </button>
+                            @empty
+                                <div class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">No available subjects in this level.</div>
+                            @endforelse
+                        </div>
+                    @endif
                     @error('selectedSubjectIds') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
@@ -91,6 +130,14 @@
                         @error('participantCount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 @endif
+
+                <div class="mb-4">
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Exam Cycles Per Subject</label>
+                    <input type="number" wire:model.live="maxExams" min="1"
+                           class="w-full sm:w-48 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Total generations = selected subjects × cycles per subject.</p>
+                    @error('maxExams') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
 
                 @if($calculatedPrice > 0)
                     <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">

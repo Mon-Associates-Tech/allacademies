@@ -200,7 +200,7 @@ class GeneralExamParticipantVerificationService
      */
     public function generateResultUrl(GeneralExamParticipant $participant): string
     {
-        return route('general-exams.results', [
+        return route('general-exams.results.dashboard', [
             'token' => $participant->result_access_token,
         ]);
     }

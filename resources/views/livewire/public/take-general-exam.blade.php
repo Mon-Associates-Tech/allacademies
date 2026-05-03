@@ -30,10 +30,15 @@
                 <p class="text-gray-600 dark:text-gray-400 mb-6">Your responses have been recorded successfully.</p>
 
                 @if($canViewResults ?? false)
-                    <a href="{{ route('general-exams.results.token', $submission->result_token) }}"
-                       class="inline-block w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors">
-                        View Results
-                    </a>
+                    @php
+                        $participantResultToken = optional($submission->participant)->result_access_token;
+                    @endphp
+                    @if($participantResultToken)
+                        <a href="{{ route('general-exams.results.dashboard', ['token' => $participantResultToken]) }}"
+                           class="inline-block w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors">
+                            View Results
+                        </a>
+                    @endif
                 @else
                     <p class="text-sm text-gray-500 dark:text-gray-400">Results will be available after the instructor releases them.</p>
                 @endif

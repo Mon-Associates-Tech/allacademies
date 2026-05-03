@@ -119,11 +119,16 @@ class GeneralExamSubscription extends Model
 
     public function hasAvailableExamSlots(): bool
     {
-        if ($this->max_exams === null) {
-            return true;
+        $subjectCount = $this->subjects()->count();
+        if ($subjectCount === 0) {
+            return false;
         }
 
-        return $this->exams_used < $this->max_exams;
+        $cyclesPerSubject = max(1, (int) ($this->max_exams ?? 1));
+        $allowedTotalGenerations = $subjectCount * $cyclesPerSubject;
+        $usedGenerations = $this->exams()->whereNotNull('academic_subject_id')->count();
+
+        return $usedGenerations < $allowedTotalGenerations;
     }
 
     public function canCreateExam(): bool

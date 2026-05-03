@@ -18,9 +18,12 @@ class GeneralExam extends Model
         'description',
         'access_code',
         'user_id',
+        'general_exam_subscription_id',
+        'academic_subject_id',
         'teacher_id',
         'school_id',
         'type',
+        'delivery_type',
         'duration_in_minutes',
         'starts_at',
         'ends_at',
@@ -103,6 +106,11 @@ class GeneralExam extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function academicSubject(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubject::class, 'academic_subject_id');
     }
 
     public function sections(): HasMany

@@ -49,6 +49,19 @@
                             &nbsp;|&nbsp; Expires: {{ $selectedSubscription->expires_at->format('d M Y') }}
                         @endif
                     </p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Allowed subjects for this subscription:
+                        {{ $selectedSubscription->subjects->map(fn($s) => $s->name.' ('.($s->academicLevel->academicGroup->name ?? 'N/A').' • '.($s->academicLevel->name ?? 'N/A').')')->join(', ') }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Used subjects: {{ count($this->usedSubscriptionSubjectIds) }} / {{ count($this->allowedSubscriptionSubjectIds) }}
+                        @if(count($this->remainingSubscriptionSubjectIds) === 0)
+                            <span class="text-amber-600 dark:text-amber-400"> — all subjects already used</span>
+                        @endif
+                    </p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Generation limit: {{ $this->examCyclesPerSubject }} per subject.
+                    </p>
                 @endif
             </div>
         @endif
@@ -294,7 +307,7 @@
                             <select wire:model.live="selectedAcademicSubjectId" class="w-full px-3 py-2 text-sm border border-emerald-300 dark:border-emerald-700 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500" {{ !$selectedAcademicLevelId ? 'disabled' : '' }}>
                                 <option value="">Select Subject...</option>
                                 @foreach($this->academicSubjects as $subject)
-                                    <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                    <option value="{{ $subject->id }}">{{ $subject->name }} ({{ $subject->academicLevel->name ?? 'N/A' }})</option>
                                 @endforeach
                             </select>
                         </div>

@@ -34,9 +34,10 @@ class GeneralExamPricingSeeder extends Seeder
         }
 
         // ==================== SUBSCRIPTION PLANS ====================
+        // Keep only two plan types. "max_exams" is now treated as cycles per subject on subscription instances.
         $plans = [
             [
-                'name' => 'Online — One-Time',
+                'name' => 'Online',
                 'type' => 'online',
                 'max_subjects' => 10,
                 'max_exams' => 1,
@@ -44,32 +45,10 @@ class GeneralExamPricingSeeder extends Seeder
                 'duration_type' => 'one_time',
                 'duration_value' => null,
                 'base_price' => 0,
-                'description' => 'Single online exam session. Price calculated per student × subject tier.',
+                'description' => 'Online exam delivery. Price = per-student tier by selected subject count. Exam cycles per subject are chosen at subscription purchase.',
             ],
             [
-                'name' => 'Online — 5 Exams',
-                'type' => 'online',
-                'max_subjects' => 10,
-                'max_exams' => 5,
-                'max_participants' => null,
-                'duration_type' => 'fixed_count',
-                'duration_value' => 5,
-                'base_price' => 0,
-                'description' => 'Bundle of 5 online exams. Shared participant pool across all exams.',
-            ],
-            [
-                'name' => 'Online — Monthly',
-                'type' => 'online',
-                'max_subjects' => 10,
-                'max_exams' => null,
-                'max_participants' => null,
-                'duration_type' => 'period',
-                'duration_value' => 30,
-                'base_price' => 0,
-                'description' => 'Unlimited online exams for 30 days. Participant slots shared across all exams.',
-            ],
-            [
-                'name' => 'Print — One-Time',
+                'name' => 'Print',
                 'type' => 'print',
                 'max_subjects' => 10,
                 'max_exams' => 1,
@@ -77,20 +56,15 @@ class GeneralExamPricingSeeder extends Seeder
                 'duration_type' => 'one_time',
                 'duration_value' => null,
                 'base_price' => 0,
-                'description' => 'Single print exam. Answer sheet generated alongside question paper. Flat rate per subject.',
-            ],
-            [
-                'name' => 'Print — 5 Exams',
-                'type' => 'print',
-                'max_subjects' => 10,
-                'max_exams' => 5,
-                'max_participants' => null,
-                'duration_type' => 'fixed_count',
-                'duration_value' => 5,
-                'base_price' => 0,
-                'description' => 'Bundle of 5 print exams.',
+                'description' => 'Print exam delivery. Price = print flat-rate tier by selected subject count. Exam cycles per subject are chosen at subscription purchase.',
             ],
         ];
+
+        $activeNames = collect($plans)->pluck('name');
+
+        GeneralExamSubscriptionPlan::query()
+            ->whereNotIn('name', $activeNames)
+            ->update(['is_active' => false]);
 
         foreach ($plans as $plan) {
             GeneralExamSubscriptionPlan::updateOrCreate(

@@ -74,16 +74,21 @@ class GeneralExamSubscriptionService
     {
         $plan = GeneralExamSubscriptionPlan::findOrFail($config['plan_id']);
         $subjectCount = count($config['subject_ids']);
+        $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
         $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0);
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count.');
+        }
 
-        return DB::transaction(function () use ($user, $plan, $config, $amount) {
+        return DB::transaction(function () use ($user, $plan, $config, $amount, $examCyclesPerSubject) {
             $subscription = GeneralExamSubscription::create([
                 'user_id' => $user->id,
                 'general_exam_subscription_plan_id' => $plan->id,
                 'type' => $config['type'],
                 'status' => GeneralExamSubscriptionStatus::Pending,
                 'participant_slots' => $config['participant_count'] ?? 0,
-                'max_exams' => $config['max_exams'] ?? $plan->max_exams,
+                // Stored as "exam cycles per subject".
+                'max_exams' => $examCyclesPerSubject,
                 'amount_paid' => $amount,
             ]);
 
@@ -173,6 +178,9 @@ class GeneralExamSubscriptionService
     public function initiateTopUp(User $user, GeneralExamSubscription $subscription, int $additionalParticipants): array
     {
         $amount = $this->calculateTopUpPrice($subscription, $additionalParticipants);
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Unable to initialize top-up: calculated amount is invalid.');
+        }
 
         $reference = 'GES-TOP-'.strtoupper(Str::random(10));
 
@@ -257,15 +265,16 @@ class GeneralExamSubscriptionService
     public function grantSubscription(User $owner, User $targetUser, array $config): GeneralExamSubscription
     {
         $plan = GeneralExamSubscriptionPlan::findOrFail($config['plan_id']);
+        $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
 
-        return DB::transaction(function () use ($owner, $targetUser, $plan, $config) {
+        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $examCyclesPerSubject) {
             $subscription = GeneralExamSubscription::create([
                 'user_id' => $targetUser->id,
                 'general_exam_subscription_plan_id' => $plan->id,
                 'type' => $config['type'],
                 'status' => GeneralExamSubscriptionStatus::Active,
                 'participant_slots' => $config['participant_count'] ?? 0,
-                'max_exams' => $config['max_exams'] ?? $plan->max_exams,
+                'max_exams' => $examCyclesPerSubject,
                 'amount_paid' => 0,
                 'granted_by_owner' => true,
                 'granted_by' => $owner->id,
@@ -288,16 +297,20 @@ class GeneralExamSubscriptionService
     {
         $plan = GeneralExamSubscriptionPlan::findOrFail($config['plan_id']);
         $subjectCount = count($config['subject_ids']);
+        $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
         $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0);
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count.');
+        }
 
-        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $amount) {
+        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $amount, $examCyclesPerSubject) {
             $subscription = GeneralExamSubscription::create([
                 'user_id' => $targetUser->id,
                 'general_exam_subscription_plan_id' => $plan->id,
                 'type' => $config['type'],
                 'status' => GeneralExamSubscriptionStatus::Pending,
                 'participant_slots' => $config['participant_count'] ?? 0,
-                'max_exams' => $config['max_exams'] ?? $plan->max_exams,
+                'max_exams' => $examCyclesPerSubject,
                 'amount_paid' => $amount,
                 'granted_by_owner' => true,
                 'granted_by' => $owner->id,

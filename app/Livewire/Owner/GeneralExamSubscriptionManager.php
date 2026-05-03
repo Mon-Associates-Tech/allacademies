@@ -38,7 +38,7 @@ class GeneralExamSubscriptionManager extends Component
 
     public int $participantCount = 30;
 
-    public ?int $maxExams = null;
+    public ?int $maxExams = 1;
 
     public string $allocationMode = 'grant'; // grant or payment
 
@@ -105,6 +105,7 @@ class GeneralExamSubscriptionManager extends Component
         $this->allocationMode = 'grant';
         $this->participantCount = 30;
         $this->type = 'online';
+        $this->maxExams = 1;
         $this->showAllocationForm = true;
     }
 
@@ -116,6 +117,7 @@ class GeneralExamSubscriptionManager extends Component
             'type' => 'required|in:online,print',
             'selectedSubjectIds' => 'required|array|min:1',
             'participantCount' => 'required_if:type,online|integer|min:1',
+            'maxExams' => 'required|integer|min:1',
         ]);
 
         $owner = auth()->user();
@@ -129,15 +131,19 @@ class GeneralExamSubscriptionManager extends Component
             'max_exams' => $this->maxExams,
         ];
 
-        if ($this->allocationMode === 'grant') {
-            $service->grantSubscription($owner, $targetUser, $config);
-            $this->showAllocationForm = false;
-            $this->dispatch('flash', type: 'success', message: "Subscription granted to {$targetUser->name}.");
-        } else {
-            $result = $service->initiateOwnerPayment($owner, $targetUser, $config);
-            if ($result['authorization_url']) {
-                $this->redirect($result['authorization_url']);
+        try {
+            if ($this->allocationMode === 'grant') {
+                $service->grantSubscription($owner, $targetUser, $config);
+                $this->showAllocationForm = false;
+                $this->dispatch('flash', type: 'success', message: "Subscription granted to {$targetUser->name}.");
+            } else {
+                $result = $service->initiateOwnerPayment($owner, $targetUser, $config);
+                if ($result['authorization_url']) {
+                    $this->redirect($result['authorization_url']);
+                }
             }
+        } catch (\Throwable $e) {
+            $this->dispatch('flash', type: 'error', message: $e->getMessage());
         }
     }
 

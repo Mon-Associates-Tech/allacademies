@@ -92,6 +92,12 @@ Route::get('/general-exams/results', [GeneralExamController::class, 'results'])
 Route::get('/general-exams/results/{token}', [GeneralExamController::class, 'results'])
     ->name('general-exams.results.token');
 
+Route::get('/general-exams/results/{token}/dashboard', [GeneralExamController::class, 'dashboard'])
+    ->name('general-exams.results.dashboard');
+
+Route::get('/general-exams/results/{token}/submission/{submission}', [GeneralExamController::class, 'submissionResult'])
+    ->name('general-exams.results.submission');
+
 /*
 |--------------------------------------------------------------------------
 | Teacher Routes (Authentication Required)

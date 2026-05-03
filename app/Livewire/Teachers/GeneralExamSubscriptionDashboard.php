@@ -3,6 +3,8 @@
 namespace App\Livewire\Teachers;
 
 use App\Models\AcademicSubject;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
 use App\Models\GeneralExam;
 use App\Models\GeneralExamScoreAuditLog;
 use App\Models\GeneralExamSubmission;
@@ -29,9 +31,13 @@ class GeneralExamSubscriptionDashboard extends Component
 
     public string $subjectSearch = '';
 
+    public ?int $selectedAcademicGroupId = null;
+
+    public ?int $selectedAcademicLevelId = null;
+
     public int $participantCount = 30;
 
-    public ?int $maxExams = null;
+    public ?int $maxExams = 1;
 
     public float $calculatedPrice = 0;
 
@@ -89,6 +95,7 @@ class GeneralExamSubscriptionDashboard extends Component
         }
 
         return AcademicSubject::withoutGlobalScopes()
+            ->when($this->selectedAcademicLevelId, fn ($q) => $q->where('academic_level_id', $this->selectedAcademicLevelId))
             ->where('name', 'like', "%{$this->subjectSearch}%")
             ->whereNotIn('id', $this->selectedSubjectIds)
             ->orderBy('name')
@@ -103,8 +110,47 @@ class GeneralExamSubscriptionDashboard extends Component
         }
 
         return AcademicSubject::withoutGlobalScopes()
+            ->with('academicLevel.academicGroup')
             ->whereIn('id', $this->selectedSubjectIds)
             ->get();
+    }
+
+    public function updatedSelectedAcademicGroupId(): void
+    {
+        $this->selectedAcademicLevelId = null;
+        $this->subjectSearch = '';
+    }
+
+    public function getAcademicGroupsProperty()
+    {
+        return AcademicGroup::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    public function getAcademicLevelsProperty()
+    {
+        if (! $this->selectedAcademicGroupId) {
+            return collect();
+        }
+
+        return AcademicLevel::query()
+            ->where('academic_group_id', $this->selectedAcademicGroupId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    public function getFilteredSubjectsProperty()
+    {
+        if (! $this->selectedAcademicLevelId) {
+            return collect();
+        }
+
+        return AcademicSubject::withoutGlobalScopes()
+            ->where('academic_level_id', $this->selectedAcademicLevelId)
+            ->whereNotIn('id', $this->selectedSubjectIds)
+            ->orderBy('name')
+            ->get(['id', 'name', 'academic_level_id']);
     }
 
     // ==================== PURCHASE FLOW ====================
@@ -129,6 +175,13 @@ class GeneralExamSubscriptionDashboard extends Component
         $this->recalculatePrice();
     }
 
+    public function updatedShowPurchaseForm(): void
+    {
+        if ($this->showPurchaseForm && ! $this->maxExams) {
+            $this->maxExams = 1;
+        }
+    }
+
     public function recalculatePrice(): void
     {
         if (! $this->planId || empty($this->selectedSubjectIds)) {
@@ -150,18 +203,23 @@ class GeneralExamSubscriptionDashboard extends Component
             'type' => 'required|in:online,print',
             'selectedSubjectIds' => 'required|array|min:1',
             'participantCount' => 'required_if:type,online|integer|min:1',
+            'maxExams' => 'required|integer|min:1',
         ]);
 
-        $result = $service->initiatePayment(auth()->user(), [
-            'plan_id' => $this->planId,
-            'type' => $this->type,
-            'subject_ids' => $this->selectedSubjectIds,
-            'participant_count' => $this->type === 'online' ? $this->participantCount : 0,
-            'max_exams' => $this->maxExams,
-        ]);
+        try {
+            $result = $service->initiatePayment(auth()->user(), [
+                'plan_id' => $this->planId,
+                'type' => $this->type,
+                'subject_ids' => $this->selectedSubjectIds,
+                'participant_count' => $this->type === 'online' ? $this->participantCount : 0,
+                'max_exams' => $this->maxExams,
+            ]);
 
-        if ($result['authorization_url']) {
-            $this->redirect($result['authorization_url']);
+            if ($result['authorization_url']) {
+                $this->redirect($result['authorization_url']);
+            }
+        } catch (\Throwable $e) {
+            session()->flash('error', $e->getMessage());
         }
     }
 
@@ -199,11 +257,15 @@ class GeneralExamSubscriptionDashboard extends Component
     {
         $this->validate(['additionalParticipants' => 'required|integer|min:1']);
 
-        $subscription = GeneralExamSubscription::findOrFail($this->topUpSubscriptionId);
-        $result = $service->initiateTopUp(auth()->user(), $subscription, $this->additionalParticipants);
+        try {
+            $subscription = GeneralExamSubscription::findOrFail($this->topUpSubscriptionId);
+            $result = $service->initiateTopUp(auth()->user(), $subscription, $this->additionalParticipants);
 
-        if ($result['authorization_url']) {
-            $this->redirect($result['authorization_url']);
+            if ($result['authorization_url']) {
+                $this->redirect($result['authorization_url']);
+            }
+        } catch (\Throwable $e) {
+            session()->flash('error', $e->getMessage());
         }
     }
 

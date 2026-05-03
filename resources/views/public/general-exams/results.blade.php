@@ -13,6 +13,11 @@
                     </form>
                 </div>
             @elseif(isset($submission) && $submission)
+                <div class="mb-4">
+                    <a href="{{ route('general-exams.results.dashboard', ['token' => $token]) }}" class="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                        ← Back to results dashboard
+                    </a>
+                </div>
                 <!-- Header -->
                 <div class="mb-6 text-center">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $submission->assignment->title ?? 'Assignment Result' }}</h1>
@@ -177,15 +182,6 @@
                     </a>
                 </div>
 
-                <!-- Save Results Notice -->
-                <div class="mt-8 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl text-center">
-                    <p class="text-sm text-amber-700 dark:text-amber-300">
-                        <strong>Important:</strong> Save this page URL to access your results later.
-                        @if(isset($token))
-                            <br>Your results token: <code class="px-2 py-1 bg-amber-100 dark:bg-amber-800 rounded">{{ $token }}</code>
-                        @endif
-                    </p>
-                </div>
             @else
                 <!-- No Submission Found -->
                 <div class="text-center py-12">

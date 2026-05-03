@@ -108,7 +108,7 @@
                     </div>
                 @endif
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Max Exams (blank = plan default)</label>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Exam Cycles Per Subject</label>
                     <input type="number" wire:model="maxExams" min="1"
                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
                 </div>

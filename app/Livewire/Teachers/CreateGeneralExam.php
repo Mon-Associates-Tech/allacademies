@@ -9,6 +9,7 @@ use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
 use App\Models\GeneralExamSubscription;
+use App\Models\GeneralExam;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
 use App\Services\GeneralExam\GeneralExamAIService;
@@ -192,6 +193,79 @@ class CreateGeneralExam extends Component
         return $this->activeSubscriptions->firstWhere('id', $this->subscriptionId);
     }
 
+    public function updatedSubscriptionId(): void
+    {
+        $this->selectedAcademicGroupId = null;
+        $this->selectedAcademicLevelId = null;
+        $this->selectedAcademicSubjectId = null;
+        $this->selectedAcademicTopicId = null;
+        $this->selectedAcademicSubtopicId = null;
+        $this->updateAvailableQuestionsCount();
+    }
+
+    public function getAllowedSubscriptionSubjectsProperty(): Collection
+    {
+        if (! $this->selectedSubscription) {
+            return collect();
+        }
+
+        return $this->selectedSubscription->subjects()
+            ->with('academicLevel.academicGroup')
+            ->get();
+    }
+
+    public function getAllowedSubscriptionSubjectIdsProperty(): array
+    {
+        return $this->allowedSubscriptionSubjects->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    public function getUsedSubscriptionSubjectIdsProperty(): array
+    {
+        if (! $this->selectedSubscription) {
+            return [];
+        }
+
+        return GeneralExam::query()
+            ->where('general_exam_subscription_id', $this->selectedSubscription->id)
+            ->whereNotNull('academic_subject_id')
+            ->pluck('academic_subject_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public function getSubjectGenerationCountsProperty(): array
+    {
+        if (! $this->selectedSubscription) {
+            return [];
+        }
+
+        return GeneralExam::query()
+            ->where('general_exam_subscription_id', $this->selectedSubscription->id)
+            ->whereNotNull('academic_subject_id')
+            ->selectRaw('academic_subject_id, COUNT(*) as aggregate')
+            ->groupBy('academic_subject_id')
+            ->pluck('aggregate', 'academic_subject_id')
+            ->mapWithKeys(fn ($count, $subjectId) => [(int) $subjectId => (int) $count])
+            ->all();
+    }
+
+    public function getExamCyclesPerSubjectProperty(): int
+    {
+        return max(1, (int) ($this->selectedSubscription?->max_exams ?? 1));
+    }
+
+    public function getRemainingSubscriptionSubjectIdsProperty(): array
+    {
+        $counts = $this->subjectGenerationCounts;
+        $limit = $this->examCyclesPerSubject;
+
+        return array_values(array_filter($this->allowedSubscriptionSubjectIds, function ($subjectId) use ($counts, $limit) {
+            return ($counts[(int) $subjectId] ?? 0) < $limit;
+        }));
+    }
+
     // Academic Hierarchy Cascading Methods
     public function updatedSelectedAcademicGroupId(): void
     {
@@ -245,7 +319,15 @@ class CreateGeneralExam extends Component
     // Get Academic Groups for dropdown
     public function getAcademicGroupsProperty(): Collection
     {
+        $subjectIds = $this->allowedSubscriptionSubjectIds;
+        if (empty($subjectIds)) {
+            return collect();
+        }
+
         return AcademicGroup::query()
+            ->whereHas('academicLevels.academicSubjects', function ($q) use ($subjectIds) {
+                $q->whereIn('academic_subjects.id', $subjectIds);
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
     }
@@ -257,7 +339,15 @@ class CreateGeneralExam extends Component
             return collect();
         }
 
+        $subjectIds = $this->allowedSubscriptionSubjectIds;
+        if (empty($subjectIds)) {
+            return collect();
+        }
+
         return AcademicLevel::where('academic_group_id', $this->selectedAcademicGroupId)
+            ->whereHas('academicSubjects', function ($q) use ($subjectIds) {
+                $q->whereIn('academic_subjects.id', $subjectIds);
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
     }
@@ -269,9 +359,17 @@ class CreateGeneralExam extends Component
             return collect();
         }
 
+        $subjectIds = $this->allowedSubscriptionSubjectIds;
+        if (empty($subjectIds)) {
+            return collect();
+        }
+
         return AcademicSubject::where('academic_level_id', $this->selectedAcademicLevelId)
+            ->whereIn('id', $subjectIds)
+            ->whereIn('id', $this->remainingSubscriptionSubjectIds)
+            ->with('academicLevel')
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'academic_level_id']);
     }
 
     // Get Academic Topics based on selected subject
@@ -348,6 +446,11 @@ class CreateGeneralExam extends Component
     {
         if (! $this->selectedAcademicSubjectId) {
             $this->addError('academicSelection', 'Please select at least an academic subject.');
+
+            return;
+        }
+        if (! in_array((int) $this->selectedAcademicSubjectId, $this->allowedSubscriptionSubjectIds, true)) {
+            $this->addError('academicSelection', 'Selected subject is not part of your subscription.');
 
             return;
         }
@@ -586,6 +689,25 @@ class CreateGeneralExam extends Component
     protected function validateStep4(): bool
     {
         $this->resetErrorBag();
+
+        if (! $this->selectedAcademicSubjectId) {
+            $this->addError('academicSelection', 'Please select an academic subject.');
+
+            return false;
+        }
+
+        if (! in_array((int) $this->selectedAcademicSubjectId, $this->allowedSubscriptionSubjectIds, true)) {
+            $this->addError('academicSelection', 'Selected subject is not part of your subscription.');
+
+            return false;
+        }
+
+        $subjectGenerationCount = $this->subjectGenerationCounts[(int) $this->selectedAcademicSubjectId] ?? 0;
+        if ($subjectGenerationCount >= $this->examCyclesPerSubject) {
+            $this->addError('academicSelection', 'You have reached the generation limit for this subject in this subscription.');
+
+            return false;
+        }
 
         $totalQuestions = $this->getTotalQuestionsCount();
 
@@ -875,10 +997,32 @@ class CreateGeneralExam extends Component
 
             return;
         }
+        if (empty($this->remainingSubscriptionSubjectIds)) {
+            session()->flash('error', 'All subjects in this subscription have already been used for exam generation.');
+
+            return;
+        }
+        if (! in_array((int) $this->selectedAcademicSubjectId, $this->allowedSubscriptionSubjectIds, true)) {
+            session()->flash('error', 'Please select a subject that is part of the selected subscription.');
+
+            return;
+        }
+        $subjectGenerationCount = $this->subjectGenerationCounts[(int) $this->selectedAcademicSubjectId] ?? 0;
+        if ($subjectGenerationCount >= $this->examCyclesPerSubject) {
+            session()->flash('error', 'You have reached the generation limit for this subject in the selected subscription.');
+
+            return;
+        }
+        if (! in_array((int) $this->selectedAcademicSubjectId, $this->allowedSubscriptionSubjectIds, true)) {
+            session()->flash('error', 'Please select a subject that is part of the selected subscription.');
+
+            return;
+        }
 
         try {
             $data = $this->prepareAssignmentData();
             $data['general_exam_subscription_id'] = $this->subscriptionId;
+            $data['academic_subject_id'] = $this->selectedAcademicSubjectId;
             $data['delivery_type'] = $subscription->type;
 
             $assignment = $this->assignmentService->createAssignment(Auth::user(), $data);
@@ -910,10 +1054,32 @@ class CreateGeneralExam extends Component
 
             return;
         }
+        if (empty($this->remainingSubscriptionSubjectIds)) {
+            session()->flash('error', 'All subjects in this subscription have already been used for exam generation.');
+
+            return;
+        }
+        if (! in_array((int) $this->selectedAcademicSubjectId, $this->allowedSubscriptionSubjectIds, true)) {
+            session()->flash('error', 'Please select a subject that is part of the selected subscription.');
+
+            return;
+        }
+        $subjectGenerationCount = $this->subjectGenerationCounts[(int) $this->selectedAcademicSubjectId] ?? 0;
+        if ($subjectGenerationCount >= $this->examCyclesPerSubject) {
+            session()->flash('error', 'You have reached the generation limit for this subject in the selected subscription.');
+
+            return;
+        }
+        if (! in_array((int) $this->selectedAcademicSubjectId, $this->allowedSubscriptionSubjectIds, true)) {
+            session()->flash('error', 'Please select a subject that is part of the selected subscription.');
+
+            return;
+        }
 
         try {
             $data = $this->prepareAssignmentData();
             $data['general_exam_subscription_id'] = $this->subscriptionId;
+            $data['academic_subject_id'] = $this->selectedAcademicSubjectId;
             $data['delivery_type'] = $subscription->type;
 
             $assignment = $this->assignmentService->createAssignment(Auth::user(), $data);
