@@ -19,27 +19,44 @@
 
         if (imageUrl) {
             const paint = document.getElementById('paint');
+            const waitForDrawingContext = async (timeoutMs = 10000) => {
+                const started = Date.now();
+                while (Date.now() - started < timeoutMs) {
+                    const ctx = paint?.drawingContext;
+                    if (ctx?.canvas && ctx?.previewCanvas && ctx?.context) {
+                        return ctx;
+                    }
+                    await new Promise((resolve) => setTimeout(resolve, 50));
+                }
+                throw new Error('Paint drawing context did not initialize in time.');
+            };
 
-            const loadImage = async () => {
+            const loadImageElement = (src) => new Promise((resolve, reject) => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+
+            const loadImageIntoCanvas = async () => {
                 try {
-                    const response = await fetch(imageUrl, { credentials: 'include' });
-                    const blob = await response.blob();
-                    const file = new File([blob], 'page.png', { type: 'image/png' });
+                    const ctx = await waitForDrawingContext();
+                    const img = await loadImageElement(imageUrl);
 
-                    const tryOpen = () => {
-                        if (typeof paint.openFile === 'function') {
-                            paint.openFile(file);
-                        } else {
-                            setTimeout(tryOpen, 100);
-                        }
-                    };
-                    tryOpen();
+                    ctx.canvas.width = ctx.previewCanvas.width = img.naturalWidth || img.width;
+                    ctx.canvas.height = ctx.previewCanvas.height = img.naturalHeight || img.height;
+                    ctx.context.fillStyle = 'white';
+                    ctx.context.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.context.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.document.title = 'page.png';
+                    ctx.document.dirty = false;
                 } catch (e) {
-                    console.error('Failed to load image into Paint:', e);
+                    console.error('Failed to load image into Paint:', e, { imageUrl });
                 }
             };
 
-            customElements.whenDefined('paint-app').then(loadImage);
+            customElements.whenDefined('paint-app').then(loadImageIntoCanvas);
         }
     </script>
 </body>
