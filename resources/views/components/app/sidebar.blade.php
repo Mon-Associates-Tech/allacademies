@@ -107,6 +107,8 @@
                     // Get role value for comparison
                     $userRole = auth()->user()->role;
                     $roleValue = $userRole instanceof UserRole ? $userRole->value : $userRole;
+                    $generalExamAccessRoles = config('access.general_exams.access_roles', ['admin', 'owner', 'teacher']);
+                    $canAccessGeneralExams = in_array(strtolower((string) $roleValue), $generalExamAccessRoles, true);
                 @endphp
 
                 <div class="mb-4">
@@ -270,6 +272,79 @@
 
 
                     <!-- Other Sections -->
+                    @if($canAccessGeneralExams)
+                        <li class="px-3 py-2 rounded-sm mb-0.5 mt-4">
+                            <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">General Exams</span>
+                        </li>
+
+                        <li class="mb-0.5" title="General Exams Dashboard">
+                            <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                               class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('examinations-hub.dashboard') }}">
+                                <div class="flex items-center">
+                                    <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.dashboard') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Exams Dashboard</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        <li class="mb-0.5" title="Manage General Exams">
+                            <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                               class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.manage') || Route::is('examinations-hub.exams.show') || Route::is('examinations-hub.submissions.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('examinations-hub.manage') }}">
+                                <div class="flex items-center">
+                                    <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.manage') || Route::is('examinations-hub.exams.show') || Route::is('examinations-hub.submissions.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                        <path d="M4 4h16v2H4zm0 4h16v12H4zm4 3v2h8v-2zm0 4v2h5v-2z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Manage Exams</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        <li class="mb-0.5" title="Create General Exam">
+                            <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                               class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('examinations-hub.create') }}">
+                                <div class="flex items-center">
+                                    <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.create') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                        <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Create Exam</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        <li class="mb-0.5" title="Exam Subscriptions">
+                            <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                               class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.subscriptions') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               href="{{ route('examinations-hub.subscriptions') }}">
+                                <div class="flex items-center">
+                                    <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.subscriptions') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                        <path d="M2 6h20v12H2zm2 2v8h16V8zm2 2h6v2H6z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Exam Subscriptions</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        @if(in_array(strtolower((string) $roleValue), ['admin', 'owner'], true))
+                            <li class="mb-0.5 last:mb-2" title="Admin Exam Pricing">
+                                <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
+                                   class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.admin') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                   href="{{ route('examinations-hub.admin') }}">
+                                    <div class="flex items-center">
+                                        <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.admin') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                            <path d="M12 2 1 7l11 5 9-4.09V17h2V7zM5 10.18V14c0 2.21 3.13 4 7 4s7-1.79 7-4v-3.82l-7 3.18z"/>
+                                        </svg>
+                                        <span class="text-sm ml-2 sidebar-text duration-200">Exam Admin</span>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+                    @endif
+
                     <li class="px-3 py-2 rounded-sm mb-0.5 mt-4">
                         <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase sidebar-text">Resources</span>
                     </li>

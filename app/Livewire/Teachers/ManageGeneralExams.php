@@ -3,6 +3,7 @@
 namespace App\Livewire\Teachers;
 
 use App\Models\GeneralExam;
+use App\Models\GeneralExamSubmission;
 use App\Services\GeneralExam\GeneralExamService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -247,18 +248,18 @@ class ManageGeneralExams extends Component
 
     protected function getAssignment(int $id): ?GeneralExam
     {
-        $query = GeneralExam::where('id', $id);
+        return $this->baseAssignmentQuery()->where('id', $id)->first();
+    }
 
-        $query->where(function ($q) {
+    protected function baseAssignmentQuery()
+    {
+        return GeneralExam::where(function ($q) {
             $q->where('user_id', $this->userId);
 
-            // Backward compatibility: include legacy teacher ownership
             if (Auth::user()?->teacher) {
                 $q->orWhere('teacher_id', Auth::user()->teacher->id);
             }
         });
-
-        return $query->first();
     }
 
     public function getAssignmentsProperty()
@@ -267,13 +268,7 @@ class ManageGeneralExams extends Component
             return collect();
         }
 
-        $query = GeneralExam::where(function ($q) {
-            $q->where('user_id', $this->userId);
-
-            if (Auth::user()?->teacher) {
-                $q->orWhere('teacher_id', Auth::user()->teacher->id);
-            }
-        })->withCount(['submissions', 'questions']);
+        $query = $this->baseAssignmentQuery()->withCount(['submissions', 'questions', 'sections']);
 
         // Search filter
         if (! empty($this->search)) {
@@ -307,12 +302,7 @@ class ManageGeneralExams extends Component
         }
 
         $baseFilter = function ($status) {
-            return GeneralExam::where(function ($q) {
-                $q->where('user_id', $this->userId);
-                if (Auth::user()?->teacher) {
-                    $q->orWhere('teacher_id', Auth::user()->teacher->id);
-                }
-            })->where('status', $status)->count();
+            return $this->baseAssignmentQuery()->where('status', $status)->count();
         };
 
         return [
@@ -323,11 +313,77 @@ class ManageGeneralExams extends Component
         ];
     }
 
+    public function getDashboardStatsProperty(): array
+    {
+        if (! $this->userId) {
+            return [
+                'total_exams' => 0,
+                'total_submissions' => 0,
+                'submitted_count' => 0,
+                'completion_rate' => 0.0,
+                'avg_score' => 0.0,
+                'guest_participants' => 0,
+                'configured_participants' => 0,
+                'auto_gradable_questions' => 0,
+                'manual_review_questions' => 0,
+            ];
+        }
+
+        $assignmentIds = $this->baseAssignmentQuery()->pluck('id');
+        if ($assignmentIds->isEmpty()) {
+            return [
+                'total_exams' => 0,
+                'total_submissions' => 0,
+                'submitted_count' => 0,
+                'completion_rate' => 0.0,
+                'avg_score' => 0.0,
+                'guest_participants' => 0,
+                'configured_participants' => 0,
+                'auto_gradable_questions' => 0,
+                'manual_review_questions' => 0,
+            ];
+        }
+
+        $submissions = GeneralExamSubmission::whereIn('general_exam_id', $assignmentIds);
+
+        $totalSubmissions = (clone $submissions)->count();
+        $submittedCount = (clone $submissions)->whereNotNull('submitted_at')->count();
+        $avgScore = (float) ((clone $submissions)->whereNotNull('percentage')->avg('percentage') ?? 0);
+
+        $guestParticipants = (clone $submissions)
+            ->whereIn('participant_type', ['participant', 'App\\Models\\GeneralExamParticipant'])
+            ->distinct('participant_id')
+            ->count('participant_id');
+
+        $configuredParticipants = (clone $submissions)
+            ->where('participant_type', 'App\\Models\\Student')
+            ->distinct('participant_id')
+            ->count('participant_id');
+
+        $questionTypeCounts = \App\Models\GeneralExamQuestion::whereIn('general_exam_id', $assignmentIds)
+            ->selectRaw("SUM(CASE WHEN type IN ('multiple_choice','true_false') THEN 1 ELSE 0 END) as auto_gradable")
+            ->selectRaw("SUM(CASE WHEN type IN ('short_answer','essay') THEN 1 ELSE 0 END) as manual_review")
+            ->first();
+
+        return [
+            'total_exams' => $assignmentIds->count(),
+            'total_submissions' => $totalSubmissions,
+            'submitted_count' => $submittedCount,
+            'completion_rate' => $totalSubmissions > 0 ? round(($submittedCount / $totalSubmissions) * 100, 1) : 0.0,
+            'avg_score' => round($avgScore, 1),
+            'guest_participants' => $guestParticipants,
+            'configured_participants' => $configuredParticipants,
+            'auto_gradable_questions' => (int) ($questionTypeCounts->auto_gradable ?? 0),
+            'manual_review_questions' => (int) ($questionTypeCounts->manual_review ?? 0),
+        ];
+    }
+
     public function render()
     {
         return view('livewire.teachers.manage-general-exams', [
             'assignments' => $this->assignments,
             'statusCounts' => $this->statusCounts,
+            'dashboardStats' => $this->dashboardStats,
         ]);
     }
 }

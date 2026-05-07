@@ -205,7 +205,17 @@ class GeneralExamQuestion extends Model
             return [];
         }
 
-        return $this->options;
+        // Handle new format: [{'key': 'A', 'value': 'text'}, ...]
+        if (isset($this->options[0]) && is_array($this->options[0]) && isset($this->options[0]['key'])) {
+            return collect($this->options)->pluck('value', 'key')->toArray();
+        }
+
+        // Handle legacy format: ['text1', 'text2', ...] - convert to keyed array
+        $keyed = [];
+        foreach ($this->options as $index => $value) {
+            $keyed[chr(65 + $index)] = $value;
+        }
+        return $keyed;
     }
 
     public function getFormattedQuestion(): string

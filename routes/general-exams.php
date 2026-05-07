@@ -159,10 +159,8 @@ Route::middleware(['auth', 'verified'])->prefix('teachers/general-exams')->name(
     })->name('destroy');
 
     // Export results
-    Route::get('/{assignment}/export', function ($assignment) {
-        // TODO: Implement CSV/Excel export
-        return response()->json(['message' => 'Export functionality coming soon']);
-    })->name('export');
+    Route::get('/{assignment}/export', [TeacherGeneralExamController::class, 'export'])
+        ->name('export');
 
     // Download answer sheet (print subscriptions only)
     Route::get('/{assignment}/answer-sheet', function ($assignment, GeneralExamAnswerSheetService $service) {

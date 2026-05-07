@@ -4,6 +4,14 @@ namespace App\Providers;
 
 use App\Channels\SmsChannel;
 use App\Contracts\SmsProvider;
+use App\Examinations\Contracts\ExamDashboardServiceInterface;
+use App\Examinations\Contracts\ExamCreationServiceInterface;
+use App\Examinations\Contracts\ExamParticipantAccessServiceInterface;
+use App\Examinations\Contracts\ExamSubmissionExportServiceInterface;
+use App\Examinations\Services\ExamCreationService;
+use App\Examinations\Services\ExamDashboardService;
+use App\Examinations\Services\ExamParticipantAccessService;
+use App\Examinations\Services\ExamSubmissionExportService;
 use App\Livewire\Common\AppModal;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
@@ -77,6 +85,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SmsChannel::class, function ($app) {
             return new SmsChannel($app->make(SmsProvider::class));
         });
+
+        $this->app->bind(ExamDashboardServiceInterface::class, ExamDashboardService::class);
+        $this->app->bind(ExamCreationServiceInterface::class, ExamCreationService::class);
+        $this->app->bind(ExamParticipantAccessServiceInterface::class, ExamParticipantAccessService::class);
+        $this->app->bind(ExamSubmissionExportServiceInterface::class, ExamSubmissionExportService::class);
     }
 
     /**
