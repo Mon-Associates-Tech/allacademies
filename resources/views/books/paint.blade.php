@@ -9,7 +9,7 @@
         html, body { height: 100%; overflow: hidden; background: #008080; }
         paint-app { display: block; width: 100%; height: 100%; }
     </style>
-    @vite('resources/js/paint.js')
+    <!-- @vite('resources/js/paint.js') -->
 </head>
 <body>
     <paint-app id="paint"></paint-app>
