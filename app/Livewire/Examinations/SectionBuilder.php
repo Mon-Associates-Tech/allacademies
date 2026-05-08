@@ -27,8 +27,52 @@ class SectionBuilder extends Component
     {
         if (preg_match('/^(\d+)$/', $key, $matches)) {
             $index = (int) $matches[1];
-            if (isset($this->sections[$index])) {
-                $this->sections[$index]['has_document'] = true;
+            if (isset($this->sections[$index]) && $value) {
+                try {
+                    // Get the file - $value is the uploaded file object
+                    $file = is_array($value) ? ($value[0] ?? null) : $value;
+                    
+                    if (!$file || !is_object($file) || !method_exists($file, 'getRealPath')) {
+                        return;
+                    }
+                    
+                    // Get file info
+                    $tempPath = $file->getRealPath();
+                    $fileName = $file->getClientOriginalName();
+                    
+                    // Copy to permanent storage
+                    $storagePath = 'temp-exam-documents/' . uniqid() . '_' . $fileName;
+                    \Illuminate\Support\Facades\Storage::disk('local')->put(
+                        $storagePath,
+                        file_get_contents($tempPath)
+                    );
+                    
+                    $permanentPath = storage_path('app/' . $storagePath);
+                    
+                    $this->sections[$index]['has_document'] = true;
+                    $this->sections[$index]['document_path'] = $permanentPath;
+                    $this->sections[$index]['document_name'] = $fileName;
+                    
+                    \Illuminate\Support\Facades\Log::info('Document uploaded for section', [
+                        'index' => $index,
+                        'name' => $fileName,
+                        'path' => $permanentPath,
+                        'exists' => file_exists($permanentPath),
+                        'dispatching_event' => 'document-uploaded-' . $index,
+                    ]);
+                    
+                    // Dispatch browser event to update Alpine.js state
+                    $this->dispatch('document-uploaded-' . $index, 
+                        path: $permanentPath,
+                        name: $fileName
+                    );
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to store uploaded document', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'index' => $index,
+                    ]);
+                }
             }
         }
     }

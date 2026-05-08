@@ -100,7 +100,9 @@
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex-1">
                                         <p class="font-medium text-gray-900 dark:text-white">Question {{ $loop->parent->iteration }}.{{ $loop->iteration }}</p>
-                                        <div class="text-gray-700 dark:text-gray-300 mt-2">{!! $question->getFormattedQuestion() !!}</div>
+                                        <div class="text-gray-700 dark:text-gray-300 mt-2">
+                                            <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
+                                        </div>
                                     </div>
                                     <div class="ml-4 flex items-center gap-2">
                                         @if($isCorrect === true)
@@ -134,7 +136,7 @@
                                                     {{ !$isStudentAnswer && $isCorrectAnswer ? 'bg-blue-50 dark:bg-blue-900/10' : '' }}
                                                 ">
                                                     <span class="font-medium text-gray-700 dark:text-gray-300">{{ $optionKey }}.</span>
-                                                    <span class="text-gray-700 dark:text-gray-300">{{ $optionText }}</span>
+                                                    <x-form.markdown-with-math :content="$optionText" class="inline text-gray-700 dark:text-gray-300" />
                                                     @if($isStudentAnswer)
                                                         <span class="ml-auto text-xs text-gray-600 dark:text-gray-400">(Your answer)</span>
                                                     @endif

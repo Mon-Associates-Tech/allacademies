@@ -18,6 +18,11 @@ class ExamQuestionPreviewService
 
     public function generateForSections(array $sections, bool $hardenedMode = false): array
     {
+        Log::info('generateForSections called', [
+            'sections_count' => count($sections),
+            'sections_data' => $sections,
+        ]);
+        
         return collect($sections)->map(function (array $section, int $index) use ($hardenedMode) {
             if ($hardenedMode) {
                 return $this->getPlaceholderForHardenedMode($section);
@@ -64,19 +69,130 @@ class ExamQuestionPreviewService
 
     private function generateFromAi(array $section): array
     {
-        $document = $section['document'] ?? null;
         $questionType = $section['question_type'] ?? 'multiple_choice';
         $count = (int) ($section['question_count'] ?? 0);
+        $subjectId = $section['academic_subject_id'] ?? null;
+        $topicIds = collect($section['topic_ids'] ?? [])->filter()->map(fn ($v) => (int) $v)->all();
 
-        if (!$document instanceof UploadedFile || $count <= 0) {
+        Log::info('generateFromAi called', [
+            'has_document_path' => !empty($section['document_path']),
+            'document_path' => $section['document_path'] ?? null,
+            'document_name' => $section['document_name'] ?? null,
+            'file_exists' => !empty($section['document_path']) && file_exists($section['document_path']),
+            'count' => $count,
+            'question_type' => $questionType,
+        ]);
+
+        if ($count <= 0) {
+            Log::warning('AI generation skipped: count is 0');
             return [];
         }
 
+        // Check if document path is provided (from Livewire upload)
+        if (!empty($section['document_path']) && file_exists($section['document_path'])) {
+            Log::info('Attempting to extract content from document path');
+            try {
+                $content = $this->extractContentFromPath($section['document_path'], $section['document_name'] ?? 'document.txt');
+                Log::info('Content extracted', ['content_length' => strlen($content), 'preview' => substr($content, 0, 200)]);
+                
+                if (!empty($content)) {
+                    $questions = $this->generationService->generateQuestionsFromContent($content, $questionType, $count);
+                    Log::info('Questions generated from document', ['count' => count($questions)]);
+                    return $questions;
+                } else {
+                    Log::warning('Extracted content is empty');
+                }
+            } catch (\Exception $e) {
+                Log::error('AI generation from document path failed in preview', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+        }
+
+        // Check if document is provided as UploadedFile
+        $document = $section['document'] ?? null;
+        if ($document instanceof UploadedFile) {
+            Log::info('Attempting to use UploadedFile');
+            try {
+                $questions = $this->generationService->generateFromDocument($document, $questionType, $count);
+                Log::info('Questions generated from UploadedFile', ['count' => count($questions)]);
+                return $questions;
+            } catch (\Exception $e) {
+                Log::error('AI generation from document failed in preview', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+        }
+
+        // Otherwise, use subject/topic-based AI generation
+        if ($subjectId) {
+            Log::info('Falling back to subject-based generation', ['subject_id' => $subjectId]);
+            try {
+                $questions = $this->generationService->generateFromSubject($subjectId, $topicIds, $questionType, $count);
+                Log::info('Questions generated from subject', ['count' => count($questions)]);
+                return $questions;
+            } catch (\Exception $e) {
+                Log::error('AI generation from subject failed in preview', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+        }
+
+        Log::warning('No generation method succeeded, returning empty array');
+        return [];
+    }
+
+    private function extractContentFromPath(string $filePath, string $fileName): string
+    {
+        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        return match ($extension) {
+            'txt', 'md' => file_get_contents($filePath),
+            'pdf' => $this->extractPdfContentFromPath($filePath),
+            'doc', 'docx' => $this->extractDocxContentFromPath($filePath),
+            default => '',
+        };
+    }
+
+    private function extractPdfContentFromPath(string $filePath): string
+    {
         try {
-            return $this->generationService->generateFromDocument($document, $questionType, $count);
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($filePath);
+            return $pdf->getText();
         } catch (\Exception $e) {
-            Log::error('AI generation failed in preview', ['error' => $e->getMessage()]);
-            return [];
+            Log::error('PDF extraction from path failed', ['error' => $e->getMessage()]);
+            return '';
+        }
+    }
+
+    private function extractDocxContentFromPath(string $filePath): string
+    {
+        try {
+            $phpWord = \PhpOffice\PhpWord\IOFactory::load($filePath);
+            $text = '';
+
+            foreach ($phpWord->getSections() as $section) {
+                foreach ($section->getElements() as $element) {
+                    if (method_exists($element, 'getText')) {
+                        $text .= $element->getText() . "\n";
+                    } elseif (method_exists($element, 'getElements')) {
+                        foreach ($element->getElements() as $childElement) {
+                            if (method_exists($childElement, 'getText')) {
+                                $text .= $childElement->getText() . "\n";
+                            }
+                        }
+                    }
+                }
+            }
+
+            return trim($text);
+        } catch (\Exception $e) {
+            Log::error('DOCX extraction from path failed', ['error' => $e->getMessage()]);
+            return '';
         }
     }
 

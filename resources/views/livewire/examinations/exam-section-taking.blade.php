@@ -196,7 +196,7 @@
                                     </span>
                                 </div>
                                 <div class="text-gray-800 dark:text-gray-200 text-lg leading-relaxed">
-                                    {!! $question->getFormattedQuestion() !!}
+                                    <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
                                 </div>
                             </div>
 
@@ -219,7 +219,7 @@
                                             >
                                             <div class="flex-1 leading-relaxed">
                                                 <span class="font-semibold text-gray-900 dark:text-white mr-2">{{ $key }}.</span>
-                                                <span class="text-gray-700 dark:text-gray-300">{{ $optionText }}</span>
+                                                <x-form.markdown-with-math :content="$optionText" class="inline" />
                                             </div>
                                         </label>
                                     @endforeach

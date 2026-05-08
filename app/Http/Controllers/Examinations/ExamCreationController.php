@@ -90,7 +90,16 @@ class ExamCreationController extends Controller
 
     public function preview(Request $request): View
     {
+        Log::info('Preview request received', [
+            'sections' => $request->input('sections'),
+        ]);
+        
         $payload = $this->validatedPayload($request);
+        
+        Log::info('Validated payload', [
+            'sections' => $payload['sections'],
+        ]);
+        
         $hardenedMode = (bool) ($payload['hardened_mode'] ?? false);
         
         $generatedQuestions = $this->previewService->generateForSections(
@@ -199,6 +208,9 @@ class ExamCreationController extends Controller
             'sections.*.subtopic_ids' => ['nullable', 'array'],
             'sections.*.subtopic_ids.*' => ['integer', 'exists:academic_subtopics,id'],
             'sections.*.is_randomized' => ['nullable', 'boolean'],
+            'sections.*.document_path' => ['nullable', 'string'],
+            'sections.*.document_name' => ['nullable', 'string'],
+            'sections.*.has_document' => ['nullable', 'boolean'],
         ]);
 
         foreach ($data['sections'] as $idx => $section) {
