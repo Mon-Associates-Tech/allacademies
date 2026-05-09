@@ -6,10 +6,10 @@
     <title>Paint – {{ $book->title }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; background: #008080; }
-        paint-app { display: block; width: 100%; height: 100%; }
+        html, body { height: 100vh; overflow: hidden; background: #008080; }
+        paint-app { display: block; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
     </style>
-    <!-- @vite('resources/js/paint.js') -->
+    @vite(['resources/js/app.js', 'resources/js/paint.js'])
 </head>
 <body>
     <paint-app id="paint"></paint-app>
@@ -44,11 +44,22 @@
                     const ctx = await waitForDrawingContext();
                     const img = await loadImageElement(imageUrl);
 
-                    ctx.canvas.width = ctx.previewCanvas.width = img.naturalWidth || img.width;
-                    ctx.canvas.height = ctx.previewCanvas.height = img.naturalHeight || img.height;
+                    const maxWidth = window.innerWidth;
+                    const maxHeight = window.innerHeight - 100;
+                    let width = img.naturalWidth || img.width;
+                    let height = img.naturalHeight || img.height;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width = Math.floor(width * ratio);
+                        height = Math.floor(height * ratio);
+                    }
+
+                    ctx.canvas.width = ctx.previewCanvas.width = width;
+                    ctx.canvas.height = ctx.previewCanvas.height = height;
                     ctx.context.fillStyle = 'white';
-                    ctx.context.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                    ctx.context.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.context.fillRect(0, 0, width, height);
+                    ctx.context.drawImage(img, 0, 0, width, height);
                     ctx.document.title = 'page.png';
                     ctx.document.dirty = false;
                 } catch (e) {
