@@ -185,7 +185,12 @@ class ExamTakingController extends Controller
 
     public function completed(GeneralExam $exam): View
     {
-        return view('examinations-hub.take.completed', ['exam' => $exam]);
+        $participantEmail = session('exam_participant_data.email');
+        
+        return view('examinations-hub.take.completed', [
+            'exam' => $exam,
+            'participantEmail' => $participantEmail,
+        ]);
     }
 
     private function validateParticipant(GeneralExam $exam, array $data): array
@@ -247,6 +252,12 @@ class ExamTakingController extends Controller
     {
         $participantType = $participantData['type'];
         $participantId = $participantData['id'];
+        
+        // For general participants, generate a unique numeric ID from email
+        if ($participantType === 'general' && !empty($participantData['email'])) {
+            // Use CRC32 to convert email to a numeric ID (always positive)
+            $participantId = abs(crc32($participantData['email']));
+        }
 
         if (!$exam->canParticipantAttempt($participantType, $participantId)) {
             return null;

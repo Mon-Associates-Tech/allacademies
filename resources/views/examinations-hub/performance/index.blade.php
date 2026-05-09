@@ -7,7 +7,34 @@
             <p class="text-gray-600 dark:text-gray-400 mt-1">View examination performance and metrics for all participants</p>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <!-- Performance Overview Chart -->
+        <div class="grid lg:grid-cols-3 gap-6 mb-6">
+            <!-- Performance Distribution -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Distribution</h2>
+                <div class="h-64">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Average Grade Distribution -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Average Grade Distribution</h2>
+                <div class="h-64">
+                    <canvas id="gradeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Performers -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 10 Performers</h2>
+                <div class="h-64">
+                    <canvas id="topPerformersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="participants-table" class="bg-white dark:bg-gray-800 shadow rounded-lg">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <form method="GET" class="flex gap-4">
                     <div class="flex-1">
@@ -33,11 +60,53 @@
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Participant</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                <a href="?sort_by=name&sort_order={{ $sortBy === 'name' && $sortOrder === 'asc' ? 'desc' : 'asc' }}{{ request('search') ? '&search=' . request('search') : '' }}#participants-table" 
+                                   class="inline-flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-100">
+                                    Participant
+                                    @if($sortBy === 'name')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if($sortOrder === 'asc')
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            @endif
+                                        </svg>
+                                    @endif
+                                </a>
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Submissions</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Avg Score</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                <a href="?sort_by=submissions&sort_order={{ $sortBy === 'submissions' && $sortOrder === 'asc' ? 'desc' : 'asc' }}{{ request('search') ? '&search=' . request('search') : '' }}#participants-table" 
+                                   class="inline-flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-100">
+                                    Submissions
+                                    @if($sortBy === 'submissions')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if($sortOrder === 'asc')
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            @endif
+                                        </svg>
+                                    @endif
+                                </a>
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                <a href="?sort_by=performance&sort_order={{ $sortBy === 'performance' && $sortOrder === 'asc' ? 'desc' : 'asc' }}{{ request('search') ? '&search=' . request('search') : '' }}#participants-table" 
+                                   class="inline-flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-100">
+                                    Avg Score
+                                    @if($sortBy === 'performance')
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if($sortOrder === 'asc')
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            @endif
+                                        </svg>
+                                    @endif
+                                </a>
+                            </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
                         </tr>
                     </thead>
@@ -85,7 +154,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="{{ route('examinations-hub.performance.show', [$participant->participant_type, $participant->participant_id]) }}" 
+                                    <a href="{{ route('examinations-hub.performance.show', [$participant->participant_type, $participant->participant_id ?? 0]) }}" 
                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
                                         View Performance
                                     </a>
@@ -109,4 +178,159 @@
             @endif
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Performance Distribution Chart
+            const performanceData = @json($performanceDistribution);
+            
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(performanceData),
+                    datasets: [{
+                        data: Object.values(performanceData),
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(59, 130, 246)',
+                            'rgb(251, 191, 36)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
+                        }
+                    }
+                }
+            });
+
+            // Average Grade Distribution Chart
+            const gradeData = @json($gradeDistribution);
+            const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+            new Chart(gradeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['A+', 'A', 'B', 'C', 'D', 'F'],
+                    datasets: [{
+                        label: 'Participants',
+                        data: ['A+', 'A', 'B', 'C', 'D', 'F'].map(grade => gradeData[grade] || 0),
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(249, 115, 22, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(59, 130, 246)',
+                            'rgb(99, 102, 241)',
+                            'rgb(251, 191, 36)',
+                            'rgb(249, 115, 22)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12
+                        }
+                    }
+                }
+            });
+
+            // Top Performers Chart
+            const topPerformers = @json($topPerformers);
+            const topPerformersCtx = document.getElementById('topPerformersChart').getContext('2d');
+            new Chart(topPerformersCtx, {
+                type: 'bar',
+                data: {
+                    labels: topPerformers.map(p => p.participant_name.length > 15 ? p.participant_name.substring(0, 15) + '...' : p.participant_name),
+                    datasets: [{
+                        label: 'Average Score',
+                        data: topPerformers.map(p => p.avg_percentage),
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderColor: 'rgb(99, 102, 241)',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) { return value + '%'; }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Average Score: ' + context.parsed.x + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Smooth scroll to table if sort parameters are present
+        if (window.location.hash === '#participants-table') {
+            setTimeout(function() {
+                document.getElementById('participants-table').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+    </script>
+    @endpush
 </x-layouts.app>

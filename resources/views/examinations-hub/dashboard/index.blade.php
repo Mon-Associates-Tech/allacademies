@@ -14,6 +14,25 @@
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"><div class="text-2xl font-bold">{{ $summary['manual_review'] }}</div><div class="text-sm text-gray-500">Manual Review</div></div>
         </div>
 
+        <!-- Charts Section -->
+        <div class="grid lg:grid-cols-2 gap-6 mb-6">
+            <!-- Submission Trend Chart -->
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Submission Trend (Last 30 Days)</h2>
+                <div class="h-64">
+                    <canvas id="submissionTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Exam Status Distribution -->
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Exam Status Distribution</h2>
+                <div class="h-64">
+                    <canvas id="examStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
@@ -50,4 +69,98 @@
             <div class="p-4">{{ $exams->links() }}</div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Submission Trend Chart
+            const submissionTrend = @json($summary['submission_trend']);
+            const trendCtx = document.getElementById('submissionTrendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(submissionTrend),
+                    datasets: [{
+                        label: 'Submissions',
+                        data: Object.values(submissionTrend),
+                        borderColor: 'rgb(99, 102, 241)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgb(99, 102, 241)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12
+                        }
+                    }
+                }
+            });
+
+            // Exam Status Distribution Chart
+            const statusData = @json($summary['exam_status_distribution']);
+            const statusCtx = document.getElementById('examStatusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusData),
+                    datasets: [{
+                        data: Object.values(statusData),
+                        backgroundColor: [
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(156, 163, 175, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(251, 191, 36)',
+                            'rgb(34, 197, 94)',
+                            'rgb(156, 163, 175)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-layouts.app>

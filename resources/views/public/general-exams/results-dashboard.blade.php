@@ -61,6 +61,25 @@
                     </div>
                 </div>
 
+                <!-- Charts Section -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Performance Trend Chart -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Trend (Last 10 Exams)</h2>
+                        <div class="h-64">
+                            <canvas id="performanceTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Grade Distribution Chart -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Grade Distribution</h2>
+                        <div class="h-64">
+                            <canvas id="gradeDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     @if($submissions->isEmpty())
                         <div class="p-8 text-center text-gray-500 dark:text-gray-400">No submissions found for the selected filters.</div>
@@ -110,4 +129,116 @@
             @endif
         </div>
     </div>
+
+    @if(($participant ?? null) && !($needsEmail ?? false))
+        @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Performance Trend Chart
+                const trendData = @json($performanceTrend ?? []);
+                const trendCtx = document.getElementById('performanceTrendChart')?.getContext('2d');
+                
+                if (trendCtx && Object.keys(trendData).length > 0) {
+                    new Chart(trendCtx, {
+                        type: 'line',
+                        data: {
+                            labels: Object.keys(trendData),
+                            datasets: [{
+                                label: 'Score %',
+                                data: Object.values(trendData),
+                                borderColor: 'rgb(99, 102, 241)',
+                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: 'rgb(99, 102, 241)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) { return value + '%'; }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    padding: 12,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return 'Score: ' + context.parsed.y + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Grade Distribution Chart
+                const gradeData = @json($gradeDistribution ?? []);
+                const gradeCtx = document.getElementById('gradeDistributionChart')?.getContext('2d');
+                
+                if (gradeCtx) {
+                    new Chart(gradeCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['A+', 'A', 'B', 'C', 'D', 'F'],
+                            datasets: [{
+                                label: 'Count',
+                                data: ['A+', 'A', 'B', 'C', 'D', 'F'].map(grade => gradeData[grade] || 0),
+                                backgroundColor: [
+                                    'rgba(34, 197, 94, 0.8)',
+                                    'rgba(59, 130, 246, 0.8)',
+                                    'rgba(99, 102, 241, 0.8)',
+                                    'rgba(251, 191, 36, 0.8)',
+                                    'rgba(249, 115, 22, 0.8)',
+                                    'rgba(239, 68, 68, 0.8)'
+                                ],
+                                borderColor: [
+                                    'rgb(34, 197, 94)',
+                                    'rgb(59, 130, 246)',
+                                    'rgb(99, 102, 241)',
+                                    'rgb(251, 191, 36)',
+                                    'rgb(249, 115, 22)',
+                                    'rgb(239, 68, 68)'
+                                ],
+                                borderWidth: 2,
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { stepSize: 1 }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    padding: 12
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+        @endpush
+    @endif
 </x-layouts.general-exam>

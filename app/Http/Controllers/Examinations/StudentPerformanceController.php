@@ -13,15 +13,27 @@ class StudentPerformanceController extends Controller
 {
     public function index(Request $request): View
     {
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
         $query = GeneralExamSubmission::query()
             ->select(
                 'participant_type',
                 'participant_id',
                 DB::raw('COALESCE(MAX(participant_name), "Unknown") as participant_name'),
-                DB::raw('COALESCE(MAX(participant_email), "N/A") as participant_email')
+                DB::raw('COALESCE(MAX(participant_email), "N/A") as participant_email'),
+                DB::raw('COUNT(*) as submission_count'),
+                DB::raw('ROUND(AVG(COALESCE(percentage, 0)), 2) as avg_percentage'),
+                DB::raw('CASE 
+                    WHEN AVG(COALESCE(percentage, 0)) >= 90 THEN "A+"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 80 THEN "A"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 70 THEN "B"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 60 THEN "C"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 50 THEN "D"
+                    ELSE "F"
+                END as avg_grade')
             )
-            ->selectRaw('COUNT(*) as submission_count')
-            ->selectRaw('ROUND(AVG(COALESCE(percentage, 0)), 2) as avg_percentage')
             ->whereNotNull('submitted_at')
             ->groupBy('participant_type', 'participant_id');
 
@@ -31,10 +43,75 @@ class StudentPerformanceController extends Controller
                 ->orHaving(DB::raw('COALESCE(MAX(participant_email), "")'), 'like', "%{$search}%");
         }
 
-        $participants = $query->orderBy('participant_name')->paginate(20);
+        // Apply sorting after grouping
+        switch ($sortBy) {
+            case 'performance':
+                $query->orderByRaw('avg_percentage ' . $sortOrder);
+                break;
+            case 'submissions':
+                $query->orderByRaw('submission_count ' . $sortOrder);
+                break;
+            default:
+                $query->orderByRaw('participant_name ' . $sortOrder);
+        }
+
+        $participants = $query->paginate(20)->appends($request->except('page'));
+
+        // Chart data for performance overview
+        $performanceDistribution = GeneralExamSubmission::whereNotNull('submitted_at')
+            ->whereNotNull('percentage')
+            ->selectRaw('CASE 
+                WHEN percentage >= 80 THEN "Excellent (80-100%)" 
+                WHEN percentage >= 60 THEN "Good (60-79%)" 
+                WHEN percentage >= 50 THEN "Average (50-59%)" 
+                ELSE "Below Average (<50%)" 
+            END as performance_range')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('performance_range')
+            ->pluck('count', 'performance_range');
+
+        // Average grade distribution
+        $gradeDistribution = GeneralExamSubmission::query()
+            ->select(
+                'participant_type',
+                'participant_id',
+                DB::raw('CASE 
+                    WHEN AVG(COALESCE(percentage, 0)) >= 90 THEN "A+"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 80 THEN "A"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 70 THEN "B"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 60 THEN "C"
+                    WHEN AVG(COALESCE(percentage, 0)) >= 50 THEN "D"
+                    ELSE "F"
+                END as grade')
+            )
+            ->whereNotNull('submitted_at')
+            ->groupBy('participant_type', 'participant_id')
+            ->get()
+            ->groupBy('grade')
+            ->map->count();
+
+        // Top performers data
+        $topPerformers = GeneralExamSubmission::query()
+            ->select(
+                'participant_type',
+                'participant_id',
+                DB::raw('COALESCE(MAX(participant_name), "Unknown") as participant_name')
+            )
+            ->selectRaw('ROUND(AVG(COALESCE(percentage, 0)), 2) as avg_percentage')
+            ->whereNotNull('submitted_at')
+            ->whereNotNull('percentage')
+            ->groupBy('participant_type', 'participant_id')
+            ->orderBy('avg_percentage', 'desc')
+            ->limit(10)
+            ->get();
 
         return view('examinations-hub.performance.index', [
             'participants' => $participants,
+            'performanceDistribution' => $performanceDistribution,
+            'gradeDistribution' => $gradeDistribution,
+            'topPerformers' => $topPerformers,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
         ]);
     }
 
@@ -208,6 +285,15 @@ class StudentPerformanceController extends Controller
 
         $recentTrend = $gradedSubmissions->sortByDesc('submitted_at')->take(10)->pluck('percentage')->values();
 
+        // Chart data for performance trends over time
+        $trendData = $gradedSubmissions->sortBy('submitted_at')
+            ->groupBy(function($submission) {
+                return $submission->submitted_at->format('M d');
+            })
+            ->map(function($group) {
+                return round($group->avg('percentage'), 2);
+            });
+
         return [
             'total_submissions' => $totalSubmissions,
             'graded_submissions' => $gradedSubmissions->count(),
@@ -219,6 +305,7 @@ class StudentPerformanceController extends Controller
             'grade_distribution' => $gradeDistribution,
             'subject_performance' => $subjectPerformance,
             'recent_trend' => $recentTrend,
+            'trend_data' => $trendData,
             'highest_score' => $gradedSubmissions->max('percentage') ?? 0,
             'lowest_score' => $gradedSubmissions->min('percentage') ?? 0,
         ];

@@ -32,6 +32,17 @@ Route::middleware(['auth', 'verified'])->prefix('examinations-hub')->name('exami
 
     Route::post('/exams/{exam}/participants/configured', [ParticipantController::class, 'storeConfigured'])->name('participants.configured.store');
     Route::post('/exams/{exam}/participants/configured/import', [ParticipantController::class, 'importConfigured'])->name('participants.configured.import');
+
+    Route::get('/reports', [\App\Http\Controllers\Examinations\PerformanceReportController::class, 'index'])->name('reports.index');
+    Route::post('/reports/generate', [\App\Http\Controllers\Examinations\PerformanceReportController::class, 'generate'])->name('reports.generate');
+
+    Route::middleware('can:viewAny,App\Models\GradeScale')->group(function () {
+        Route::get('/grading-system', [\App\Http\Controllers\Examinations\GradingSystemController::class, 'index'])->name('grading-system.index');
+        Route::post('/grading-system', [\App\Http\Controllers\Examinations\GradingSystemController::class, 'store'])->name('grading-system.store');
+        Route::put('/grading-system/{gradeScale}', [\App\Http\Controllers\Examinations\GradingSystemController::class, 'update'])->name('grading-system.update');
+        Route::delete('/grading-system/{gradeScale}', [\App\Http\Controllers\Examinations\GradingSystemController::class, 'destroy'])->name('grading-system.destroy');
+        Route::post('/grading-system/initialize', [\App\Http\Controllers\Examinations\GradingSystemController::class, 'initializeDefault'])->name('grading-system.initialize');
+    });
 });
 
 Route::prefix('examinations-hub/take')->name('examinations-hub.take.')->group(function () {
@@ -52,3 +63,8 @@ Route::get('/examinations-hub/join', [ParticipantController::class, 'joinEntry']
 Route::post('/examinations-hub/join', [ParticipantController::class, 'joinLookup'])->name('examinations-hub.join.lookup');
 Route::get('/examinations-hub/join/{code}', [ParticipantController::class, 'joinForm'])->name('examinations-hub.join');
 Route::post('/examinations-hub/join/{code}', [ParticipantController::class, 'attemptJoin'])->name('examinations-hub.join.attempt');
+
+Route::prefix('examinations-hub/results')->name('examinations-hub.results.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Examinations\ParticipantResultsController::class, 'index'])->name('index');
+    Route::get('/{submission}', [\App\Http\Controllers\Examinations\ParticipantResultsController::class, 'show'])->name('show');
+});

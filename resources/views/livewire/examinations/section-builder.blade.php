@@ -112,38 +112,9 @@
 
             @if(in_array($section['source_type'] ?? '', ['database', 'mixed'], true))
                 <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <p class="text-sm font-medium mb-3">Academic Hierarchy (for Database Questions)</p>
+                    <p class="text-sm font-medium mb-3">Topic & Subtopic Filters (optional)</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Narrow down questions by specific topics and subtopics</p>
                     <div class="space-y-3">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Academic Group</label>
-                            @livewire('common.searchable-multi-select', [
-                                'items' => collect($hierarchyTree)->map(fn($g) => ['id' => $g['id'], 'name' => $g['name']])->values()->all(),
-                                'selected' => !empty($section['academic_group_id']) ? [(string) $section['academic_group_id']] : [],
-                                'name' => "sections[{$index}][academic_group_id]",
-                                'multiple' => false,
-                                'placeholder' => 'Select group',
-                            ], key("section-{$index}-group-".($section['academic_group_id'] ?? 'none').'-'.md5(json_encode($section))))
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Academic Level</label>
-                            @livewire('common.searchable-multi-select', [
-                                'items' => $this->levelItems($index),
-                                'selected' => !empty($section['academic_level_id']) ? [(string) $section['academic_level_id']] : [],
-                                'name' => "sections[{$index}][academic_level_id]",
-                                'multiple' => false,
-                                'placeholder' => 'Select level',
-                            ], key("section-{$index}-level-".($section['academic_level_id'] ?? 'none').'-'.md5(json_encode($section))))
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Subject</label>
-                            @livewire('common.searchable-multi-select', [
-                                'items' => $this->subjectItems($index),
-                                'selected' => !empty($section['academic_subject_id']) ? [(string) $section['academic_subject_id']] : [],
-                                'name' => "sections[{$index}][academic_subject_id]",
-                                'multiple' => false,
-                                'placeholder' => 'Select subject',
-                            ], key("section-{$index}-subject-".($section['academic_subject_id'] ?? 'none').'-'.md5(json_encode($section))))
-                        </div>
                         <div>
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Topics (optional)</label>
                             @livewire('common.searchable-multi-select', [

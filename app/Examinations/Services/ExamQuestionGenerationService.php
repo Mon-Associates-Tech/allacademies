@@ -85,17 +85,7 @@ class ExamQuestionGenerationService
             $text = '';
 
             foreach ($phpWord->getSections() as $section) {
-                foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    } elseif (method_exists($element, 'getElements')) {
-                        foreach ($element->getElements() as $childElement) {
-                            if (method_exists($childElement, 'getText')) {
-                                $text .= $childElement->getText() . "\n";
-                            }
-                        }
-                    }
-                }
+                $text .= $this->extractElementsText($section->getElements());
             }
 
             return trim($text);
@@ -103,5 +93,46 @@ class ExamQuestionGenerationService
             Log::error('DOCX extraction failed', ['error' => $e->getMessage()]);
             return '';
         }
+    }
+
+    private function extractElementsText(array $elements): string
+    {
+        $text = '';
+
+        foreach ($elements as $element) {
+            $elementClass = get_class($element);
+
+            // Handle Text elements
+            if ($elementClass === 'PhpOffice\\PhpWord\\Element\\Text') {
+                $text .= $element->getText() . "\n";
+            }
+            // Handle TextRun (contains multiple text elements with formatting)
+            elseif ($elementClass === 'PhpOffice\\PhpWord\\Element\\TextRun') {
+                if (method_exists($element, 'getElements')) {
+                    $text .= $this->extractElementsText($element->getElements());
+                }
+            }
+            // Handle Table elements
+            elseif ($elementClass === 'PhpOffice\\PhpWord\\Element\\Table') {
+                foreach ($element->getRows() as $row) {
+                    foreach ($row->getCells() as $cell) {
+                        $text .= $this->extractElementsText($cell->getElements());
+                    }
+                }
+            }
+            // Handle any other container elements
+            elseif (method_exists($element, 'getElements')) {
+                $text .= $this->extractElementsText($element->getElements());
+            }
+            // Fallback: try getText if available and ensure it's a string
+            elseif (method_exists($element, 'getText')) {
+                $textValue = $element->getText();
+                if (is_string($textValue)) {
+                    $text .= $textValue . "\n";
+                }
+            }
+        }
+
+        return $text;
     }
 }

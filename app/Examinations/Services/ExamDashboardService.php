@@ -43,6 +43,8 @@ class ExamDashboardService implements ExamDashboardServiceInterface
                 'avg_score' => 0,
                 'auto_gradable' => 0,
                 'manual_review' => 0,
+                'submission_trend' => [],
+                'exam_status_distribution' => [],
             ];
         }
 
@@ -54,12 +56,34 @@ class ExamDashboardService implements ExamDashboardServiceInterface
             ->selectRaw("SUM(CASE WHEN type IN ('short_answer','essay') THEN 1 ELSE 0 END) as manual_review")
             ->first();
 
+        // Submission trend over last 30 days
+        $submissionTrend = GeneralExamSubmission::whereIn('general_exam_id', $examIds)
+            ->whereNotNull('submitted_at')
+            ->where('submitted_at', '>=', now()->subDays(30))
+            ->selectRaw('DATE(submitted_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('count', 'date');
+
+        // Exam status distribution
+        $examStatusDistribution = GeneralExam::where('user_id', $userId)
+            ->selectRaw("SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft")
+            ->selectRaw("SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published")
+            ->selectRaw("SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived")
+            ->first();
+
         return [
             'total_exams' => $examIds->count(),
             'total_submissions' => $totalSubmissions,
             'avg_score' => round($avgScore, 1),
             'auto_gradable' => (int) ($types->auto_gradable ?? 0),
             'manual_review' => (int) ($types->manual_review ?? 0),
+            'submission_trend' => $submissionTrend,
+            'exam_status_distribution' => [
+                'Draft' => (int) ($examStatusDistribution->draft ?? 0),
+                'Published' => (int) ($examStatusDistribution->published ?? 0),
+                'Archived' => (int) ($examStatusDistribution->archived ?? 0),
+            ],
         ];
     }
 

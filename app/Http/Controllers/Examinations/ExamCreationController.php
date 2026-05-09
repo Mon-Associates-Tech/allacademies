@@ -64,6 +64,9 @@ class ExamCreationController extends Controller
             'participant_mode' => $exam->participant_mode,
             'participant_required_fields' => $exam->participant_required_fields ?? ['name', 'email'],
             'configured_match_mode' => $exam->configured_match_mode ?? 'any',
+            'academic_group_id' => $exam->sections->first()?->academic_group_id,
+            'academic_level_id' => $exam->sections->first()?->academic_level_id,
+            'academic_subject_id' => $exam->academic_subject_id,
             'sections' => $exam->sections->map(fn ($section) => [
                 'title' => $section->title,
                 'description' => $section->description,
@@ -73,9 +76,6 @@ class ExamCreationController extends Controller
                 'question_type' => $section->question_type,
                 'question_count' => $section->question_count,
                 'is_randomized' => $section->is_randomized,
-                'academic_group_id' => $section->academic_group_id,
-                'academic_level_id' => $section->academic_level_id,
-                'academic_subject_id' => $section->academic_subject_id,
                 'topic_ids' => $section->topic_ids ?? [],
                 'subtopic_ids' => $section->subtopic_ids ?? [],
             ])->values()->all(),
@@ -189,6 +189,9 @@ class ExamCreationController extends Controller
             'participant_required_fields' => ['required', 'array', 'min:1'],
             'participant_required_fields.*' => ['in:name,email,code'],
             'configured_match_mode' => ['required', 'in:any,both'],
+            'academic_group_id' => ['nullable', 'integer', 'exists:academic_groups,id'],
+            'academic_level_id' => ['nullable', 'integer', 'exists:academic_levels,id'],
+            'academic_subject_id' => ['nullable', 'integer', 'exists:academic_subjects,id'],
             'sections' => ['required', 'array', 'min:1'],
             'sections.*.title' => ['required', 'string', 'max:255'],
             'sections.*.description' => ['nullable', 'string'],
@@ -200,9 +203,6 @@ class ExamCreationController extends Controller
             'sections.*.database_count' => ['nullable', 'integer', 'min:0', 'max:500'],
             'sections.*.ai_count' => ['nullable', 'integer', 'min:0', 'max:500'],
             'sections.*.manual_count' => ['nullable', 'integer', 'min:0', 'max:500'],
-            'sections.*.academic_group_id' => ['nullable', 'integer', 'exists:academic_groups,id'],
-            'sections.*.academic_level_id' => ['nullable', 'integer', 'exists:academic_levels,id'],
-            'sections.*.academic_subject_id' => ['nullable', 'integer', 'exists:academic_subjects,id'],
             'sections.*.topic_ids' => ['nullable', 'array'],
             'sections.*.topic_ids.*' => ['integer', 'exists:academic_topics,id'],
             'sections.*.subtopic_ids' => ['nullable', 'array'],
@@ -213,31 +213,46 @@ class ExamCreationController extends Controller
             'sections.*.has_document' => ['nullable', 'boolean'],
         ]);
 
+        // Validate academic hierarchy if provided
+        if (!empty($data['academic_group_id']) || !empty($data['academic_level_id']) || !empty($data['academic_subject_id'])) {
+            $groupId = (int) ($data['academic_group_id'] ?? 0);
+            $levelId = (int) ($data['academic_level_id'] ?? 0);
+            $subjectId = (int) ($data['academic_subject_id'] ?? 0);
+
+            if ($levelId && $groupId) {
+                $level = AcademicLevel::find($levelId);
+                if (!$level || (int) $level->academic_group_id !== $groupId) {
+                    throw ValidationException::withMessages([
+                        'academic_level_id' => 'Selected level does not belong to selected group.',
+                    ]);
+                }
+            }
+
+            if ($subjectId && $levelId) {
+                $subject = AcademicSubject::find($subjectId);
+                if (!$subject || (int) $subject->academic_level_id !== $levelId) {
+                    throw ValidationException::withMessages([
+                        'academic_subject_id' => 'Selected subject does not belong to selected level.',
+                    ]);
+                }
+            }
+        }
+
         foreach ($data['sections'] as $idx => $section) {
             $sourceType = $section['source_type'] ?? '';
             $needsHierarchy = in_array($sourceType, ['database', 'mixed'], true);
             
-            if ($needsHierarchy && (empty($section['academic_group_id']) || empty($section['academic_level_id']) || empty($section['academic_subject_id']))) {
+            if ($needsHierarchy && (empty($data['academic_group_id']) || empty($data['academic_level_id']) || empty($data['academic_subject_id']))) {
                 throw ValidationException::withMessages([
-                    "sections.{$idx}.academic_subject_id" => "Section ".($idx + 1)." requires group, level and subject for database/mixed source.",
+                    'academic_subject_id' => "Section ".($idx + 1)." requires exam-level academic hierarchy (group, level, subject) for database/mixed source.",
                 ]);
             }
-
+            
+            // Copy exam-level hierarchy to sections for database/mixed sources
             if ($needsHierarchy) {
-                $level = AcademicLevel::find((int) $section['academic_level_id']);
-                $subject = AcademicSubject::find((int) $section['academic_subject_id']);
-                $groupId = (int) $section['academic_group_id'];
-
-                if (! $level || (int) $level->academic_group_id !== $groupId) {
-                    throw ValidationException::withMessages([
-                        "sections.{$idx}.academic_level_id" => "Section ".($idx + 1).": selected level does not belong to selected group.",
-                    ]);
-                }
-                if (! $subject || (int) $subject->academic_level_id !== (int) $level->id) {
-                    throw ValidationException::withMessages([
-                        "sections.{$idx}.academic_subject_id" => "Section ".($idx + 1).": selected subject does not belong to selected level.",
-                    ]);
-                }
+                $data['sections'][$idx]['academic_group_id'] = $data['academic_group_id'];
+                $data['sections'][$idx]['academic_level_id'] = $data['academic_level_id'];
+                $data['sections'][$idx]['academic_subject_id'] = $data['academic_subject_id'];
             }
             
             if ($sourceType === 'mixed') {

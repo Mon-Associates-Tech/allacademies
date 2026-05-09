@@ -27,7 +27,13 @@
                 </div>
 
                 <div class="space-y-3">
-                    <a href="{{ route('examinations-hub.take.join') }}" class="block w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
+                    @if($participantEmail)
+                        <a href="{{ route('examinations-hub.results.index', ['email' => $participantEmail]) }}" class="block w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
+                            View My Results
+                        </a>
+                    @endif
+                    
+                    <a href="{{ route('examinations-hub.take.join') }}" class="block w-full px-6 py-3 @if($participantEmail) border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 @else bg-indigo-600 text-white hover:bg-indigo-700 @endif rounded-lg font-medium">
                         Take Another Exam
                     </a>
                     

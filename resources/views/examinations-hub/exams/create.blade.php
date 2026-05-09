@@ -3,7 +3,7 @@
     
     @php
         $seed = $formData ?? old();
-        $seedSections = $seed['sections'] ?? [['title'=>'Section A','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'academic_group_id'=>'','academic_level_id'=>'','academic_subject_id'=>'','topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+        $seedSections = $seed['sections'] ?? [['title'=>'Section A','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
         
         // Set default dates if not provided
         $defaultStartsAt = $seed['starts_at'] ?? now()->format('Y-m-d\TH:i');
@@ -91,8 +91,6 @@
                             </div>
                         </div>
                         
-                        <div></div>
-                        
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Start Date & Time <span class="text-red-500">*</span></label>
                             <div class="relative">
@@ -117,6 +115,28 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Academic Classification Section -->
+            <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md overflow-visible">
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-750 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Academic Classification</h2>
+                    </div>
+                </div>
+                <div class="p-6 pb-32">
+                    @livewire('examinations.academic-classification', [
+                        'academicGroupId' => $seed['academic_group_id'] ?? null,
+                        'academicLevelId' => $seed['academic_level_id'] ?? null,
+                        'academicSubjectId' => $seed['academic_subject_id'] ?? null,
+                        'hierarchyTree' => $hierarchyTree,
+                    ], key('exam-academic-classification-' . md5(json_encode([$seed['academic_group_id'] ?? null, $seed['academic_level_id'] ?? null, $seed['academic_subject_id'] ?? null]))))
                 </div>
             </section>
 
