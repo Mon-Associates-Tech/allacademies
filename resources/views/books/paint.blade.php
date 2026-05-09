@@ -8,6 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100vh; overflow: hidden; background: #008080; }
         paint-app { display: block; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+        canvas { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
     </style>
     @vite(['resources/js/app.js', 'resources/js/paint.js'])
 </head>
@@ -57,6 +58,8 @@
 
                     ctx.canvas.width = ctx.previewCanvas.width = width;
                     ctx.canvas.height = ctx.previewCanvas.height = height;
+                    ctx.context.imageSmoothingEnabled = true;
+                    ctx.context.imageSmoothingQuality = 'high';
                     ctx.context.fillStyle = 'white';
                     ctx.context.fillRect(0, 0, width, height);
                     ctx.context.drawImage(img, 0, 0, width, height);
