@@ -33,4 +33,12 @@ Route::prefix('')->group(function () {
     Route::get('/academic-subjects/{subject}/topics', [\App\Http\Controllers\Api\ExaminationApiController::class, 'getTopics']);
 
     Route::post('/questions/generate', [\App\Http\Controllers\Api\ExaminationApiController::class, 'generate']);
+
+    // Question availability checking
+    Route::post('/questions/check-availability', [\App\Http\Controllers\Api\QuestionAvailabilityController::class, 'check']);
+    Route::get('/questions/statistics', [\App\Http\Controllers\Api\QuestionAvailabilityController::class, 'statistics']);
 });
+
+// Senior High School ID: 5
+// Academic level id for level: 18
+// Academic subject id for Physics: 105

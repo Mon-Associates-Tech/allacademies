@@ -143,15 +143,12 @@ class QuestionGenerator
 
                 if (! $subtopicModel) {
                     Log::warning('Subtopic not found', ['subtopic_id' => $subtopicId]);
-
                     continue;
                 }
 
-                $topicId = $subtopicModel->academic_topic_id;
-
+                // Query questions by subtopic only - don't require topic_id match
                 $questions = DB::table($table)
                     ->where('academic_subtopic_id', $subtopicId)
-                    ->where('academic_topic_id', $topicId)
                     ->whereNotIn('id', $usedQuestions)
                     ->whereNotIn('id', $sectionQuestions)
                     ->inRandomOrder()
@@ -162,11 +159,18 @@ class QuestionGenerator
                 $fetchedCount = count($questions);
 
                 if ($fetchedCount < $count) {
+                    // Check total available for better error reporting
+                    $totalAvailable = DB::table($table)
+                        ->where('academic_subtopic_id', $subtopicId)
+                        ->count();
+
                     Log::error('Not enough questions in subtopic', [
                         'subtopic_id' => $subtopicId,
                         'subtopic_name' => $subtopicModel->name,
                         'requested' => $count,
                         'available' => $fetchedCount,
+                        'total_in_subtopic' => $totalAvailable,
+                        'already_used' => count($usedQuestions),
                         'table' => $table,
                     ]);
                 }
@@ -180,9 +184,9 @@ class QuestionGenerator
         $remainingQuestionsNeeded = $requiredCount - $subtopicQuestionCount;
 
         if ($remainingQuestionsNeeded > 0) {
+            // Get all questions from topics (including those with subtopics)
             $topicQuestions = DB::table($table)
                 ->whereIn('academic_topic_id', $topicIds)
-                ->whereNull('academic_subtopic_id')
                 ->whereNotIn('id', $usedQuestions)
                 ->whereNotIn('id', $sectionQuestions)
                 ->inRandomOrder()
@@ -193,16 +197,23 @@ class QuestionGenerator
             $fetchedCount = count($topicQuestions);
 
             if ($fetchedCount < $remainingQuestionsNeeded) {
+                // Check total available for better error reporting
+                $totalAvailable = DB::table($table)
+                    ->whereIn('academic_topic_id', $topicIds)
+                    ->count();
+
                 Log::error('Not enough questions at topic level', [
                     'topic_ids' => $topicIds,
                     'requested' => $remainingQuestionsNeeded,
                     'available' => $fetchedCount,
+                    'total_in_topics' => $totalAvailable,
+                    'already_used' => count($usedQuestions),
                     'table' => $table,
                     'subtopic_questions_count' => $subtopicQuestionCount,
                 ]);
 
                 throw new NotEnoughQuestionsException(
-                    "Not enough questions at topic level. Requested: {$remainingQuestionsNeeded}, Available: {$fetchedCount}"
+                    "Not enough questions available. Requested: {$remainingQuestionsNeeded}, Available: {$fetchedCount}"
                 );
             }
 

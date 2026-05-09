@@ -72,53 +72,44 @@ class ExaminationController extends Controller
 
         $topics = AcademicTopic::where('academic_subject_id', $academicSubject->id)
             ->select(['id', 'name'])
-            ->withCount([
-                'essayQuestions',
-                'multipleChoiceQuestions',
-                'trueOrFalseQuestions',
-            ])
             ->with([
                 'subtopics' => function ($query) {
-                    $query->withCount([
-                        'essayQuestions',
-                        'multipleChoiceQuestions',
-                        'trueOrFalseQuestions',
-                    ]);
+                    $query->select(['id', 'name', 'academic_topic_id']);
                 },
             ])
             ->get()
             ->map(function ($topic) {
+                // Count questions at subtopic level
                 $subtopics = $topic->subtopics->map(function ($subtopic) {
                     return [
                         'id' => $subtopic->id,
                         'name' => $subtopic->name,
-                        'essay_questions_count' => $subtopic->essay_questions_count,
-                        'multiple_choice_questions_count' => $subtopic->multiple_choice_questions_count,
-                        'true_or_false_questions_count' => $subtopic->true_or_false_questions_count,
+                        'essay_questions_count' => $subtopic->essayQuestions()->count(),
+                        'multiple_choice_questions_count' => $subtopic->multipleChoiceQuestions()->count(),
+                        'true_or_false_questions_count' => $subtopic->trueOrFalseQuestions()->count(),
                     ];
                 });
 
-                $questionsCount = $subtopics->isEmpty()
-                    ? ($topic->essay_questions_count + $topic->multiple_choice_questions_count + $topic->true_or_false_questions_count)
-                    : $subtopics->sum(function ($sub) {
-                        return $sub['essay_questions_count']
-                            + $sub['multiple_choice_questions_count']
-                            + $sub['true_or_false_questions_count'];
-                    });
+                // Count questions at topic level (all questions for this topic)
+                $topicEssayCount = \DB::table('essay_questions')
+                    ->where('academic_topic_id', $topic->id)
+                    ->count();
+                $topicMcqCount = \DB::table('multiple_choice_questions')
+                    ->where('academic_topic_id', $topic->id)
+                    ->count();
+                $topicTofCount = \DB::table('true_or_false_questions')
+                    ->where('academic_topic_id', $topic->id)
+                    ->count();
+
+                $totalQuestionsCount = $topicEssayCount + $topicMcqCount + $topicTofCount;
 
                 return [
                     'id' => $topic->id,
                     'name' => $topic->name,
-                    'questions_count' => $questionsCount,
-                    'essay_questions_count' => $subtopics->isEmpty()
-                        ? $topic->essay_questions_count
-                        : $subtopics->sum('essay_questions_count'),
-                    'multiple_choice_questions_count' => $subtopics->isEmpty()
-                        ? $topic->multiple_choice_questions_count
-                        : $subtopics->sum('multiple_choice_questions_count'),
-                    'true_or_false_questions_count' => $subtopics->isEmpty()
-                        ? $topic->true_or_false_questions_count
-                        : $subtopics->sum('true_or_false_questions_count'),
+                    'questions_count' => $totalQuestionsCount,
+                    'essay_questions_count' => $topicEssayCount,
+                    'multiple_choice_questions_count' => $topicMcqCount,
+                    'true_or_false_questions_count' => $topicTofCount,
                     'subtopics' => $subtopics->toArray(),
                     'selectedOptions' => [],
                 ];
@@ -135,7 +126,7 @@ class ExaminationController extends Controller
     /**
      * Display the specified resource.
      *
-     * @return Application|Factory|View|\Illuminate\View\View
+     * @return Application|Factory|\Illuminate\View\View|View
      */
     public function show(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, Examination $examination)
     {

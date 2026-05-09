@@ -123,4 +123,23 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/transactions', [SchoolPaymentController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{payment}', [SchoolPaymentController::class, 'show'])->name('transactions.show');
     Route::post('/transactions/export', [SchoolPaymentController::class, 'export'])->name('transactions.export');
+
+    // Question Availability Checker
+    Route::get('/question-availability', \App\Livewire\QuestionAvailabilityChecker::class)
+        ->name('question-availability')
+        ->middleware('can:access-question-availability');
+
+    // Generate Examination
+    Route::get('/generate-examination', \App\Livewire\GenerateExamination::class)
+        ->name('generate-examination')
+        ->middleware('can:access-question-availability');
+
+    // Academic ID Map Download
+    Route::get('/academic-id-map/download', function () {
+        $path = storage_path('app/academic_id_map.json');
+        if (!file_exists($path)) {
+            abort(404, 'ID Map not found. Please generate it first.');
+        }
+        return response()->download($path, 'academic_id_map_' . date('Y-m-d') . '.json');
+    })->name('academic.id-map.download');
 });

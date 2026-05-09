@@ -67,6 +67,11 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('subscribed', static function (User $user, AcademicSubject $academicSubject) {
+            // Owners bypass subscription checks
+            if ($user->role === UserRole::OWNER) {
+                return true;
+            }
+
             return $academicSubject
                 ->subscriptions()
                 ->where('team_id', $user->current_team_id)
@@ -85,6 +90,10 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('access-artisan-commands', static function (User $user) {
             return $user->isSuperAdmin() || $user->isOwner();
+        });
+
+        Gate::define('access-question-availability', static function (User $user) {
+            return $user->isSuperAdmin() || $user->isOwner() || $user->isAdmin();
         });
     }
 }
