@@ -17,6 +17,10 @@ class GeneralExam extends Model
         'title',
         'description',
         'access_code',
+        'send_reminders',
+        'reminder_datetime',
+        'reminder_sent',
+        'reminder_sent_at',
         'user_id',
         'general_exam_subscription_id',
         'academic_subject_id',
@@ -24,6 +28,9 @@ class GeneralExam extends Model
         'school_id',
         'type',
         'delivery_type',
+        'participant_mode',
+        'participant_required_fields',
+        'configured_match_mode',
         'duration_in_minutes',
         'starts_at',
         'ends_at',
@@ -45,6 +52,7 @@ class GeneralExam extends Model
         'source_document_path',
         'ai_generation_settings',
         'status',
+        'hardened_mode',
         'max_attempts',
     ];
 
@@ -54,17 +62,23 @@ class GeneralExam extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'results_released_at' => 'datetime',
+            'reminder_datetime' => 'datetime',
+            'reminder_sent_at' => 'datetime',
             'is_randomized' => 'boolean',
             'results_released' => 'boolean',
             'show_correct_answers' => 'boolean',
             'show_score_breakdown' => 'boolean',
+            'send_reminders' => 'boolean',
+            'reminder_sent' => 'boolean',
             'proctoring_enabled' => 'boolean',
             'restrict_navigation' => 'boolean',
             'auto_submit_on_violation' => 'boolean',
             'require_webcam' => 'boolean',
             'require_fullscreen' => 'boolean',
             'ai_generated' => 'boolean',
+            'hardened_mode' => 'boolean',
             'ai_generation_settings' => 'array',
+            'participant_required_fields' => 'array',
         ];
     }
 
@@ -126,6 +140,11 @@ class GeneralExam extends Model
     public function submissions(): HasMany
     {
         return $this->hasMany(GeneralExamSubmission::class);
+    }
+
+    public function configuredParticipants(): HasMany
+    {
+        return $this->hasMany(GeneralExamConfiguredParticipant::class);
     }
 
     public function isActive(): bool

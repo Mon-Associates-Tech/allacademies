@@ -28,9 +28,12 @@ class GeneralExamSubmission extends Model
         'general_exam_id',
         'participant_type',
         'participant_id',
+        'participant_name',
+        'participant_email',
         'started_at',
         'submitted_at',
         'time_spent_seconds',
+        'time_taken_minutes',
         'responses',
         'score',
         'total_marks',
@@ -254,6 +257,17 @@ class GeneralExamSubmission extends Model
 
     protected function calculateGrade(float $percentage): string
     {
+        $schoolId = auth()->user()?->school_id;
+        $levelId = $this->assignment?->academic_level_id;
+        
+        if ($schoolId) {
+            $gradeScale = GradeScale::getForScore($percentage, $schoolId, $levelId);
+            if ($gradeScale) {
+                return $gradeScale->letter_grade;
+            }
+        }
+        
+        // Fallback to default grading if no custom scale found
         return match (true) {
             $percentage >= 90 => 'A+',
             $percentage >= 80 => 'A',

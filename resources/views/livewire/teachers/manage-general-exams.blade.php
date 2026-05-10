@@ -3,8 +3,8 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">General Exams</h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Create and manage code-based exams for anyone to take</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Examination Dashboard</h1>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Create, monitor, and export section-based online examinations.</p>
             </div>
             <a href="{{ route('teachers.general-exams.create') }}"
                class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
@@ -15,8 +15,40 @@
             </a>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $dashboardStats['total_exams'] }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Total Exams</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $dashboardStats['total_submissions'] }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-blue-600">{{ $dashboardStats['completion_rate'] }}%</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Completion Rate</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-indigo-600">{{ $dashboardStats['avg_score'] }}%</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Average Score</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-cyan-600">{{ $dashboardStats['guest_participants'] }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">General Participants</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-teal-600">{{ $dashboardStats['configured_participants'] }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Configured Participants</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-emerald-600">{{ $dashboardStats['auto_gradable_questions'] }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Auto-Graded Questions</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="text-2xl font-bold text-orange-600">{{ $dashboardStats['manual_review_questions'] }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Manual-Review Questions</div>
+            </div>
+
             <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $statusCounts['draft'] }}</div>
                 <div class="text-sm text-gray-500 dark:text-gray-400">Drafts</div>
@@ -40,7 +72,8 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
                     <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search assignments..."
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                           aria-label="Search examinations">
                 </div>
                 <select wire:model.live="statusFilter" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                     <option value="">All Statuses</option>
@@ -88,6 +121,9 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" wire:click="sortBy('questions_count')">
                                     Questions
                                 </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" wire:click="sortBy('sections_count')">
+                                    Sections
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" wire:click="sortBy('submissions_count')">
                                     Submissions
                                 </th>
@@ -128,6 +164,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $assignment->questions_count }}</td>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $assignment->sections_count }}</td>
                                     <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $assignment->submissions_count }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $assignment->created_at->format('M d, Y') }}</td>
                                     <td class="px-6 py-4 text-right">
@@ -155,6 +192,12 @@
                                             <a href="{{ route('teachers.general-exams.results', $assignment) }}" class="p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg" title="View Results">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                                </svg>
+                                            </a>
+
+                                            <a href="{{ route('teachers.general-exams.export', $assignment) }}" class="p-2 text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/30 rounded-lg" title="Export CSV">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0l4-4m-4 4l-4-4m-5 8h18"></path>
                                                 </svg>
                                             </a>
 

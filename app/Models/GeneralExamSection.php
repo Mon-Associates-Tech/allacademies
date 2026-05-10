@@ -18,6 +18,14 @@ class GeneralExamSection extends Model
         'instructions',
         'order',
         'time_limit_minutes',
+        'source_type',
+        'question_type',
+        'question_count',
+        'academic_group_id',
+        'academic_level_id',
+        'academic_subject_id',
+        'topic_ids',
+        'subtopic_ids',
         'total_marks',
         'is_randomized',
     ];
@@ -26,12 +34,29 @@ class GeneralExamSection extends Model
     {
         return [
             'is_randomized' => 'boolean',
+            'topic_ids' => 'array',
+            'subtopic_ids' => 'array',
         ];
     }
 
     public function assignment(): BelongsTo
     {
         return $this->belongsTo(GeneralExam::class, 'general_exam_id');
+    }
+
+    public function academicGroup(): BelongsTo
+    {
+        return $this->belongsTo(AcademicGroup::class, 'academic_group_id');
+    }
+
+    public function academicLevel(): BelongsTo
+    {
+        return $this->belongsTo(AcademicLevel::class, 'academic_level_id');
+    }
+
+    public function academicSubject(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubject::class, 'academic_subject_id');
     }
 
     public function questions(): HasMany

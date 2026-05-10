@@ -29,14 +29,26 @@ class ChatGPTService
      * Unified Chat method with retry logic and usage logging
      * Supports both simple message arrays and complex request data
      */
-    public function chat($messages, $model = 'gpt-4', array $options = []): array
+    public function chat($messages, $model = 'gpt-4.1-nano', array $options = []): array
     {
-        $requestData = array_merge([
-            'model' => $model,
-            'input' => $messages,
-        ], $options);
+        // Extract internal options
+        $requestType = $options['request_type'] ?? 'chat';
+        unset($options['request_type']);
 
-        return $this->sendChatRequest($requestData, $options);
+        // Build proper responses API request
+        $formattedMessages = is_string($messages) ? [['role' => 'user', 'content' => $messages]] : $messages;
+        
+        $requestData = [
+            'model' => $model,
+            'input' => $formattedMessages,
+        ];
+
+        // Add supported parameters
+        if (isset($options['temperature'])) {
+            $requestData['temperature'] = $options['temperature'];
+        }
+
+        return $this->sendChatRequest($requestData, ['request_type' => $requestType]);
     }
 
     /**

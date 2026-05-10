@@ -117,6 +117,28 @@ class GeneralExamController extends Controller
             'best_percentage' => round((float) $submissions->max('percentage'), 2),
         ];
 
+        // Performance trend data
+        $performanceTrend = $submissions
+            ->sortBy('submitted_at')
+            ->take(10)
+            ->mapWithKeys(function ($submission) {
+                $date = $submission->submitted_at?->format('M d') ?? 'N/A';
+                return [$date => round((float) ($submission->percentage ?? 0), 1)];
+            });
+
+        // Grade distribution
+        $gradeDistribution = $submissions->groupBy(function ($submission) {
+            $percentage = $submission->percentage ?? 0;
+            return match (true) {
+                $percentage >= 90 => 'A+',
+                $percentage >= 80 => 'A',
+                $percentage >= 70 => 'B',
+                $percentage >= 60 => 'C',
+                $percentage >= 50 => 'D',
+                default => 'F',
+            };
+        })->map->count();
+
         $subjectOptions = $allSubmissions
             ->flatMap(function ($submission) {
                 return optional($submission->assignment?->subscription)->subjects ?? collect();
@@ -140,6 +162,8 @@ class GeneralExamController extends Controller
             'needsEmail' => $needsEmail,
             'submissions' => $submissions,
             'summary' => $summary,
+            'performanceTrend' => $performanceTrend,
+            'gradeDistribution' => $gradeDistribution,
             'subjectOptions' => $subjectOptions,
             'assignerOptions' => $assignerOptions,
             'selectedSubject' => $subjectFilter !== '' ? $subjectFilter : null,

@@ -484,3 +484,4 @@ include_once 'lms.php';
 
 // General Exams Routes (code-based assignments for teachers and participants)
 include_once 'general-exams.php';
+include_once 'examinations-hub.php';
