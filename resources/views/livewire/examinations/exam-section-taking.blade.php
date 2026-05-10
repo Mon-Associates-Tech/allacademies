@@ -23,7 +23,7 @@
                     @endif
 
                     <!-- Stats -->
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Questions</span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ $this->questions->count() }}</span>
@@ -137,7 +137,7 @@
         @else
         <div class="flex flex-col h-screen">
             <!-- Top Header Bar -->
-            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-2 flex-shrink-0">
                 <div class="max-w-7xl mx-auto flex items-center justify-between">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $this->exam->title }}</h2>
@@ -169,8 +169,8 @@
                     @endphp
 
                     <!-- Question Card -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-6" wire:key="question-container-{{ $question->id }}">
-                        <div class="flex items-start justify-between mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-4" wire:key="question-container-{{ $question->id }}">
+                        <div class="flex hidden items-start justify-between mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
                                     <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ $currentQuestionIndex + 1 }}</span>
@@ -188,8 +188,14 @@
                         </div>
 
                         <div class="text-gray-800 dark:text-gray-200 text-lg leading-relaxed mb-8" wire:key="question-text-{{ $question->id }}">
-                            <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
-                        </div>
+                        <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
+                                    <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ $currentQuestionIndex + 1 }}</span>
+                                </div>
+                            
+                        <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
+</div>    
+                    </div>
 
                         @if($question->isMultipleChoice())
                             <div class="space-y-2" wire:key="options-{{ $question->id }}">
@@ -273,7 +279,7 @@
                                 <button 
                                     wire:key="nav-btn-{{ $q->id }}"
                                     wire:click="goToQuestion({{ $index }})"
-                                    class="aspect-square rounded-lg text-sm font-medium transition-all flex items-center justify-center
+                                    class="aspect-square rounded-md text-sm  py-2 font-medium transition-all flex items-center justify-center
                                         @if($currentQuestionIndex === $index)
                                             bg-indigo-600 text-white ring-2 ring-indigo-600 ring-offset-2 scale-110
                                         @elseif(!empty($responses[$q->id]))
@@ -306,12 +312,12 @@
             </div>
 
             <!-- Bottom Navigation Bar -->
-            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-2 flex-shrink-0">
                 <div class="max-w-4xl mx-auto flex items-center justify-between">
                     <button 
                         wire:click="previousQuestion"
                         @if($currentQuestionIndex === 0) disabled @endif
-                        class="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                        class="flex items-center gap-2 px-4 py-3 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>

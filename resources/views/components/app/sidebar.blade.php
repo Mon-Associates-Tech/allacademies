@@ -290,7 +290,7 @@
                             </a>
                         </li>
 
-                        <li class="mb-0.5" title="Manage General Exams">
+                        <li class="mb-0.5 hidden" title="Manage General Exams">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.manage') || Route::is('examinations-hub.exams.show') || Route::is('examinations-hub.submissions.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                                href="{{ route('examinations-hub.manage') }}">
@@ -303,7 +303,7 @@
                             </a>
                         </li>
 
-                        <li class="mb-0.5" title="Create General Exam">
+                        <li class="mb-0.5 hidden" title="Create General Exam">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                                href="{{ route('examinations-hub.create') }}">
@@ -316,7 +316,7 @@
                             </a>
                         </li>
 
-                        <li class="mb-0.5" title="Exam Subscriptions">
+                        <li class="mb-0.5 hidden" title="Exam Subscriptions">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.subscriptions') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                                href="{{ route('examinations-hub.subscriptions') }}">
@@ -330,7 +330,7 @@
                         </li>
 
                         @if(in_array(strtolower((string) $roleValue), ['admin', 'owner'], true))
-                            <li class="mb-0.5 last:mb-2" title="Admin Exam Pricing">
+                            <li class="mb-0.5 hidden     last:mb-2" title="Admin Exam Pricing">
                                 <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                    class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.admin') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                                    href="{{ route('examinations-hub.admin') }}">

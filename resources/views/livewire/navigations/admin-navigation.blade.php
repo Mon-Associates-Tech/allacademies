@@ -564,7 +564,7 @@
         </li>
 
         <!-- ID Card Template Settings -->
-        <li class="mb-0.5 last:mb-0" title="ID Card Templates">
+        <li class="mb-0.5 last:mb-0 hidden" title="ID Card Templates">
             <a :class="sidebarExpanded ? 'py-2' : ''"
                class="block pl-3 rounded-lg transition {{ Route::is('admin.settings.id-card-templates') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                href="{{ route('admin.settings.id-card-templates') }}">

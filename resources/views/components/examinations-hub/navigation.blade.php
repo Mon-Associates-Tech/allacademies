@@ -80,7 +80,7 @@
                 @endif
             </div>
 
-            <div class="flex items-center space-x-2">
+            <div class="flex hidden items-center space-x-2">
                 <a href="{{ route('examinations-hub.take.join') }}" 
                    class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
                     <div class="flex items-center">
