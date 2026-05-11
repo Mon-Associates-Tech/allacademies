@@ -443,6 +443,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
 });
 
+Route::get('/clear-cache', function() {
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    return 'Cache cleared!';
+})->name('cache.clear');
+
+Route::get('/components', function () {
+    return view('components');
+})->name('components');
+
 /*
 |--------------------------------------------------------------------------
 | Include Additional Route Files

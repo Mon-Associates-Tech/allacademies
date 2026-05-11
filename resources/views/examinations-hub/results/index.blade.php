@@ -1,314 +1,402 @@
 <x-layouts.exam>
-<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        @if($needsEmail)
-            <!-- Email Verification Form -->
-            <div class="max-w-md mx-auto">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-                    <div class="text-center mb-6">
-                        <div class="mx-auto h-16 w-16 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mb-4">
-                            <svg class="h-8 w-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+    {{-- ═══════════════════════════════════════════════════════════
+         PAGE SHELL
+    ═══════════════════════════════════════════════════════════ --}}
+    <div class="min-h-screen py-8"
+         style="font-family: 'system-ui', -apple-system, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7">
+
+            @if($needsEmail)
+                {{-- ── EMAIL VERIFICATION CARD ── --}}
+                <div class="max-w-md mx-auto">
+                    <div class="overflow-hidden"
+                         style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                        <div class="h-1 w-full" style="background: linear-gradient(90deg, #2563eb, #60a5fa, #93c5fd);"></div>
+                        <div class="px-7 py-6 text-center">
+                            <div class="w-16 h-16 mx-auto flex items-center justify-center mb-4"
+                                 style="border-radius: 2px; background: linear-gradient(135deg, #2563eb, #60a5fa);">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                                Access Your Results
+                            </h2>
+                            <p class="text-slate-400 mt-2 text-sm">Enter your email to view your exam results</p>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Access Your Results</h2>
-                        <p class="mt-2 text-gray-600 dark:text-gray-400">Enter your email to view your exam results</p>
                     </div>
 
                     @if(session('error'))
-                        <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                            <p class="text-sm text-red-600 dark:text-red-400">{{ session('error') }}</p>
+                        <div class="mt-4 overflow-hidden"
+                             style="border-radius: 2px; border: 1px solid rgba(220,38,38,0.2); box-shadow: 0 1px 6px rgba(220,38,38,0.08);">
+                            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2"
+                                 style="background: linear-gradient(135deg, #fef2f2, #fee2e2);">
+                                <div class="w-1 h-5" style="background: linear-gradient(180deg, #dc2626, #ef4444); border-radius: 1px;"></div>
+                                <h2 class="font-bold text-red-800 dark:text-red-300 text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Error</h2>
+                            </div>
+                            <div class="p-5">
+                                <p class="text-sm text-red-700 dark:text-red-400">{{ session('error') }}</p>
+                            </div>
                         </div>
                     @endif
 
-                    <form method="GET" action="{{ route('examinations-hub.results.index') }}">
-                        <div class="mb-6">
-                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+                    <form method="GET" action="{{ route('examinations-hub.results.index') }}" class="bg-white dark:bg-slate-900 overflow-hidden"
+                          style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="p-5">
+                            <label for="email" class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Email Address <span class="text-red-500">*</span>
+                            </label>
                             <input type="email" name="email" id="email" required
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                style="border-radius: 2px;"
                                 placeholder="your.email@example.com">
                         </div>
-
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
-                            View My Results
-                        </button>
+                        <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+                            <button type="submit" 
+                                    class="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #2563eb, #60a5fa); box-shadow: 0 2px 10px rgba(37,99,235,0.3);">
+                                View My Results
+                            </button>
+                        </div>
                     </form>
                 </div>
-            </div>
-        @else
-            <!-- Results Dashboard -->
-            <div class="mb-8">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">My Exam Results</h1>
-                        <p class="mt-2 text-gray-600 dark:text-gray-400">{{ $email }}</p>
-                    </div>
-                    <a href="{{ route('examinations-hub.results.index') }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
-                        Change Email
-                    </a>
-                </div>
-            </div>
 
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
+            @else
+                {{-- ── PAGE HEADER ── --}}
+                <div class="overflow-hidden"
+                     style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #065f46, #059669, #10b981);"></div>
+                    <div class="px-7 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Total Submissions</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $summary['total_submissions'] }}</p>
+                            <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                                My Exam Results
+                            </h1>
+                            <p class="text-slate-400 mt-2 text-sm">{{ $email }}</p>
                         </div>
-                        <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="{{ route('examinations-hub.results.index') }}" 
+                           class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors">
+                            Change Email
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- ── METRICS STRIP ── --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {{-- Total Submissions --}}
+                    <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                             style="border-radius: 2px; background: linear-gradient(135deg, #1d4ed8, #3b82f6);">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Results Released</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $summary['results_released'] }}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Total Submissions</p>
+                            <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $summary['total_submissions'] }}</p>
                         </div>
-                        <div class="h-12 w-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </div>
+
+                    {{-- Results Released --}}
+                    <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                             style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669);">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Average Score</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($summary['average_percentage'], 1) }}%</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Results Released</p>
+                            <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $summary['results_released'] }}</p>
                         </div>
-                        <div class="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </div>
+
+                    {{-- Average Score --}}
+                    <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                             style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa);">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                             </svg>
                         </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Best Score</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($summary['best_percentage'], 1) }}%</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Average Score</p>
+                            <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ number_format($summary['average_percentage'], 1) }}<span class="text-lg font-medium text-slate-500">%</span></p>
                         </div>
-                        <div class="h-12 w-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </div>
+
+                    {{-- Best Score --}}
+                    <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                             style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706);">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                             </svg>
                         </div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Best Score</p>
+                            <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ number_format($summary['best_percentage'], 1) }}<span class="text-lg font-medium text-slate-500">%</span></p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            @if(false && $submissions->isNotEmpty() && isset($performanceTrend) && isset($gradeDistribution))
-                <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Trend</h3>
-                        <canvas id="performanceTrendChart" height="250"></canvas>
+                {{-- ── CHARTS ROW (Conditional) --}}
+                @if(false && $submissions->isNotEmpty() && isset($performanceTrend) && isset($gradeDistribution))
+                <div class="grid lg:grid-cols-2 gap-6">
+                    {{-- Performance Trend --}}
+                    <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                            <div class="w-1 h-5" style="background: linear-gradient(180deg, #2563eb, #60a5fa); border-radius: 1px;"></div>
+                            <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Performance Trend</h2>
+                        </div>
+                        <div class="p-5">
+                            <div class="h-64">
+                                <canvas id="performanceTrendChart"></canvas>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Grade Distribution</h3>
-                        <canvas id="gradeDistributionChart" height="250"></canvas>
+                    {{-- Grade Distribution --}}
+                    <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                            <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
+                            <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Grade Distribution</h2>
+                        </div>
+                        <div class="p-5">
+                            <div class="h-64">
+                                <canvas id="gradeDistributionChart"></canvas>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                @endif
+
+                {{-- ── SUBMISSIONS TABLE ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">All Submissions</h2>
+                    </div>
+
+                    @if($submissions->isEmpty())
+                        <div class="p-8 text-center">
+                            <p class="text-sm text-slate-400 dark:text-slate-500">No exam submissions found.</p>
+                        </div>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Exam</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Submitted</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Score</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Grade</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Status</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
+                                    @foreach($submissions as $submission)
+                                        <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="font-semibold text-slate-900 dark:text-white">{{ $submission->assignment->title }}</div>
+                                                <div class="text-xs text-slate-500 dark:text-slate-400">by {{ $submission->assignment->user->name }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-slate-700 dark:text-slate-300">
+                                                {{ $submission->submitted_at?->format('M d, Y H:i') }}
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center gap-1 text-sm font-semibold text-slate-900 dark:text-white">
+                                                    {{ $submission->score }}/{{ $submission->total_marks }}
+                                                    <span class="text-slate-500 font-normal">({{ number_format($submission->percentage, 1) }}%)</span>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @php
+                                                    $grade = $submission->grade;
+                                                    $gradeStyle = in_array($grade, ['A+', 'A'])
+                                                        ? 'color:#065f46;background:#ecfdf5;border-color:#a7f3d0;'
+                                                        : ($grade === 'B'
+                                                            ? 'color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe;'
+                                                            : ($grade === 'C'
+                                                                ? 'color:#92400e;background:#fffbeb;border-color:#fde68a;'
+                                                                : 'color:#991b1b;background:#fef2f2;border-color:#fecaca;'));
+                                                @endphp
+                                                <span class="inline-flex items-center justify-center text-xs font-semibold px-2.5 py-1 border"
+                                                      style="border-radius: 2px; {{ $gradeStyle }}">
+                                                    {{ $grade }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if($submission->canViewResults())
+                                                    <span class="inline-flex items-center justify-center text-xs font-semibold px-2.5 py-1 border"
+                                                          style="border-radius: 2px; color:#065f46;background:#ecfdf5;border-color:#a7f3d0;">
+                                                        Released
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center justify-center text-xs font-semibold px-2.5 py-1 border"
+                                                          style="border-radius: 2px; color:#475569;background:#f1f5f9;border-color:#e2e8f0;">
+                                                        Pending
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                @if($submission->canViewResults())
+                                                    <a href="{{ route('examinations-hub.results.show', ['submission' => $submission, 'email' => $email]) }}" 
+                                                       class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors">
+                                                        View Details
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                        </svg>
+                                                    </a>
+                                                @else
+                                                    <span class="text-xs text-slate-400 dark:text-slate-500">Not Available</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
             @endif
 
-            <!-- Submissions List -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">All Submissions</h2>
-                </div>
-
-                @if($submissions->isEmpty())
-                    <div class="p-8 text-center">
-                        <p class="text-gray-500 dark:text-gray-400">No exam submissions found.</p>
-                    </div>
-                @else
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-900">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Exam</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Submitted</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Score</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                @foreach($submissions as $submission)
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $submission->assignment->title }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">by {{ $submission->assignment->user->name }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $submission->submitted_at?->format('M d, Y H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                                            {{ $submission->score }}/{{ $submission->total_marks }}
-                                            <span class="text-gray-500 dark:text-gray-400">({{ number_format($submission->percentage, 1) }}%)</span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                                @if($submission->grade === 'A+' || $submission->grade === 'A') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                @elseif($submission->grade === 'B') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                @elseif($submission->grade === 'C') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                                @else bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                @endif">
-                                                {{ $submission->grade }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            @if($submission->canViewResults())
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                    Released
-                                                </span>
-                                            @else
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                                    Pending
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-right text-sm">
-                                            @if($submission->canViewResults())
-                                                <a href="{{ route('examinations-hub.results.show', ['submission' => $submission, 'email' => $email]) }}" 
-                                                   class="text-indigo-600 dark:text-indigo-400 hover:underline">
-                                                    View Details
-                                                </a>
-                                            @else
-                                                <span class="text-gray-400 dark:text-gray-600">Not Available</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            </div>
-        @endif
+        </div>{{-- /container --}}
     </div>
-</div>
 
-@if(false && !$needsEmail && $submissions->isNotEmpty() && isset($performanceTrend) && isset($gradeDistribution))
+    {{-- ── CHARTS SCRIPT (Conditional) --}}
+    @if(false && !$needsEmail && $submissions->isNotEmpty() && isset($performanceTrend) && isset($gradeDistribution))
     <script>
-        (function() {
-            if (window.chartsInitialized) return;
-            window.chartsInitialized = true;
+    (function() {
+        if (window.chartsInitialized) return;
+        window.chartsInitialized = true;
 
-            document.addEventListener('DOMContentLoaded', function() {
-                const isDark = document.documentElement.classList.contains('dark');
-                const textColor = isDark ? '#9CA3AF' : '#6B7280';
-                const gridColor = isDark ? '#374151' : '#E5E7EB';
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+            const tickColor   = isDark ? '#94a3b8' : '#64748b';
+            const tooltipBg   = 'rgba(15,23,42,0.92)';
 
-                // Performance Trend Chart
-                const trendCanvas = document.getElementById('performanceTrendChart');
-                if (trendCanvas && !trendCanvas.chart) {
-                    const trendCtx = trendCanvas.getContext('2d');
-                    trendCanvas.chart = new Chart(trendCtx, {
-                        type: 'line',
-                        data: {
-                            labels: {!! json_encode($performanceTrend->keys()) !!},
-                            datasets: [{
-                                label: 'Score (%)',
-                                data: {!! json_encode($performanceTrend->values()) !!},
-                                borderColor: '#6366F1',
-                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: (context) => `Score: ${context.parsed.y}%`
-                                    }
-                                }
+            // ── Performance Trend ─────────────────────────────
+            const trendCanvas = document.getElementById('performanceTrendChart');
+            if (trendCanvas && !trendCanvas.chart) {
+                trendCanvas.chart = new Chart(trendCanvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: {!! json_encode($performanceTrend->keys()) !!},
+                        datasets: [{
+                            label: 'Score (%)',
+                            data: {!! json_encode($performanceTrend->values()) !!},
+                            borderColor: '#7c3aed',
+                            backgroundColor: 'rgba(124,58,237,0.08)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#7c3aed',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { color: gridColor },
+                                ticks: { color: tickColor, font: { size: 11 } }
                             },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    max: 100,
-                                    ticks: { color: textColor },
-                                    grid: { color: gridColor }
-                                },
-                                x: {
-                                    ticks: { color: textColor },
-                                    grid: { color: gridColor }
-                                }
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: tickColor, font: { size: 11 } }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: tooltipBg,
+                                padding: 12,
+                                cornerRadius: 2,
+                                callbacks: { label: ctx => 'Score: ' + ctx.parsed.y + '%' }
                             }
                         }
-                    });
-                }
+                    }
+                });
+            }
 
-                // Grade Distribution Chart
-                const gradeCanvas = document.getElementById('gradeDistributionChart');
-                if (gradeCanvas && !gradeCanvas.chart) {
-                    const gradeCtx = gradeCanvas.getContext('2d');
-                    const gradeData = {!! json_encode($gradeDistribution) !!};
-                    const grades = ['A+', 'A', 'B', 'C', 'D', 'F'];
-                    const gradeCounts = grades.map(g => gradeData[g] || 0);
-
-                    gradeCanvas.chart = new Chart(gradeCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: grades,
-                            datasets: [{
-                                label: 'Count',
-                                data: gradeCounts,
-                                backgroundColor: [
-                                    '#10B981',
-                                    '#34D399',
-                                    '#3B82F6',
-                                    '#FBBF24',
-                                    '#F59E0B',
-                                    '#EF4444'
-                                ]
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
+            // ── Grade Distribution ───────────────────────────
+            const gradeCanvas = document.getElementById('gradeDistributionChart');
+            if (gradeCanvas && !gradeCanvas.chart) {
+                const gradeData = {!! json_encode($gradeDistribution) !!};
+                const grades = ['A+', 'A', 'B', 'C', 'D', 'F'];
+                gradeCanvas.chart = new Chart(gradeCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: grades,
+                        datasets: [{
+                            label: 'Count',
+                            data: grades.map(g => gradeData[g] || 0),
+                            backgroundColor: [
+                                'rgba(5,150,105,0.85)',
+                                'rgba(37,99,235,0.85)',
+                                'rgba(124,58,237,0.85)',
+                                'rgba(217,119,6,0.85)',
+                                'rgba(234,88,12,0.85)',
+                                'rgba(220,38,38,0.85)'
+                            ],
+                            borderColor: [
+                                'rgb(5,150,105)',
+                                'rgb(37,99,235)',
+                                'rgb(124,58,237)',
+                                'rgb(217,119,6)',
+                                'rgb(234,88,12)',
+                                'rgb(220,38,38)'
+                            ],
+                            borderWidth: 1.5,
+                            borderRadius: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: gridColor },
+                                ticks: { color: tickColor, stepSize: 1, font: { size: 11 } }
                             },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { 
-                                        color: textColor,
-                                        stepSize: 1
-                                    },
-                                    grid: { color: gridColor }
-                                },
-                                x: {
-                                    ticks: { color: textColor },
-                                    grid: { display: false }
-                                }
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: tickColor, font: { size: 11 } }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: tooltipBg,
+                                padding: 12,
+                                cornerRadius: 2
                             }
                         }
-                    });
-                }
-            });
-        })();
+                    }
+                });
+            }
+        });
+    })();
     </script>
-@endif
-</div>
+    @endif
 </x-layouts.exam>
