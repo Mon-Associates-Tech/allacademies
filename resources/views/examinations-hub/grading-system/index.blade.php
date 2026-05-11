@@ -1,60 +1,91 @@
 <x-layouts.app>
     <x-examinations-hub.navigation active="grading-system" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between">
+    {{-- ═══════════════════════════════════════════════════════════
+         PAGE SHELL
+    ═══════════════════════════════════════════════════════════ --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
+         style="font-family: 'system-ui', -apple-system, sans-serif;">
+
+        {{-- ── PAGE HEADER ── --}}
+        <div class="overflow-hidden"
+             style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+            <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
+            <div class="px-7 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Grading System</h1>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">Define and manage grade scales for your examinations</p>
+                    <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                        Grading System
+                    </h1>
+                    <p class="text-slate-400 mt-2 text-sm">
+                        Define and manage grade scales for your examinations
+                    </p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex items-center gap-3">
                     @if($gradeScales->where('is_default', true)->isEmpty())
                         <form method="POST" action="{{ route('examinations-hub.grading-system.initialize') }}">
                             @csrf
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+                            <button type="submit" 
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 10px rgba(5,150,105,0.3);">
+                                <x-heroicon-o-plus class="w-4 h-4" />
                                 Initialize Default
                             </button>
                         </form>
                     @endif
                     <button onclick="document.getElementById('createModal').classList.remove('hidden')" 
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
+                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
+                        <x-heroicon-o-plus class="w-4 h-4" />
                         Add Grade Scale
                     </button>
                 </div>
             </div>
         </div>
 
+        {{-- ── ALERTS ── --}}
         @if(session('success'))
-            <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <p class="text-green-800 dark:text-green-200">{{ session('success') }}</p>
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(5,150,105,0.2); box-shadow: 0 1px 6px rgba(5,150,105,0.08);">
+                <div class="px-5 py-4 flex items-center gap-3">
+                    <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+                         style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669);">
+                        <x-heroicon-o-check class="w-4 h-4 text-white" />
+                    </div>
+                    <p class="text-sm text-emerald-700 dark:text-emerald-300">{{ session('success') }}</p>
+                </div>
             </div>
         @endif
 
         @if(session('info'))
-            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p class="text-blue-800 dark:text-blue-200">{{ session('info') }}</p>
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(37,99,235,0.2); box-shadow: 0 1px 6px rgba(37,99,235,0.08);">
+                <div class="px-5 py-4 flex items-center gap-3">
+                    <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+                         style="border-radius: 2px; background: linear-gradient(135deg, #2563eb, #60a5fa);">
+                        <x-heroicon-o-information-circle class="w-4 h-4 text-white" />
+                    </div>
+                    <p class="text-sm text-blue-700 dark:text-blue-300">{{ session('info') }}</p>
+                </div>
             </div>
         @endif
 
-        <!-- Info Card -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
-            <div class="flex items-start">
-                <svg class="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">About Grading System</h3>
-                    <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+        {{-- ── INFO CARD ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(37,99,235,0.2); box-shadow: 0 1px 6px rgba(37,99,235,0.08);">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2"
+                 style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #2563eb, #60a5fa); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">About Grading System</h2>
+            </div>
+            <div class="p-5">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+                         style="border-radius: 2px; background: linear-gradient(135deg, #2563eb, #60a5fa);">
+                        <x-heroicon-o-information-circle class="w-4 h-4 text-white" />
+                    </div>
+                    <div class="text-sm text-slate-700 dark:text-slate-300">
                         <p>Define custom grade scales for your school. You can create:</p>
-                        <ul class="list-disc list-inside mt-2 space-y-1">
+                        <ul class="list-disc list-inside mt-2 space-y-1 ml-2">
                             <li><strong>Default Grades:</strong> Applied to all exams when no specific level is set</li>
                             <li><strong>Level-Specific Grades:</strong> Custom scales for specific academic levels</li>
                         </ul>
@@ -64,55 +95,68 @@
             </div>
         </div>
 
-        <!-- Grade Scales Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Grade Scales</h2>
+        {{-- ── GRADE SCALES TABLE ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Grade Scales</h2>
             </div>
 
             @if($gradeScales->isEmpty())
                 <div class="p-12 text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No grade scales</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by initializing the default grading system or creating a custom one.</p>
+                    <div class="w-12 h-12 mx-auto flex items-center justify-center mb-4"
+                         style="border-radius: 2px; background: linear-gradient(135deg, #64748b, #94a3b8);">
+                        <x-heroicon-o-clipboard-document-list class="w-6 h-6 text-white" />
+                    </div>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white">No grade scales</h3>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Get started by initializing the default grading system or creating a custom one.</p>
                 </div>
             @else
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Grade</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Score Range</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Grade Point</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Level</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Remarks</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Grade</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Score Range</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Grade Point</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Level</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Remarks</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
                             @foreach($gradeScales as $scale)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-3 py-1 text-lg font-bold text-indigo-600 dark:text-indigo-400">{{ $scale->letter_grade }}</span>
-                                        @if($scale->is_default)
-                                            <span class="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">Default</span>
-                                        @endif
+                                <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-lg font-bold text-amber-700 dark:text-amber-400">{{ $scale->letter_grade }}</span>
+                                            @if($scale->is_default)
+                                                <x-ui.badge variant="success" size="sm">Default</x-ui.badge>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $scale->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ $scale->min_score }}% - {{ $scale->max_score }}%</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ $scale->grade_point ?? 'N/A' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="px-6 py-4 text-slate-700 dark:text-slate-300">{{ $scale->name }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center text-xs font-medium px-2.5 py-1 border text-slate-700 dark:text-slate-300"
+                                              style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+                                            {{ $scale->min_score }}% - {{ $scale->max_score }}%
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-700 dark:text-slate-300">{{ $scale->grade_point ?? 'N/A' }}</td>
+                                    <td class="px-6 py-4 text-slate-700 dark:text-slate-300">
                                         {{ $scale->academicLevel?->name ?? 'All Levels' }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{{ $scale->remarks }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td class="px-6 py-4 text-slate-700 dark:text-slate-300">{{ $scale->remarks }}</td>
+                                    <td class="px-6 py-4 text-right">
                                         <form method="POST" action="{{ route('examinations-hub.grading-system.destroy', $scale) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this grade scale?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
+                                            <button type="submit" class="inline-flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors">
+                                                Delete
+                                                <x-heroicon-o-trash class="w-3.5 h-3.5" />
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
@@ -122,53 +166,88 @@
                 </div>
             @endif
         </div>
-    </div>
 
-    <!-- Create Modal -->
-    <div id="createModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white dark:bg-gray-800">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Grade Scale</h3>
-                <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
+    </div>{{-- /container --}}
 
-            <form method="POST" action="{{ route('examinations-hub.grading-system.store') }}">
-                @csrf
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+    {{-- ── CREATE MODAL ── --}}
+    <div id="createModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop --}}
+        <div class="fixed inset-0 bg-slate-900/75 transition-opacity" onclick="document.getElementById('createModal').classList.add('hidden')"></div>
+
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-2xl transform overflow-hidden rounded-[2px] bg-white dark:bg-slate-900 text-left shadow-xl transition-all"
+                 style="border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+                
+                {{-- Modal Header --}}
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"
+                     style="background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm" id="modal-title">Add Grade Scale</h3>
+                    </div>
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" 
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        <x-heroicon-o-x-mark class="w-5 h-5" />
+                    </button>
+                </div>
+
+                {{-- Modal Body --}}
+                <form method="POST" action="{{ route('examinations-hub.grading-system.store') }}" class="p-6 space-y-5">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Letter Grade *</label>
-                            <input type="text" name="letter_grade" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="e.g., A+">
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Letter Grade <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="letter_grade" required 
+                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                   style="border-radius: 2px;" placeholder="e.g., A+">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
-                            <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="e.g., Excellent">
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="name" required 
+                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                   style="border-radius: 2px;" placeholder="e.g., Excellent">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Min Score (%) *</label>
-                            <input type="number" name="min_score" min="0" max="100" step="0.01" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Min Score (%) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="min_score" min="0" max="100" step="0.01" required 
+                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                   style="border-radius: 2px;">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Score (%) *</label>
-                            <input type="number" name="max_score" min="0" max="100" step="0.01" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Max Score (%) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="max_score" min="0" max="100" step="0.01" required 
+                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                   style="border-radius: 2px;">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade Point</label>
-                            <input type="number" name="grade_point" min="0" max="5" step="0.1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="e.g., 4.0">
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Grade Point
+                            </label>
+                            <input type="number" name="grade_point" min="0" max="5" step="0.1" 
+                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                   style="border-radius: 2px;" placeholder="e.g., 4.0">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Level</label>
-                            <select name="academic_level_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                Academic Level
+                            </label>
+                            <select name="academic_level_id" 
+                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                    style="border-radius: 2px;">
                                 <option value="">All Levels (Default)</option>
                                 @foreach($academicLevels as $level)
                                     <option value="{{ $level->id }}">{{ $level->name }}</option>
@@ -178,27 +257,38 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Remarks</label>
-                        <input type="text" name="remarks" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="e.g., Outstanding performance">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                            Remarks
+                        </label>
+                        <input type="text" name="remarks" 
+                               class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                               style="border-radius: 2px;" placeholder="e.g., Outstanding performance">
                     </div>
 
                     <div class="flex items-center">
-                        <input type="checkbox" name="is_default" value="1" id="is_default" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                        <label for="is_default" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" name="is_default" value="1" id="is_default" 
+                               class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500">
+                        <label for="is_default" class="ml-2 block text-sm text-slate-700 dark:text-slate-300">
                             Set as default (applies to all levels if no specific level is selected)
                         </label>
                     </div>
-                </div>
 
-                <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                        Create Grade Scale
-                    </button>
-                </div>
-            </form>
+                    {{-- Modal Footer --}}
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" 
+                                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border"
+                                style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
+                                style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
+                            Create Grade Scale
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+
 </x-layouts.app>

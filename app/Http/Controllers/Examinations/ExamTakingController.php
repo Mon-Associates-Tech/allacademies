@@ -106,8 +106,27 @@ class ExamTakingController extends Controller
 
         $questions = $section->questions;
         
+        // Handle randomization per participant
         if ($section->is_randomized && $questions->isNotEmpty()) {
-            $questions = $questions->shuffle();
+            $randomizedOrder = $submission->randomized_question_order ?? [];
+            $sectionKey = "section_{$section->id}";
+            
+            // If this section hasn't been randomized for this participant yet, randomize and store
+            if (!isset($randomizedOrder[$sectionKey])) {
+                $questionIds = $questions->pluck('id')->shuffle()->values()->toArray();
+                $randomizedOrder[$sectionKey] = $questionIds;
+                $submission->update(['randomized_question_order' => $randomizedOrder]);
+            }
+            
+            // Reorder questions based on stored randomized order
+            $orderedQuestions = collect();
+            foreach ($randomizedOrder[$sectionKey] as $questionId) {
+                $question = $questions->firstWhere('id', $questionId);
+                if ($question) {
+                    $orderedQuestions->push($question);
+                }
+            }
+            $questions = $orderedQuestions;
         }
 
         $responses = $submission->responses ?? [];

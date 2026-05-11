@@ -159,6 +159,46 @@
             </div>
         </div>
 
+        {{-- ── RESULTS AVAILABILITY ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #d97706); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Results Availability</h2>
+            </div>
+            <div class="p-5">
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">When should results be available? <span class="text-red-500">*</span></label>
+                        <select name="result_visibility" id="result_visibility"
+                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                style="border-radius: 2px;" required
+                                onchange="document.getElementById('scheduled_datetime_field').style.display = this.value === 'scheduled' ? 'block' : 'none';">
+                            <option value="immediate" @selected(($seed['result_visibility'] ?? 'immediate')==='immediate')>⚡ Immediately after submission</option>
+                            <option value="after_due_date" @selected(($seed['result_visibility'] ?? '')==='after_due_date')>📅 After exam end date</option>
+                            <option value="scheduled" @selected(($seed['result_visibility'] ?? '')==='scheduled')>🕐 Scheduled date & time</option>
+                            <option value="manual_release" @selected(($seed['result_visibility'] ?? '')==='manual_release')>🔒 Manual release by administrator</option>
+                        </select>
+                    </div>
+                    
+                    <div id="scheduled_datetime_field" class="md:col-span-2" style="display: {{ ($seed['result_visibility'] ?? 'immediate') === 'scheduled' ? 'block' : 'none' }};">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Results Release Date & Time</label>
+                        <div class="relative">
+                            <input type="datetime-local" name="results_release_datetime" value="{{ $seed['results_release_datetime'] ?? '' }}" 
+                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all pl-4 pr-10"
+                                   style="border-radius: 2px;">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Results will automatically become available at this date and time</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- ── PARTICIPANT ACCESS CONTROL ── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">

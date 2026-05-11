@@ -38,6 +38,7 @@ class GeneralExam extends Model
         'instructions',
         'total_marks',
         'result_visibility',
+        'results_release_datetime',
         'results_released',
         'results_released_at',
         'show_correct_answers',
@@ -61,6 +62,7 @@ class GeneralExam extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'results_release_datetime' => 'datetime',
             'results_released_at' => 'datetime',
             'reminder_datetime' => 'datetime',
             'reminder_sent_at' => 'datetime',
@@ -177,6 +179,7 @@ class GeneralExam extends Model
             'immediate' => true,
             'after_due_date' => $this->isExpired(),
             'manual_release' => $this->results_released,
+            'scheduled' => $this->results_release_datetime && now()->gte($this->results_release_datetime),
             default => false,
         };
     }

@@ -309,6 +309,79 @@
                     </div>
                 </div>
 
+                {{-- ── RESULTS AVAILABILITY ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #d97706); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Results Availability</h2>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <dl class="space-y-2.5">
+                            <div class="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800">
+                                <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">Visibility Mode</dt>
+                                <dd class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                    @php
+                                        $visibilityLabel = match($exam->result_visibility) {
+                                            'immediate' => '⚡ Immediate',
+                                            'after_due_date' => '📅 After End Date',
+                                            'scheduled' => '🕐 Scheduled',
+                                            'manual_release' => '🔒 Manual Release',
+                                            default => 'Not Set'
+                                        };
+                                    @endphp
+                                    {{ $visibilityLabel }}
+                                </dd>
+                            </div>
+                            @if($exam->result_visibility === 'scheduled' && $exam->results_release_datetime)
+                                <div class="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800">
+                                    <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">Release Date</dt>
+                                    <dd class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $exam->results_release_datetime->format('M d, Y \a\t h:i A') }}</dd>
+                                </div>
+                            @endif
+                            <div class="flex items-center justify-between py-2">
+                                <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">Currently Available</dt>
+                                <dd>
+                                    @if($exam->canShowResults())
+                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+                                              style="border-radius: 2px;">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Yes
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                                              style="border-radius: 2px;">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                            No
+                                        </span>
+                                    @endif
+                                </dd>
+                            </div>
+                        </dl>
+
+                        @if($exam->result_visibility === 'manual_release')
+                            <form action="{{ route('examinations-hub.exams.toggle-results', $exam) }}" method="POST">
+                                @csrf
+                                @if($exam->results_released)
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all"
+                                            style="border-radius: 2px; background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 2px 8px rgba(220,38,38,0.25);">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        Hide Results from Participants
+                                    </button>
+                                @else
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all"
+                                            style="border-radius: 2px; background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 2px 8px rgba(5,150,105,0.25);">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                        Release Results to Participants
+                                    </button>
+                                @endif
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
                 {{-- ── ADD PARTICIPANT ── --}}
                 <div class="bg-white dark:bg-slate-900 overflow-hidden"
                      style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
