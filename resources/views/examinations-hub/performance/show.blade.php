@@ -1,180 +1,253 @@
 <x-layouts.app>
     <x-examinations-hub.navigation active="performance" />
-    
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <a href="{{ route('examinations-hub.performance.index') }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 text-sm mb-2 inline-block">
-                    ← Back to Participants
-                </a>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                    {{ $participant->participant_name }}
-                </h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">
-                    {{ $participant->participant_email ?? 'No email' }} • {{ ucfirst($participant->participant_type) }} Participant
-                </p>
+
+    {{-- ═══════════════════════════════════════════════════════════
+         PAGE SHELL
+    ═══════════════════════════════════════════════════════════ --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
+         style="font-family: 'system-ui', -apple-system, sans-serif;">
+
+        {{-- ── PAGE HEADER ── --}}
+        <div class="overflow-hidden"
+             style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+            <div class="h-1 w-full" style="background: linear-gradient(90deg, #b45309, #d97706, #fbbf24);"></div>
+            <div class="px-7 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div class="min-w-0">
+                    <a href="{{ route('examinations-hub.performance.index') }}"
+                       class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors mb-3">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        Back to Participants
+                    </a>
+                    <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                        {{ $participant->participant_name }}
+                    </h1>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+                        <span class="text-xs text-slate-400">
+                            {{ $participant->participant_email ?? 'No email on record' }}
+                        </span>
+                        <span class="text-slate-700">·</span>
+                        <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400 px-2 py-0.5 bg-amber-400/10 border border-amber-400/20"
+                              style="border-radius: 2px;">
+                            {{ ucfirst($participant->participant_type) }} Participant
+                        </span>
+                    </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <a href="{{ route('examinations-hub.performance.export', [$participantType, $participantId]) }}{{ !empty($selectedSubjects) ? '?' . http_build_query(['subjects' => $selectedSubjects]) : '' }}"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
+                       style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 10px rgba(5,150,105,0.3);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Export Report
+                    </a>
+                </div>
             </div>
-            <div>
-                <a href="{{ route('examinations-hub.performance.export', [$participantType, $participantId]) }}{{ !empty($selectedSubjects) ? '?' . http_build_query(['subjects' => $selectedSubjects]) : '' }}" 
-                   class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </div>
+
+        {{-- ── SUBJECT FILTER ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #2563eb, #60a5fa); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Filter by Subject</h2>
+            </div>
+            <div class="p-5">
+                <form method="GET" class="space-y-4">
+                    @if($availableSubjects->isNotEmpty())
+                        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                            @foreach($availableSubjects as $subject)
+                                <label class="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all border
+                                    {{ in_array($subject->id, $selectedSubjects) 
+                                        ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30' 
+                                        : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 hover:border-slate-200 dark:hover:border-slate-700' }}"
+                                     style="border-radius: 2px;">
+                                    <input
+                                        type="checkbox"
+                                        name="subjects[]"
+                                        value="{{ $subject->id }}"
+                                        {{ in_array($subject->id, $selectedSubjects) ? 'checked' : '' }}
+                                        class="w-4 h-4 rounded text-amber-600 border-slate-300 dark:border-slate-600 focus:ring-amber-500"
+                                    >
+                                    <span class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ $subject->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-sm text-slate-500 dark:text-slate-400">No subjects available for filtering.</p>
+                    @endif
+                    <div class="flex items-center gap-3 pt-1">
+                        <button type="submit"
+                                class="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white transition-all"
+                                style="border-radius: 2px; background: linear-gradient(135deg, #1e293b, #334155); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+                            Apply Filter
+                        </button>
+                        @if(!empty($selectedSubjects))
+                            <a href="{{ request()->url() }}" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">Clear filters</a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- ── METRICS STRIP ── --}}
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- Total Submissions --}}
+            <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                     style="background: linear-gradient(135deg, #1d4ed8, #3b82f6); border-radius: 2px;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    Export Report
-                </a>
-            </div>
-        </div>
-
-        <!-- Subject Filter -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-            <form method="GET" class="space-y-4">
+                </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Subjects</label>
-                    <div class="grid md:grid-cols-4 gap-3">
-                        @foreach($availableSubjects as $subject)
-                            <label class="flex items-center space-x-2">
-                                <input 
-                                    type="checkbox" 
-                                    name="subjects[]" 
-                                    value="{{ $subject->id }}"
-                                    {{ in_array($subject->id, $selectedSubjects) ? 'checked' : '' }}
-                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                >
-                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $subject->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    Apply Filter
-                </button>
-            </form>
-        </div>
-
-        <!-- Overall Metrics -->
-        <div class="grid md:grid-cols-4 gap-6 mb-6">
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Total Submissions</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ $metrics['total_submissions'] }}</p>
-                    </div>
-                    <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Total Submissions</p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $metrics['total_submissions'] }}</p>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Average Score</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ $metrics['average_percentage'] }}%</p>
-                    </div>
-                    <div class="h-12 w-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
+            {{-- Average Score --}}
+            <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                     style="background: linear-gradient(135deg, #065f46, #059669); border-radius: 2px;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Average Score</p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $metrics['average_percentage'] }}<span class="text-lg font-medium text-slate-500">%</span></p>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Overall Grade</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ $metrics['overall_grade'] }}</p>
-                    </div>
-                    <div class="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                        </svg>
-                    </div>
+            {{-- Overall Grade --}}
+            <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                     style="background: linear-gradient(135deg, #b45309, #d97706); border-radius: 2px;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Overall Grade</p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $metrics['overall_grade'] }}</p>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Pending Review</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ $metrics['pending_submissions'] }}</p>
-                    </div>
-                    <div class="h-12 w-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+            {{-- Pending Review --}}
+            <div class="bg-white dark:bg-slate-900 px-5 py-5 flex items-center gap-4"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                     style="background: linear-gradient(135deg, #92400e, #b45309); border-radius: 2px;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Pending Review</p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $metrics['pending_submissions'] }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="grid lg:grid-cols-2 gap-6 mb-6">
-            <!-- Performance Trend Chart -->
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Trend</h2>
-                <div class="h-64">
-                    <canvas id="trendChart"></canvas>
+        {{-- ── CHARTS ROW ── --}}
+        <div class="grid lg:grid-cols-2 gap-6">
+            {{-- Performance Trend --}}
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <div class="w-1 h-5" style="background: linear-gradient(180deg, #2563eb, #60a5fa); border-radius: 1px;"></div>
+                    <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Performance Trend</h2>
+                </div>
+                <div class="p-5">
+                    <div class="h-64">
+                        <canvas id="trendChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- Grade Distribution Chart -->
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Grade Distribution</h2>
-                <div class="h-64">
-                    <canvas id="gradeChart"></canvas>
+            {{-- Grade Distribution --}}
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
+                    <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Grade Distribution</h2>
+                </div>
+                <div class="p-5">
+                    <div class="h-64">
+                        <canvas id="gradeChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Subject Performance -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Performance by Subject</h2>
-            <div class="h-80 mb-6">
-                <canvas id="subjectChart"></canvas>
+        {{-- ── SUBJECT PERFORMANCE ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Performance by Subject</h2>
             </div>
+
+            <div class="p-5 border-b border-slate-50 dark:border-slate-800">
+                <div class="h-72">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            </div>
+
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Subject</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Submissions</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Score</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Percentage</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Grade</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Subject</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Submissions</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Score</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Percentage</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Grade</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
                         @forelse($metrics['subject_performance'] as $performance)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                                <td class="px-6 py-3.5 font-semibold text-slate-800 dark:text-slate-200">
                                     {{ $performance['subject']->name ?? 'Unknown' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
+                                <td class="px-6 py-3.5 text-center text-slate-600 dark:text-slate-400">
                                     {{ $performance['submissions_count'] }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    {{ $performance['total_score'] }} / {{ $performance['total_marks'] }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium
-                                        @if($performance['percentage'] >= 80) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                        @elseif($performance['percentage'] >= 60) bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                        @elseif($performance['percentage'] >= 50) bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                        @else bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                        @endif">
-                                        {{ $performance['percentage'] }}%
+                                <td class="px-6 py-3.5 text-center">
+                                    <span class="font-mono text-xs font-medium text-slate-700 dark:text-slate-300 px-2 py-1 bg-slate-100 dark:bg-slate-800"
+                                          style="border-radius: 2px;">
+                                        {{ $performance['total_score'] }} / {{ $performance['total_marks'] }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-semibold text-gray-900 dark:text-white">
+                                <td class="px-6 py-3.5 text-center">
+                                    @php
+                                        $pct = $performance['percentage'];
+                                        $pctStyle = $pct >= 80
+                                            ? 'color:#065f46;background:#ecfdf5;border-color:#a7f3d0;'
+                                            : ($pct >= 60
+                                                ? 'color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe;'
+                                                : ($pct >= 50
+                                                    ? 'color:#92400e;background:#fffbeb;border-color:#fde68a;'
+                                                    : 'color:#991b1b;background:#fef2f2;border-color:#fecaca;'));
+                                    @endphp
+                                    <span class="inline-block text-xs font-bold px-2.5 py-1 border"
+                                          style="border-radius: 2px; {{ $pctStyle }}">
+                                        {{ $pct }}%
+                                    </span>
+                                </td>
+                                <td class="px-6 py-3.5 text-center font-bold text-slate-800 dark:text-slate-200">
                                     {{ $performance['average_grade'] }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-400 dark:text-slate-500">
                                     No subject performance data available
                                 </td>
                             </tr>
@@ -184,74 +257,115 @@
             </div>
         </div>
 
-        <!-- Grade Distribution -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Grade Summary</h2>
-            <div class="grid grid-cols-6 gap-4">
-                @foreach(['A+', 'A', 'B', 'C', 'D', 'F'] as $grade)
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-gray-900 dark:text-white">
-                            {{ $metrics['grade_distribution'][$grade] ?? 0 }}
+        {{-- ── GRADE SUMMARY ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Grade Summary</h2>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                    @php
+                        $gradeConfig = [
+                            'A+' => ['bg' => 'linear-gradient(135deg,#065f46,#059669)', 'light' => '#ecfdf5', 'border' => '#a7f3d0', 'text' => '#065f46'],
+                            'A'  => ['bg' => 'linear-gradient(135deg,#1d4ed8,#3b82f6)', 'light' => '#eff6ff', 'border' => '#bfdbfe', 'text' => '#1d4ed8'],
+                            'B'  => ['bg' => 'linear-gradient(135deg,#5b21b6,#7c3aed)', 'light' => '#f5f3ff', 'border' => '#ddd6fe', 'text' => '#5b21b6'],
+                            'C'  => ['bg' => 'linear-gradient(135deg,#92400e,#d97706)', 'light' => '#fffbeb', 'border' => '#fde68a', 'text' => '#92400e'],
+                            'D'  => ['bg' => 'linear-gradient(135deg,#c2410c,#f97316)', 'light' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#c2410c'],
+                            'F'  => ['bg' => 'linear-gradient(135deg,#991b1b,#ef4444)', 'light' => '#fef2f2', 'border' => '#fecaca', 'text' => '#991b1b'],
+                        ];
+                    @endphp
+                    @foreach($gradeConfig as $grade => $cfg)
+                        @php $count = $metrics['grade_distribution'][$grade] ?? 0; @endphp
+                        <div class="flex flex-col items-center justify-center py-5 border"
+                             style="border-radius: 2px; background: {{ $count > 0 ? $cfg['light'] : '#f8fafc' }}; border-color: {{ $count > 0 ? $cfg['border'] : 'rgba(0,0,0,0.06)' }};">
+                            <span class="text-3xl font-bold mb-1"
+                                  style="letter-spacing: -0.04em; color: {{ $count > 0 ? $cfg['text'] : '#94a3b8' }};">
+                                {{ $count }}
+                            </span>
+                            <span class="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-white mb-1"
+                                  style="border-radius: 2px; background: {{ $count > 0 ? $cfg['bg'] : 'linear-gradient(135deg,#94a3b8,#cbd5e1)' }};">
+                                {{ $grade }}
+                            </span>
                         </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Grade {{ $grade }}</div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </div>
 
-        <!-- Recent Submissions -->
-        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Submissions</h2>
+        {{-- ── RECENT SUBMISSIONS TABLE ── --}}
+        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <div class="w-1 h-5" style="background: linear-gradient(180deg, #0369a1, #38bdf8); border-radius: 1px;"></div>
+                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Recent Submissions</h2>
+            </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Exam</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Subject</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Score</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Grade</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Exam</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Subject</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Score</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Grade</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Status</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Date</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
                         @forelse($submissions as $submission)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                                <td class="px-6 py-3.5 font-medium text-slate-800 dark:text-slate-200">
                                     {{ $submission->assignment->title }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                <td class="px-6 py-3.5 text-slate-600 dark:text-slate-400">
                                     {{ $submission->assignment->sections->first()?->academicSubject->name ?? 'N/A' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    {{ $submission->score ?? '-' }} / {{ $submission->total_marks ?? '-' }}
+                                <td class="px-6 py-3.5 text-center">
+                                    <span class="font-mono text-xs font-medium px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                          style="border-radius: 2px;">
+                                        {{ $submission->score ?? '—' }} / {{ $submission->total_marks ?? '—' }}
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-semibold text-gray-900 dark:text-white">
-                                    {{ $submission->grade ?? '-' }}
+                                <td class="px-6 py-3.5 text-center font-bold text-slate-800 dark:text-slate-200">
+                                    {{ $submission->grade ?? '—' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium
-                                        @if($submission->status === 'auto_graded' || $submission->status === 'final') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                        @elseif($submission->status === 'submitted') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                        @else bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200
-                                        @endif">
+                                <td class="px-6 py-3.5 text-center">
+                                    @php
+                                        $status = $submission->status;
+                                        if (in_array($status, ['auto_graded', 'final'])) {
+                                            $sStyle = 'color:#065f46;background:#ecfdf5;border-color:#a7f3d0;';
+                                            $dot = '#059669';
+                                        } elseif ($status === 'submitted') {
+                                            $sStyle = 'color:#92400e;background:#fffbeb;border-color:#fde68a;';
+                                            $dot = '#d97706';
+                                        } else {
+                                            $sStyle = 'color:#475569;background:#f1f5f9;border-color:#e2e8f0;';
+                                            $dot = '#94a3b8';
+                                        }
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 border"
+                                          style="border-radius: 2px; {{ $sStyle }}">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background: {{ $dot }};"></span>
                                         {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    {{ $submission->submitted_at?->format('M d, Y') ?? '-' }}
+                                <td class="px-6 py-3.5 text-center text-slate-500 dark:text-slate-400 text-xs">
+                                    {{ $submission->submitted_at?->format('M d, Y') ?? '—' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="{{ route('examinations-hub.submissions.show', [$submission->assignment, $submission]) }}" 
-                                       class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
+                                <td class="px-6 py-3.5 text-right">
+                                    <a href="{{ route('examinations-hub.submissions.show', [$submission->assignment, $submission]) }}"
+                                       class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors">
                                         View Details
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="7" class="px-6 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
                                     No submissions found
                                 </td>
                             </tr>
@@ -260,27 +374,32 @@
                 </table>
             </div>
         </div>
-    </div>
+
+    </div>{{-- /container --}}
 
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Performance Trend Chart
+        document.addEventListener('DOMContentLoaded', function () {
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+            const tickColor   = isDark ? '#94a3b8' : '#64748b';
+            const tooltipBg   = 'rgba(15,23,42,0.92)';
+
+            // ── Performance Trend ──────────────────────────────
             const trendData = @json($metrics['trend_data']);
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            new Chart(trendCtx, {
+            new Chart(document.getElementById('trendChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: Object.keys(trendData),
                     datasets: [{
                         label: 'Performance %',
                         data: Object.values(trendData),
-                        borderColor: 'rgb(99, 102, 241)',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        borderWidth: 3,
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217,119,6,0.08)',
+                        borderWidth: 2.5,
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: 'rgb(99, 102, 241)',
+                        pointBackgroundColor: '#d97706',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
                         pointRadius: 5,
@@ -294,54 +413,53 @@
                         y: {
                             beginAtZero: true,
                             max: 100,
-                            ticks: {
-                                callback: function(value) { return value + '%'; }
-                            }
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, callback: v => v + '%', font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: tickColor, font: { size: 11 } }
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: tooltipBg,
                             padding: 12,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Score: ' + context.parsed.y + '%';
-                                }
-                            }
+                            cornerRadius: 2,
+                            callbacks: { label: ctx => 'Score: ' + ctx.parsed.y + '%' }
                         }
                     }
                 }
             });
 
-            // Grade Distribution Chart
+            // ── Grade Distribution ─────────────────────────────
             const gradeData = @json($metrics['grade_distribution']);
-            const gradeCtx = document.getElementById('gradeChart').getContext('2d');
-            new Chart(gradeCtx, {
+            new Chart(document.getElementById('gradeChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ['A+', 'A', 'B', 'C', 'D', 'F'],
                     datasets: [{
                         label: 'Count',
-                        data: ['A+', 'A', 'B', 'C', 'D', 'F'].map(grade => gradeData[grade] || 0),
+                        data: ['A+', 'A', 'B', 'C', 'D', 'F'].map(g => gradeData[g] || 0),
                         backgroundColor: [
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(99, 102, 241, 0.8)',
-                            'rgba(251, 191, 36, 0.8)',
-                            'rgba(249, 115, 22, 0.8)',
-                            'rgba(239, 68, 68, 0.8)'
+                            'rgba(5,150,105,0.85)',
+                            'rgba(37,99,235,0.85)',
+                            'rgba(124,58,237,0.85)',
+                            'rgba(217,119,6,0.85)',
+                            'rgba(234,88,12,0.85)',
+                            'rgba(220,38,38,0.85)'
                         ],
                         borderColor: [
-                            'rgb(34, 197, 94)',
-                            'rgb(59, 130, 246)',
-                            'rgb(99, 102, 241)',
-                            'rgb(251, 191, 36)',
-                            'rgb(249, 115, 22)',
-                            'rgb(239, 68, 68)'
+                            'rgb(5,150,105)',
+                            'rgb(37,99,235)',
+                            'rgb(124,58,237)',
+                            'rgb(217,119,6)',
+                            'rgb(234,88,12)',
+                            'rgb(220,38,38)'
                         ],
-                        borderWidth: 2,
-                        borderRadius: 6
+                        borderWidth: 1.5,
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -350,33 +468,38 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { stepSize: 1 }
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, stepSize: 1, font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: tickColor, font: { size: 11 } }
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12
+                            backgroundColor: tooltipBg,
+                            padding: 12,
+                            cornerRadius: 2
                         }
                     }
                 }
             });
 
-            // Subject Performance Chart
+            // ── Subject Performance ────────────────────────────
             const subjectData = @json($metrics['subject_performance']);
-            const subjectCtx = document.getElementById('subjectChart').getContext('2d');
-            new Chart(subjectCtx, {
+            new Chart(document.getElementById('subjectChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: subjectData.map(s => s.subject?.name || 'Unknown'),
                     datasets: [{
                         label: 'Percentage',
                         data: subjectData.map(s => s.percentage),
-                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                        borderColor: 'rgb(99, 102, 241)',
-                        borderWidth: 2,
-                        borderRadius: 6
+                        backgroundColor: 'rgba(124,58,237,0.75)',
+                        borderColor: 'rgb(124,58,237)',
+                        borderWidth: 1.5,
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -387,24 +510,27 @@
                         x: {
                             beginAtZero: true,
                             max: 100,
-                            ticks: {
-                                callback: function(value) { return value + '%'; }
-                            }
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, callback: v => v + '%', font: { size: 11 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: tickColor, font: { size: 11 } }
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: tooltipBg,
                             padding: 12,
+                            cornerRadius: 2,
                             callbacks: {
-                                label: function(context) {
-                                    const index = context.dataIndex;
-                                    const subject = subjectData[index];
+                                label: function (ctx) {
+                                    const s = subjectData[ctx.dataIndex];
                                     return [
-                                        'Score: ' + subject.total_score + '/' + subject.total_marks,
-                                        'Percentage: ' + subject.percentage + '%',
-                                        'Grade: ' + subject.average_grade
+                                        'Score: ' + s.total_score + ' / ' + s.total_marks,
+                                        'Percentage: ' + s.percentage + '%',
+                                        'Grade: ' + s.average_grade
                                     ];
                                 }
                             }
