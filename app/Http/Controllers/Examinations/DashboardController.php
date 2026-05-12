@@ -129,4 +129,21 @@ class DashboardController extends Controller
 
         return back()->with('success', 'Reminder settings updated successfully.');
     }
+
+    public function toggleResults(GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        if ($exam->result_visibility !== 'manual_release') {
+            return back()->withErrors(['error' => 'Results can only be toggled for exams with manual release mode.']);
+        }
+
+        $exam->update(['results_released' => !$exam->results_released]);
+
+        $message = $exam->results_released 
+            ? 'Results have been released to participants.' 
+            : 'Results have been hidden from participants.';
+
+        return back()->with('success', $message);
+    }
 }

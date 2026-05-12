@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations-hub')->name('exami
     Route::post('/exams/{exam}/send-invitations', [DashboardController::class, 'sendInvitations'])->name('exams.send-invitations');
     Route::post('/exams/{exam}/send-reminder', [DashboardController::class, 'sendReminder'])->name('exams.send-reminder');
     Route::post('/exams/{exam}/reminder-settings', [DashboardController::class, 'updateReminderSettings'])->name('exams.reminder-settings');
+    Route::post('/exams/{exam}/toggle-results', [DashboardController::class, 'toggleResults'])->name('exams.toggle-results');
 
     Route::get('/exams/{exam}/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('/exams/{exam}/submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
