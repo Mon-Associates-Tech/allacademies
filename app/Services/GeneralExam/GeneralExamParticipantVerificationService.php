@@ -2,8 +2,8 @@
 
 namespace App\Services\GeneralExam;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamParticipant;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamParticipant;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;

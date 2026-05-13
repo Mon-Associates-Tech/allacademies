@@ -2,11 +2,11 @@
 
 namespace App\Services\GeneralExam;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamParticipant;
-use App\Models\GeneralExamQuestion;
-use App\Models\GeneralExamSection;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamParticipant;
+use App\ExaminationHub\Models\GeneralExamQuestion;
+use App\ExaminationHub\Models\GeneralExamSection;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Models\ProctoringSession;
 use App\Models\Student;
 use App\Models\User;

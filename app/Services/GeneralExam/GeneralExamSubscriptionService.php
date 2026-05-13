@@ -3,11 +3,11 @@
 namespace App\Services\GeneralExam;
 
 use App\Enums\GeneralExamSubscriptionStatus;
-use App\Models\GeneralExamScoreAuditLog;
-use App\Models\GeneralExamSubmission;
-use App\Models\GeneralExamSubscription;
-use App\Models\GeneralExamSubscriptionPayment;
-use App\Models\GeneralExamSubscriptionPlan;
+use App\ExaminationHub\Models\GeneralExamScoreAuditLog;
+use App\ExaminationHub\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExamSubscription;
+use App\ExaminationHub\Models\GeneralExamSubscriptionPayment;
+use App\ExaminationHub\Models\GeneralExamSubscriptionPlan;
 use App\Models\User;
 use App\Services\PaystackService;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +54,7 @@ class GeneralExamSubscriptionService
             return round($perSlot * $additionalParticipants, 2);
         }
 
-        $tier = \App\Models\GeneralExamPricingTier::forSubjectCount($subjectCount);
+        $tier = \App\ExaminationHub\Models\GeneralExamPricingTier::forSubjectCount($subjectCount);
 
         if (! $tier) {
             return 0.0;
@@ -434,7 +434,7 @@ class GeneralExamSubscriptionService
      */
     public function getParticipantPerformance(User $instructor, string $identifier): array
     {
-        $examIds = \App\Models\GeneralExam::where('user_id', $instructor->id)->pluck('id');
+        $examIds = \App\ExaminationHub\Models\GeneralExam::where('user_id', $instructor->id)->pluck('id');
 
         $submissions = GeneralExamSubmission::whereIn('general_exam_id', $examIds)
             ->whereNotNull('submitted_at')

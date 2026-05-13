@@ -3,8 +3,8 @@
 namespace App\Livewire\Owner;
 
 use App\Models\AcademicSubject;
-use App\Models\GeneralExamSubscription;
-use App\Models\GeneralExamSubscriptionPlan;
+use App\ExaminationHub\Models\GeneralExamSubscription;
+use App\ExaminationHub\Models\GeneralExamSubscriptionPlan;
 use App\Models\User;
 use App\Services\GeneralExam\GeneralExamSubscriptionService;
 use Livewire\Component;

@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Services\GeneralExam\GeneralExamService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -360,7 +360,7 @@ class ManageGeneralExams extends Component
             ->distinct('participant_id')
             ->count('participant_id');
 
-        $questionTypeCounts = \App\Models\GeneralExamQuestion::whereIn('general_exam_id', $assignmentIds)
+        $questionTypeCounts = \App\ExaminationHub\Models\GeneralExamQuestion::whereIn('general_exam_id', $assignmentIds)
             ->selectRaw("SUM(CASE WHEN type IN ('multiple_choice','true_false') THEN 1 ELSE 0 END) as auto_gradable")
             ->selectRaw("SUM(CASE WHEN type IN ('short_answer','essay') THEN 1 ELSE 0 END) as manual_review")
             ->first();

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Teachers;
 
 use App\Http\Controllers\Controller;
-use App\Models\GeneralExam;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 

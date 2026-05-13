@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Mail\ExamInvitationMail;
-use App\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExam;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

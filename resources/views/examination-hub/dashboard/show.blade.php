@@ -1,0 +1,517 @@
+<x-layouts.app>
+    <x-examination-hub.navigation active="manage" />
+
+    {{-- ═══════════════════════════════════════════════════════════
+         PAGE SHELL
+    ═══════════════════════════════════════════════════════════ --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
+         style="font-family: 'system-ui', -apple-system, sans-serif;">
+
+        {{-- ── PAGE HEADER ── --}}
+        <div class="overflow-hidden"
+             style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+            <div class="h-1 w-full" style="background: linear-gradient(90deg, #b45309, #d97706, #fbbf24);"></div>
+            <div class="px-7 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-xs font-medium tracking-widest text-amber-400 uppercase mb-1" style="letter-spacing: 0.15em;">Examination Management</p>
+                    <h1 class="text-2xl font-bold text-white leading-snug truncate" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                        {{ $exam->title }}
+                    </h1>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs text-slate-400">
+                            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            Code: <span class="font-mono font-semibold text-amber-400">{{ $exam->access_code }}</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 text-xs text-slate-400">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            {{ $exam->duration_in_minutes ?? 0 }} minutes
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 text-xs text-slate-400">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            {{ $exam->questions_count }} questions
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    @if(!$exam->starts_at || now()->lt($exam->starts_at))
+                        <a href="{{ route('examination-hub.exams.edit', $exam) }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
+                           style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 8px rgba(5,150,105,0.3);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit Exam
+                        </a>
+                    @endif
+                    <a href="{{ route('examination-hub.submissions.index', $exam) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
+                       style="border-radius: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        View Submissions
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── FLASH MESSAGES ── --}}
+        @if(session('success'))
+            <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                 style="border-radius: 2px;">
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-sm text-emerald-800 dark:text-emerald-300">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950/30"
+                 style="border-radius: 2px;">
+                <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-sm text-red-800 dark:text-red-300">{{ session('error') }}</p>
+            </div>
+        @endif
+
+        {{-- ── STATS STRIP ── --}}
+        <div class="grid grid-cols-3 gap-4">
+            @foreach([
+                ['label' => 'Total Sections',   'value' => $exam->sections_count,    'icon' => 'M4 6h16M4 10h16M4 14h16M4 18h16'],
+                ['label' => 'Total Questions',  'value' => $exam->questions_count,   'icon' => 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['label' => 'Submissions',      'value' => $exam->submissions_count, 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+            ] as $stat)
+                <div class="bg-white dark:bg-slate-900 flex items-center gap-4 px-5 py-4"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                         style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 2px;">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $stat['icon'] }}"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">{{ $stat['label'] }}</p>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.03em;">{{ $stat['value'] }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- ── MAIN TWO-COLUMN GRID ── --}}
+        <div class="grid md:grid-cols-2 gap-6 items-start">
+
+            {{-- ┌─────────────────────────────────┐
+                 │  SECTION NAVIGATOR               │
+                 └─────────────────────────────────┘ --}}
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Section Navigator</h2>
+                    </div>
+                    <span class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                          style="border-radius: 2px;">{{ $exam->sections_count }} sections</span>
+                </div>
+
+                <div class="p-5">
+                    @if($exam->hardened_mode && $exam->starts_at && now()->lt($exam->starts_at))
+                        <div class="flex items-start gap-3 p-4 mb-4 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30"
+                             style="border-radius: 2px;">
+                            <div class="w-8 h-8 flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-900"
+                                 style="border-radius: 2px;">
+                                <svg class="w-4 h-4 text-amber-700 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Hardened Mode Active</p>
+                                <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5 leading-relaxed">
+                                    Questions are hidden until exam starts on
+                                    <span class="font-medium">{{ $exam->starts_at->format('M d, Y \a\t h:i A') }}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            @foreach($sectionNavigator as $section)
+                                <div class="p-4 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40"
+                                     style="border-radius: 2px;">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex items-start gap-2.5">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white flex-shrink-0 mt-0.5"
+                                                  style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 2px;">
+                                                {{ $section['index'] }}
+                                            </span>
+                                            <div>
+                                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $section['title'] }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                                    {{ $section['question_count'] }} questions
+                                                    @if($section['time_limit_minutes'])
+                                                        · {{ $section['time_limit_minutes'] }} min limit
+                                                    @else
+                                                        · No time limit
+                                                    @endif
+                                                </p>
+                                                @if(!empty($section['instructions']))
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{{ $section['instructions'] }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800"
+                                         style="border-radius: 2px;">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">Questions hidden until start</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="space-y-2">
+                            @foreach($sectionNavigator as $section)
+                                <div class="p-4 border border-slate-100 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-800 transition-colors"
+                                     style="border-radius: 2px;">
+                                    <div class="flex items-start gap-2.5">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white flex-shrink-0 mt-0.5"
+                                              style="background: linear-gradient(135deg, #b45309, #d97706); border-radius: 2px;">
+                                            {{ $section['index'] }}
+                                        </span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $section['title'] }}</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                                {{ $section['question_count'] }} questions
+                                                @if($section['time_limit_minutes'])
+                                                    · {{ $section['time_limit_minutes'] }} min limit
+                                                @else
+                                                    · No time limit
+                                                @endif
+                                            </p>
+                                            @if(!empty($section['instructions']))
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed border-l-2 border-slate-200 dark:border-slate-700 pl-2">{{ $section['instructions'] }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ┌─────────────────────────────────┐
+                 │  RIGHT COLUMN                    │
+                 └─────────────────────────────────┘ --}}
+            <div class="space-y-5">
+
+                {{-- ── EMAIL INVITATIONS ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #2563eb, #60a5fa); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Email Invitations & Reminders</h2>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        {{-- Info note --}}
+                        <div class="flex items-start gap-2.5 p-3.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900"
+                             style="border-radius: 2px;">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <p class="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+                                Send invitations to all configured participants with exam details and a calendar file attachment.
+                            </p>
+                        </div>
+
+                        {{-- Send invitations button --}}
+                        <form action="{{ route('examination-hub.exams.send-invitations', $exam) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                Send Invitations Now
+                            </button>
+                        </form>
+
+                        {{-- Divider --}}
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100 dark:border-slate-800"></div></div>
+                            <div class="relative flex justify-center"><span class="px-3 text-xs text-slate-400 bg-white dark:bg-slate-900 uppercase tracking-wider">Automated Reminders</span></div>
+                        </div>
+
+                        {{-- Reminder settings --}}
+                        <form action="{{ route('examination-hub.exams.reminder-settings', $exam) }}" method="POST" class="space-y-3">
+                            @csrf
+                            <div class="flex items-center gap-3 px-3.5 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                                 style="border-radius: 2px;">
+                                <input type="checkbox" name="send_reminders" id="send_reminders" value="1"
+                                       {{ $exam->send_reminders ? 'checked' : '' }}
+                                       class="w-4 h-4 rounded text-amber-600 border-slate-300 dark:border-slate-600 focus:ring-amber-500">
+                                <label for="send_reminders" class="text-sm font-medium text-slate-700 dark:text-slate-300">Enable Automatic Reminders</label>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" style="font-size: 10px; letter-spacing: 0.1em;">Send Reminder On</label>
+                                <input type="datetime-local" name="reminder_datetime"
+                                       value="{{ $exam->reminder_datetime?->format('Y-m-d\TH:i') }}"
+                                       class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                       style="border-radius: 2px;">
+                            </div>
+
+                            <button type="submit"
+                                    class="w-full py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                    style="border-radius: 2px;">
+                                Save Reminder Settings
+                            </button>
+                        </form>
+
+                        @if($exam->reminder_sent)
+                            <div class="flex items-center gap-2 px-3.5 py-2.5 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30"
+                                 style="border-radius: 2px;">
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <p class="text-xs text-emerald-800 dark:text-emerald-300">
+                                    Reminder sent {{ $exam->reminder_sent_at->format('M d, Y \a\t h:i A') }}
+                                </p>
+                            </div>
+                        @endif
+
+                        <form action="{{ route('examination-hub.exams.send-reminder', $exam) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706); box-shadow: 0 2px 8px rgba(180,83,9,0.25);">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                Send Manual Reminder Now
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- ── PARTICIPANT SETTINGS ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                            <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Participant Settings</h2>
+                        </div>
+                        <span class="text-xs px-2 py-1 font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800"
+                              style="border-radius: 2px;">{{ ucfirst($exam->participant_mode) }}</span>
+                    </div>
+                    <div class="p-5">
+                        <dl class="space-y-2.5">
+                            @foreach([
+                                ['label' => 'Mode',            'value' => ucfirst($exam->participant_mode)],
+                                ['label' => 'Match Rule',      'value' => ucfirst($exam->configured_match_mode ?? 'any')],
+                                ['label' => 'Required Fields', 'value' => implode(', ', $exam->participant_required_fields ?? [])],
+                                ['label' => 'Configured',      'value' => $configuredCount . ' participants'],
+                            ] as $row)
+                                <div class="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800 last:border-0">
+                                    <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">{{ $row['label'] }}</dt>
+                                    <dd class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $row['value'] }}</dd>
+                                </div>
+                            @endforeach
+                        </dl>
+                    </div>
+                </div>
+
+                {{-- ── RESULTS AVAILABILITY ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #d97706); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Results Availability</h2>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <dl class="space-y-2.5">
+                            <div class="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800">
+                                <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">Visibility Mode</dt>
+                                <dd class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                    @php
+                                        $visibilityLabel = match($exam->result_visibility) {
+                                            'immediate' => '⚡ Immediate',
+                                            'after_due_date' => '📅 After End Date',
+                                            'scheduled' => '🕐 Scheduled',
+                                            'manual_release' => '🔒 Manual Release',
+                                            default => 'Not Set'
+                                        };
+                                    @endphp
+                                    {{ $visibilityLabel }}
+                                </dd>
+                            </div>
+                            @if($exam->result_visibility === 'scheduled' && $exam->results_release_datetime)
+                                <div class="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800">
+                                    <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">Release Date</dt>
+                                    <dd class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $exam->results_release_datetime->format('M d, Y \a\t h:i A') }}</dd>
+                                </div>
+                            @endif
+                            <div class="flex items-center justify-between py-2">
+                                <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">Currently Available</dt>
+                                <dd>
+                                    @if($exam->canShowResults())
+                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+                                              style="border-radius: 2px;">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Yes
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                                              style="border-radius: 2px;">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                            No
+                                        </span>
+                                    @endif
+                                </dd>
+                            </div>
+                        </dl>
+
+                        @if($exam->result_visibility === 'manual_release')
+                            <form action="{{ route('examination-hub.exams.toggle-results', $exam) }}" method="POST">
+                                @csrf
+                                @if($exam->results_released)
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all"
+                                            style="border-radius: 2px; background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 2px 8px rgba(220,38,38,0.25);">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        Hide Results from Participants
+                                    </button>
+                                @else
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-all"
+                                            style="border-radius: 2px; background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 2px 8px rgba(5,150,105,0.25);">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                        Release Results to Participants
+                                    </button>
+                                @endif
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- ── ADD PARTICIPANT ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #059669, #34d399); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Add Participant</h2>
+                    </div>
+                    <div class="p-5">
+                        <form action="{{ route('examination-hub.participants.configured.store', $exam) }}" method="POST" class="space-y-3">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Full Name</label>
+                                <input name="name" placeholder="e.g. John Mensah" required
+                                       class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                       style="border-radius: 2px;">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Email Address</label>
+                                <input name="email" type="email" placeholder="e.g. john@example.com" required
+                                       class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                       style="border-radius: 2px;">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Unique Code <span class="normal-case text-slate-400">(optional)</span></label>
+                                <input name="unique_code" placeholder="e.g. STU-2024-001"
+                                       class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                       style="border-radius: 2px;">
+                            </div>
+                            <button type="submit"
+                                    class="w-full py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #0f172a, #1e293b); box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                Add Participant
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- ── IMPORT CSV ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #0369a1, #38bdf8); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Import Participants</h2>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-center gap-2 px-3 py-2 mb-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
+                             style="border-radius: 2px;">
+                            <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">CSV format: <span class="text-slate-700 dark:text-slate-300">name, email, unique_code</span></p>
+                        </div>
+                        <form action="{{ route('examination-hub.participants.configured.import', $exam) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Select CSV File</label>
+                                <input type="file" name="participants_csv" accept=".csv" required
+                                       class="w-full text-sm text-slate-600 dark:text-slate-400 file:mr-3 file:py-2 file:px-4 file:border-0 file:text-xs file:font-semibold file:text-white file:cursor-pointer border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer"
+                                       style="border-radius: 2px; --tw-file-border-radius: 2px;"
+                                       onchange="this.parentElement.querySelector('style') || (()=>{ const s=document.createElement('style'); s.textContent='input[type=file]::file-selector-button{background:linear-gradient(135deg,#1e293b,#334155);border-radius:2px;}'; this.parentElement.appendChild(s); })()">
+                            </div>
+                            <button type="submit"
+                                    class="w-full py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #0369a1, #0284c7); box-shadow: 0 2px 8px rgba(3,105,161,0.25);">
+                                Import from CSV
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>{{-- /right column --}}
+        </div>{{-- /grid --}}
+
+        {{-- ── CONFIGURED PARTICIPANTS TABLE ── --}}
+        @if($configuredParticipants->isNotEmpty())
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Configured Participants</h2>
+                    </div>
+                    <span class="text-xs px-2 py-1 font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
+                          style="border-radius: 2px;">{{ $configuredCount }} total</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Unique Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
+                            @foreach($configuredParticipants as $participant)
+                                <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                                    <td class="px-6 py-3.5 font-medium text-slate-800 dark:text-slate-200">{{ $participant->name }}</td>
+                                    <td class="px-6 py-3.5 text-slate-600 dark:text-slate-400">{{ $participant->email }}</td>
+                                    <td class="px-6 py-3.5">
+                                        @if($participant->unique_code)
+                                            <span class="font-mono text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                                  style="border-radius: 2px;">{{ $participant->unique_code }}</span>
+                                        @else
+                                            <span class="text-slate-400 dark:text-slate-600">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-3.5">
+                                        @if($participant->is_active)
+                                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+                                                  style="border-radius: 2px;">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                Active
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                                                  style="border-radius: 2px;">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                Inactive
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+    </div>{{-- /container --}}
+</x-layouts.app>

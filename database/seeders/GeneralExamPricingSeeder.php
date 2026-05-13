@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\GeneralExamPricingTier;
-use App\Models\GeneralExamSubscriptionPlan;
+use App\ExaminationHub\Models\GeneralExamPricingTier;
+use App\ExaminationHub\Models\GeneralExamSubscriptionPlan;
 use Illuminate\Database\Seeder;
 
 class GeneralExamPricingSeeder extends Seeder

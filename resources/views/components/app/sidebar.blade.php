@@ -280,7 +280,7 @@
                         <li class="mb-0.5" title="General Exams Dashboard">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                               href="{{ route('examinations-hub.dashboard') }}">
+                               href="{{ route('examination-hub.dashboard') }}">
                                 <div class="flex items-center">
                                     <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.dashboard') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
@@ -293,7 +293,7 @@
                         <li class="mb-0.5 hidden" title="Manage General Exams">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.manage') || Route::is('examinations-hub.exams.show') || Route::is('examinations-hub.submissions.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                               href="{{ route('examinations-hub.manage') }}">
+                               href="{{ route('examination-hub.manage') }}">
                                 <div class="flex items-center">
                                     <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.manage') || Route::is('examinations-hub.exams.show') || Route::is('examinations-hub.submissions.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path d="M4 4h16v2H4zm0 4h16v12H4zm4 3v2h8v-2zm0 4v2h5v-2z"/>
@@ -306,7 +306,7 @@
                         <li class="mb-0.5 hidden" title="Create General Exam">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.create') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                               href="{{ route('examinations-hub.create') }}">
+                               href="{{ route('examination-hub.create') }}">
                                 <div class="flex items-center">
                                     <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.create') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/>
@@ -319,7 +319,7 @@
                         <li class="mb-0.5 hidden" title="Exam Subscriptions">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.subscriptions') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                               href="{{ route('examinations-hub.subscriptions') }}">
+                               href="{{ route('examination-hub.subscriptions') }}">
                                 <div class="flex items-center">
                                     <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.subscriptions') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path d="M2 6h20v12H2zm2 2v8h16V8zm2 2h6v2H6z"/>
@@ -333,7 +333,7 @@
                             <li class="mb-0.5 hidden     last:mb-2" title="Admin Exam Pricing">
                                 <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
                                    class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.admin') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                                   href="{{ route('examinations-hub.admin') }}">
+                                   href="{{ route('examination-hub.admin') }}">
                                     <div class="flex items-center">
                                         <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.admin') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                             <path d="M12 2 1 7l11 5 9-4.09V17h2V7zM5 10.18V14c0 2.21 3.13 4 7 4s7-1.79 7-4v-3.82l-7 3.18z"/>

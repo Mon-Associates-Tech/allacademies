@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Owner;
 
-use App\Models\GeneralExamPricingTier;
+use App\ExaminationHub\Models\GeneralExamPricingTier;
 use Livewire\Component;
 
 class GeneralExamPricingTierManager extends Component

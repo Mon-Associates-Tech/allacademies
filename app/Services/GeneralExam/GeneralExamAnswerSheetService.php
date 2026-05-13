@@ -2,7 +2,7 @@
 
 namespace App\Services\GeneralExam;
 
-use App\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExam;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfInstance;
 

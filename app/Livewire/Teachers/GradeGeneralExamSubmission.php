@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamQuestion;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamQuestion;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Services\GeneralExam\GeneralExamGradingService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;

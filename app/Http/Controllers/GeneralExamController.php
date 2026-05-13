@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GeneralExamParticipant;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExamParticipant;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

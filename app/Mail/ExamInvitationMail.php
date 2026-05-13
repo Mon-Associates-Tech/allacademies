@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExam;
 use App\Services\IcsCalendarService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;

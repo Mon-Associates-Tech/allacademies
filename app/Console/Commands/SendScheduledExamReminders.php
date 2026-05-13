@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\SendExamRemindersJob;
-use App\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExam;
 use Illuminate\Console\Command;
 
 class SendScheduledExamReminders extends Command

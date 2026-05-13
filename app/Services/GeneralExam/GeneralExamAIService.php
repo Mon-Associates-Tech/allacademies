@@ -2,7 +2,7 @@
 
 namespace App\Services\GeneralExam;
 
-use App\Models\GeneralExamQuestion;
+use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\Services\AcademicChatService;
 use App\Services\PdfContentExtractionService;
 use Illuminate\Http\UploadedFile;

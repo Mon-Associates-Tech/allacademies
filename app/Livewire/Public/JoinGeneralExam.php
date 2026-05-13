@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Public;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamParticipant;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamParticipant;
 use App\Models\Student;
 use App\Services\GeneralExam\GeneralExamParticipantVerificationService;
 use App\Services\GeneralExam\GeneralExamService;

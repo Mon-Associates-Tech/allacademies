@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExam;
 use Carbon\Carbon;
 
 class IcsCalendarService

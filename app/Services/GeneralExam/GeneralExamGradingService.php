@@ -2,9 +2,9 @@
 
 namespace App\Services\GeneralExam;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamQuestion;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamQuestion;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Models\User;
 use App\Services\AcademicChatService;
 use Illuminate\Support\Facades\Log;

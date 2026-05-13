@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Services\GeneralExam\GeneralExamParticipantVerificationService;
 use App\Services\GeneralExam\GeneralExamGradingService;
 use Illuminate\Support\Facades\Auth;
@@ -185,7 +185,7 @@ class ViewGeneralExamResults extends Component
         if (! empty($this->search)) {
             $query->where(function ($q) {
                 // For GeneralExamParticipant
-                $q->whereHasMorph('participant', ['App\Models\GeneralExamParticipant'], function ($query) {
+                $q->whereHasMorph('participant', ['App\ExaminationHub\Models\GeneralExamParticipant'], function ($query) {
                     $query->where('name', 'like', '%'.$this->search.'%')
                         ->orWhere('email', 'like', '%'.$this->search.'%');
                 })

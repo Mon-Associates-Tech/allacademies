@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Public;
 
-use App\Models\GeneralExam;
-use App\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Services\GeneralExam\GeneralExamGradingService;
 use App\Services\GeneralExam\GeneralExamService;
 use Livewire\Component;
