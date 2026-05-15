@@ -31,9 +31,9 @@
             <form method="GET" class="grid md:grid-cols-4 gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Search</label>
-                    <input 
-                        type="text" 
-                        name="search" 
+                    <input
+                        type="text"
+                        name="search"
                         value="{{ $filters['search'] ?? '' }}"
                         placeholder="Search by title or access code..."
                         class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
@@ -51,7 +51,7 @@
                 </div>
 
                 <div class="flex items-end">
-                    <button type="submit" 
+                    <button type="submit"
                             class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all w-full"
                             style="border-radius: 2px; background: linear-gradient(135deg, #1e293b, #334155); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,29 +66,19 @@
 
     {{-- ── EXAMINATIONS LIST ── --}}
     @forelse($exams as $exam)
-        <div class="bg-white dark:bg-slate-900 overflow-hidden"
-             style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-            
-            {{-- Card Header --}}
-            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/30">
-                <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.1em;">
-                        {{ $exam->title }}
-                    </h3>
-                </div>
-                <div>
-                    @php
-                        $statusStyle = $exam->status === 'published'
-                            ? 'color:#065f46;background:#ecfdf5;border-color:#a7f3d0;'
-                            : 'color:#475569;background:#f1f5f9;border-color:#e2e8f0;';
-                    @endphp
-                    <span class="inline-flex items-center justify-center text-xs font-semibold px-3 py-1 border"
-                          style="border-radius: 2px; {{ $statusStyle }}">
-                        {{ ucfirst($exam->status) }}
-                    </span>
-                </div>
-            </div>
+        <x-ui.card variant="default" shadow="true">
+            <x-ui.card-header title="{{ $exam->title }}" accent="primary">
+                <x-slot:actions>
+        <span class="inline-flex items-center justify-center text-xs font-semibold px-3 py-1 border rounded-[2px]
+            @if($exam->status === 'published')
+                text-emerald-800 bg-emerald-50 border-emerald-200 dark:text-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800
+            @else
+                text-slate-700 bg-slate-100 border-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:border-slate-700
+            @endif">
+            {{ ucfirst($exam->status) }}
+        </span>
+                </x-slot:actions>
+            </x-ui.card-header>
 
             <div class="p-5">
                 @if($exam->description)
@@ -97,102 +87,90 @@
 
                 {{-- Metrics Grid --}}
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    {{-- Access Code --}}
-                    <div class="bg-white dark:bg-slate-900 px-4 py-4 flex flex-col items-center justify-center text-center"
-                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Access Code</p>
-                        <p class="text-lg font-mono font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.02em;">{{ $exam->access_code }}</p>
-                    </div>
-
-                    {{-- Sections --}}
-                    <div class="bg-white dark:bg-slate-900 px-4 py-4 flex flex-col items-center justify-center text-center"
-                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Sections</p>
-                        <p class="text-2xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.04em;">{{ $exam->sections_count }}</p>
-                    </div>
-
-                    {{-- Questions --}}
-                    <div class="bg-white dark:bg-slate-900 px-4 py-4 flex flex-col items-center justify-center text-center"
-                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Questions</p>
-                        <p class="text-2xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.04em;">{{ $exam->questions_count }}</p>
-                    </div>
-
-                    {{-- Submissions --}}
-                    <div class="bg-white dark:bg-slate-900 px-4 py-4 flex flex-col items-center justify-center text-center"
-                         style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Submissions</p>
-                        <p class="text-2xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.04em;">{{ $exam->submissions_count }}</p>
-                    </div>
+                    @foreach([
+    ['label' => 'Access Code', 'value' => $exam->access_code, 'size' => 'lg', 'mono' => true],
+    ['label' => 'Sections',     'value' => $exam->sections_count, 'size' => '2xl', 'mono' => false],
+    ['label' => 'Questions',    'value' => $exam->questions_count, 'size' => '2xl', 'mono' => false],
+    ['label' => 'Submissions',  'value' => $exam->submissions_count, 'size' => '2xl', 'mono' => false],
+] as $metric)
+                        <div class="bg-white dark:bg-slate-900 px-4 py-4 flex flex-col items-center justify-center text-center rounded-[2px] border border-slate-200/50 dark:border-slate-800 shadow-sm">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 text-[10px]">
+                                {{ $metric['label'] }}
+                            </p>
+                            <p class="font-bold text-slate-900 dark:text-white tracking-tight {{ $metric['mono'] ? 'font-mono' : '' }} text-{{ $metric['size'] }}">
+                                {{ $metric['value'] }}
+                            </p>
+                        </div>
+                    @endforeach
                 </div>
 
-                {{-- Footer Actions --}}
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    {{-- Schedule Info --}}
-                    @if($exam->starts_at)
-                        <div class="flex items-center gap-3 text-sm">
-                            <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center"
-                                 style="border-radius: 2px; background: linear-gradient(135deg, #1e293b, #334155);">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
+                <x-ui.card-footer>
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        {{-- Schedule Info --}}
+                        @if($exam->starts_at)
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-[2px] bg-gradient-to-br from-slate-800 to-slate-700">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest">Scheduled</div>
+                                    <div class="font-semibold text-slate-900 dark:text-white">{{ $exam->starts_at->format('M d, Y \a\t h:i A') }}</div>
+                                    @if($exam->ends_at)
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">Ends: {{ $exam->ends_at->format('M d, Y \a\t h:i A') }}</div>
+                                    @endif
+                                </div>
                             </div>
-                            <div>
-                                <div class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Scheduled</div>
-                                <div class="font-semibold text-slate-900 dark:text-white">{{ $exam->starts_at->format('M d, Y \a\t h:i A') }}</div>
-                                @if($exam->ends_at)
-                                    <div class="text-xs text-slate-500 dark:text-slate-400">Ends: {{ $exam->ends_at->format('M d, Y \a\t h:i A') }}</div>
-                                @endif
+                        @else
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-[2px] bg-gradient-to-br from-slate-500 to-slate-400">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest">Schedule</div>
+                                    <div class="font-semibold text-slate-400 dark:text-slate-500">Not scheduled</div>
+                                </div>
                             </div>
-                        </div>
-                    @else
-                        <div class="flex items-center gap-3 text-sm">
-                            <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center"
-                                 style="border-radius: 2px; background: linear-gradient(135deg, #64748b, #94a3b8);">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Schedule</div>
-                                <div class="font-semibold text-slate-400 dark:text-slate-500">Not scheduled</div>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Action Buttons --}}
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{{ route('examination-hub.exams.show', $exam) }}" 
-                           class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
-                           style="border-radius: 2px; background: linear-gradient(135deg, #1e293b, #334155); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                            View Details
-                        </a>
-                        @if(!$exam->starts_at || now()->lt($exam->starts_at))
-                            <a href="{{ route('examination-hub.exams.edit', $exam) }}" 
-                               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
-                               style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 6px rgba(5,150,105,0.3);">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                                Edit
-                            </a>
                         @endif
-                        <a href="{{ route('examination-hub.submissions.index', $exam) }}" 
-                           class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border"
-                           style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Submissions
-                        </a>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex flex-wrap gap-2">
+                            <x-ui.button
+                                variant="secondary"
+                                size="md"
+                                icon="eye"
+                                href="{{ route('examination-hub.exams.show', $exam) }}"
+                            >
+                                View Details
+                            </x-ui.button>
+
+                            @if(!$exam->starts_at || now()->lt($exam->starts_at))
+                                <x-ui.button
+                                    variant="success"
+                                    size="md"
+                                    icon="pencil"
+                                    href="{{ route('examination-hub.exams.edit', $exam) }}"
+                                >
+                                    Edit
+                                </x-ui.button>
+                            @endif
+
+                            <x-ui.button
+                                variant="ghost"
+                                size="md"
+                                icon="document-text"
+                                href="{{ route('examination-hub.submissions.index', $exam) }}"
+                            >
+                                Submissions
+                            </x-ui.button>
+                        </div>
                     </div>
-                </div>
+                </x-ui.card-footer>
             </div>
-        </div>
+        </x-ui.card>
     @empty
         {{-- Empty State --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden text-center py-16"
@@ -206,7 +184,7 @@
                 </div>
                 <p class="text-lg font-semibold text-slate-900 dark:text-white">No examinations found</p>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Get started by creating your first examination</p>
-                <a href="{{ route('examination-hub.create') }}" 
+                <a href="{{ route('examination-hub.create') }}"
                    class="mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all"
                    style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
                     Create Your First Exam

@@ -1,5 +1,7 @@
 <?php
 
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamParticipant;
 use App\Http\Controllers\GeneralExamController;
 use App\Http\Controllers\Student\GeneralExamController as StudentGeneralExamController;
 use App\Http\Controllers\Teachers\GeneralExamController as TeacherGeneralExamController;
@@ -50,9 +52,9 @@ Route::get('/general-exams/verify-email', function () {
             ->with('error', $result['error']);
     }
 
-    /** @var \App\Models\GeneralExamParticipant $participant */
+    /** @var GeneralExamParticipant $participant */
     $participant = $result['participant'];
-    /** @var \App\Models\GeneralExam $assignment */
+    /** @var GeneralExam $assignment */
     $assignment = $result['assignment'];
 
     // Check eligibility
@@ -68,7 +70,7 @@ Route::get('/general-exams/verify-email', function () {
     } else {
         $submission = $assignmentService->getOrCreateSubmission(
             $assignment,
-            \App\Models\GeneralExamParticipant::class,
+            GeneralExamParticipant::class,
             $participant->id,
             [
                 'ip_address' => request()->ip(),
@@ -131,28 +133,28 @@ Route::middleware(['auth', 'verified'])->prefix('teachers/general-exams')->name(
 
     // API-style actions (for AJAX/Livewire)
     Route::post('/{assignment}/publish', function ($assignment) {
-        $assignment = \App\Models\GeneralExam::findOrFail($assignment);
+        $assignment = GeneralExam::findOrFail($assignment);
         $assignment->update(['status' => 'published']);
 
         return response()->json(['success' => true, 'message' => 'Assignment published']);
     })->name('publish');
 
     Route::post('/{assignment}/close', function ($assignment) {
-        $assignment = \App\Models\GeneralExam::findOrFail($assignment);
+        $assignment = GeneralExam::findOrFail($assignment);
         $assignment->update(['status' => 'closed']);
 
         return response()->json(['success' => true, 'message' => 'Assignment closed']);
     })->name('close');
 
     Route::post('/{assignment}/release-results', function ($assignment) {
-        $assignment = \App\Models\GeneralExam::findOrFail($assignment);
+        $assignment = GeneralExam::findOrFail($assignment);
         $assignment->releaseResults();
 
         return response()->json(['success' => true, 'message' => 'Results released']);
     })->name('release-results');
 
     Route::delete('/{assignment}', function ($assignment) {
-        $assignment = \App\Models\GeneralExam::findOrFail($assignment);
+        $assignment = GeneralExam::findOrFail($assignment);
         $assignment->delete();
 
         return response()->json(['success' => true, 'message' => 'Assignment deleted']);
@@ -164,7 +166,7 @@ Route::middleware(['auth', 'verified'])->prefix('teachers/general-exams')->name(
 
     // Download answer sheet (print subscriptions only)
     Route::get('/{assignment}/answer-sheet', function ($assignment, GeneralExamAnswerSheetService $service) {
-        $assignment = \App\Models\GeneralExam::with(['questions', 'sections.questions', 'subscription'])
+        $assignment = GeneralExam::with(['questions', 'sections.questions', 'subscription'])
             ->where('user_id', auth()->id())
             ->findOrFail($assignment);
 
@@ -195,7 +197,7 @@ Route::middleware(['auth', 'verified'])->prefix('general-exams/subscriptions')->
             return redirect()->route('general-exams.subscription.dashboard')->with('error', 'No payment reference found.');
         }
 
-        $payment = \App\Models\GeneralExamSubscriptionPayment::where('paystack_reference', $reference)->first();
+        $payment = \App\ExaminationHub\Models\GeneralExamSubscriptionPayment::where('paystack_reference', $reference)->first();
         if (! $payment) {
             return redirect()->route('general-exams.subscription.dashboard')->with('error', 'Payment record not found.');
         }

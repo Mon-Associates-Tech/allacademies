@@ -8,5 +8,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 interface ExamSubmissionExportServiceInterface
 {
     public function exportCsv(GeneralExam $exam): StreamedResponse;
+
+    public function exportExcel(GeneralExam $exam): StreamedResponse;
 }
 

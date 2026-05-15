@@ -1,7 +1,7 @@
 @php
     $seed = $formData ?? old();
     $seedSections = $seed['sections'] ?? [['title'=>'Section A','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
-    
+
     // Set default dates if not provided
     $defaultStartsAt = $seed['starts_at'] ?? now()->format('Y-m-d\TH:i');
     $defaultEndsAt = $seed['ends_at'] ?? now()->addWeek()->format('Y-m-d\TH:i');
@@ -52,24 +52,24 @@
                 <div class="grid md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Exam Title <span class="text-red-500">*</span></label>
-                        <input name="title" value="{{ $seed['title'] ?? '' }}" placeholder="e.g., Final Mathematics Examination 2024" 
+                        <input name="title" value="{{ $seed['title'] ?? '' }}" placeholder="e.g., Final Mathematics Examination 2024"
                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                style="border-radius: 2px;" required>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Status <span class="text-red-500">*</span></label>
-                        <select name="status" 
+                        <select name="status"
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;" required>
                             <option value="draft" @selected(($seed['status'] ?? 'draft')==='draft')>📝 Draft</option>
                             <option value="published" @selected(($seed['status'] ?? '')==='published')>✅ Published</option>
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Exam Mode</label>
-                        <select name="hardened_mode" 
+                        <select name="hardened_mode"
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
                             <option value="0" @selected(($seed['hardened_mode'] ?? '0')==='0')>👁️ Normal (Preview Questions)</option>
@@ -82,25 +82,25 @@
                             <span>Hardened mode prevents viewing questions before exam creation</span>
                         </p>
                     </div>
-                    
+
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Description</label>
-                        <textarea name="description" placeholder="Brief description of the examination" 
+                        <textarea name="description" placeholder="Brief description of the examination"
                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                   style="border-radius: 2px;" rows="2">{{ $seed['description'] ?? '' }}</textarea>
                     </div>
-                    
+
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">General Instructions</label>
-                        <textarea name="instructions" placeholder="Instructions and rules for the entire examination" 
+                        <textarea name="instructions" placeholder="Instructions and rules for the entire examination"
                                   class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                   style="border-radius: 2px;" rows="3">{{ $seed['instructions'] ?? '' }}</textarea>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Total Duration (minutes)</label>
                         <div class="relative">
-                            <input type="number" min="1" name="duration_in_minutes" value="{{ $seed['duration_in_minutes'] ?? '' }}" placeholder="e.g., 120" 
+                            <input type="number" min="1" name="duration_in_minutes" value="{{ $seed['duration_in_minutes'] ?? '' }}" placeholder="e.g., 120"
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all pl-4 pr-10"
                                    style="border-radius: 2px;">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -110,11 +110,11 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Start Date & Time <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="datetime-local" name="starts_at" value="{{ $defaultStartsAt }}" 
+                            <input type="datetime-local" name="starts_at" value="{{ $defaultStartsAt }}"
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all pl-4 pr-10"
                                    style="border-radius: 2px;" required>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -124,11 +124,11 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">End Date & Time <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="datetime-local" name="ends_at" value="{{ $defaultEndsAt }}" 
+                            <input type="datetime-local" name="ends_at" value="{{ $defaultEndsAt }}"
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all pl-4 pr-10"
                                    style="border-radius: 2px;" required>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -180,11 +180,11 @@
                             <option value="manual_release" @selected(($seed['result_visibility'] ?? '')==='manual_release')>🔒 Manual release by administrator</option>
                         </select>
                     </div>
-                    
+
                     <div id="scheduled_datetime_field" class="md:col-span-2" style="display: {{ ($seed['result_visibility'] ?? 'immediate') === 'scheduled' ? 'block' : 'none' }};">
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Results Release Date & Time</label>
                         <div class="relative">
-                            <input type="datetime-local" name="results_release_datetime" value="{{ $seed['results_release_datetime'] ?? '' }}" 
+                            <input type="datetime-local" name="results_release_datetime" value="{{ $seed['results_release_datetime'] ?? '' }}"
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all pl-4 pr-10"
                                    style="border-radius: 2px;">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -210,7 +210,7 @@
                 <div class="grid md:grid-cols-2 gap-5">
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Participant Mode <span class="text-red-500">*</span></label>
-                        <select name="participant_mode" 
+                        <select name="participant_mode"
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;" required>
                             <option value="general" @selected(($seed['participant_mode'] ?? 'general')==='general')>🌐 General (Anyone with code)</option>
@@ -218,17 +218,17 @@
                             <option value="both" @selected(($seed['participant_mode'] ?? '')==='both')>🔀 Both</option>
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Configured Match Rule <span class="text-red-500">*</span></label>
-                        <select name="configured_match_mode" 
+                        <select name="configured_match_mode"
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;" required>
                             <option value="any" @selected(($seed['configured_match_mode'] ?? 'any')==='any')>Match email OR code</option>
                             <option value="both" @selected(($seed['configured_match_mode'] ?? '')==='both')>Match email AND code</option>
                         </select>
                     </div>
-                    
+
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Required Participant Fields</label>
                         @php $oldFields = $seed['participant_required_fields'] ?? ['name','email']; @endphp
@@ -280,15 +280,14 @@
 
         {{-- ── FORM ACTIONS ── --}}
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
-            <a href="{{ route('examination-hub.dashboard') }}" 
-               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border"
-               style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+            <a href="{{ route('examination-hub.dashboard') }}"
+               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border border-slate-200/50 rounded-sm bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
                 Cancel
             </a>
-            <button type="submit" 
+            <button type="submit"
                     class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-all"
                     style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

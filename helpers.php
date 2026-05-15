@@ -509,7 +509,7 @@ if (!function_exists('extractQuestionsFromDocument')) {
     /**
      * Extract or generate questions from document content
      * Intelligently detects if content contains pre-formatted questions or needs generation
-     * 
+     *
      * @param string $content The document content
      * @param string $questionType Type of questions (multiple_choice, true_false, essay, short_answer)
      * @param int $count Number of questions to extract/generate

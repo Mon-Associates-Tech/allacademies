@@ -152,14 +152,14 @@
                     @endif
 
                     <div class="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <a href="{{ route('examinations-hub.take.start', $this->exam) }}"
+                        <a href="{{ route('examination-hub.take.start', $this->exam) }}"
                            class="inline-flex items-center gap-2 px-4 py-2 text-sm text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                            style="border-radius: 2px;">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                             Back to Overview
                         </a>
                         @if($sectionIndex < $this->exam->sections->count() - 1)
-                            <a href="{{ route('examinations-hub.take.section', [$this->exam, $sectionIndex + 1]) }}"
+                            <a href="{{ route('examination-hub.take.section', [$this->exam, $sectionIndex + 1]) }}"
                                class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white transition-colors"
                                style="background: #1e293b; border-radius: 2px;">
                                 Skip to Next Section
@@ -272,8 +272,7 @@
                     {{-- Question body --}}
                     <div class="px-6 pt-6 pb-5">
                         {{-- Question text --}}
-                        <div class="text-slate-800 dark:text-slate-200 mb-7 leading-relaxed"
-                             style="font-size: 1.05rem; font-family: 'Georgia', serif;"
+                        <div class="text-slate-800 dark:text-slate-200 mb-7 leading-relaxed text-[1.05rem] font-serif"
                              wire:key="question-text-{{ $question->id }}">
                             <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
                         </div>
@@ -282,9 +281,13 @@
                         @if($question->isMultipleChoice())
                             <div class="space-y-2" wire:key="options-{{ $question->id }}">
                                 @foreach($question->getOptionsForDisplay() as $key => $optionText)
-                                    <label wire:key="opt-{{ $question->id }}-{{ $key }}"
-                                           class="flex items-start gap-3 p-3.5 cursor-pointer transition-all duration-150 group"
-                                           style="border-radius: 2px; border: 1.5px solid {{ isset($responses[$question->id]) && $responses[$question->id] === $key ? '#d97706' : 'rgba(0,0,0,0.08)' }}; background: {{ isset($responses[$question->id]) && $responses[$question->id] === $key ? 'linear-gradient(to right, #fffbeb, #fefce8)' : '#fff' }};">
+                                    @php
+                                        $isSelected = isset($responses[$question->id]) && $responses[$question->id] === $key;
+                                    @endphp
+                                    <label
+                                        wire:key="opt-{{ $question->id }}-{{ $key }}"
+                                        class="flex items-start gap-3 p-3.5 cursor-pointer transition-all duration-150 group rounded-[2px] border {{ $isSelected ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800' }}"
+                                    >
                                         <input
                                             type="radio"
                                             name="question_{{ $question->id }}"
@@ -293,24 +296,27 @@
                                             class="h-4 w-4 text-amber-600 border-slate-300 focus:ring-amber-500 flex-shrink-0 mt-1"
                                         >
                                         <div class="flex-1 flex items-start gap-3">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold flex-shrink-0 mt-0.5 transition-colors"
-                                                  style="border-radius: 2px; background: {{ isset($responses[$question->id]) && $responses[$question->id] === $key ? '#d97706' : '#f1f5f9' }}; color: {{ isset($responses[$question->id]) && $responses[$question->id] === $key ? '#fff' : '#475569' }};">
-                                                {{ $key }}
-                                            </span>
+                        <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold flex-shrink-0 mt-0.5 transition-colors rounded-[2px] {{ $isSelected ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                            {{ $key }}
+                        </span>
                                             <div class="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
-                                                <x-form.markdown-with-math :content="$optionText" class="text-gray-800 dark:text-gray-200" />
+                                                <x-form.markdown-with-math :content="$optionText" class="text-slate-800 dark:text-slate-200" />
                                             </div>
                                         </div>
                                     </label>
                                 @endforeach
                             </div>
 
-                        {{-- ── TRUE / FALSE ── --}}
+                            {{-- ── TRUE / FALSE ── --}}
                         @elseif($question->isTrueFalse())
                             <div class="grid grid-cols-2 gap-3">
                                 @foreach(['True', 'False'] as $tfValue)
-                                    <label class="flex items-center justify-center gap-3 py-5 cursor-pointer transition-all duration-150"
-                                           style="border-radius: 2px; border: 1.5px solid {{ isset($responses[$question->id]) && $responses[$question->id] === $tfValue ? '#d97706' : 'rgba(0,0,0,0.08)' }}; background: {{ isset($responses[$question->id]) && $responses[$question->id] === $tfValue ? 'linear-gradient(135deg, #fffbeb, #fefce8)' : '#f8fafc' }};">
+                                    @php
+                                        $isSelected = isset($responses[$question->id]) && $responses[$question->id] === $tfValue;
+                                    @endphp
+                                    <label
+                                        class="flex items-center justify-center gap-3 py-5 cursor-pointer transition-all duration-150 rounded-[2px] {{ $isSelected ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800' }}"
+                                    >
                                         <input
                                             type="radio"
                                             name="question_{{ $question->id }}"
@@ -323,15 +329,14 @@
                                 @endforeach
                             </div>
 
-                        {{-- ── OPEN / ESSAY ── --}}
+                            {{-- ── OPEN / ESSAY ── --}}
                         @else
                             <div>
-                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Your Answer</label>
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Your Answer</label>
                                 <textarea
                                     wire:model.live.debounce.500ms="responses.{{ $question->id }}"
                                     rows="10"
-                                    class="w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed"
-                                    style="border-radius: 2px; font-family: 'Georgia', serif;"
+                                    class="w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
                                     placeholder="Type your answer here…"
                                 ></textarea>
                                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Responses are saved automatically as you type.</p>
@@ -413,7 +418,7 @@
                 {{-- Centre action --}}
                 <div class="flex items-center gap-2">
                     @if($sectionIndex < $this->exam->sections->count() - 1)
-                        <a href="{{ route('examinations-hub.take.section', [$this->exam, $sectionIndex + 1]) }}"
+                        <a href="{{ route('examination-hub.take.section', [$this->exam, $sectionIndex + 1]) }}"
                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                            style="border-radius: 2px; background: #334155; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
                             Next Section
@@ -422,7 +427,7 @@
                             </svg>
                         </a>
                     @else
-                        <form method="POST" action="{{ route('examinations-hub.take.submit', $this->exam) }}">
+                        <form method="POST" action="{{ route('examination-hub.take.submit', $this->exam) }}">
                             @csrf
                             <button type="submit"
                                     class="inline-flex items-center gap-2 px-7 py-2.5 text-sm font-bold text-white transition-all"

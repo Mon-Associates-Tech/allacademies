@@ -97,5 +97,11 @@
             document.documentElement.classList.add('dark');
         }
     </script>
+
+    <script >
+        import ExamProctoring from '/../resources/js/proctoring.js';
+        const proctor = new ExamProctoring({ sessionId: {{ request('proctoring_session_id') ?? 'null' }} });
+        proctor.init();
+    </script>
 </body>
 </html>

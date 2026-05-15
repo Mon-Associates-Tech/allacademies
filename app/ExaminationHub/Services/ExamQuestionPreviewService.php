@@ -2,9 +2,9 @@
 
 namespace App\ExaminationHub\Services;
 
-use App\Models\EssayQuestion;
-use App\Models\MultipleChoiceQuestion;
-use App\Models\TrueOrFalseQuestion;
+use App\ExaminationHub\Models\EssayQuestion;
+use App\ExaminationHub\Models\MultipleChoiceQuestion;
+use App\ExaminationHub\Models\TrueOrFalseQuestion;
 use App\Support\Mark;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -22,7 +22,7 @@ class ExamQuestionPreviewService
             'sections_count' => count($sections),
             'sections_data' => $sections,
         ]);
-        
+
         return collect($sections)->map(function (array $section, int $index) use ($hardenedMode) {
             if ($hardenedMode) {
                 return $this->getPlaceholderForHardenedMode($section);
@@ -94,7 +94,7 @@ class ExamQuestionPreviewService
             try {
                 $content = $this->extractContentFromPath($section['document_path'], $section['document_name'] ?? 'document.txt');
                 Log::info('Content extracted', ['content_length' => strlen($content), 'preview' => substr($content, 0, 200)]);
-                
+
                 if (!empty($content)) {
                     $questions = $this->generationService->generateQuestionsFromContent($content, $questionType, $count);
                     Log::info('Questions generated from document', ['count' => count($questions)]);

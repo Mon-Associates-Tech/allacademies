@@ -1,6 +1,6 @@
 <x-layouts.app>
     <x-examination-hub.navigation active="manage" />
-    
+
     {{-- ═══════════════════════════════════════════════════════════
          PAGE SHELL
     ═══════════════════════════════════════════════════════════ --}}
@@ -19,15 +19,19 @@
                     <p class="text-slate-400 mt-2 text-sm">{{ $exam->title }}</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('examination-hub.exams.show', $exam) }}" 
-                       class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border"
-                       style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+                    <a href="{{ route('examination-hub.exams.show', $exam) }}"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all
+          border border-slate-200 dark:border-slate-600
+          bg-gradient-to-br from-slate-50 to-slate-100
+          dark:from-slate-700 dark:to-slate-800
+          text-slate-700 dark:text-slate-200"
+                       style="border-radius: 2px;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                         Back to Exam
                     </a>
-                    <a href="{{ route('examination-hub.submissions.export', $exam) }}" 
+                    <a href="{{ route('examination-hub.submissions.export', $exam) }}"
                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                        style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 10px rgba(5,150,105,0.3);">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +178,7 @@
                                     {{ optional($submission->submitted_at)?->format('M d, Y H:i') ?? 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="{{ route('examination-hub.submissions.show', [$exam, $submission]) }}" 
+                                    <a href="{{ route('examination-hub.submissions.show', [$exam, $submission]) }}"
                                        class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors">
                                         View Details
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

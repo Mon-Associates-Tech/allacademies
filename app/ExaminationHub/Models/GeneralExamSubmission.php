@@ -2,6 +2,8 @@
 
 namespace App\ExaminationHub\Models;
 
+use App\Models\ProctoringSession;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -76,7 +78,7 @@ class GeneralExamSubmission extends Model
         return $this->belongsTo(GeneralExam::class, 'general_exam_id');
     }
 
-    public function participant(): MorphTo
+    public function generalExamParticipant(): MorphTo
     {
         return $this->morphTo();
     }
@@ -261,14 +263,14 @@ class GeneralExamSubmission extends Model
     {
         $schoolId = auth()->user()?->school_id;
         $levelId = $this->assignment?->academic_level_id;
-        
+
         if ($schoolId) {
-            $gradeScale = GradeScale::getForScore($percentage, $schoolId, $levelId);
+            $gradeScale = ExaminationHubGradeScale::getForScore($percentage, $schoolId, $levelId);
             if ($gradeScale) {
                 return $gradeScale->letter_grade;
             }
         }
-        
+
         // Fallback to default grading if no custom scale found
         return match (true) {
             $percentage >= 90 => 'A+',

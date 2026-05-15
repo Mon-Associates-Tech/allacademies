@@ -108,7 +108,7 @@ class ParticipantController extends Controller
         }
 
         $participant = $this->accessService->createOrReuseParticipant($data['name'], $data['email']);
-        $submission = $this->generalExamService->getOrCreateSubmission($exam, \App\Models\GeneralExamParticipant::class, $participant->id, [
+        $submission = $this->generalExamService->getOrCreateSubmission($exam, \App\ExaminationHub\Models\GeneralExamParticipant::class, $participant->id, [
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

@@ -83,5 +83,6 @@ class Kernel extends HttpKernel
         'school.scope' => \App\Http\Middleware\AutomaticSchoolScoping::class,
         'assignment.session' => \App\Http\Middleware\AssignmentSessionMiddleware::class,
         'token.subscription' => \App\Http\Middleware\CheckTokenSubscription::class,
+        'proctor.exam' => \App\Http\Middleware\ProctorExamMiddleware::class,
     ];
 }

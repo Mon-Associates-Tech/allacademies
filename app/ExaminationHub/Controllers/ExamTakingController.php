@@ -2,9 +2,11 @@
 
 namespace App\ExaminationHub\Controllers;
 
+use App\ExaminationHub\Services\GradingSystemService;
 use App\Http\Controllers\Controller;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +14,13 @@ use Illuminate\View\View;
 
 class ExamTakingController extends Controller
 {
+    private $gradingService;
+
+    public function __construct()
+    {
+        $this->gradingService = app()->make(GradingSystemService::class);
+    }
+
     public function join(): View
     {
         return view('examination-hub.take.join');
@@ -105,19 +114,19 @@ class ExamTakingController extends Controller
         }
 
         $questions = $section->questions;
-        
+
         // Handle randomization per participant
         if ($section->is_randomized && $questions->isNotEmpty()) {
             $randomizedOrder = $submission->randomized_question_order ?? [];
             $sectionKey = "section_{$section->id}";
-            
+
             // If this section hasn't been randomized for this participant yet, randomize and store
             if (!isset($randomizedOrder[$sectionKey])) {
                 $questionIds = $questions->pluck('id')->shuffle()->values()->toArray();
                 $randomizedOrder[$sectionKey] = $questionIds;
                 $submission->update(['randomized_question_order' => $randomizedOrder]);
             }
-            
+
             // Reorder questions based on stored randomized order
             $orderedQuestions = collect();
             foreach ($randomizedOrder[$sectionKey] as $questionId) {
@@ -141,36 +150,45 @@ class ExamTakingController extends Controller
         ]);
     }
 
-    public function saveResponse(Request $request, GeneralExam $exam): RedirectResponse
+    public function saveResponse(Request $request, GeneralExam $exam): JsonResponse|RedirectResponse
     {
         $submissionId = session('exam_submission_id');
-        $submission = GeneralExamSubmission::find($submissionId);
+        $submission   = GeneralExamSubmission::find($submissionId);
 
         if (!$submission || $submission->general_exam_id !== $exam->id) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Invalid session.'], 403);
+            }
             abort(403, 'Invalid session.');
         }
 
         if ($submission->submitted_at) {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'already_submitted']);
+            }
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
         $data = $request->validate([
-            'question_id' => ['required', 'integer', 'exists:general_exam_questions,id'],
-            'response' => ['required', 'string'],
+            'question_id'  => ['required', 'integer', 'exists:general_exam_questions,id'],
+            'response'     => ['required', 'string'],
             'section_index' => ['required', 'integer'],
         ]);
 
         $responses = $submission->responses ?? [];
         $responses[$data['question_id']] = [
-            'response' => $data['response'],
+            'response'    => $data['response'],
             'answered_at' => now()->toIso8601String(),
         ];
 
         $submission->update(['responses' => $responses]);
 
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'saved', 'question_id' => $data['question_id']]);
+        }
+
         return back()->with('success', 'Response saved.');
     }
-
     public function submit(Request $request, GeneralExam $exam): RedirectResponse
     {
         $submissionId = session('exam_submission_id');
@@ -185,8 +203,8 @@ class ExamTakingController extends Controller
         }
 
         DB::transaction(function () use ($submission, $exam) {
-            $timeTaken = $submission->started_at 
-                ? now()->diffInMinutes($submission->started_at) 
+            $timeTaken = $submission->started_at
+                ? $submission->started_at->diffInMinutes(now())
                 : 0;
 
             $submission->update([
@@ -205,7 +223,7 @@ class ExamTakingController extends Controller
     public function completed(GeneralExam $exam): View
     {
         $participantEmail = session('exam_participant_data.email');
-        
+
         return view('examination-hub.take.completed', [
             'exam' => $exam,
             'participantEmail' => $participantEmail,
@@ -271,7 +289,7 @@ class ExamTakingController extends Controller
     {
         $participantType = $participantData['type'];
         $participantId = $participantData['id'];
-        
+
         // For general participants, generate a unique numeric ID from email
         if ($participantType === 'general' && !empty($participantData['email'])) {
             // Use CRC32 to convert email to a numeric ID (always positive)
@@ -303,20 +321,20 @@ class ExamTakingController extends Controller
     private function autoGradeSubmission(GeneralExamSubmission $submission, GeneralExam $exam): void
     {
         $exam->load('questions');
-        $responses = $submission->responses ?? [];
-        $totalScore = 0;
-        $totalMarks = 0;
+        $responses      = $submission->responses ?? [];
+        $totalScore     = 0;
+        $totalMarks     = 0;
         $gradedResponses = [];
 
         foreach ($exam->questions as $question) {
-            $questionId = $question->id;
+            $questionId  = $question->id;
             $totalMarks += $question->marks;
-            $response = $responses[$questionId]['response'] ?? null;
+            $response    = $responses[$questionId]['response'] ?? null;
 
             if ($response === null) {
                 $gradedResponses[$questionId] = [
-                    'response' => null,
-                    'is_correct' => false,
+                    'response'    => null,
+                    'is_correct'  => false,
                     'points_earned' => 0,
                     'answered_at' => null,
                 ];
@@ -325,45 +343,43 @@ class ExamTakingController extends Controller
 
             if ($question->canAutoGrade()) {
                 $gradeResult = $question->gradeResponse($response);
-                $gradedResponses[$questionId] = array_merge(
-                    $responses[$questionId],
-                    $gradeResult
-                );
+                $gradedResponses[$questionId] = array_merge($responses[$questionId], $gradeResult);
                 $totalScore += $gradeResult['points_earned'];
             } else {
-                $gradedResponses[$questionId] = array_merge(
-                    $responses[$questionId],
-                    [
-                        'is_correct' => null,
-                        'points_earned' => 0,
-                        'requires_grading' => true,
-                    ]
-                );
+                $gradedResponses[$questionId] = array_merge($responses[$questionId], [
+                    'is_correct'      => null,
+                    'points_earned'   => 0,
+                    'requires_grading' => true,
+                ]);
             }
         }
 
         $percentage = $totalMarks > 0 ? ($totalScore / $totalMarks) * 100 : 0;
-        $grade = $this->calculateGrade($percentage);
+
+        // ── Use the configurable grading system ──────────────────────────────
+        $grade = $this->calculateGrade($percentage, $exam);
 
         $submission->update([
-            'responses' => $gradedResponses,
-            'score' => $totalScore,
-            'total_marks' => $totalMarks,
-            'percentage' => round($percentage, 2),
-            'grade' => $grade,
-            'status' => 'auto_graded',
+            'responses'          => $gradedResponses,
+            'score'              => $totalScore,
+            'total_marks'        => $totalMarks,
+            'percentage'         => round($percentage, 2),
+            'grade'              => $grade,
+            'status'             => 'auto_graded',
         ]);
     }
 
-    private function calculateGrade(float $percentage): string
+    /**
+     * Resolve a percentage to a grade label.
+     *
+     * Priority: exam owner's custom grade scales → built-in fallback.
+     */
+    private function calculateGrade(float $percentage, GeneralExam $exam): string
     {
-        return match (true) {
-            $percentage >= 90 => 'A+',
-            $percentage >= 80 => 'A',
-            $percentage >= 70 => 'B',
-            $percentage >= 60 => 'C',
-            $percentage >= 50 => 'D',
-            default => 'F',
-        };
+        return $this->gradingService->resolveGrade(
+            $percentage,
+            $exam->user_id,
+            $exam->school_id
+        );
     }
 }

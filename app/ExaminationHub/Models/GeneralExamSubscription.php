@@ -3,6 +3,8 @@
 namespace App\ExaminationHub\Models;
 
 use App\Enums\GeneralExamSubscriptionStatus;
+use App\Models\AcademicSubject;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

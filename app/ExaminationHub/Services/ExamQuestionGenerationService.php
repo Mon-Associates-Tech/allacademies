@@ -17,7 +17,7 @@ class ExamQuestionGenerationService
     public function generateFromDocument(UploadedFile $file, string $questionType, int $count): array
     {
         $content = $this->extractContent($file);
-        
+
         if (empty($content)) {
             return [];
         }
@@ -28,7 +28,7 @@ class ExamQuestionGenerationService
     public function generateFromSubject(int $subjectId, array $topicIds, string $questionType, int $count): array
     {
         $subject = \App\Models\AcademicSubject::find($subjectId);
-        
+
         if (!$subject) {
             return [];
         }

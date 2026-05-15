@@ -9,6 +9,7 @@ use App\ExaminationHub\Controllers\ParticipantResultsController;
 use App\ExaminationHub\Controllers\PerformanceReportController;
 use App\ExaminationHub\Controllers\StudentPerformanceController;
 use App\ExaminationHub\Controllers\SubmissionController;
+use App\ExaminationHub\Controllers\ProctoringController;
 use App\Http\Middleware\EnsureExamSession;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,8 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('/exams/{exam}/submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
     Route::get('/exams/{exam}/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
+
 
     Route::get('/performance', [StudentPerformanceController::class, 'index'])->name('performance.index');
     Route::get('/performance/{participantType}/{participantId}', [StudentPerformanceController::class, 'show'])->name('performance.show');
@@ -41,24 +44,35 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/reports', [PerformanceReportController::class, 'index'])->name('reports.index');
     Route::post('/reports/generate', [PerformanceReportController::class, 'generate'])->name('reports.generate');
 
-    Route::middleware('can:viewAny,App\Models\GradeScale')->group(function () {
+    // ── Proctoring (admin review) ─────────────────────────────────────────────
+    Route::get('/exams/{exam}/proctoring', [ProctoringController::class, 'index'])->name('proctoring.index');
+    Route::get('/exams/{exam}/submissions/{submission}/proctoring', [ProctoringController::class, 'show'])->name('proctoring.show');
+
+
+    Route::middleware('can:viewAny,App\ExaminationHub\Models\GradeScale')->group(function () {
         Route::get('/grading-system', [GradingSystemController::class, 'index'])->name('grading-system.index');
         Route::post('/grading-system', [GradingSystemController::class, 'store'])->name('grading-system.store');
         Route::put('/grading-system/{gradeScale}', [GradingSystemController::class, 'update'])->name('grading-system.update');
         Route::delete('/grading-system/{gradeScale}', [GradingSystemController::class, 'destroy'])->name('grading-system.destroy');
         Route::post('/grading-system/initialize', [GradingSystemController::class, 'initializeDefault'])->name('grading-system.initialize');
     });
+
+    // Proctoring event ingestion (JSON, called by exam-proctor.js)
+    Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])->name('proctor.event');
 });
 
 Route::prefix('examinations-hub/take')->name('examination-hub.take.')->group(function () {
     Route::get('/join', [ExamTakingController::class, 'join'])->name('join');
     Route::post('/authenticate', [ExamTakingController::class, 'authenticate'])->name('authenticate');
 
-    Route::middleware(EnsureExamSession::class)->group(function () {
+    Route::middleware([EnsureExamSession::class, 'proctor.exam:exam'])->group(function () {
         Route::get('/{exam}/start', [ExamTakingController::class, 'start'])->name('start');
         Route::get('/{exam}/section/{sectionIndex}', [ExamTakingController::class, 'section'])->name('section');
         Route::post('/{exam}/save-response', [ExamTakingController::class, 'saveResponse'])->name('save-response');
         Route::post('/{exam}/submit', [ExamTakingController::class, 'submit'])->name('submit');
+
+        // Proctoring event ingestion (JSON, called by exam-proctor.js)
+        Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])->name('proctor.event');
     });
 
     Route::get('/{exam}/completed', [ExamTakingController::class, 'completed'])->name('completed');
@@ -73,3 +87,4 @@ Route::prefix('examinations-hub/results')->name('examination-hub.results.')->gro
     Route::get('/', [ParticipantResultsController::class, 'index'])->name('index');
     Route::get('/{submission}', [ParticipantResultsController::class, 'show'])->name('show');
 });
+

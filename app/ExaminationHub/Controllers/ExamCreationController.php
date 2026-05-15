@@ -6,11 +6,11 @@ use App\ExaminationHub\Contracts\ExamCreationServiceInterface;
 use App\ExaminationHub\Services\ExamQuestionPreviewService;
 use App\ExaminationHub\Services\ExamQuestionPersistenceService;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
+use App\ExaminationHub\Models\GeneralExam;
+use App\Http\Controllers\Controller;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\ExaminationHub\Models\GeneralExam;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -93,20 +93,20 @@ class ExamCreationController extends Controller
         Log::info('Preview request received', [
             'sections' => $request->input('sections'),
         ]);
-        
+
         $payload = $this->validatedPayload($request);
-        
+
         Log::info('Validated payload', [
             'sections' => $payload['sections'],
         ]);
-        
+
         $hardenedMode = (bool) ($payload['hardened_mode'] ?? false);
-        
+
         $generatedQuestions = $this->previewService->generateForSections(
             $payload['sections'],
             $hardenedMode
         );
-        
+
         Log::info('Preview generated questions', [
             'hardened_mode' => $hardenedMode,
             'sections_count' => count($payload['sections']),
@@ -130,20 +130,20 @@ class ExamCreationController extends Controller
         $payload = json_decode(base64_decode($encoded, true), true, 512, JSON_THROW_ON_ERROR);
         $questionsJson = (string) $request->input('questions_json', '');
         $hardenedMode = (bool) ($payload['hardened_mode'] ?? false);
-        
+
         Log::info('Store exam - questions_json received', [
             'questions_json_length' => strlen($questionsJson),
             'questions_json_empty' => empty($questionsJson),
             'hardened_mode' => $hardenedMode,
         ]);
-        
+
         $questionsData = !empty($questionsJson) ? json_decode(base64_decode($questionsJson, true), true, 512, JSON_THROW_ON_ERROR) : [];
-        
+
         Log::info('Store exam - decoded questions', [
             'questions_data_count' => count($questionsData ?? []),
             'questions_data' => $questionsData,
         ]);
-        
+
         $examId = $payload['exam_id'] ?? null;
         if ($examId) {
             $exam = GeneralExam::findOrFail((int) $examId);
@@ -241,20 +241,20 @@ class ExamCreationController extends Controller
         foreach ($data['sections'] as $idx => $section) {
             $sourceType = $section['source_type'] ?? '';
             $needsHierarchy = in_array($sourceType, ['database', 'mixed'], true);
-            
+
             if ($needsHierarchy && (empty($data['academic_group_id']) || empty($data['academic_level_id']) || empty($data['academic_subject_id']))) {
                 throw ValidationException::withMessages([
                     'academic_subject_id' => "Section ".($idx + 1)." requires exam-level academic hierarchy (group, level, subject) for database/mixed source.",
                 ]);
             }
-            
+
             // Copy exam-level hierarchy to sections for database/mixed sources
             if ($needsHierarchy) {
                 $data['sections'][$idx]['academic_group_id'] = $data['academic_group_id'];
                 $data['sections'][$idx]['academic_level_id'] = $data['academic_level_id'];
                 $data['sections'][$idx]['academic_subject_id'] = $data['academic_subject_id'];
             }
-            
+
             if ($sourceType === 'mixed') {
                 $dbCount = (int) ($section['database_count'] ?? 0);
                 $aiCount = (int) ($section['ai_count'] ?? 0);

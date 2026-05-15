@@ -45,5 +45,13 @@ class SubmissionController extends Controller
 
         return $this->exportService->exportCsv($exam);
     }
+
+    /** Export as Excel (.xlsx). Add the route: GET /exams/{exam}/submissions/export-excel */
+    public function exportExcel(GeneralExam $exam): StreamedResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        return $this->exportService->exportExcel($exam);
+    }
 }
 

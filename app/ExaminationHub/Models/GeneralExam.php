@@ -2,6 +2,10 @@
 
 namespace App\ExaminationHub\Models;
 
+use App\Models\AcademicSubject;
+use App\Models\School;
+use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

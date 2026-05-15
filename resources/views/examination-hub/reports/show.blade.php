@@ -21,15 +21,14 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="window.print()" 
-                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border"
-                            style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+                    <button onclick="window.print()"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border border-slate-200/50 rounded-sm bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                         </svg>
                         Print
                     </button>
-                    <a href="{{ route('examination-hub.reports.index') }}" 
+                    <a href="{{ route('examination-hub.reports.index') }}"
                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                        style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +49,7 @@
                     <span class="text-sm font-semibold text-slate-900 dark:text-white">
                         {{ number_format($usage['total_tokens'] ?? 0) }} tokens
                         <span class="text-slate-400 font-normal">
-                            (Prompt: {{ number_format($usage['prompt_tokens'] ?? 0) }}, 
+                            (Prompt: {{ number_format($usage['prompt_tokens'] ?? 0) }},
                             Completion: {{ number_format($usage['completion_tokens'] ?? 0) }})
                         </span>
                     </span>

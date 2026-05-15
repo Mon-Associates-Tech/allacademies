@@ -195,6 +195,7 @@ return [
         \Lab404\Impersonate\ImpersonateServiceProvider::class,
         //        App\Providers\MessageServiceProvider::class,
         App\Providers\AcademicChatServiceProvider::class,
+        \App\Providers\ProctoringServiceProvider::class,
 
     ],
 

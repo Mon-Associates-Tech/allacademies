@@ -24,7 +24,7 @@
                     @if($gradeScales->where('is_default', true)->isEmpty())
                         <form method="POST" action="{{ route('examination-hub.grading-system.initialize') }}">
                             @csrf
-                            <button type="submit" 
+                            <button type="submit"
                                     class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                                     style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 10px rgba(5,150,105,0.3);">
                                 <x-heroicon-o-plus class="w-4 h-4" />
@@ -32,7 +32,7 @@
                             </button>
                         </form>
                     @endif
-                    <button onclick="document.getElementById('createModal').classList.remove('hidden')" 
+                    <button onclick="document.getElementById('createModal').classList.remove('hidden')"
                             class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                             style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
                         <x-heroicon-o-plus class="w-4 h-4" />
@@ -177,7 +177,7 @@
         <div class="flex min-h-full items-center justify-center p-4">
             <div class="relative w-full max-w-2xl transform overflow-hidden rounded-[2px] bg-white dark:bg-slate-900 text-left shadow-xl transition-all"
                  style="border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
-                
+
                 {{-- Modal Header --}}
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"
                      style="background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
@@ -185,7 +185,7 @@
                         <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
                         <h3 class="font-bold text-slate-900 dark:text-white text-sm" id="modal-title">Add Grade Scale</h3>
                     </div>
-                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" 
+                    <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
                             class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                         <x-heroicon-o-x-mark class="w-5 h-5" />
                     </button>
@@ -199,7 +199,7 @@
                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                 Letter Grade <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="letter_grade" required 
+                            <input type="text" name="letter_grade" required
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                    style="border-radius: 2px;" placeholder="e.g., A+">
                         </div>
@@ -207,7 +207,7 @@
                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                 Name <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="name" required 
+                            <input type="text" name="name" required
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                    style="border-radius: 2px;" placeholder="e.g., Excellent">
                         </div>
@@ -218,7 +218,7 @@
                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                 Min Score (%) <span class="text-red-500">*</span>
                             </label>
-                            <input type="number" name="min_score" min="0" max="100" step="0.01" required 
+                            <input type="number" name="min_score" min="0" max="100" step="0.01" required
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                    style="border-radius: 2px;">
                         </div>
@@ -226,7 +226,7 @@
                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                 Max Score (%) <span class="text-red-500">*</span>
                             </label>
-                            <input type="number" name="max_score" min="0" max="100" step="0.01" required 
+                            <input type="number" name="max_score" min="0" max="100" step="0.01" required
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                    style="border-radius: 2px;">
                         </div>
@@ -237,7 +237,7 @@
                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                 Grade Point
                             </label>
-                            <input type="number" name="grade_point" min="0" max="5" step="0.1" 
+                            <input type="number" name="grade_point" min="0" max="5" step="0.1"
                                    class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                    style="border-radius: 2px;" placeholder="e.g., 4.0">
                         </div>
@@ -245,7 +245,7 @@
                             <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                 Academic Level
                             </label>
-                            <select name="academic_level_id" 
+                            <select name="academic_level_id"
                                     class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                     style="border-radius: 2px;">
                                 <option value="">All Levels (Default)</option>
@@ -260,13 +260,13 @@
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                             Remarks
                         </label>
-                        <input type="text" name="remarks" 
+                        <input type="text" name="remarks"
                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                style="border-radius: 2px;" placeholder="e.g., Outstanding performance">
                     </div>
 
                     <div class="flex items-center">
-                        <input type="checkbox" name="is_default" value="1" id="is_default" 
+                        <input type="checkbox" name="is_default" value="1" id="is_default"
                                class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500">
                         <label for="is_default" class="ml-2 block text-sm text-slate-700 dark:text-slate-300">
                             Set as default (applies to all levels if no specific level is selected)
@@ -275,12 +275,12 @@
 
                     {{-- Modal Footer --}}
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" 
+                        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
                                 class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border"
                                 style="border-radius: 2px; border-color: rgba(0,0,0,0.06); background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
                             Cancel
                         </button>
-                        <button type="submit" 
+                        <button type="submit"
                                 class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                                 style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
                             Create Grade Scale

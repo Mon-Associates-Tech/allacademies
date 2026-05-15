@@ -10,7 +10,7 @@
              style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
             <div class="h-1 w-full" style="background: linear-gradient(90deg, #0369a1, #38bdf8, #7dd3fc);"></div>
             <div class="px-7 py-6">
-                <a href="{{ route('examination-hub.submissions.index', $exam) }}" 
+                <a href="{{ route('examination-hub.submissions.index', $exam) }}"
                    class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors mb-3">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -99,7 +99,9 @@
                 </div>
                 <div>
                     <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Time Taken</p>
-                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">{{ $submission->time_taken_minutes ?? 0 }}<span class="text-base font-medium text-slate-500"> min</span></p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white mt-0.5" style="letter-spacing: -0.04em;">
+                        {{ max(0, $submission->time_taken_minutes ?? 0) }}<span class="text-base font-medium text-slate-500"> min</span>
+                    </p>
                 </div>
             </div>
 
@@ -116,16 +118,16 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Status</p>
                     @php
                         $status = $submission->status ?? 'unknown';
-                        $statusStyle = $status === 'completed'
-                            ? 'color:#065f46;background:#ecfdf5;border-color:#a7f3d0;'
+                        $statusClass = $status === 'completed'
+                            ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700'
                             : ($status === 'in_progress'
-                                ? 'color:#92400e;background:#fffbeb;border-color:#fde68a;'
-                                : 'color:#475569;background:#f1f5f9;border-color:#e2e8f0;');
+                                ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700'
+                                : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600');
                     @endphp
-                    <span class="inline-flex items-center justify-center text-lg font-semibold px-3 py-1 border mt-0.5"
-                          style="border-radius: 2px; {{ $statusStyle }}">
-                        {{ ucfirst($status) }}
-                    </span>
+                    <span class="inline-flex items-center justify-center text-lg font-semibold px-3 py-1 border mt-0.5 {{ $statusClass }}"
+                          style="border-radius: 2px;">
+        {{ ucfirst($status) }}
+    </span>
                 </div>
             </div>
 
@@ -158,29 +160,30 @@
                 <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
                 <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Detailed Responses</h2>
             </div>
-            
+
             <div class="p-5 space-y-8">
                 @foreach($questionsBySection as $sectionTitle => $questions)
                     <div>
                         <h3 class="font-bold text-slate-900 dark:text-white text-sm mb-4 pb-2 border-b border-slate-100 dark:border-slate-800" style="letter-spacing: 0.05em;">
                             {{ $sectionTitle }}
                         </h3>
-                        
+
                         <div class="space-y-5">
                             @foreach($questions as $index => $question)
                                 @php
-                                    $response = $responses[$question->id] ?? null;
-                                    $isCorrect = $response['is_correct'] ?? null;
+                                    $response     = $responses[$question->id] ?? null;
+                                    $isCorrect    = $response['is_correct'] ?? null;
                                     $studentAnswer = $response['response'] ?? null;
                                     $pointsEarned = $response['points_earned'] ?? 0;
-                                    $cardBg = $isCorrect === true 
-                                        ? 'background:#ecfdf5;border-color:#a7f3d0;' 
-                                        : ($isCorrect === false 
-                                            ? 'background:#fef2f2;border-color:#fecaca;' 
-                                            : 'background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-color:rgba(0,0,0,0.06);');
+
+                                    $cardClass = $isCorrect === true
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700'
+                                        : ($isCorrect === false
+                                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
+                                            : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-700');
                                 @endphp
-                                
-                                <div class="p-4 border" style="border-radius: 2px; {{ $cardBg }}">
+
+                                <div class="p-4 border {{ $cardClass }}" style="border-radius: 2px;">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="flex-1 min-w-0">
                                             <p class="font-semibold text-slate-900 dark:text-white">Question {{ $loop->iteration }}</p>
@@ -190,29 +193,42 @@
                                         </div>
                                         <div class="flex items-center gap-2 flex-shrink-0">
                                             @if($isCorrect === true)
-                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold border"
-                                                      style="border-radius: 2px; color:#065f46;background:#ecfdf5;border-color:#a7f3d0;">
-                                                    ✓ Correct
-                                                </span>
+                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold border
+                                                     text-emerald-700 dark:text-emerald-400
+                                                     bg-emerald-50 dark:bg-emerald-900/30
+                                                     border-emerald-200 dark:border-emerald-700"
+                                                      style="border-radius: 2px;">
+                                            ✓ Correct
+                                        </span>
                                             @elseif($isCorrect === false)
-                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold border"
-                                                      style="border-radius: 2px; color:#991b1b;background:#fef2f2;border-color:#fecaca;">
-                                                    ✗ Incorrect
-                                                </span>
+                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold border
+                                                     text-red-700 dark:text-red-400
+                                                     bg-red-50 dark:bg-red-900/30
+                                                     border-red-200 dark:border-red-700"
+                                                      style="border-radius: 2px;">
+                                            ✗ Incorrect
+                                        </span>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold border"
-                                                      style="border-radius: 2px; color:#475569;background:#f1f5f9;border-color:#e2e8f0;">
-                                                    Pending Review
-                                                </span>
+                                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold border
+                                                     text-slate-600 dark:text-slate-400
+                                                     bg-slate-100 dark:bg-slate-700
+                                                     border-slate-200 dark:border-slate-600"
+                                                      style="border-radius: 2px;">
+                                            Pending Review
+                                        </span>
                                             @endif
-                                            <span class="text-sm font-mono font-semibold text-slate-700 dark:text-slate-300 px-2 py-1"
-                                                  style="border-radius: 2px; background:rgba(0,0,0,0.04);">
-                                                {{ $pointsEarned }}/{{ $question->marks }}
-                                            </span>
+
+                                            <span class="text-sm font-mono font-semibold
+                                                 text-slate-700 dark:text-slate-300
+                                                 bg-black/5 dark:bg-white/10
+                                                 px-2 py-1"
+                                                  style="border-radius: 2px;">
+                                        {{ $pointsEarned }}/{{ $question->marks }}
+                                    </span>
                                         </div>
                                     </div>
 
-                                    {{-- Multiple Choice / TrueFalse Options --}}
+                                    {{-- Multiple Choice / True-False Options --}}
                                     @if($question->isMultipleChoice() || $question->isTrueFalse())
                                         <div class="mt-4 space-y-2">
                                             @if($question->isMultipleChoice())
@@ -220,58 +236,66 @@
                                                     @php
                                                         $isStudentAnswer = $studentAnswer === $optionKey;
                                                         $isCorrectAnswer = $question->correct_answer === $optionKey;
-                                                        $optBg = $isStudentAnswer && $isCorrectAnswer 
-                                                            ? 'background:#ecfdf5;border-color:#a7f3d0;' 
-                                                            : ($isStudentAnswer && !$isCorrectAnswer 
-                                                                ? 'background:#fef2f2;border-color:#fecaca;' 
-                                                                : (!$isStudentAnswer && $isCorrectAnswer 
-                                                                    ? 'background:#eff6ff;border-color:#bfdbfe;' 
-                                                                    : 'background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-color:rgba(0,0,0,0.06);'));
+
+                                                        $optClass = $isStudentAnswer && $isCorrectAnswer
+                                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700'
+                                                            : ($isStudentAnswer && !$isCorrectAnswer
+                                                                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
+                                                                : (!$isStudentAnswer && $isCorrectAnswer
+                                                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
+                                                                    : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-700'));
                                                     @endphp
-                                                    <div class="flex items-center gap-2 p-2.5 border text-sm" style="border-radius: 2px; {{ $optBg }}">
+                                                    <div class="flex items-center gap-2 p-2.5 border text-sm {{ $optClass }}" style="border-radius: 2px;">
                                                         <span class="font-medium text-slate-700 dark:text-slate-300">{{ $optionKey }}.</span>
                                                         <x-form.markdown-with-math :content="$optionText" class="inline text-slate-700 dark:text-slate-300" style="font-size:0.875rem;"/>
                                                         @if($isStudentAnswer)
                                                             <span class="ml-auto text-xs text-slate-500 dark:text-slate-400">(Your answer)</span>
                                                         @endif
                                                         @if($isCorrectAnswer)
-                                                            <span class="ml-auto text-xs font-medium" style="color:#065f46;">✓ Correct</span>
+                                                            <span class="ml-auto text-xs font-medium text-emerald-700 dark:text-emerald-400">✓ Correct</span>
                                                         @endif
                                                     </div>
                                                 @endforeach
                                             @else
                                                 @php
-                                                    $trueCorrect = $question->correct_answer === 'True' || $question->correct_answer === '1';
+                                                    $trueCorrect  = $question->correct_answer === 'True' || $question->correct_answer === '1';
                                                     $falseCorrect = !$trueCorrect;
+                                                    $trueClass  = $studentAnswer === 'True'
+                                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
+                                                        : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-700';
+                                                    $falseClass = $studentAnswer === 'False'
+                                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
+                                                        : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-700';
                                                 @endphp
-                                                <div class="flex items-center gap-2 p-2.5 border text-sm" 
-                                                     style="border-radius: 2px; {{ $studentAnswer === 'True' ? 'background:#eff6ff;border-color:#bfdbfe;' : 'background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-color:rgba(0,0,0,0.06);' }}">
+                                                <div class="flex items-center gap-2 p-2.5 border text-sm {{ $trueClass }}" style="border-radius: 2px;">
                                                     <span class="font-medium text-slate-700 dark:text-slate-300">True</span>
                                                     @if($studentAnswer === 'True')
                                                         <span class="ml-auto text-xs text-slate-500 dark:text-slate-400">(Your answer)</span>
                                                     @endif
                                                     @if($trueCorrect)
-                                                        <span class="ml-auto text-xs font-medium" style="color:#065f46;">✓ Correct</span>
+                                                        <span class="ml-auto text-xs font-medium text-emerald-700 dark:text-emerald-400">✓ Correct</span>
                                                     @endif
                                                 </div>
-                                                <div class="flex items-center gap-2 p-2.5 border text-sm" 
-                                                     style="border-radius: 2px; {{ $studentAnswer === 'False' ? 'background:#eff6ff;border-color:#bfdbfe;' : 'background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-color:rgba(0,0,0,0.06);' }}">
+                                                <div class="flex items-center gap-2 p-2.5 border text-sm {{ $falseClass }}" style="border-radius: 2px;">
                                                     <span class="font-medium text-slate-700 dark:text-slate-300">False</span>
                                                     @if($studentAnswer === 'False')
                                                         <span class="ml-auto text-xs text-slate-500 dark:text-slate-400">(Your answer)</span>
                                                     @endif
                                                     @if($falseCorrect)
-                                                        <span class="ml-auto text-xs font-medium" style="color:#065f46;">✓ Correct</span>
+                                                        <span class="ml-auto text-xs font-medium text-emerald-700 dark:text-emerald-400">✓ Correct</span>
                                                     @endif
                                                 </div>
                                             @endif
                                         </div>
                                     @else
-                                        {{-- Text/Essay Answer --}}
+                                        {{-- Text / Essay Answer --}}
                                         <div class="mt-4">
                                             <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Student Answer</p>
-                                            <div class="p-3 border text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap"
-                                                 style="border-radius: 2px; border-color:rgba(0,0,0,0.06); background:linear-gradient(135deg,#f8fafc,#f1f5f9);">
+                                            <div class="p-3 border text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap
+                                                border-slate-200 dark:border-slate-600
+                                                bg-gradient-to-br from-slate-50 to-slate-100
+                                                dark:from-slate-800 dark:to-slate-900"
+                                                 style="border-radius: 2px;">
                                                 {{ $studentAnswer ?? 'No answer provided' }}
                                             </div>
                                         </div>
@@ -279,10 +303,13 @@
 
                                     {{-- Feedback --}}
                                     @if(!empty($response['feedback']))
-                                        <div class="mt-4 p-3 border text-sm"
-                                             style="border-radius: 2px; color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe;">
+                                        <div class="mt-4 p-3 border text-sm
+                                            text-blue-700 dark:text-blue-300
+                                            bg-blue-50 dark:bg-blue-900/20
+                                            border-blue-200 dark:border-blue-700"
+                                             style="border-radius: 2px;">
                                             <p class="font-semibold">Feedback:</p>
-                                            <p class="mt-1 text-slate-700 dark:text-slate-300">{{ $response['feedback'] }}</p>
+                                            <p class="mt-1">{{ $response['feedback'] }}</p>
                                         </div>
                                     @endif
                                 </div>
@@ -292,6 +319,5 @@
                 @endforeach
             </div>
         </div>
-
     </div>{{-- /container --}}
 </x-layouts.app>
