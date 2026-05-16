@@ -14,7 +14,11 @@ export default class ExamProctoring {
     }
 
     init() {
-        if (this.isInitialized || !this.sessionId) return;
+        if (this.isInitialized) return;
+        if (!this.sessionId) {
+            console.warn('Proctoring init skipped: missing sessionId');
+            return;
+        }
         this.bindEvents();
         this.enforceFullscreen();
         this.isInitialized = true;
@@ -24,6 +28,8 @@ export default class ExamProctoring {
     bindEvents() {
         document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
         window.addEventListener('blur', () => this.report('window_blur'));
+        window.addEventListener('beforeunload', () => this.reportPageLeave('before_unload'));
+        window.addEventListener('pagehide', () => this.reportPageLeave('page_hide'));
         document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
         document.addEventListener('keydown', (e) => this.handleKeydown(e));
         document.addEventListener('copy', (e) => { e.preventDefault(); this.report('copy_attempt'); });
@@ -61,17 +67,15 @@ export default class ExamProctoring {
         try {
             const res = await fetch(this.endpoint, {
                 method: 'POST',
+                keepalive: true,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': this.csrfToken,
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    proctoring_session_id: this.sessionId,
-                    proctoring_violation: {
-                        type,
-                        metadata: { ...metadata, timestamp: new Date().toISOString() }
-                    }
+                    event_type: type,
+                    event_data: { ...metadata, timestamp: new Date().toISOString() }
                 })
             });
 
@@ -85,7 +89,51 @@ export default class ExamProctoring {
         }
     }
 
+    reportPageLeave(reason = 'page_leave') {
+        if (!this.sessionId) return;
+
+        const payload = {
+            _token: this.csrfToken,
+            event_type: 'page_leave',
+            event_data: { reason, timestamp: new Date().toISOString() }
+        };
+
+        // Most reliable during unload/navigation
+        if (navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+            navigator.sendBeacon(this.endpoint, blob);
+            return;
+        }
+
+        // Fallback when sendBeacon is unavailable
+        fetch(this.endpoint, {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this.csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
+    }
+
     handleResponse(data) {
+        if (data.should_auto_submit) {
+            this.showToast('Proctoring violation limit reached. Submitting exam.', 'error');
+            setTimeout(() => {
+                document.querySelector('#exam-submit-form')?.submit();
+            }, 1200);
+            return;
+        }
+
+        if (data.status === 'logged') {
+            const type = (data.event_type || 'violation').replace(/_/g, ' ');
+            const toastType = data.severity === 'high' ? 'error' : data.severity === 'medium' ? 'warning' : 'info';
+            this.showToast(`Violation recorded: ${type}.`, toastType);
+            return;
+        }
+
         if (data.action === 'warn') {
             // Show non-blocking warning
             this.showToast(data.message, 'warning');

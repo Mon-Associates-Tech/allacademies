@@ -129,16 +129,21 @@ class ProctoringService
      */
     public function shouldAutoSubmit(GeneralExam $exam, GeneralExamSubmission $submission): bool
     {
-        if (! $exam->auto_submit_on_violation) {
+        if (! $exam->proctoring_enabled || ! $exam->auto_submit_on_violation) {
             return false;
         }
 
-        $exitCount = ExamProctoringLog::forSubmission($submission->id)
-            ->where('event_type', ExamProctoringLog::EVENT_EXAM_EXIT)
+        $highThreshold = (int) ($exam->auto_submit_high_severity_threshold ?? 2);
+        $mediumThreshold = (int) ($exam->auto_submit_medium_severity_threshold ?? 5);
+
+        $highCount = ExamProctoringLog::forSubmission($submission->id)
+            ->where('severity', ExamProctoringLog::SEVERITY_HIGH)
+            ->count();
+        $mediumCount = ExamProctoringLog::forSubmission($submission->id)
+            ->where('severity', ExamProctoringLog::SEVERITY_MEDIUM)
             ->count();
 
-        // Auto-submit after 3 exit attempts if enabled
-        return $exitCount >= 3;
+        return $highCount >= $highThreshold && $mediumCount >= $mediumThreshold;
     }
 
     // ─── Private helpers ─────────────────────────────────────────────────────

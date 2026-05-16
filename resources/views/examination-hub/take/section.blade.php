@@ -8,15 +8,39 @@
     ])
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sessionId = @json(request('proctoring_session_id'));
+        (function () {
+            let hasInitializedProctoring = false;
+            const sessionId = @json($proctoringSessionId ?? null);
+            const endpoint = @json(route('examination-hub.take.proctor.event', ['exam' => $exam]));
+
+            function initProctoring() {
+                if (hasInitializedProctoring) return;
+                if (!sessionId) {
+                    console.warn('Proctoring bootstrap skipped: missing proctoringSessionId');
+                    return;
+                }
+                if (!window.ExamProctoring) return;
+
                 const proctor = new window.ExamProctoring({
                     sessionId: sessionId,
-                    endpoint: @json(route('examination-hub.take.proctor.event', ['exam' =>  $exam]))
+                    endpoint: endpoint
                 });
-                proctor.init();
 
-        });
+                proctor.init();
+                proctor.report('exam_enter');
+                hasInitializedProctoring = true;
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initProctoring, { once: true });
+            } else {
+                initProctoring();
+            }
+
+            // If JS bundle registers ExamProctoring slightly later, retry once shortly after load
+            setTimeout(initProctoring, 350);
+            document.addEventListener('livewire:navigated', initProctoring);
+        })();
     </script>
     <script>
         /**

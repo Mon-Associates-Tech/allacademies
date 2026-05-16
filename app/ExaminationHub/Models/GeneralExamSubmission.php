@@ -333,7 +333,7 @@ class GeneralExamSubmission extends Model
             return null;
         }
 
-        $endTime = $this->started_at->addMinutes($this->assignment->duration_in_minutes);
+        $endTime = $this->started_at->copy()->addMinutes($this->assignment->duration_in_minutes);
         $remaining = now()->diffInSeconds($endTime, false);
 
         return max(0, $remaining);

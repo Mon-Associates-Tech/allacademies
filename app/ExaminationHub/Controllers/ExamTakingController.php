@@ -89,7 +89,7 @@ class ExamTakingController extends Controller
         ]);
     }
 
-    public function section(GeneralExam $exam, int $sectionIndex): View|RedirectResponse
+    public function section(Request $request, GeneralExam $exam, int $sectionIndex): View|RedirectResponse
     {
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
@@ -147,6 +147,8 @@ class ExamTakingController extends Controller
             'sectionIndex' => $sectionIndex,
             'questions' => $questions,
             'responses' => $responses,
+            'proctoringSessionId' => $request->input('proctoring_session_id')
+                ?? $request->attributes->get('proctoring_session_id'),
         ]);
     }
 

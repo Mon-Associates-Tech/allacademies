@@ -88,30 +88,46 @@ class ProctorExamMiddleware
 
         $modelClass = $mappings[$modelKey];
 
-        // Try to get the ID from ANY route parameter that could match this model
-        // This handles cases where route param name != modelKey (e.g., {exam} vs 'general_exam')
-        $id = $request->route($modelKey)
-            ?? $request->route(array_first(array_keys($request->route()->parameters())))
-            ?? null;
+        // If route model binding already resolved the model, use it directly.
+        $bound = $request->route($modelKey);
+        if ($bound instanceof \Illuminate\Database\Eloquent\Model) {
+            return $bound;
+        }
 
-        if (!$id || !is_numeric($id)) {
+        // Try any bound route parameter that is already a model of this class.
+        $params = $request->route()?->parameters() ?? [];
+        foreach ($params as $param) {
+            if ($param instanceof $modelClass) {
+                return $param;
+            }
+        }
+
+        // Fallback: resolve by numeric id from named or first parameter.
+        $id = $bound;
+        if (!is_numeric($id)) {
+            $firstParam = reset($params);
+            $id = is_numeric($firstParam) ? $firstParam : null;
+        }
+
+        if (!$id) {
             return null;
         }
 
-        // Use find() instead offindOrFail() to avoid throwing 404 prematurely
+        // Use find() instead of findOrFail() to avoid throwing 404 prematurely
         return $modelClass::find($id);
     }
 
     protected function resolveSession(Request $request, $user, $proctorable, $driver): ?ExamProctoringSession
     {
         $sessionId = $request->input('proctoring_session_id');
+        $proctorableClass = get_class($proctorable);
 
         if ($sessionId) {
             $session = ExamProctoringSession::find($sessionId);
             // Validate session belongs to this user and model
             if ($session
                 && $session->user_id === $user->getAuthIdentifier()
-                && $session->proctorable_type === $proctorable->getMorphClass()
+                && ltrim($session->proctorable_type, '\\') === ltrim($proctorableClass, '\\')
                 && $session->proctorable_id == $proctorable->getKey()
             ) {
                 return $session;

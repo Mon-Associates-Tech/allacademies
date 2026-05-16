@@ -210,11 +210,33 @@
                     {{-- Timer --}}
                     @if($timeRemaining !== null)
                         <div class="flex items-center gap-2 px-3 py-1.5 rounded"
+                             x-data="{
+                                remaining: {{ (int) $timeRemaining }},
+                                timer: null,
+                                format(seconds) {
+                                    const safe = Math.max(0, seconds);
+                                    const m = Math.floor(safe / 60);
+                                    const s = safe % 60;
+                                    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                                },
+                                init() {
+                                    this.timer = setInterval(() => {
+                                        if (this.remaining > 0) {
+                                            this.remaining--;
+                                            return;
+                                        }
+
+                                        clearInterval(this.timer);
+                                        const submitForm = document.getElementById('exam-submit-form');
+                                        if (submitForm) submitForm.submit();
+                                    }, 1000);
+                                }
+                             }"
                              style="background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25);">
                             <svg class="h-4 w-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <span class="font-mono text-sm font-bold text-red-400">{{ $timeRemaining }}<span class="text-red-500 text-xs font-normal ml-0.5">min</span></span>
+                            <span class="font-mono text-sm font-bold text-red-400" x-text="format(remaining)"></span>
                         </div>
                     @endif
 
@@ -427,7 +449,7 @@
                             </svg>
                         </a>
                     @else
-                        <form method="POST" action="{{ route('examination-hub.take.submit', $this->exam) }}">
+                        <form id="exam-submit-form" method="POST" action="{{ route('examination-hub.take.submit', $this->exam) }}">
                             @csrf
                             <button type="submit"
                                     class="inline-flex items-center gap-2 px-7 py-2.5 text-sm font-bold text-white transition-all"

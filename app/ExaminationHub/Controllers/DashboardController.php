@@ -130,6 +130,30 @@ class DashboardController extends Controller
         return back()->with('success', 'Reminder settings updated successfully.');
     }
 
+    public function updateProctoringSettings(Request $request, GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $data = $request->validate([
+            'proctoring_enabled' => ['nullable', 'boolean'],
+            'auto_submit_on_violation' => ['nullable', 'boolean'],
+            'auto_submit_high_severity_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'auto_submit_medium_severity_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
+        ]);
+
+        $proctoringEnabled = $request->boolean('proctoring_enabled');
+        $autoSubmitEnabled = $request->boolean('auto_submit_on_violation');
+
+        $exam->update([
+            'proctoring_enabled' => $proctoringEnabled,
+            'auto_submit_on_violation' => $autoSubmitEnabled,
+            'auto_submit_high_severity_threshold' => $data['auto_submit_high_severity_threshold'] ?? $exam->auto_submit_high_severity_threshold ?? 2,
+            'auto_submit_medium_severity_threshold' => $data['auto_submit_medium_severity_threshold'] ?? $exam->auto_submit_medium_severity_threshold ?? 5,
+        ]);
+
+        return back()->with('success', 'Proctoring settings updated successfully.');
+    }
+
     public function toggleResults(GeneralExam $exam): RedirectResponse
     {
         $this->ensureOwnerAccess($exam);

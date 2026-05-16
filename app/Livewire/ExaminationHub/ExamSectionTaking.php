@@ -36,8 +36,8 @@ class ExamSectionTaking extends Component
         $this->loadResponses();
 
         if ($exam->duration_in_minutes && $submission->started_at) {
-            $elapsed = now()->diffInMinutes($submission->started_at);
-            $this->timeRemaining = max(0, $exam->duration_in_minutes - $elapsed);
+            $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+            $this->timeRemaining = max(0, now()->diffInSeconds($examEndsAt, false));
         }
     }
 

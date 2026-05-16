@@ -52,6 +52,8 @@ class ProctoringController extends Controller
 
         return response()->json([
             'status'            => 'logged',
+            'event_type'        => $log->event_type,
+            'event_data'        => $log->event_data,
             'severity'          => $log->severity,
             'should_auto_submit' => $shouldAutoSubmit,
         ]);

@@ -14,7 +14,7 @@
 
 @php
     // Determine if school switcher should be shown
-    $hasSchoolSwitcher = auth()->check() && auth()->user()->canAccessCrossSchool();
+    $hasSchoolSwitcher =  false; //auth()->check() && auth()->user()->canAccessCrossSchool();
     // Determine if impersonation banner is showing
     $hasImpersonationBanner = session()->has('impersonated_by');
 @endphp

@@ -29,7 +29,7 @@ class BasicProctoringDriver implements ProctoringDriverInterface
 
         return ExamProctoringSession::create([
             'user_id' => $user->getAuthIdentifier(),
-            'proctorable_type' => $proctorable->getMorphClass(),
+            'proctorable_type' => get_class($proctorable),
             'proctorable_id' => $proctorable->getKey(),
             'school_id' => $schoolId,
             'session_token' => Str::random(32),

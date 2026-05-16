@@ -66,6 +66,17 @@
                 <p class="text-sm text-red-800 dark:text-red-300">{{ session('error') }}</p>
             </div>
         @endif
+        @if($errors->any())
+            <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950/30"
+                 style="border-radius: 2px;">
+                <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="text-sm text-red-800 dark:text-red-300">
+                    @foreach($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         {{-- ── STATS STRIP ── --}}
         <div class="grid grid-cols-3 gap-4">
@@ -310,6 +321,80 @@
                 </div>
 
                 {{-- ── RESULTS AVAILABILITY ── --}}
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b91c1c, #ef4444); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Proctoring Auto-Submit</h2>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <form action="{{ route('examination-hub.exams.proctoring-settings', $exam) }}" method="POST" class="space-y-4">
+                            @csrf
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" name="proctoring_enabled" value="1"
+                                       {{ $exam->proctoring_enabled ? 'checked' : '' }}
+                                       class="w-4 h-4 rounded text-amber-600 border-slate-300 dark:border-slate-600 focus:ring-amber-500">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Enable Proctoring</span>
+                            </label>
+
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" name="auto_submit_on_violation" value="1"
+                                       {{ $exam->auto_submit_on_violation ? 'checked' : '' }}
+                                       class="w-4 h-4 rounded text-amber-600 border-slate-300 dark:border-slate-600 focus:ring-amber-500">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Enable Auto-Submit on Violations</span>
+                            </label>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" style="font-size: 10px; letter-spacing: 0.1em;">High Severity Threshold</label>
+                                    <input type="number" min="0" max="100"
+                                           name="auto_submit_high_severity_threshold"
+                                           value="{{ old('auto_submit_high_severity_threshold', $exam->auto_submit_high_severity_threshold ?? 2) }}"
+                                           class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                           style="border-radius: 2px;">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" style="font-size: 10px; letter-spacing: 0.1em;">Medium Severity Threshold</label>
+                                    <input type="number" min="0" max="100"
+                                           name="auto_submit_medium_severity_threshold"
+                                           value="{{ old('auto_submit_medium_severity_threshold', $exam->auto_submit_medium_severity_threshold ?? 5) }}"
+                                           class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                           style="border-radius: 2px;">
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                Auto-submit triggers when both thresholds are met: high severity count >= high threshold and medium severity count >= medium threshold.
+                            </p>
+
+                            <div class="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 space-y-2"
+                                 style="border-radius: 2px;">
+                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.08em;">
+                                    Violation Types
+                                </p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400">
+                                    <span class="font-semibold text-red-700 dark:text-red-400">High:</span>
+                                    exam exit, multiple faces, face mismatch.
+                                </p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400">
+                                    <span class="font-semibold text-amber-700 dark:text-amber-400">Medium:</span>
+                                    tab switch, window blur, fullscreen exit, no face detected.
+                                </p>
+                                <p class="text-xs text-slate-600 dark:text-slate-400">
+                                    <span class="font-semibold text-blue-700 dark:text-blue-400">Low:</span>
+                                    copy attempt, paste attempt, keyboard shortcut, right click/context menu.
+                                </p>
+                            </div>
+
+                            <button type="submit"
+                                    class="w-full py-2 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                    style="border-radius: 2px;">
+                                Save Proctoring Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-slate-900 overflow-hidden"
                      style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
                     <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
