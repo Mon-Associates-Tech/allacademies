@@ -1,0 +1,262 @@
+<?php
+
+namespace App\MockExam\Models;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class MockExamSubmission extends Model
+{
+    public const STATUS_NOT_STARTED       = 'not_started';
+    public const STATUS_IN_PROGRESS      = 'in_progress';
+    public const STATUS_SUBMITTED        = 'submitted';
+    public const STATUS_AUTO_GRADED      = 'auto_graded';
+    public const STATUS_MANUALLY_REVIEWED = 'manually_reviewed';
+    public const STATUS_FINAL            = 'final';
+
+    protected $fillable = [
+        'mock_exam_id',
+        'participant_type',
+        'participant_id',
+        'participant_name',
+        'participant_email',
+        'started_at',
+        'submitted_at',
+        'time_spent_seconds',
+        'responses',
+        'randomized_question_order',
+        'score',
+        'total_marks',
+        'percentage',
+        'grade',
+        'status',
+        'requires_manual_review',
+        'graded_at',
+        'graded_by',
+        'teacher_feedback',
+        'attempt_number',
+        'ip_address',
+        'user_agent',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'started_at'               => 'datetime',
+            'submitted_at'             => 'datetime',
+            'graded_at'                => 'datetime',
+            'responses'                => 'array',
+            'randomized_question_order'=> 'array',
+            'requires_manual_review'   => 'boolean',
+            'score'                    => 'float',
+            'total_marks'              => 'float',
+            'percentage'               => 'float',
+        ];
+    }
+
+    // ─── Relationships ────────────────────────────────────────────────────────
+
+    public function mockExam(): BelongsTo
+    {
+        return $this->belongsTo(MockExam::class);
+    }
+
+    public function gradedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'graded_by');
+    }
+
+    // ─── Status helpers ───────────────────────────────────────────────────────
+
+    public function isInProgress(): bool
+    {
+        return $this->status === self::STATUS_IN_PROGRESS;
+    }
+
+    public function isSubmitted(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_SUBMITTED,
+            self::STATUS_AUTO_GRADED,
+            self::STATUS_MANUALLY_REVIEWED,
+            self::STATUS_FINAL,
+        ], true);
+    }
+
+    public function isGraded(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_AUTO_GRADED,
+            self::STATUS_MANUALLY_REVIEWED,
+            self::STATUS_FINAL,
+        ], true);
+    }
+
+    // ─── Lifecycle ────────────────────────────────────────────────────────────
+
+    public function start(): void
+    {
+        $this->update([
+            'started_at' => now(),
+            'status'     => self::STATUS_IN_PROGRESS,
+        ]);
+    }
+
+    public function submit(bool $auto = false, ?string $reason = null): void
+    {
+        $timeSpent = $this->started_at ? now()->diffInSeconds($this->started_at) : 0;
+
+        $this->update([
+            'submitted_at'       => now(),
+            'status'             => self::STATUS_SUBMITTED,
+            'time_spent_seconds' => $timeSpent,
+        ]);
+    }
+
+    // ─── Response management ──────────────────────────────────────────────────
+
+    public function saveResponse(int $questionId, mixed $response): void
+    {
+        $responses = $this->responses ?? [];
+        $responses[$questionId] = [
+            'response'    => $response,
+            'answered_at' => now()->toIso8601String(),
+        ];
+        $this->update(['responses' => $responses]);
+    }
+
+    public function getResponse(int $questionId): mixed
+    {
+        return $this->responses[$questionId]['response'] ?? null;
+    }
+
+    public function hasAnswered(int $questionId): bool
+    {
+        return isset($this->responses[$questionId]);
+    }
+
+    public function getAnsweredCount(): int
+    {
+        return count($this->responses ?? []);
+    }
+
+    // ─── Grading ─────────────────────────────────────────────────────────────
+
+    /**
+     * Auto-grade all questions that support it; flag the rest for manual review.
+     */
+    public function autoGrade(string $grade): void
+    {
+        $exam      = $this->mockExam;
+        $questions = MockExamQuestion::whereIn(
+            'mock_exam_section_id',
+            MockExamSection::whereIn(
+                'mock_exam_subject_exam_id',
+                MockExamSubjectExam::where('mock_exam_id', $exam->id)->pluck('id')
+            )->pluck('id')
+        )->get();
+
+        $totalScore    = 0.0;
+        $totalMarks    = 0.0;
+        $needsManual   = false;
+        $gradedResponses = $this->responses ?? [];
+
+        foreach ($questions as $question) {
+            $totalMarks += $question->marks;
+            $response    = $this->getResponse($question->id);
+
+            if ($response === null) {
+                $gradedResponses[$question->id] = array_merge(
+                    $gradedResponses[$question->id] ?? [],
+                    ['is_correct' => false, 'points_earned' => 0.0, 'feedback' => 'No answer provided']
+                );
+                continue;
+            }
+
+            if ($question->canAutoGrade()) {
+                $result = $question->gradeResponse((string) $response);
+                $gradedResponses[$question->id] = array_merge(
+                    $gradedResponses[$question->id] ?? [],
+                    $result
+                );
+                $totalScore += $result['points_earned'];
+            } else {
+                $result = $question->gradeResponse((string) $response);
+                $gradedResponses[$question->id] = array_merge(
+                    $gradedResponses[$question->id] ?? [],
+                    $result
+                );
+                $totalScore += $result['points_earned'];
+                if ($result['requires_review'] ?? false) {
+                    $needsManual = true;
+                }
+            }
+        }
+
+        $percentage = $totalMarks > 0 ? ($totalScore / $totalMarks) * 100 : 0.0;
+
+        $this->update([
+            'responses'             => $gradedResponses,
+            'score'                 => $totalScore,
+            'total_marks'           => $totalMarks,
+            'percentage'            => round($percentage, 2),
+            'grade'                 => $grade,
+            'status'                => self::STATUS_AUTO_GRADED,
+            'requires_manual_review'=> $needsManual,
+            'graded_at'             => now(),
+        ]);
+    }
+
+    /**
+     * Manually grade a single question and recalculate totals.
+     */
+    public function manualGradeQuestion(int $questionId, float $points, ?string $feedback = null): void
+    {
+        $responses = $this->responses ?? [];
+
+        $responses[$questionId] = array_merge($responses[$questionId] ?? [], [
+            'points_earned'    => $points,
+            'manual_feedback'  => $feedback,
+            'manually_graded'  => true,
+        ]);
+
+        $totalScore = collect($responses)->sum(fn ($r) => (float) ($r['points_earned'] ?? 0));
+        $percentage = $this->total_marks > 0 ? ($totalScore / $this->total_marks) * 100 : 0.0;
+
+        $this->update([
+            'responses'  => $responses,
+            'score'      => $totalScore,
+            'percentage' => round($percentage, 2),
+        ]);
+    }
+
+    public function finalizeGrading(int $graderId, string $grade, ?string $feedback = null): void
+    {
+        $this->update([
+            'status'                 => self::STATUS_FINAL,
+            'graded_by'              => $graderId,
+            'graded_at'              => now(),
+            'grade'                  => $grade,
+            'teacher_feedback'       => $feedback,
+            'requires_manual_review' => false,
+        ]);
+    }
+
+    // ─── Display helpers ──────────────────────────────────────────────────────
+
+    public function getRemainingTime(): ?int
+    {
+        if (! $this->started_at || ! $this->mockExam->duration_in_minutes) {
+            return null;
+        }
+
+        // Mock exam has no single duration; individual subject exams do.
+        return null;
+    }
+
+    public function canViewResults(): bool
+    {
+        return $this->isSubmitted() && $this->mockExam->canShowResults();
+    }
+}

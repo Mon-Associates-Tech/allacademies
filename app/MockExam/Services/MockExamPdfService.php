@@ -1,0 +1,52 @@
+<?php
+
+namespace App\MockExam\Services;
+
+use App\MockExam\Models\MockExam;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
+
+class MockExamPdfService
+{
+    /**
+     * Generate a downloadable PDF of the exam paper (questions only).
+     */
+    public function generateExamPdf(MockExam $mockExam): Response
+    {
+        $mockExam->load([
+            'subjectExams.academicSubject',
+            'subjectExams.sections.questions',
+            'user',
+        ]);
+
+        $pdf = Pdf::loadView('mock-exam.pdf.exam', ['mockExam' => $mockExam])
+            ->setPaper('a4', 'portrait')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
+
+        return $pdf->download($this->filename($mockExam, 'exam'));
+    }
+
+    /**
+     * Generate a downloadable PDF of the answer key (correct answers + explanations).
+     */
+    public function generateAnswerKeyPdf(MockExam $mockExam): Response
+    {
+        $mockExam->load([
+            'subjectExams.academicSubject',
+            'subjectExams.sections.questions',
+        ]);
+
+        $pdf = Pdf::loadView('mock-exam.pdf.answer-key', ['mockExam' => $mockExam])
+            ->setPaper('a4', 'portrait')
+            ->setOption('isHtml5ParserEnabled', true);
+
+        return $pdf->download($this->filename($mockExam, 'answer-key'));
+    }
+
+    private function filename(MockExam $mockExam, string $suffix): string
+    {
+        return Str::slug($mockExam->title) . '-' . $suffix . '.pdf';
+    }
+}

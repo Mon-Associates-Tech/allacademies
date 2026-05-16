@@ -196,6 +196,7 @@ return [
         //        App\Providers\MessageServiceProvider::class,
         App\Providers\AcademicChatServiceProvider::class,
         \App\Providers\ProctoringServiceProvider::class,
+        \App\MockExam\Providers\MockExamServiceProvider::class,
 
     ],
 
