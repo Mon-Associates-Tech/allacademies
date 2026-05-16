@@ -8,7 +8,7 @@ use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
-use App\Models\TrueFalseQuestion;
+use App\Models\TrueOrFalseQuestion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +17,7 @@ class MockExamQuestionService
 {
     private const SOURCE_CLASS_MAP = [
         'multiple_choice' => MultipleChoiceQuestion::class,
-        'true_false'      => TrueFalseQuestion::class,
+        'true_false'      => TrueOrFalseQuestion::class,
         'essay'           => EssayQuestion::class,
     ];
 
@@ -33,10 +33,10 @@ class MockExamQuestionService
         array $topicIds,
         int $academicSubjectId
     ): int {
-        $effectiveSubtopicIds = $this->resolveSubtopicIds($subtopicIds, $topicIds, $academicSubjectId);
+        $resolved = $this->resolveTopicAndSubtopicIds($subtopicIds, $topicIds, $academicSubjectId);
 
-        if (empty($effectiveSubtopicIds)) {
-            Log::warning('MockExamQuestionService: no subtopics resolved', [
+        if (empty($resolved['subtopic_ids']) && empty($resolved['topic_ids'])) {
+            Log::warning('MockExamQuestionService: no topics or subtopics resolved', [
                 'section_id'         => $section->id,
                 'subtopic_ids'       => $subtopicIds,
                 'topic_ids'          => $topicIds,
@@ -56,7 +56,12 @@ class MockExamQuestionService
                 continue;
             }
 
-            $sourceQuestions = $this->fetchSourceQuestions($type, $effectiveSubtopicIds, $count);
+            $sourceQuestions = $this->fetchSourceQuestions(
+                $type,
+                $resolved['subtopic_ids'],
+                $resolved['topic_ids'],
+                $count
+            );
 
             foreach ($sourceQuestions as $source) {
                 try {
@@ -78,31 +83,56 @@ class MockExamQuestionService
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     /**
-     * Walk up the academic hierarchy to collect subtopic IDs when the caller
-     * has only provided topic or subject level selections.
+     * Resolve topic and subtopic IDs from the academic hierarchy.
+     * Returns both topic_ids and subtopic_ids for flexible querying.
      */
-    private function resolveSubtopicIds(array $subtopicIds, array $topicIds, int $academicSubjectId): array
+    private function resolveTopicAndSubtopicIds(array $subtopicIds, array $topicIds, int $academicSubjectId): array
     {
-        // Subtopics explicitly selected – use them directly
-        if (! empty($subtopicIds)) {
-            return $subtopicIds;
-        }
+        Log::info('MockExamQuestionService: resolving topics and subtopics', [
+            'input_subtopic_ids' => $subtopicIds,
+            'input_topic_ids' => $topicIds,
+            'academic_subject_id' => $academicSubjectId,
+        ]);
 
-        // Topics selected – get all their subtopics
-        if (! empty($topicIds)) {
-            return AcademicSubtopic::whereIn('academic_topic_id', $topicIds)
+        $resolvedTopicIds = [];
+        $resolvedSubtopicIds = [];
+
+        // If subtopics explicitly selected
+        if (!empty($subtopicIds)) {
+            $resolvedSubtopicIds = $subtopicIds;
+            // Also get their parent topic IDs
+            $resolvedTopicIds = AcademicSubtopic::whereIn('id', $subtopicIds)
+                ->pluck('academic_topic_id')
+                ->unique()
+                ->toArray();
+        }
+        // If topics selected
+        elseif (!empty($topicIds)) {
+            $resolvedTopicIds = $topicIds;
+            // Get all subtopics under these topics
+            $resolvedSubtopicIds = AcademicSubtopic::whereIn('academic_topic_id', $topicIds)
+                ->pluck('id')
+                ->toArray();
+        }
+        // Fall back to all topics/subtopics under the subject
+        else {
+            $resolvedTopicIds = AcademicTopic::where('academic_subject_id', $academicSubjectId)
+                ->pluck('id')
+                ->toArray();
+            $resolvedSubtopicIds = AcademicSubtopic::whereIn('academic_topic_id', $resolvedTopicIds)
                 ->pluck('id')
                 ->toArray();
         }
 
-        // Fall back to all subtopics under the subject
-        $topicIdsForSubject = AcademicTopic::where('academic_subject_id', $academicSubjectId)
-            ->pluck('id')
-            ->toArray();
+        Log::info('MockExamQuestionService: resolved IDs', [
+            'topic_count' => count($resolvedTopicIds),
+            'subtopic_count' => count($resolvedSubtopicIds),
+        ]);
 
-        return AcademicSubtopic::whereIn('academic_topic_id', $topicIdsForSubject)
-            ->pluck('id')
-            ->toArray();
+        return [
+            'topic_ids' => $resolvedTopicIds,
+            'subtopic_ids' => $resolvedSubtopicIds,
+        ];
     }
 
     /**
@@ -131,19 +161,47 @@ class MockExamQuestionService
 
     /**
      * Query the appropriate source model table and return random rows.
+     * Queries both academic_subtopic_id and academic_topic_id for maximum coverage.
      */
-    private function fetchSourceQuestions(string $type, array $subtopicIds, int $limit): Collection
+    private function fetchSourceQuestions(string $type, array $subtopicIds, array $topicIds, int $limit): Collection
     {
         $class = self::SOURCE_CLASS_MAP[$type] ?? null;
 
         if ($class === null) {
+            Log::warning('MockExamQuestionService: unknown question type', ['type' => $type]);
             return collect();
         }
 
-        return $class::whereIn('academic_subtopic_id', $subtopicIds)
-            ->inRandomOrder()
-            ->limit($limit)
-            ->get();
+        Log::info('MockExamQuestionService: fetching questions', [
+            'type' => $type,
+            'class' => $class,
+            'subtopic_ids' => $subtopicIds,
+            'topic_ids' => $topicIds,
+            'limit' => $limit,
+        ]);
+
+        // Query questions that match either subtopic_id OR topic_id
+        $query = $class::query();
+
+        if (!empty($subtopicIds) || !empty($topicIds)) {
+            $query->where(function ($q) use ($subtopicIds, $topicIds) {
+                if (!empty($subtopicIds)) {
+                    $q->whereIn('academic_subtopic_id', $subtopicIds);
+                }
+                if (!empty($topicIds)) {
+                    $q->orWhereIn('academic_topic_id', $topicIds);
+                }
+            });
+        }
+
+        $questions = $query->inRandomOrder()->limit($limit)->get();
+
+        Log::info('MockExamQuestionService: fetched questions', [
+            'type' => $type,
+            'count' => $questions->count(),
+        ]);
+
+        return $questions;
     }
 
     /**
