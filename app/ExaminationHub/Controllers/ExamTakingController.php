@@ -2,10 +2,10 @@
 
 namespace App\ExaminationHub\Controllers;
 
-use App\ExaminationHub\Services\GradingSystemService;
-use App\Http\Controllers\Controller;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
+use App\ExaminationHub\Services\GradingSystemService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,11 +37,11 @@ class ExamTakingController extends Controller
 
         $exam = GeneralExam::findByAccessCode($data['access_code']);
 
-        if (!$exam) {
+        if (! $exam) {
             return back()->withErrors(['access_code' => 'Invalid access code.']);
         }
 
-        if (!$exam->isActive()) {
+        if (! $exam->isActive()) {
             return back()->withErrors(['access_code' => 'This examination is not currently active.']);
         }
 
@@ -53,7 +53,7 @@ class ExamTakingController extends Controller
 
         $submission = $this->getOrCreateSubmission($exam, $participantData);
 
-        if (!$submission) {
+        if (! $submission) {
             return back()->withErrors(['access_code' => 'You have reached the maximum number of attempts.']);
         }
 
@@ -70,7 +70,7 @@ class ExamTakingController extends Controller
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             return redirect()->route('examination-hub.take.join')
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
@@ -94,7 +94,7 @@ class ExamTakingController extends Controller
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             return redirect()->route('examination-hub.take.join')
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
@@ -109,19 +109,19 @@ class ExamTakingController extends Controller
 
         $section = $exam->sections->get($sectionIndex);
 
-        if (!$section) {
+        if (! $section) {
             abort(404, 'Section not found.');
         }
 
         $questions = $section->questions;
 
         // Handle randomization per participant
-        if ($section->is_randomized && $questions->isNotEmpty()) {
+        if (($exam->is_randomized || $section->is_randomized) && $questions->isNotEmpty()) {
             $randomizedOrder = $submission->randomized_question_order ?? [];
             $sectionKey = "section_{$section->id}";
 
             // If this section hasn't been randomized for this participant yet, randomize and store
-            if (!isset($randomizedOrder[$sectionKey])) {
+            if (! isset($randomizedOrder[$sectionKey])) {
                 $questionIds = $questions->pluck('id')->shuffle()->values()->toArray();
                 $randomizedOrder[$sectionKey] = $questionIds;
                 $submission->update(['randomized_question_order' => $randomizedOrder]);
@@ -155,9 +155,9 @@ class ExamTakingController extends Controller
     public function saveResponse(Request $request, GeneralExam $exam): JsonResponse|RedirectResponse
     {
         $submissionId = session('exam_submission_id');
-        $submission   = GeneralExamSubmission::find($submissionId);
+        $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Invalid session.'], 403);
             }
@@ -168,18 +168,19 @@ class ExamTakingController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['status' => 'already_submitted']);
             }
+
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
         $data = $request->validate([
-            'question_id'  => ['required', 'integer', 'exists:general_exam_questions,id'],
-            'response'     => ['required', 'string'],
+            'question_id' => ['required', 'integer', 'exists:general_exam_questions,id'],
+            'response' => ['required', 'string'],
             'section_index' => ['required', 'integer'],
         ]);
 
         $responses = $submission->responses ?? [];
         $responses[$data['question_id']] = [
-            'response'    => $data['response'],
+            'response' => $data['response'],
             'answered_at' => now()->toIso8601String(),
         ];
 
@@ -191,12 +192,13 @@ class ExamTakingController extends Controller
 
         return back()->with('success', 'Response saved.');
     }
+
     public function submit(Request $request, GeneralExam $exam): RedirectResponse
     {
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             abort(403, 'Invalid session.');
         }
 
@@ -265,7 +267,7 @@ class ExamTakingController extends Controller
 
             $configured = $query->first();
 
-            if ($mode === 'configured' && !$configured) {
+            if ($mode === 'configured' && ! $configured) {
                 return ['error' => 'You are not authorized to take this examination.'];
             }
 
@@ -293,12 +295,12 @@ class ExamTakingController extends Controller
         $participantId = $participantData['id'];
 
         // For general participants, generate a unique numeric ID from email
-        if ($participantType === 'general' && !empty($participantData['email'])) {
+        if ($participantType === 'general' && ! empty($participantData['email'])) {
             // Use CRC32 to convert email to a numeric ID (always positive)
             $participantId = abs(crc32($participantData['email']));
         }
 
-        if (!$exam->canParticipantAttempt($participantType, $participantId)) {
+        if (! $exam->canParticipantAttempt($participantType, $participantId)) {
             return null;
         }
 
@@ -323,23 +325,24 @@ class ExamTakingController extends Controller
     private function autoGradeSubmission(GeneralExamSubmission $submission, GeneralExam $exam): void
     {
         $exam->load('questions');
-        $responses      = $submission->responses ?? [];
-        $totalScore     = 0;
-        $totalMarks     = 0;
+        $responses = $submission->responses ?? [];
+        $totalScore = 0;
+        $totalMarks = 0;
         $gradedResponses = [];
 
         foreach ($exam->questions as $question) {
-            $questionId  = $question->id;
+            $questionId = $question->id;
             $totalMarks += $question->marks;
-            $response    = $responses[$questionId]['response'] ?? null;
+            $response = $responses[$questionId]['response'] ?? null;
 
             if ($response === null) {
                 $gradedResponses[$questionId] = [
-                    'response'    => null,
-                    'is_correct'  => false,
+                    'response' => null,
+                    'is_correct' => false,
                     'points_earned' => 0,
                     'answered_at' => null,
                 ];
+
                 continue;
             }
 
@@ -349,8 +352,8 @@ class ExamTakingController extends Controller
                 $totalScore += $gradeResult['points_earned'];
             } else {
                 $gradedResponses[$questionId] = array_merge($responses[$questionId], [
-                    'is_correct'      => null,
-                    'points_earned'   => 0,
+                    'is_correct' => null,
+                    'points_earned' => 0,
                     'requires_grading' => true,
                 ]);
             }
@@ -362,12 +365,12 @@ class ExamTakingController extends Controller
         $grade = $this->calculateGrade($percentage, $exam);
 
         $submission->update([
-            'responses'          => $gradedResponses,
-            'score'              => $totalScore,
-            'total_marks'        => $totalMarks,
-            'percentage'         => round($percentage, 2),
-            'grade'              => $grade,
-            'status'             => 'auto_graded',
+            'responses' => $gradedResponses,
+            'score' => $totalScore,
+            'total_marks' => $totalMarks,
+            'percentage' => round($percentage, 2),
+            'grade' => $grade,
+            'status' => 'auto_graded',
         ]);
     }
 

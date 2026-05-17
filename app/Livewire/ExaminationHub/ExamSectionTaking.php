@@ -4,7 +4,6 @@ namespace App\Livewire\ExaminationHub;
 
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -12,17 +11,21 @@ class ExamSectionTaking extends Component
 {
     #[Locked]
     public int $examId;
-    
+
     #[Locked]
     public int $submissionId;
-    
+
     #[Locked]
     public int $sectionId;
-    
+
     public int $sectionIndex;
+
     public array $responses = [];
+
     public int $currentQuestionIndex = 0;
+
     public bool $showSectionInfo = true;
+
     public ?int $timeRemaining = null;
 
     public function mount(GeneralExam $exam, GeneralExamSubmission $submission, $section, int $sectionIndex, $questions): void
@@ -31,7 +34,7 @@ class ExamSectionTaking extends Component
         $this->submissionId = $submission->id;
         $this->sectionId = $section->id;
         $this->sectionIndex = $sectionIndex;
-        
+
         // Load saved responses from fresh submission data
         $this->loadResponses();
 
@@ -45,7 +48,7 @@ class ExamSectionTaking extends Component
     {
         $submission = $this->submission;
         $savedResponses = $submission->responses ?? [];
-        
+
         foreach ($this->questions as $question) {
             if (isset($savedResponses[$question->id]['response'])) {
                 $this->responses[$question->id] = $savedResponses[$question->id]['response'];
@@ -70,7 +73,30 @@ class ExamSectionTaking extends Component
 
     public function getQuestionsProperty()
     {
-        return $this->section->questions()->orderBy('order')->get();
+        $questions = $this->section->questions()->orderBy('order')->get();
+
+        // Apply randomization if stored in submission
+        $submission = $this->submission;
+        $exam = $this->exam;
+
+        if (($exam->is_randomized || $this->section->is_randomized) && $questions->isNotEmpty()) {
+            $randomizedOrder = $submission->randomized_question_order ?? [];
+            $sectionKey = "section_{$this->sectionId}";
+
+            if (isset($randomizedOrder[$sectionKey])) {
+                $orderedQuestions = collect();
+                foreach ($randomizedOrder[$sectionKey] as $questionId) {
+                    $question = $questions->firstWhere('id', $questionId);
+                    if ($question) {
+                        $orderedQuestions->push($question);
+                    }
+                }
+
+                return $orderedQuestions;
+            }
+        }
+
+        return $questions;
     }
 
     public function goToQuestion(int $index): void
@@ -102,7 +128,7 @@ class ExamSectionTaking extends Component
             'response' => $value,
             'answered_at' => now()->toIso8601String(),
         ];
-        
+
         $submission->update(['responses' => $savedResponses]);
     }
 
@@ -119,17 +145,17 @@ class ExamSectionTaking extends Component
 
     public function isQuestionAnswered(int $questionId): bool
     {
-        return !empty($this->responses[$questionId]);
+        return ! empty($this->responses[$questionId]);
     }
 
     public function getAnsweredCount(): int
     {
-        return count(array_filter($this->responses, fn($r) => !empty($r) && $r !== null));
+        return count(array_filter($this->responses, fn ($r) => ! empty($r) && $r !== null));
     }
 
     public function toggleSectionInfo(): void
     {
-        $this->showSectionInfo = !$this->showSectionInfo;
+        $this->showSectionInfo = ! $this->showSectionInfo;
     }
 
     public function render()

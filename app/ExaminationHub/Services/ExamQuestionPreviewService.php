@@ -2,9 +2,9 @@
 
 namespace App\ExaminationHub\Services;
 
-use App\ExaminationHub\Models\EssayQuestion;
-use App\ExaminationHub\Models\MultipleChoiceQuestion;
-use App\ExaminationHub\Models\TrueOrFalseQuestion;
+use App\Models\EssayQuestion;
+use App\Models\MultipleChoiceQuestion;
+use App\Models\TrueOrFalseQuestion;
 use App\Support\Mark;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
