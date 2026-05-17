@@ -3,10 +3,10 @@
 namespace App\ExaminationHub\Controllers;
 
 use App\ExaminationHub\Contracts\ExamCreationServiceInterface;
-use App\ExaminationHub\Services\ExamQuestionPreviewService;
-use App\ExaminationHub\Services\ExamQuestionPersistenceService;
-use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Services\ExamQuestionPersistenceService;
+use App\ExaminationHub\Services\ExamQuestionPreviewService;
+use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
@@ -49,7 +49,18 @@ class ExamCreationController extends Controller
     public function edit(GeneralExam $exam): View
     {
         $this->ensureOwnerAccess($exam);
-        abort_if($exam->starts_at && now()->gte($exam->starts_at), 422, 'This exam has started and can no longer be edited.');
+
+        // Show warning if exam has started or has submissions
+        $hasStarted = $exam->starts_at && now()->gte($exam->starts_at);
+        $hasSubmissions = $exam->submissions()->exists();
+
+        if ($hasStarted || $hasSubmissions) {
+            session()->flash('warning', 'Warning: This exam has '.
+                ($hasStarted ? 'already started' : '').
+                ($hasStarted && $hasSubmissions ? ' and ' : '').
+                ($hasSubmissions ? 'existing submissions' : '').
+                '. Editing may affect participants or invalidate existing results.');
+        }
 
         $exam->load('sections');
         $formData = [
@@ -58,6 +69,7 @@ class ExamCreationController extends Controller
             'description' => $exam->description,
             'instructions' => $exam->instructions,
             'duration_in_minutes' => $exam->duration_in_minutes,
+            'is_randomized' => $exam->is_randomized,
             'starts_at' => optional($exam->starts_at)?->format('Y-m-d\TH:i'),
             'ends_at' => optional($exam->ends_at)?->format('Y-m-d\TH:i'),
             'status' => $exam->status,
@@ -101,18 +113,46 @@ class ExamCreationController extends Controller
         ]);
 
         $hardenedMode = (bool) ($payload['hardened_mode'] ?? false);
+        $examId = $payload['exam_id'] ?? null;
 
-        $generatedQuestions = $this->previewService->generateForSections(
-            $payload['sections'],
-            $hardenedMode
-        );
+        // If editing an existing exam, load existing questions instead of generating new ones
+        if ($examId) {
+            $exam = GeneralExam::with(['sections.questions'])->findOrFail((int) $examId);
+            $this->ensureOwnerAccess($exam);
 
-        Log::info('Preview generated questions', [
-            'hardened_mode' => $hardenedMode,
-            'sections_count' => count($payload['sections']),
-            'generated_questions_count' => count($generatedQuestions),
-            'generated_questions' => $generatedQuestions,
-        ]);
+            $generatedQuestions = [];
+            foreach ($exam->sections as $sectionIndex => $section) {
+                $generatedQuestions[$sectionIndex] = $section->questions->map(function ($question) {
+                    return [
+                        'id' => $question->id,
+                        'question_text' => $question->question_text,
+                        'question_type' => $question->question_type,
+                        'marks' => $question->marks,
+                        'options' => $question->options ?? [],
+                        'correct_answer' => $question->correct_answer,
+                        'explanation' => $question->explanation,
+                    ];
+                })->values()->all();
+            }
+
+            Log::info('Loaded existing questions for editing', [
+                'exam_id' => $examId,
+                'sections_count' => count($generatedQuestions),
+            ]);
+        } else {
+            // Generate new questions for new exam
+            $generatedQuestions = $this->previewService->generateForSections(
+                $payload['sections'],
+                $hardenedMode
+            );
+
+            Log::info('Preview generated questions', [
+                'hardened_mode' => $hardenedMode,
+                'sections_count' => count($payload['sections']),
+                'generated_questions_count' => count($generatedQuestions),
+                'generated_questions' => $generatedQuestions,
+            ]);
+        }
 
         return view('examination-hub.exams.preview', [
             'payload' => $payload,
@@ -137,7 +177,7 @@ class ExamCreationController extends Controller
             'hardened_mode' => $hardenedMode,
         ]);
 
-        $questionsData = !empty($questionsJson) ? json_decode(base64_decode($questionsJson, true), true, 512, JSON_THROW_ON_ERROR) : [];
+        $questionsData = ! empty($questionsJson) ? json_decode(base64_decode($questionsJson, true), true, 512, JSON_THROW_ON_ERROR) : [];
 
         Log::info('Store exam - decoded questions', [
             'questions_data_count' => count($questionsData ?? []),
@@ -148,7 +188,20 @@ class ExamCreationController extends Controller
         if ($examId) {
             $exam = GeneralExam::findOrFail((int) $examId);
             $this->ensureOwnerAccess($exam);
-            abort_if($exam->starts_at && now()->gte($exam->starts_at), 422, 'This exam has started and can no longer be edited.');
+
+            // Allow editing but log warning if exam has started or has submissions
+            $hasStarted = $exam->starts_at && now()->gte($exam->starts_at);
+            $hasSubmissions = $exam->submissions()->exists();
+
+            if ($hasStarted || $hasSubmissions) {
+                Log::warning('Exam edited after start or with submissions', [
+                    'exam_id' => $exam->id,
+                    'has_started' => $hasStarted,
+                    'has_submissions' => $hasSubmissions,
+                    'user_id' => auth()->id(),
+                ]);
+            }
+
             $exam = $this->creationService->updateExam($exam, (int) auth()->id(), $payload);
         } else {
             $exam = $this->creationService->createExam((int) auth()->id(), $payload);
@@ -161,7 +214,7 @@ class ExamCreationController extends Controller
             Log::info('Hardened mode: questions generated', ['count' => count($questionsData)]);
         }
 
-        if (!empty($questionsData)) {
+        if (! empty($questionsData)) {
             Log::info('Persisting questions for exam', ['exam_id' => $exam->id]);
             $this->persistenceService->persistQuestionsForExam($exam, $questionsData);
         } else {
@@ -170,7 +223,7 @@ class ExamCreationController extends Controller
 
         return redirect()
             ->route('examination-hub.exams.show', $exam)
-            ->with('success', 'Examination created successfully.');
+            ->with('success', $examId ? 'Examination updated successfully.' : 'Examination created successfully.');
     }
 
     private function validatedPayload(Request $request): array
@@ -181,6 +234,7 @@ class ExamCreationController extends Controller
             'description' => ['nullable', 'string'],
             'instructions' => ['nullable', 'string'],
             'duration_in_minutes' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'is_randomized' => ['nullable', 'boolean'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'status' => ['required', 'in:draft,published'],
@@ -214,14 +268,14 @@ class ExamCreationController extends Controller
         ]);
 
         // Validate academic hierarchy if provided
-        if (!empty($data['academic_group_id']) || !empty($data['academic_level_id']) || !empty($data['academic_subject_id'])) {
+        if (! empty($data['academic_group_id']) || ! empty($data['academic_level_id']) || ! empty($data['academic_subject_id'])) {
             $groupId = (int) ($data['academic_group_id'] ?? 0);
             $levelId = (int) ($data['academic_level_id'] ?? 0);
             $subjectId = (int) ($data['academic_subject_id'] ?? 0);
 
             if ($levelId && $groupId) {
                 $level = AcademicLevel::find($levelId);
-                if (!$level || (int) $level->academic_group_id !== $groupId) {
+                if (! $level || (int) $level->academic_group_id !== $groupId) {
                     throw ValidationException::withMessages([
                         'academic_level_id' => 'Selected level does not belong to selected group.',
                     ]);
@@ -230,7 +284,7 @@ class ExamCreationController extends Controller
 
             if ($subjectId && $levelId) {
                 $subject = AcademicSubject::find($subjectId);
-                if (!$subject || (int) $subject->academic_level_id !== $levelId) {
+                if (! $subject || (int) $subject->academic_level_id !== $levelId) {
                     throw ValidationException::withMessages([
                         'academic_subject_id' => 'Selected subject does not belong to selected level.',
                     ]);
@@ -244,7 +298,7 @@ class ExamCreationController extends Controller
 
             if ($needsHierarchy && (empty($data['academic_group_id']) || empty($data['academic_level_id']) || empty($data['academic_subject_id']))) {
                 throw ValidationException::withMessages([
-                    'academic_subject_id' => "Section ".($idx + 1)." requires exam-level academic hierarchy (group, level, subject) for database/mixed source.",
+                    'academic_subject_id' => 'Section '.($idx + 1).' requires exam-level academic hierarchy (group, level, subject) for database/mixed source.',
                 ]);
             }
 

@@ -41,6 +41,27 @@
         @csrf
         <input type="hidden" name="exam_id" value="{{ $seed['exam_id'] ?? '' }}">
 
+        {{-- ── WARNING BANNER ── --}}
+        @if(isset($editingExam) && $editingExam)
+            @php
+                $hasStarted = $editingExam->starts_at && now()->gte($editingExam->starts_at);
+                $hasSubmissions = $editingExam->submissions_count > 0;
+            @endphp
+            @if($hasStarted || $hasSubmissions)
+                <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                     style="border-radius: 2px;">
+                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Warning: Editing Active Examination</p>
+                        <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                            This exam has {{ $hasStarted ? 'already started' : '' }}{{ $hasStarted && $hasSubmissions ? ' and has ' : '' }}{{ $hasSubmissions ? $editingExam->submissions_count . ' submission(s)' : '' }}. 
+                            Changes may affect participants or invalidate existing results. Proceed with caution.
+                        </p>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         {{-- ── EXAM CONFIGURATION ── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
@@ -109,6 +130,17 @@
                                 </svg>
                             </div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Randomize Questions</label>
+                        <label class="inline-flex items-center px-4 py-2.5 w-full text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 transition-all"
+                               style="border-radius: 2px;">
+                            <input type="checkbox" name="is_randomized" value="1"
+                                   {{ ($seed['is_randomized'] ?? false) ? 'checked' : '' }}
+                                   class="mr-3 h-4 w-4 text-purple-600 border-slate-300 dark:border-slate-600 rounded focus:ring-purple-500">
+                            <span class="text-slate-700 dark:text-slate-300">Randomize question order for each participant</span>
+                        </label>
                     </div>
 
                     <div>
@@ -294,7 +326,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>
-                {{ isset($editingExam) && $editingExam ? 'Preview Changes' : 'Preview Examination' }}
+                {{ isset($editingExam) && $editingExam ? 'Preview Updates' : 'Preview Examination' }}
             </button>
         </div>
     </form>

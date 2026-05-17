@@ -39,12 +39,21 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    @if(!$exam->starts_at || now()->lt($exam->starts_at))
-                        <a href="{{ route('examination-hub.exams.edit', $exam) }}"
+                    <a href="{{ route('examination-hub.exams.edit', $exam) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
+                       style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 8px rgba(5,150,105,0.3);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Edit Exam
+                        @if($exam->starts_at && now()->gte($exam->starts_at) || $exam->submissions_count > 0)
+                            <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        @endif
+                    </a>
+                    @if($exam->proctoring_enabled)
+                        <a href="{{ route('examination-hub.proctoring.index', $exam) }}"
                            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
-                           style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 8px rgba(5,150,105,0.3);">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            Edit Exam
+                           style="border-radius: 2px; background: linear-gradient(135deg, #7c2d12, #b91c1c); box-shadow: 0 2px 8px rgba(185,28,28,0.3);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            Proctoring
                         </a>
                     @endif
                     <a href="{{ route('examination-hub.submissions.index', $exam) }}"
@@ -63,6 +72,13 @@
                  style="border-radius: 2px;">
                 <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <p class="text-sm text-emerald-800 dark:text-emerald-300">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                 style="border-radius: 2px;">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p class="text-sm text-amber-800 dark:text-amber-300">{{ session('warning') }}</p>
             </div>
         @endif
         @if(session('error'))
