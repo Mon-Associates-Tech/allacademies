@@ -13,14 +13,24 @@ class MockExamGradeScaleController extends Controller
 {
     public function __construct(
         private readonly MockExamGradingService $gradingService
-    ) {}
+    ) {
+    }
 
     public function index(): View
     {
-        $scales    = $this->gradingService->getScalesForUser(auth()->id());
+          try {
+        \Log::info('Grade Scale Index method called. User ID: ' . auth()->id());
+        
+        $scales = $this->gradingService->getScalesForUser(auth()->id());
+        \Log::info('Scales retrieved successfully. Count: ' . $scales->count());
+        
         $hasScales = $scales->isNotEmpty();
-
+        
         return view('mock-exam.grading.index', compact('scales', 'hasScales'));
+    } catch (\Exception $e) {
+        \Log::error('Error in Grade Scale Index: ' . $e->getMessage());
+        throw $e; // Re-throw to see the actual error
+    }
     }
 
     public function store(Request $request): RedirectResponse

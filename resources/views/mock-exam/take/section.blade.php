@@ -6,6 +6,24 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $exam->title }} – {{ $section->title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- Inline styles to fix markdown component layout --}}
+    <style>
+        .markdown-inline > p,
+        .markdown-inline > *:first-child {
+            display: inline !important;
+            margin: 0 !important;
+        }
+        .markdown-inline {
+            display: inline-block;
+            vertical-align: top;
+        }
+        .markdown-inline img,
+        .markdown-inline pre,
+        .markdown-inline code {
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body class="min-h-full bg-slate-50 dark:bg-slate-950" x-data="examSection()">
 
@@ -63,16 +81,14 @@
              :class="answered['{{ $question->id }}'] ? 'border-l-4 border-l-emerald-400' : 'border-l-4 border-l-slate-200 dark:border-l-slate-600'">
 
             {{-- Question header --}}
-            <div class="px-5 py-4 flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-start gap-3 flex-1">
-                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 text-xs font-bold shrink-0 mt-0.5">
-                        {{ $loop->iteration }}
+            <div class="px-5 py-4 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 text-xs font-bold shrink-0 mt-0.5">
+                    {{ $loop->iteration }}
+                </span>
+                <div class="flex-1 min-w-0">
+                    <span class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed inline-block align-top markdown-inline">
+                        <x-form.markdown-with-math :content="$question->question_text" class="markdown-content" />
                     </span>
-                    <div class="flex-1">
-                        <p class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
-                            {!! nl2br(e($question->question_text)) !!}
-                        </p>
-                    </div>
                 </div>
                 <div class="shrink-0 text-right">
                     <span class="text-xs text-slate-400">{{ $question->marks }} mk{{ $question->marks != 1 ? 's' : '' }}</span>
@@ -98,9 +114,11 @@
                                        @change="saveResponse({{ $question->id }}, $event.target.value)"
                                        {{ $storedResponse === $letter ? 'checked' : '' }}
                                        class="accent-violet-600 mt-0.5 shrink-0">
-                                <span class="text-sm text-slate-700 dark:text-slate-300">
-                                    <span class="font-mono font-bold text-slate-400 mr-1">{{ $letter }}.</span>
-                                    {{ $text }}
+                                <span class="text-sm text-slate-700 dark:text-slate-300 inline-flex items-start gap-1 align-top">
+                                    <span class="font-mono font-bold text-slate-400 shrink-0 mt-0.5">{{ $letter }}.</span>
+                                    <span class="flex-1 min-w-0 markdown-inline">
+                                        <x-form.markdown-with-math :content="$text" class="markdown-content" />
+                                    </span>
                                 </span>
                             </label>
                         @endforeach
@@ -136,7 +154,7 @@
                             @blur="saveResponse({{ $question->id }}, $event.target.value)"
                             @keydown.ctrl.s.prevent="saveResponse({{ $question->id }}, responses['{{ $question->id }}'])"
                             placeholder="Write your answer here… (Ctrl+S to save)"
-                            class="w-full px-4 py-3 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white resize-y transition-all"
+                            class="w-full px-4 py-3 text-sm border border-slate-200 dark:border-slate-700 rounded-[2px] focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white resize-y transition-all"
                         >{{ $storedResponse }}</textarea>
                         <p class="text-xs text-slate-400">
                             <span x-text="(responses['{{ $question->id }}'] || '').length"></span> characters ·
@@ -201,9 +219,18 @@
 
 {{-- ── Submit confirmation modal ───────────────────────────────────────────── --}}
 <div x-show="confirmSubmit"
-     x-transition
+     x-cloak
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0 scale-95"
+     x-transition:enter-end="opacity-100 scale-100"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100 scale-100"
+     x-transition:leave-end="opacity-0 scale-95"
+     @click.self="confirmSubmit = false"
+     @keydown.escape.window="confirmSubmit = false"
      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2px] shadow-xl max-w-md w-full p-6">
+    
+    <div @click.stop class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-[2px] shadow-xl max-w-md w-full p-6">
         <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Submit Examination?</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
             You have answered <strong x-text="answeredCount"></strong> of <strong>{{ $questions->count() }}</strong> questions in this section.
@@ -227,7 +254,6 @@
 
 <script>
 function examSection() {
-    // Seed current responses from the server-side data
     const serverResponses = @json(collect($responses)->mapWithKeys(fn($r, $id) => [(string)$id => $r['response'] ?? null]));
 
     return {
@@ -286,6 +312,11 @@ function examSection() {
     };
 }
 </script>
+
+{{-- Add x-cloak CSS if not already in your app.css --}}
+<style>
+[x-cloak] { display: none !important; }
+</style>
 
 </body>
 </html>

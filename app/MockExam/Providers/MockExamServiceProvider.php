@@ -32,7 +32,8 @@ class MockExamServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerRouteBindings();
-        $this->loadRoutes();
+      //  $this->loadRoutes();
+          $this->loadRoutesFrom(base_path('routes/mock-exams.php'));
     }
 
     private function registerRouteBindings(): void
@@ -42,12 +43,13 @@ class MockExamServiceProvider extends ServiceProvider
         });
     }
 
-    private function loadRoutes(): void
-    {
-        // Routes are grouped under the 'web' middleware inside the file itself,
-        // so we just include the file here without extra wrapping.
-        Route::group([], base_path('routes/mock-exams.php'));
-    }
+private function loadRoutes(): void
+{
+    // Add the 'web' middleware to ensure routes are loaded with web context
+   Route::group(['middleware' => 'web'], base_path('routes/mock-exams.php'));
+      // dd('MockExamServiceProvider loadRoutes called'); // Debugging line to confirm route loading
+
+}
 }
 
 /*
