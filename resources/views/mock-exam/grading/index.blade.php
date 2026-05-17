@@ -1,4 +1,4 @@
-<x-layouts.app :title="'Mock Exam – Grading Scales'">
+<x-layouts.app >
 
     <div class="flex items-center gap-3 mb-6">
         <x-ui.button href="{{ route('mock-exams.index') }}" variant="ghost" size="sm" icon="arrow-left">Back</x-ui.button>

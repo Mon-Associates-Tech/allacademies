@@ -176,7 +176,7 @@ class AppServiceProvider extends ServiceProvider
             'mock_exam_subject_exam' => \App\MockExam\Models\MockExamSubjectExam::class,
             'mock_exam_participant' => \App\MockExam\Models\MockExamParticipant::class,
             'mock_exam_submission' => \App\MockExam\Models\MockExamSubmission::class,
-            'mock_exam_grade_scale' => \App\MockExam\Models\GradeScale::class,
+            'grade_scale' => \App\MockExam\Models\GradeScale::class,
         ]);
     }
 }
