@@ -170,13 +170,10 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Notifications
+    | Notifications (Unified)
     |--------------------------------------------------------------------------
     */
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/{type}/{id}', [NotificationController::class, 'show'])->name('notifications.show');
-    Route::post('/notifications/{type}/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications', \App\Livewire\UnifiedNotifications::class)->name('notifications.index');
 
     /*
     |--------------------------------------------------------------------------

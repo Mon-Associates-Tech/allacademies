@@ -124,12 +124,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard/author')->name('autho
 
     // Notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/', Notifications::class)->name('index');
-        //        Route::get('/{notification}', [Notifications::class, 'show'])->name('show');
-        //        Route::post('/{notification}/mark-read', [Notifications::class, 'markRead'])->name('mark-read');
-        //        Route::post('/mark-all-read', [Notifications::class, 'markAllRead'])->name('mark-all-read');
-        //        Route::get('/settings', [Notifications::class, 'settings'])->name('settings');
-        //        Route::post('/settings', [Notifications::class, 'updateSettings'])->name('update-settings');
+        Route::get('/', \App\Livewire\UnifiedNotifications::class)->name('index');
     });
 
     // Settings

@@ -42,7 +42,7 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('performance', PerformanceOverview::class)->name('performance');
     Route::get('account', StudentProfile::class)->name('account');
     Route::get('activities', ActivityLogs::class)->name('activities');
-    Route::get('notifications', Notifications::class)->name('notifications');
+    Route::get('notifications', \App\Livewire\UnifiedNotifications::class)->name('notifications');
     Route::get('schedules', StudentSchedule::class)->name('schedules');
     Route::get('courses', Courses::class)->name('courses');
     Route::get('courses/{courseId}', CourseDetails::class)->name('course.details');
