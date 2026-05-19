@@ -16,6 +16,7 @@ class MockExamSection extends Model
         'question_type',
         'question_count',
         'marks_per_question',
+        'time_limit_minutes',
         'is_randomized',
     ];
 
@@ -49,6 +50,11 @@ class MockExamSection extends Model
     public function getTotalMarks(): float
     {
         return (float) $this->questions()->sum('marks');
+    }
+
+    public function hasTimeLimit(): bool
+    {
+        return $this->time_limit_minutes !== null && $this->time_limit_minutes > 0;
     }
 
     /** Return questions, shuffled per-submission if needed. */

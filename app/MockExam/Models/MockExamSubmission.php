@@ -26,6 +26,9 @@ class MockExamSubmission extends Model
         'time_spent_seconds',
         'responses',
         'randomized_question_order',
+        'section_timings',
+        'last_activity_at',
+        'current_section_index',
         'score',
         'total_marks',
         'percentage',
@@ -46,8 +49,10 @@ class MockExamSubmission extends Model
             'started_at'               => 'datetime',
             'submitted_at'             => 'datetime',
             'graded_at'                => 'datetime',
+            'last_activity_at'         => 'datetime',
             'responses'                => 'array',
             'randomized_question_order'=> 'array',
+            'section_timings'          => 'array',
             'requires_manual_review'   => 'boolean',
             'score'                    => 'float',
             'total_marks'              => 'float',
@@ -258,5 +263,62 @@ class MockExamSubmission extends Model
     public function canViewResults(): bool
     {
         return $this->isSubmitted() && $this->mockExam->canShowResults();
+    }
+
+    // ─── Monitoring & Activity ────────────────────────────────────────────────
+
+    public function updateActivity(?int $sectionIndex = null): void
+    {
+        $data = ['last_activity_at' => now()];
+        if ($sectionIndex !== null) {
+            $data['current_section_index'] = $sectionIndex;
+        }
+        $this->update($data);
+    }
+
+    public function isIdle(): bool
+    {
+        if (! $this->last_activity_at) {
+            return false;
+        }
+        $threshold = config('mock-exam.monitoring.idle_threshold_minutes', 3);
+        return $this->last_activity_at->diffInMinutes(now()) > $threshold;
+    }
+
+    // ─── Section Timing ───────────────────────────────────────────────────────
+
+    public function startSection(int $sectionId, int $timeLimitMinutes): void
+    {
+        $timings = $this->section_timings ?? [];
+        if (isset($timings[$sectionId])) {
+            return;
+        }
+        $startedAt = now();
+        $timings[$sectionId] = [
+            'started_at' => $startedAt->toIso8601String(),
+            'expires_at' => $startedAt->addMinutes($timeLimitMinutes)->toIso8601String(),
+            'submitted_at' => null,
+        ];
+        $this->update(['section_timings' => $timings]);
+    }
+
+    public function isSectionExpired(int $sectionId): bool
+    {
+        $timings = $this->section_timings ?? [];
+        if (! isset($timings[$sectionId]['expires_at'])) {
+            return false;
+        }
+        return now()->greaterThan($timings[$sectionId]['expires_at']);
+    }
+
+    public function getRemainingSecondsForSection(int $sectionId): ?int
+    {
+        $timings = $this->section_timings ?? [];
+        if (! isset($timings[$sectionId]['expires_at'])) {
+            return null;
+        }
+        $expiresAt = \Carbon\Carbon::parse($timings[$sectionId]['expires_at']);
+        $remaining = now()->diffInSeconds($expiresAt, false);
+        return max(0, (int) $remaining);
     }
 }

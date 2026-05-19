@@ -33,6 +33,11 @@ class MockExam extends Model
         'starts_at',
         'ends_at',
         'is_randomized',
+        'auto_advance_sections',
+        'fullscreen_required',
+        'copy_paste_disabled',
+        'tab_switch_limit',
+        'auto_submit_on_violation',
         'max_attempts',
     ];
 
@@ -44,6 +49,10 @@ class MockExam extends Model
             'results_release_datetime'   => 'datetime',
             'results_released_at'        => 'datetime',
             'is_randomized'              => 'boolean',
+            'auto_advance_sections'      => 'boolean',
+            'fullscreen_required'        => 'boolean',
+            'copy_paste_disabled'        => 'boolean',
+            'auto_submit_on_violation'   => 'boolean',
             'results_released'           => 'boolean',
             'email_verification_required'=> 'boolean',
             'participant_required_fields'=> 'array',
@@ -186,5 +195,19 @@ class MockExam extends Model
             ->with('sections.questions')
             ->get()
             ->sum(fn ($se) => $se->sections->sum(fn ($s) => $s->questions->count()));
+    }
+
+    // ─── Proctoring ─────────────────────────────────────────────────────────────
+
+    public function hasProctoringEnabled(): bool
+    {
+        return $this->fullscreen_required
+            || $this->copy_paste_disabled
+            || $this->tab_switch_limit > 0;
+    }
+
+    public function getViolationLimit(): int
+    {
+        return (int) $this->tab_switch_limit;
     }
 }

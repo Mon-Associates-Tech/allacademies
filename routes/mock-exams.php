@@ -2,8 +2,10 @@
 
 use App\MockExam\Controllers\MockExamController;
 use App\MockExam\Controllers\MockExamGradeScaleController;
+use App\MockExam\Controllers\MockExamMonitoringController;
 use App\MockExam\Controllers\MockExamParticipantController;
 use App\MockExam\Controllers\MockExamPdfController;
+use App\MockExam\Controllers\MockExamProctoringController;
 use App\MockExam\Controllers\MockExamResultController;
 use App\MockExam\Controllers\MockExamSubjectExamController;
 use App\MockExam\Controllers\MockExamTakingController;
@@ -50,6 +52,9 @@ Route::middleware(['web', 'auth'])
             Route::post('/{submission}/finalize', [MockExamResultController::class, 'finalize'])->name('finalize');
         });
 
+        // Live monitoring
+        Route::get('/{mockExam}/monitor', [MockExamMonitoringController::class, 'index'])->name('monitor');
+
         // PDF downloads
         Route::get('/{mockExam}/pdf',            [MockExamPdfController::class, 'examPdf'])->name('pdf.exam');
         Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKeyPdf'])->name('pdf.answer-key');
@@ -86,4 +91,7 @@ Route::middleware('web')
         Route::post('/{mockExam}/response',              [MockExamTakingController::class, 'saveResponse'])->name('response');
         Route::post('/{mockExam}/submit',                [MockExamTakingController::class, 'submit'])->name('submit');
         Route::get('/{mockExam}/completed',              [MockExamTakingController::class, 'completed'])->name('completed');
+        
+        // Proctoring event recording (no auth, validated by session)
+        Route::post('/{mockExam}/proctor-event',         [MockExamProctoringController::class, 'recordEvent'])->name('proctor-event');
     });
