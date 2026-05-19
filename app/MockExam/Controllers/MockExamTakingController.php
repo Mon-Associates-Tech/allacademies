@@ -291,6 +291,47 @@ class MockExamTakingController extends Controller
         return view('mock-exam.take.completed', compact('exam', 'submission'));
     }
 
+    // ─── View Results (Participant-facing) ────────────────────────────────────
+
+    public function viewResults(MockExam $exam): View|RedirectResponse
+    {
+        // Find the submission from session
+        $submissionId = session("mock_exam_{$exam->id}_submission_id") 
+            ?? session('mock_exam_last_submission_id');
+        
+        if (!$submissionId) {
+            return redirect()->route('mock-exams.take.join')
+                ->withErrors(['access_code' => 'No submission found. Please take the exam first.']);
+        }
+
+        $submission = MockExamSubmission::find($submissionId);
+        
+        if (!$submission || $submission->mock_exam_id !== $exam->id) {
+            return redirect()->route('mock-exams.take.join')
+                ->withErrors(['access_code' => 'Invalid submission.']);
+        }
+
+        // Check if participant can view results
+        if (!$submission->canViewResults()) {
+            return redirect()->route('mock-exams.take.completed', $exam)
+                ->withErrors(['error' => 'Results are not available yet. Please wait for the instructor to release them.']);
+        }
+
+        // Load exam structure for displaying questions and answers
+        $exam->load(['subjectExams.sections.questions']);
+
+        // Build flat ordered list of questions for display
+        $questions = $exam->subjectExams
+            ->flatMap(fn ($se) => $se->sections)
+            ->flatMap(fn ($s) => $s->questions)
+            ->keyBy('id');
+
+        // Get analytics data
+        $analytics = $submission->getAnalytics();
+
+        return view('mock-exam.take.results', compact('exam', 'submission', 'questions', 'analytics'));
+    }
+
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     private function resolveSession(MockExam $exam): ?MockExamSubmission

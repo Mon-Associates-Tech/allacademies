@@ -114,6 +114,32 @@ class MockExamResultController extends Controller
         return back()->with('success', 'Results released to all participants.');
     }
 
+    // ─── Hide results from participants (after release) ───────────────────────
+
+    public function hide(MockExam $mockExam): RedirectResponse
+    {
+        $this->ensureOwner($mockExam);
+
+        abort_unless($mockExam->results_released, 422, 'Results must be released before they can be hidden.');
+
+        $mockExam->hideResults();
+
+        return back()->with('success', 'Results have been hidden from participants.');
+    }
+
+    // ─── Unhide results for participants ──────────────────────────────────────
+
+    public function unhide(MockExam $mockExam): RedirectResponse
+    {
+        $this->ensureOwner($mockExam);
+
+        abort_unless($mockExam->results_released, 422, 'Results must be released before they can be unhidden.');
+
+        $mockExam->unhideResults();
+
+        return back()->with('success', 'Results are now visible to participants again.');
+    }
+
     private function ensureOwner(MockExam $exam): void
     {
         abort_unless($exam->user_id === auth()->id(), 403);

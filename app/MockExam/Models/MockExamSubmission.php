@@ -110,7 +110,7 @@ class MockExamSubmission extends Model
 
     public function submit(bool $auto = false, ?string $reason = null): void
     {
-        $timeSpent = $this->started_at ? now()->diffInSeconds($this->started_at) : 0;
+        $timeSpent = $this->started_at ? abs(now()->diffInSeconds($this->started_at)) : 0;
 
         $this->update([
             'submitted_at'       => now(),
@@ -320,5 +320,117 @@ class MockExamSubmission extends Model
         $expiresAt = \Carbon\Carbon::parse($timings[$sectionId]['expires_at']);
         $remaining = now()->diffInSeconds($expiresAt, false);
         return max(0, (int) $remaining);
+    }
+
+    // ─── Analytics & Statistics ───────────────────────────────────────────────
+
+    /**
+     * Get detailed analytics for the submission
+     */
+    public function getAnalytics(): array
+    {
+        $responses = $this->responses ?? [];
+        $totalQuestions = count($responses);
+        $answeredQuestions = collect($responses)->filter(fn($r) => ($r['response'] ?? null) !== null)->count();
+        $correctAnswers = collect($responses)->where('is_correct', true)->count();
+        $incorrectAnswers = collect($responses)->where('is_correct', false)->count();
+        $ungradedAnswers = collect($responses)->whereNull('is_correct')->count();
+
+        // Calculate accuracy
+        $gradedQuestions = $correctAnswers + $incorrectAnswers;
+        $accuracy = $gradedQuestions > 0 ? round(($correctAnswers / $gradedQuestions) * 100, 2) : 0;
+
+        // Time analytics
+        $timeSpent = $this->time_spent_seconds ?? 0;
+        $avgTimePerQuestion = $totalQuestions > 0 ? round($timeSpent / $totalQuestions, 2) : 0;
+
+        // Points breakdown
+        $totalPointsEarned = collect($responses)->sum('points_earned');
+        $totalPossiblePoints = $this->total_marks ?? 0;
+
+        // Subject/Section breakdown
+        $subjectBreakdown = $this->getSubjectBreakdown();
+
+        return [
+            'total_questions' => $totalQuestions,
+            'answered_questions' => $answeredQuestions,
+            'unanswered_questions' => $totalQuestions - $answeredQuestions,
+            'correct_answers' => $correctAnswers,
+            'incorrect_answers' => $incorrectAnswers,
+            'ungraded_answers' => $ungradedAnswers,
+            'accuracy_percentage' => $accuracy,
+            'time_spent_seconds' => $timeSpent,
+            'time_spent_formatted' => $this->formatTime($timeSpent),
+            'avg_time_per_question' => $avgTimePerQuestion,
+            'total_points_earned' => round($totalPointsEarned, 2),
+            'total_possible_points' => round($totalPossiblePoints, 2),
+            'score_percentage' => $this->percentage ?? 0,
+            'grade' => $this->grade,
+            'subject_breakdown' => $subjectBreakdown,
+        ];
+    }
+
+    /**
+     * Get breakdown by subject exam
+     */
+    public function getSubjectBreakdown(): array
+    {
+        $exam = $this->mockExam;
+        $responses = $this->responses ?? [];
+        $breakdown = [];
+
+        foreach ($exam->subjectExams as $subjectExam) {
+            $subjectResponses = [];
+            $subjectMarks = 0;
+            $subjectEarned = 0;
+            $subjectCorrect = 0;
+            $subjectTotal = 0;
+
+            foreach ($subjectExam->sections as $section) {
+                foreach ($section->questions as $question) {
+                    $subjectTotal++;
+                    $subjectMarks += $question->marks;
+
+                    if (isset($responses[$question->id])) {
+                        $resp = $responses[$question->id];
+                        $subjectEarned += $resp['points_earned'] ?? 0;
+                        if (($resp['is_correct'] ?? false) === true) {
+                            $subjectCorrect++;
+                        }
+                        $subjectResponses[] = $resp;
+                    }
+                }
+            }
+
+            $breakdown[] = [
+                'subject_name' => $subjectExam->getDisplayTitle(),
+                'total_questions' => $subjectTotal,
+                'answered_questions' => count($subjectResponses),
+                'correct_answers' => $subjectCorrect,
+                'marks_possible' => round($subjectMarks, 2),
+                'marks_earned' => round($subjectEarned, 2),
+                'percentage' => $subjectMarks > 0 ? round(($subjectEarned / $subjectMarks) * 100, 2) : 0,
+            ];
+        }
+
+        return $breakdown;
+    }
+
+    /**
+     * Format seconds into human-readable time
+     */
+    private function formatTime(int $seconds): string
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%dh %dm %ds', $hours, $minutes, $secs);
+        } elseif ($minutes > 0) {
+            return sprintf('%dm %ds', $minutes, $secs);
+        }
+
+        return sprintf('%ds', $secs);
     }
 }

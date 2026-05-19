@@ -91,7 +91,14 @@
 
 <script>
     function joinForm() {
-        return { accessCode: '{{ old('access_code', '') }}' };
+        // Get access code from URL parameter if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeFromUrl = urlParams.get('code') || '';
+        const oldCode = '{{ old('access_code', '') }}';
+        
+        return { 
+            accessCode: oldCode || codeFromUrl.toUpperCase() 
+        };
     }
 </script>
 </body>

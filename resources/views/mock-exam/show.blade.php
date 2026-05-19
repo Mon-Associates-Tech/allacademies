@@ -155,9 +155,31 @@
                 </div>
                 <div class="divide-y divide-slate-50 dark:divide-slate-800">
                     @if($mockExam->access_code && $mockExam->isOnline())
-                        <div class="px-5 py-3.5 flex items-center justify-between">
+                        <div class="px-5 py-3.5 flex items-center justify-between" x-data="{ copied: false, shareUrl: '{{ route('mock-exams.take.join') }}?code={{ $mockExam->access_code }}' }">
                             <span class="text-xs text-slate-500 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.1em;">Access Code</span>
-                            <span class="font-mono font-bold text-xl text-violet-600 dark:text-violet-400 tracking-widest">{{ $mockExam->access_code }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-xl text-violet-600 dark:text-violet-400 tracking-widest">{{ $mockExam->access_code }}</span>
+                                <button @click="navigator.clipboard.writeText('{{ $mockExam->access_code }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                        class="inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-violet-600 border border-slate-200 dark:border-slate-700 hover:border-violet-400 transition-all"
+                                        style="border-radius: 2px;"
+                                        title="Copy access code">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <button @click="navigator.clipboard.writeText(shareUrl); copied = true; setTimeout(() => copied = false, 2000)"
+                                        class="inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-blue-600 border border-slate-200 dark:border-slate-700 hover:border-blue-400 transition-all"
+                                        style="border-radius: 2px;"
+                                        title="Copy share URL with code">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-5.367 3 3 0 00-5.367 5.367zm0 0L9 12m0 0l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 115.367-5.367 3 3 0 01-5.367 5.367z"/>
+                                    </svg>
+                                </button>
+                                <span x-show="copied" x-transition
+                                      class="text-xs text-emerald-600 font-medium">
+                                    Copied!
+                                </span>
+                            </div>
                         </div>
                     @endif
                     @foreach([

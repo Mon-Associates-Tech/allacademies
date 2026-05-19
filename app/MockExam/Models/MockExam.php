@@ -30,6 +30,10 @@ class MockExam extends Model
         'results_release_datetime',
         'results_released',
         'results_released_at',
+        'results_hidden_after_release',
+        'show_question_breakdown',
+        'show_correct_answers',
+        'show_participant_responses',
         'starts_at',
         'ends_at',
         'is_randomized',
@@ -54,6 +58,10 @@ class MockExam extends Model
             'copy_paste_disabled'        => 'boolean',
             'auto_submit_on_violation'   => 'boolean',
             'results_released'           => 'boolean',
+            'results_hidden_after_release' => 'boolean',
+            'show_question_breakdown'    => 'boolean',
+            'show_correct_answers'       => 'boolean',
+            'show_participant_responses' => 'boolean',
             'email_verification_required'=> 'boolean',
             'participant_required_fields'=> 'array',
         ];
@@ -148,6 +156,11 @@ class MockExam extends Model
 
     public function canShowResults(): bool
     {
+        // If admin has hidden results after release, participants cannot see them
+        if ($this->results_hidden_after_release) {
+            return false;
+        }
+
         return match ($this->result_visibility) {
             'immediate'      => true,
             'after_due_date' => $this->isExpired(),
@@ -155,6 +168,31 @@ class MockExam extends Model
             'scheduled'      => $this->results_release_datetime && now()->gte($this->results_release_datetime),
             default          => false,
         };
+    }
+
+    public function canShowQuestionBreakdown(): bool
+    {
+        return $this->show_question_breakdown;
+    }
+
+    public function canShowCorrectAnswers(): bool
+    {
+        return $this->show_correct_answers;
+    }
+
+    public function canShowParticipantResponses(): bool
+    {
+        return $this->show_participant_responses;
+    }
+
+    public function hideResults(): void
+    {
+        $this->update(['results_hidden_after_release' => true]);
+    }
+
+    public function unhideResults(): void
+    {
+        $this->update(['results_hidden_after_release' => false]);
     }
 
     public function releaseResults(): void

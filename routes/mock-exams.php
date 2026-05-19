@@ -47,6 +47,8 @@ Route::middleware(['web', 'auth'])
         Route::prefix('/{mockExam}/results')->name('results.')->group(function () {
             Route::get('/',                       [MockExamResultController::class, 'index'])->name('index');
             Route::post('/release',               [MockExamResultController::class, 'release'])->name('release');
+            Route::post('/hide',                  [MockExamResultController::class, 'hide'])->name('hide');
+            Route::post('/unhide',                [MockExamResultController::class, 'unhide'])->name('unhide');
             Route::get('/{submission}',           [MockExamResultController::class, 'show'])->name('show');
             Route::post('/{submission}/grade',    [MockExamResultController::class, 'grade'])->name('grade');
             Route::post('/{submission}/finalize', [MockExamResultController::class, 'finalize'])->name('finalize');
@@ -91,6 +93,7 @@ Route::middleware('web')
         Route::post('/{mockExam}/response',              [MockExamTakingController::class, 'saveResponse'])->name('response');
         Route::post('/{mockExam}/submit',                [MockExamTakingController::class, 'submit'])->name('submit');
         Route::get('/{mockExam}/completed',              [MockExamTakingController::class, 'completed'])->name('completed');
+        Route::get('/{mockExam}/results',                [MockExamTakingController::class, 'viewResults'])->name('results');
         
         // Proctoring event recording (no auth, validated by session)
         Route::post('/{mockExam}/proctor-event',         [MockExamProctoringController::class, 'recordEvent'])->name('proctor-event');
