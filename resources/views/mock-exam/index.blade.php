@@ -132,7 +132,7 @@
                         </x-ui.button>
 
                         @if($exam->isPrint())
-                            <x-ui.button href="{{ route('mock-exams.pdf.exam', $exam) }}" variant="info" size="sm" icon="document-arrow-down">
+                            <x-ui.button href="{{ route('mock-exams.pdf', $exam) }}" variant="info" size="sm" icon="document-arrow-down">
                                 Exam PDF
                             </x-ui.button>
                             <x-ui.button href="{{ route('mock-exams.pdf.answer-key', $exam) }}" variant="ghost" size="sm" icon="document-text">

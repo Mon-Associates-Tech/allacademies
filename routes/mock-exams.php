@@ -58,7 +58,9 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/monitor', [MockExamMonitoringController::class, 'index'])->name('monitor');
 
         // PDF downloads
-        Route::get('/{mockExam}/pdf',            [MockExamPdfController::class, 'examPdf'])->name('pdf.exam');
+        Route::get('/{mockExam}/pdf',            [MockExamPdfController::class, 'previewPage'])->name('pdf');
+        Route::get('/{mockExam}/pdf/download',   [MockExamPdfController::class, 'examPdf'])->name('pdf.exam');
+        Route::get('/{mockExam}/pdf/preview',    [MockExamPdfController::class, 'previewExamPdf'])->name('pdf.preview');
         Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKeyPdf'])->name('pdf.answer-key');
     });
 

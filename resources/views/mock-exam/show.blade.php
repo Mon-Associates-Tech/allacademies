@@ -57,7 +57,7 @@
                     </a>
                 @endif
                 @if($mockExam->isPrint())
-                    <a href="{{ route('mock-exams.pdf.exam', $mockExam) }}"
+                    <a href="{{ route('mock-exams.pdf', $mockExam) }}"
                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white border border-blue-500 transition-all"
                        style="border-radius: 2px; background: linear-gradient(135deg, #1d4ed8, #3b82f6);">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

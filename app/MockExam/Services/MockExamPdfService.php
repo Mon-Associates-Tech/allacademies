@@ -12,7 +12,7 @@ class MockExamPdfService
     /**
      * Generate a downloadable PDF of the exam paper (questions only).
      */
-    public function generateExamPdf(MockExam $mockExam): Response
+    public function generateExamPdf(MockExam $mockExam, float $fontSize = 10.5): Response
     {
         $mockExam->load([
             'subjectExams.academicSubject',
@@ -20,12 +20,45 @@ class MockExamPdfService
             'user',
         ]);
 
-        $pdf = Pdf::loadView('mock-exam.pdf.exam', ['mockExam' => $mockExam])
+        $pdf = Pdf::loadView('mock-exam.pdf.exam', [
+            'mockExam' => $mockExam,
+            'fontSize' => $fontSize,
+        ])
             ->setPaper('a4', 'portrait')
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('margin_top', 8)
+            ->setOption('margin_right', 10)
+            ->setOption('margin_bottom', 12)
+            ->setOption('margin_left', 10);
 
         return $pdf->download($this->filename($mockExam, 'exam'));
+    }
+
+    /**
+     * Generate a streamable PDF for preview.
+     */
+    public function previewExamPdf(MockExam $mockExam, float $fontSize = 10.5): Response
+    {
+        $mockExam->load([
+            'subjectExams.academicSubject',
+            'subjectExams.sections.questions',
+            'user',
+        ]);
+
+        $pdf = Pdf::loadView('mock-exam.pdf.exam', [
+            'mockExam' => $mockExam,
+            'fontSize' => $fontSize,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('margin_top', 8)
+            ->setOption('margin_right', 10)
+            ->setOption('margin_bottom', 12)
+            ->setOption('margin_left', 10);
+
+        return $pdf->stream($this->filename($mockExam, 'exam'));
     }
 
     /**

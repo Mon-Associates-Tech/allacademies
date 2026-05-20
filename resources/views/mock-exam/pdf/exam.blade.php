@@ -6,391 +6,616 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
+        @page {
+            size: A4;
+            margin: 18mm 15mm 24mm 15mm;
+        }
+
         body {
+            font-family: 'DejaVu Serif', Georgia, serif;
+            font-size: {{ $fontSize ?? 10.5 }}pt;
+            color: #111111;
+            line-height: 1.55;
+            background: #ffffff;
+        }
+
+        /* ══════════════════════════════════════════════
+           FIXED – repeated on every page
+        ══════════════════════════════════════════════ */
+
+        /* Outer page border */
+        .pg-border {
+            position: fixed;
+            top: 5mm; left: 5mm; right: 5mm; bottom: 5mm;
+            border: 1.5px solid #0c1f3f;
+        }
+        /* Inner gold accent frame */
+        .pg-border-gold {
+            position: fixed;
+            top: 7.5mm; left: 7.5mm; right: 7.5mm; bottom: 7.5mm;
+            border: 0.75px solid #c9a22a;
+        }
+
+        /* Footer ─ sits in the bottom margin */
+        .pg-footer {
+            position: fixed;
+            bottom: -20mm;
+            left: 0; right: 0;
+            border-top: 1px solid #0c1f3f;
+            padding-top: 2px;
+        }
+        .pg-footer table { width: 100%; border-collapse: collapse; }
+        .pg-footer td {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 10.5pt;
-            color: #0f172a;
+            font-size: 7pt;
+            color: #555;
+        }
+        .ft-right  { text-align: right; }
+        .ft-center { text-align: center; color: #888; font-style: italic; }
+
+
+        /* ══════════════════════════════════════════════
+           EXAM HEADER
+        ══════════════════════════════════════════════ */
+
+        /* 1 ─ Heavy navy rule + gold line */
+        .hdr-rule-navy { height: 5px;   background: #0c1f3f; }
+        .hdr-rule-gold { height: 2.5px; background: #c9a22a; }
+
+        /* 2 ─ Title block */
+        .hdr-title {
+            text-align: center;
+            padding: 9px 18px 8px;
+            border-left: 1px solid #d0d0d0;
+            border-right: 1px solid #d0d0d0;
+        }
+        .hdr-exam-title {
+            font-family: 'DejaVu Serif', Georgia, serif;
+            font-size: {{ ($fontSize ?? 10.5) + 6 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #0c1f3f;
+            line-height: 1.25;
+        }
+        .hdr-exam-date {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) }}pt;
+            color: #555;
+            margin-top: 3px;
+            letter-spacing: 0.03em;
+        }
+
+        /* 3 ─ Info grid (date / subjects / duration / marks) */
+        .hdr-info {
+            width: 100%;
+            border-collapse: collapse;
+            border-top: 2px solid #0c1f3f;
+            border-bottom: 2px solid #0c1f3f;
+            background: #f5f0df;
+        }
+        .hdr-info td {
+            padding: 5px 10px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            text-align: center;
+            border-right: 1px solid #c8b870;
+        }
+        .hdr-info td:last-child { border-right: none; }
+        .hi-lbl {
+            display: block;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #999;
+            margin-bottom: 3px;
+        }
+        .hi-val {
+            font-size: {{ ($fontSize ?? 10.5) }}pt;
+            font-weight: bold;
+            color: #0c1f3f;
+        }
+
+
+        /* ══════════════════════════════════════════════
+           CANDIDATE INFORMATION
+        ══════════════════════════════════════════════ */
+
+        .cand-wrap {
+            border: 1.5px solid #0c1f3f;
+            margin-top: 9px;
+            margin-bottom: 9px;
+        }
+        .cand-bar {
+            background: #0c1f3f;
+            color: #c9a22a;
+            padding: 3px 10px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 2.5 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+        .cand-tbl { width: 100%; border-collapse: collapse; }
+        .cand-tbl td {
+            padding: 6px 10px 5px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            vertical-align: bottom;
+        }
+        .cand-tbl td + td { border-left: 1px solid #ccc; }
+        .cand-tbl tr + tr td { border-top: 1px solid #ccc; }
+        .cf-lbl {
+            display: block;
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #888;
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+        .cf-line {
+            display: block;
+            border-bottom: 1.5px solid #0c1f3f;
+            height: 18px;
+        }
+
+
+        /* ══════════════════════════════════════════════
+           INSTRUCTIONS
+        ══════════════════════════════════════════════ */
+
+        .inst-wrap {
+            border: 1px solid #c9a22a;
+            border-left: 5px solid #c9a22a;
+            background: #fffdf0;
+            padding: 6px 10px;
+            margin-bottom: 10px;
+        }
+        .inst-heading {
+            display: block;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 2 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: #0c1f3f;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 0.5px solid #ddd5a0;
+        }
+        .inst-body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
+            color: #333;
             line-height: 1.55;
         }
 
-        /* ── Top banner ── */
-        .top-banner {
-            background: #0f172a;
-            padding: 12px 18px 10px;
-            margin-bottom: 0;
-        }
-        .banner-title {
-            color: #ffffff;
-            font-size: 15pt;
-            font-weight: bold;
-            letter-spacing: 0.08em;
-            font-family: 'DejaVu Serif', Georgia, serif;
-            text-transform: uppercase;
-        }
-        .banner-sub {
-            color: #94a3b8;
-            font-size: 8pt;
-            margin-top: 2px;
-            letter-spacing: 0.04em;
-        }
-        .violet-stripe {
-            height: 3px;
-            background: #7c3aed;
-            margin-bottom: 14px;
-        }
 
-        /* ── Candidate box ── */
-        .candidate-box {
-            border: 1.5px solid #334155;
-            margin-bottom: 14px;
-        }
-        .candidate-box table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .candidate-box td {
-            padding: 7px 10px;
-            font-size: 9.5pt;
-        }
-        .candidate-box .field-label {
-            color: #475569;
+        /* ══════════════════════════════════════════════
+           SUBJECT BLOCK
+        ══════════════════════════════════════════════ */
+
+        .subj-wrap { margin-top: 6px; margin-bottom: 4px; }
+
+        .subj-bar { width: 100%; border-collapse: collapse; }
+        .subj-bar-name {
+            background: #0c1f3f;
+            color: #ffffff;
+            padding: 6px 12px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) + 1 }}pt;
             font-weight: bold;
-            width: 160px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .subj-bar-meta {
+            background: #0c1f3f;
+            color: #c9a22a;
+            padding: 6px 12px;
+            text-align: right;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 1 }}pt;
             white-space: nowrap;
         }
-        .field-line {
-            border-bottom: 1.5px solid #334155;
-            display: inline-block;
-            width: 100%;
-        }
-        .candidate-box td + td {
-            border-left: 1px solid #e2e8f0;
-        }
-        .candidate-box tr + tr td {
-            border-top: 1px solid #e2e8f0;
-        }
+        .subj-gold-rule { height: 2.5px; background: #c9a22a; margin-bottom: 8px; }
 
-        /* ── Global instructions ── */
-        .global-instructions {
-            border-left: 3px solid #7c3aed;
-            background: #faf5ff;
-            padding: 8px 12px;
-            margin-bottom: 14px;
-            font-size: 9.5pt;
-        }
-        .global-instructions .heading {
-            font-weight: bold;
-            color: #5b21b6;
-            text-transform: uppercase;
-            font-size: 8.5pt;
-            letter-spacing: 0.08em;
-            margin-bottom: 4px;
-        }
-
-        /* ── Subject exam header ── */
-        .subject-block {
-            margin-bottom: 20px;
-        }
-        .subject-header {
-            background: #0f172a;
-            color: #ffffff;
-            padding: 9px 14px;
-            font-size: 11pt;
-            font-weight: bold;
-            font-family: 'DejaVu Serif', Georgia, serif;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            margin-bottom: 0;
-        }
-        .subject-header .subject-meta {
-            font-size: 8.5pt;
-            color: #94a3b8;
-            font-weight: normal;
+        .subj-inst {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            letter-spacing: 0;
-            text-transform: none;
-            margin-top: 2px;
-        }
-        .subject-instructions {
-            background: #fffbeb;
-            border-left: 3px solid #f59e0b;
-            padding: 7px 12px;
-            font-size: 9.5pt;
-            margin-bottom: 10px;
-            border-top: 1px solid #fde68a;
+            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
+            font-style: italic;
+            color: #444;
+            border-left: 3px solid #c9a22a;
+            background: #fffdf0;
+            padding: 4px 9px;
+            margin-bottom: 8px;
         }
 
-        /* ── Section header ── */
-        .section-block {
-            margin-bottom: 16px;
-        }
-        .section-header-row {
-            display: table;
-            width: 100%;
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 4px;
-            margin-bottom: 4px;
-        }
-        .section-header-left {
-            display: table-cell;
+
+        /* ══════════════════════════════════════════════
+           SECTION HEADER
+        ══════════════════════════════════════════════ */
+
+        .sec-wrap { margin-bottom: 8px; }
+
+        .sec-bar { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        .sec-bar-name {
+            background: #1a3a6b;
+            color: #ffffff;
+            padding: 5px 10px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) }}pt;
             font-weight: bold;
-            font-size: 10.5pt;
-            color: #0f172a;
             text-transform: uppercase;
             letter-spacing: 0.04em;
+            border-left: 4px solid #c9a22a;
         }
-        .section-header-right {
-            display: table-cell;
+        .sec-bar-meta {
+            background: #1a3a6b;
+            color: #c9a22a;
+            padding: 5px 12px;
             text-align: right;
-            font-size: 8.5pt;
-            color: #64748b;
-            vertical-align: bottom;
-        }
-        .section-instructions {
-            font-style: italic;
-            color: #374151;
-            font-size: 9pt;
-            margin-bottom: 10px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
+            white-space: nowrap;
         }
 
-        /* ── Questions ── */
-        .question-block {
-            margin-bottom: 14px;
+        .sec-inst {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
+            font-style: italic;
+            color: #555;
+            padding: 2px 5px;
+            margin-bottom: 5px;
         }
-        .question-row {
-            display: table;
-            width: 100%;
-        }
-        .question-num-cell {
-            display: table-cell;
-            width: 26px;
+
+
+        /* ══════════════════════════════════════════════
+           QUESTIONS  — 3-column table: num | body | marks
+           (no floats — fully dompdf-safe)
+        ══════════════════════════════════════════════ */
+
+        .q-item { margin-bottom: 7px; page-break-inside: avoid; }
+
+        .q-row { width: 100%; border-collapse: collapse; }
+
+        /* column 1: question number */
+        .q-num {
+            width: 24px;
+            vertical-align: top;
+            padding-top: 1px;
+            padding-right: 4px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
             font-weight: bold;
-            color: #4c1d95;
-            font-size: 10.5pt;
+            font-size: {{ ($fontSize ?? 10.5) }}pt;
+            color: #0c1f3f;
+            white-space: nowrap;
+        }
+
+        /* column 2: question text + options / lines */
+        .q-body { vertical-align: top; }
+
+        .q-text {
+            font-family: 'DejaVu Serif', Georgia, serif;
+            font-size: {{ ($fontSize ?? 10.5) }}pt;
+            color: #111;
+            line-height: 1.55;
+        }
+
+        /* column 3: marks badge */
+        .q-marks-col {
+            width: 40px;
             vertical-align: top;
-            padding-top: 0;
+            text-align: right;
+            padding-left: 5px;
+            padding-top: 1px;
+            white-space: nowrap;
         }
-        .question-text-cell {
-            display: table-cell;
-            vertical-align: top;
-        }
-        .question-text {
-            font-size: 10.5pt;
-            color: #0f172a;
-        }
-        .marks-badge {
-            display: inline;
-            font-size: 8pt;
-            color: #64748b;
+        .q-marks-badge {
+            display: inline-block;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 2 }}pt;
+            color: #555;
+            border: 0.75px solid #bbb;
+            background: #f8f8f6;
+            padding: 1px 4px;
             font-style: italic;
         }
 
-        /* ── MCQ Options ── */
-        .mcq-options {
-            margin-top: 6px;
-            margin-left: 0;
-        }
-        .mcq-options table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .mcq-options td {
-            padding: 2px 8px 2px 0;
-            font-size: 10pt;
+
+        /* ══════════════════════════════════════════════
+           MCQ OPTIONS  — 2-column table, indented
+        ══════════════════════════════════════════════ */
+
+        .opts { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .opts td {
             width: 50%;
+            padding: 2px 6px 2px 2px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: {{ ($fontSize ?? 10.5) - 0.5 }}pt;
+            color: #1a1a1a;
             vertical-align: top;
         }
-        .option-key {
+        .opt-key {
             font-weight: bold;
-            color: #1e293b;
-            margin-right: 4px;
+            color: #0c1f3f;
+            display: inline-block;
+            width: 18px;
         }
 
-        /* ── True/False (formatted like MCQ) ── */
-        .tf-options {
-            margin-top: 6px;
-        }
-        .tf-options table {
-            border-collapse: collapse;
-        }
-        .tf-options td {
-            padding: 2px 20px 2px 0;
-            font-size: 10pt;
-        }
 
-        /* ── Essay (writing lines) ── */
-        .essay-lines {
-            margin-top: 8px;
-        }
-        .writing-line {
-            border-bottom: 1px solid #94a3b8;
+        /* ══════════════════════════════════════════════
+           ESSAY ANSWER LINES
+        ══════════════════════════════════════════════ */
+
+        .elines { margin-top: 6px; }
+        .eline {
+            border-bottom: 0.75px solid #999;
             height: 20px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
-        /* ── Page break ── */
-        .page-break { page-break-before: always; }
 
-        /* ── Footer ── */
-        .page-footer {
-            position: fixed;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 7.5pt;
-            color: #94a3b8;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 5px;
-        }
+        /* ══════════════════════════════════════════════
+           UTILITIES
+        ══════════════════════════════════════════════ */
 
-        /* ── Divider ── */
-        hr.section-divider {
-            border: none;
-            border-top: 1px solid #e2e8f0;
-            margin: 14px 0;
-        }
+        .sec-sep { border: none; border-top: 1px dashed #ccc; margin: 11px 0; }
+        .pg-break { page-break-before: always; }
     </style>
 </head>
 <body>
 
-{{-- ── Header banner ── --}}
-<div class="top-banner">
-    <div class="banner-title">{{ $mockExam->title }}</div>
-    <div class="banner-sub">
-        Generated: {{ now()->format('d F Y') }}
-        @if($mockExam->starts_at) &nbsp;·&nbsp; Exam Date: {{ $mockExam->starts_at->format('d F Y') }} @endif
-    </div>
-</div>
-<div class="violet-stripe"></div>
+{{-- ══ Decorative page frame (fixed → every page) ══ --}}
+<div class="pg-border"></div>
+<div class="pg-border-gold"></div>
 
-{{-- ── Candidate details ── --}}
-<div class="candidate-box">
+{{-- ══ Footer ══ --}}
+<div class="pg-footer">
     <table>
         <tr>
-            <td class="field-label">Candidate Name:</td>
-            <td style="width:42%;"><span class="field-line">&nbsp;</span></td>
-            <td class="field-label" style="width:130px;">Index / ID No.:</td>
-            <td style="width:22%;"><span class="field-line">&nbsp;</span></td>
-        </tr>
-        <tr>
-            <td class="field-label">Centre / School:</td>
-            <td colspan="3"><span class="field-line">&nbsp;</span></td>
+            <td style="width:38%;">{{ $mockExam->title }}</td>
+            <td class="ft-center" style="width:24%;">— Turn Over —</td>
+            <td class="ft-right" style="width:38%;">Page <span class="pagenum"></span></td>
         </tr>
     </table>
 </div>
 
-{{-- ── Global instructions ── --}}
+{{-- ══════════════════════════════════════════════
+     EXAM HEADER
+══════════════════════════════════════════════ --}}
+<div class="hdr-rule-navy"></div>
+<div class="hdr-rule-gold"></div>
+
+<div class="hdr-title">
+    <div class="hdr-exam-title">{{ $mockExam->title }}</div>
+    @if($mockExam->starts_at)
+        <div class="hdr-exam-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
+    @endif
+</div>
+
+@php
+    $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
+    $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
+    $subjectCount  = $mockExam->subjectExams->count();
+@endphp
+
+<table class="hdr-info">
+    <tr>
+        <td>
+            <span class="hi-lbl">Exam Date</span>
+            <span class="hi-val">
+                @if($mockExam->starts_at)
+                    {{ $mockExam->starts_at->format('d M Y') }}
+                @else
+                    {{ now()->format('d M Y') }}
+                @endif
+            </span>
+        </td>
+        @if($subjectCount > 0)
+            <td>
+                <span class="hi-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
+                <span class="hi-val">
+                    @if($subjectCount === 1)
+                        {{ Str::limit($mockExam->subjectExams->first()->getDisplayTitle(), 22) }}
+                    @else
+                        {{ $subjectCount }} Papers
+                    @endif
+                </span>
+            </td>
+        @endif
+        @if($totalDuration > 0)
+            <td>
+                <span class="hi-lbl">Total Duration</span>
+                <span class="hi-val">
+                    @if($totalDuration >= 60)
+                        {{ floor($totalDuration / 60) }}hr {{ $totalDuration % 60 > 0 ? ($totalDuration % 60).'min' : '' }}
+                    @else
+                        {{ $totalDuration }} mins
+                    @endif
+                </span>
+            </td>
+        @endif
+        @if($totalMarks > 0)
+            <td>
+                <span class="hi-lbl">Total Marks</span>
+                <span class="hi-val">{{ number_format($totalMarks, 0) }}</span>
+            </td>
+        @endif
+        <td>
+            <span class="hi-lbl">Instructions</span>
+            <span class="hi-val">Read carefully</span>
+        </td>
+    </tr>
+</table>
+
+
+{{-- ══════════════════════════════════════════════
+     CANDIDATE INFORMATION
+══════════════════════════════════════════════ --}}
+<div class="cand-wrap">
+    <div class="cand-bar">Candidate Information</div>
+    <table class="cand-tbl">
+        <tr>
+            <td style="width:44%;">
+                <span class="cf-lbl">Full Name</span>
+                <span class="cf-line"></span>
+            </td>
+            <td style="width:26%;">
+                <span class="cf-lbl">Index No.</span>
+                <span class="cf-line"></span>
+            </td>
+            <td style="width:30%;">
+                <span class="cf-lbl">Class / Form</span>
+                <span class="cf-line"></span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <span class="cf-lbl">School / Institution</span>
+                <span class="cf-line"></span>
+            </td>
+            <td>
+                <span class="cf-lbl">Signature</span>
+                <span class="cf-line"></span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+{{-- ══════════════════════════════════════════════
+     GLOBAL INSTRUCTIONS
+══════════════════════════════════════════════ --}}
 @if($mockExam->instructions)
-    <div class="global-instructions">
-        <div class="heading">General Instructions</div>
-        {{ $mockExam->instructions }}
+    <div class="inst-wrap">
+        <span class="inst-heading">General Instructions to Candidates</span>
+        <div class="inst-body">{{ $mockExam->instructions }}</div>
     </div>
 @endif
 
-{{-- ── Subject exams ── --}}
-@foreach($mockExam->subjectExams as $seIdx => $se)
-    @if($seIdx > 0) <div class="page-break"></div> @endif
 
-    <div class="subject-block">
-        <div class="subject-header">
-            Subject {{ $loop->iteration }}: {{ $se->getDisplayTitle() }}
-            @if($se->duration_in_minutes)
-                <div class="subject-meta">Time Allowed: {{ $se->duration_in_minutes }} minutes</div>
-            @endif
-        </div>
+{{-- ══════════════════════════════════════════════
+     SUBJECT EXAMS
+══════════════════════════════════════════════ --}}
+@foreach($mockExam->subjectExams as $seIdx => $se)
+    @if($seIdx > 0) <div class="pg-break"></div> @endif
+
+    <div class="subj-wrap">
+
+        {{-- Subject bar --}}
+        <table class="subj-bar">
+            <tr>
+                <td class="subj-bar-name">{{ $se->getDisplayTitle() }}</td>
+                @if($se->duration_in_minutes)
+                    <td class="subj-bar-meta">
+                        Time Allowed:&nbsp;
+                        @if($se->duration_in_minutes >= 60)
+                            {{ floor($se->duration_in_minutes / 60) }} hour{{ floor($se->duration_in_minutes / 60) > 1 ? 's' : '' }}
+                            {{ $se->duration_in_minutes % 60 > 0 ? ($se->duration_in_minutes % 60).' mins' : '' }}
+                        @else
+                            {{ $se->duration_in_minutes }} minutes
+                        @endif
+                    </td>
+                @endif
+            </tr>
+        </table>
+        <div class="subj-gold-rule"></div>
 
         @if($se->instructions)
-            <div class="subject-instructions">
-                {{ $se->instructions }}
-            </div>
+            <div class="subj-inst">{{ $se->instructions }}</div>
         @endif
 
-        @foreach($se->sections as $sIdx => $section)
-            <div class="section-block">
 
-                {{-- Section title bar --}}
-                <div class="section-header-row">
-                    <div class="section-header-left">
-                        Section {{ $sIdx + 1 }}: {{ $section->title }}
-                    </div>
-                    <div class="section-header-right">
-                        {{ $section->questions->count() }} question(s) &nbsp;·&nbsp;
-                        {{ number_format($section->getTotalMarks(), 1) }} marks
-                    </div>
-                </div>
+        {{-- Sections --}}
+        @foreach($se->sections as $sIdx => $section)
+            @if($sIdx > 0) <hr class="sec-sep"> @endif
+
+            <div class="sec-wrap">
+
+                {{-- Section header --}}
+                <table class="sec-bar">
+                    <tr>
+                        <td class="sec-bar-name">
+                            Section&nbsp;{{ $sIdx + 1 }}:&nbsp;{{ $section->title }}
+                        </td>
+                        <td class="sec-bar-meta">
+                            {{ $section->questions->count() }}&nbsp;{{ Str::plural('Question', $section->questions->count()) }}
+                            &nbsp;·&nbsp;
+                            {{ number_format($section->getTotalMarks(), 0) }}&nbsp;Marks
+                        </td>
+                    </tr>
+                </table>
 
                 @if($section->instructions)
-                    <div class="section-instructions">{{ $section->instructions }}</div>
+                    <div class="sec-inst">{{ $section->instructions }}</div>
                 @endif
+
 
                 {{-- Questions --}}
                 @foreach($section->questions as $qIdx => $question)
-                    <div class="question-block">
-                        <div class="question-row">
-                            <div class="question-num-cell">{{ $qIdx + 1 }}.</div>
-                            <div class="question-text-cell">
+                    <div class="q-item">
+                        <table class="q-row">
+                            <tr>
+                                {{-- Col 1: number --}}
+                                <td class="q-num">{{ $qIdx + 1 }}.</td>
 
-                                <span class="question-text">
-                                    {{ strip_tags($question->question_text) }}
-                                </span>
-                                <span class="marks-badge"> [{{ $question->marks }}mk]</span>
+                                {{-- Col 2: question body --}}
+                                <td class="q-body">
+                                    <span class="q-text">{{ strip_tags($question->question_text) }}</span>
 
-                                {{-- ── MCQ options ── --}}
-                                @if($question->isMultipleChoice() && !empty($question->options))
-                                    <div class="mcq-options">
-                                        @php $opts = $question->getOptionsForDisplay(); $pairs = array_chunk(array_keys($opts), 2, true); @endphp
-                                        <table>
-                                            @foreach($pairs as $pair)
+                                    {{-- ── MCQ ── --}}
+                                    @if($question->isMultipleChoice() && !empty($question->options))
+                                        @php $opts = $question->getOptionsForDisplay(); @endphp
+                                        <table class="opts">
+                                            @foreach(array_chunk(array_keys($opts), 2, true) as $pair)
                                                 <tr>
                                                     @foreach($pair as $letter)
                                                         <td>
-                                                            <span class="option-key">({{ $letter }})</span>{{ $opts[$letter] }}
+                                                            <span class="opt-key">{{ $letter }}.</span>
+                                                            {{ $opts[$letter] }}
                                                         </td>
                                                     @endforeach
-                                                    @if(count($pair) < 2)<td></td>@endif
+                                                    @if(count($pair) < 2)
+                                                        <td></td>
+                                                    @endif
                                                 </tr>
                                             @endforeach
                                         </table>
-                                    </div>
 
-                                {{-- ── True / False – formatted as A/B options ── --}}
-                                @elseif($question->isTrueFalse())
-                                    <div class="tf-options">
-                                        <table>
+                                    {{-- ── True / False ── --}}
+                                    @elseif($question->isTrueFalse())
+                                        <table class="opts">
                                             <tr>
-                                                <td><span class="option-key">(A)</span> True</td>
-                                                <td><span class="option-key">(B)</span> False</td>
+                                                <td><span class="opt-key">A.</span> True</td>
+                                                <td><span class="opt-key">B.</span> False</td>
                                             </tr>
                                         </table>
-                                    </div>
 
-                                {{-- ── Essay – writing lines only, no box ── --}}
-                                @elseif($question->isEssay())
-                                    <div class="essay-lines">
-                                        @php $lines = max(6, (int) round($question->marks / 3)); @endphp
-                                        @for($l = 0; $l < $lines; $l++)
-                                            <div class="writing-line"></div>
-                                        @endfor
-                                    </div>
-                                @endif
+                                    {{-- ── Essay ── --}}
+                                    @elseif($question->isEssay())
+                                        <div class="elines">
+                                            @php $numLines = max(4, (int) round($question->marks * 1.2)); @endphp
+                                            @for($l = 0; $l < $numLines; $l++)
+                                                <div class="eline"></div>
+                                            @endfor
+                                        </div>
+                                    @endif
+                                </td>
 
-                            </div>
-                        </div>
+                                {{-- Col 3: marks badge --}}
+                                <td class="q-marks-col">
+                                    <span class="q-marks-badge">[{{ $question->marks }}mk]</span>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 @endforeach
 
-            </div>
-
-            @if(!$loop->last)<hr class="section-divider">@endif
+            </div>{{-- /.sec-wrap --}}
         @endforeach
-    </div>
-@endforeach
 
-{{-- ── Fixed footer ── --}}
-<div class="page-footer">
-    {{ $mockExam->title }} &nbsp;·&nbsp; {{ now()->format('Y') }} &nbsp;·&nbsp; Page <span class="pagenum"></span>
-</div>
+    </div>{{-- /.subj-wrap --}}
+@endforeach
 
 </body>
 </html>
