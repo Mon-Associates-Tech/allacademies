@@ -78,7 +78,6 @@
                             <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time</th>
                             <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Event</th>
                             <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Severity</th>
-                            <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
@@ -98,13 +97,6 @@
                                         @else bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 @endif">
                                         {{ ucfirst($log->severity) }}
                                     </span>
-                                </td>
-                                <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400 font-mono max-w-xs truncate">
-                                    @if(!empty($log->event_data))
-                                        {{ json_encode($log->event_data) }}
-                                    @else
-                                        —
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach

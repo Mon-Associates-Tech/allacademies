@@ -139,7 +139,6 @@
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Time</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Event</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Severity</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Data</th>
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
@@ -173,15 +172,6 @@
                                               style="border-radius: 2px; {{ $severityStyle }}">
                                             {{ ucfirst($log->severity) }}
                                         </span>
-                                </td>
-                                <td class="px-6 py-4 max-w-xs">
-                                    @if(!empty($log->event_data))
-                                        <code class="text-xs text-slate-500 dark:text-slate-400 font-mono break-all">
-                                            {{ json_encode($log->event_data) }}
-                                        </code>
-                                    @else
-                                        <span class="text-slate-300 dark:text-slate-600">—</span>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach

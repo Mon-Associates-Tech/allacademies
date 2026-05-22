@@ -25,56 +25,74 @@ class HeartbeatController extends Controller
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             return response()->json(['error' => 'Invalid session'], 403);
         }
 
         // Get or create heartbeat session
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submission->id)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             // Initialize session if not exists
             $heartbeat = $this->monitoringService->initializeSession($submission, [
-                'ip'         => $request->ip(),
+                'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-                'browser'    => $request->input('browser'),
-                'os'         => $request->input('os'),
+                'browser' => $request->input('browser'),
+                'os' => $request->input('os'),
             ]);
         }
 
         // Check if terminated by admin
         if ($heartbeat->status === ExamParticipantHeartbeat::STATUS_TERMINATED) {
             return response()->json([
-                'status'     => 'terminated',
-                'reason'     => $heartbeat->termination_reason,
-                'message'    => 'Your exam session has been terminated by the administrator.',
-                'redirect'   => route('examination-hub.take.completed', $exam),
+                'status' => 'terminated',
+                'reason' => $heartbeat->termination_reason,
+                'message' => 'Your exam session has been terminated by the administrator.',
+                'redirect' => route('examination-hub.take.completed', $exam),
             ]);
         }
 
         // Process heartbeat data
         $data = $request->validate([
-            'is_focused'            => ['nullable', 'boolean'],
-            'current_question_index'=> ['nullable', 'integer', 'min:0'],
+            'is_focused' => ['nullable', 'boolean'],
+            'current_question_index' => ['nullable', 'integer', 'min:0'],
             'current_section_index' => ['nullable', 'integer', 'min:0'],
-            'questions_answered'    => ['nullable', 'integer', 'min:0'],
+            'questions_answered' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $heartbeat = $this->monitoringService->processHeartbeat($heartbeat->session_token, $data);
 
+        // Compute questions_answered from submission ground truth
+        $submission->refresh();
+        $answeredCount = count(array_filter(
+            $submission->responses ?? [],
+            fn ($r) => ! empty($r['response'] ?? $r)
+        ));
+        if ($heartbeat->questions_answered !== $answeredCount) {
+            $heartbeat->update(['questions_answered' => $answeredCount]);
+            $heartbeat->questions_answered = $answeredCount;
+        }
+
         // Build response
         $response = [
-            'status'        => 'ok',
+            'status' => 'ok',
             'session_token' => $heartbeat->session_token,
-            'server_time'   => now()->toIso8601String(),
+            'server_time' => now()->toIso8601String(),
         ];
 
         // Include warning if present
         if ($heartbeat->has_warning) {
             $response['warning'] = [
-                'message'   => $heartbeat->admin_message,
+                'message' => $heartbeat->admin_message,
                 'warned_at' => $heartbeat->warned_at->toIso8601String(),
             ];
+        }
+
+        // Include pending admin message (non-warning) if present
+        if (! $heartbeat->has_warning && $heartbeat->admin_message) {
+            $response['admin_message'] = $heartbeat->admin_message;
+            // Clear it after delivery
+            $heartbeat->update(['admin_message' => null]);
         }
 
         return response()->json($response);
@@ -89,14 +107,14 @@ class HeartbeatController extends Controller
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             return response()->json(['error' => 'Invalid session'], 403);
         }
 
         $deviceInfo = $request->validate([
-            'browser'    => ['nullable', 'string', 'max:100'],
-            'os'         => ['nullable', 'string', 'max:100'],
-            'screen_width'  => ['nullable', 'integer'],
+            'browser' => ['nullable', 'string', 'max:100'],
+            'os' => ['nullable', 'string', 'max:100'],
+            'screen_width' => ['nullable', 'integer'],
             'screen_height' => ['nullable', 'integer'],
         ]);
 
@@ -106,9 +124,9 @@ class HeartbeatController extends Controller
         $heartbeat = $this->monitoringService->initializeSession($submission, $deviceInfo);
 
         return response()->json([
-            'status'        => 'initialized',
+            'status' => 'initialized',
             'session_token' => $heartbeat->session_token,
-            'server_time'   => now()->toIso8601String(),
+            'server_time' => now()->toIso8601String(),
         ]);
     }
 
@@ -121,7 +139,7 @@ class HeartbeatController extends Controller
         $submissionId = session('exam_submission_id');
         $submission = GeneralExamSubmission::find($submissionId);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
             return response()->json(['error' => 'Invalid session'], 403);
         }
 

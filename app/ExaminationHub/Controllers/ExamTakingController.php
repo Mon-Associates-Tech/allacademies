@@ -101,6 +101,7 @@ class ExamTakingController extends Controller
             'exam' => $exam,
             'submission' => $submission,
             'heartbeatToken' => session('exam_heartbeat_token'),
+            'proctoringEnabled' => (bool) $exam->proctoring_enabled,
         ]);
     }
 
@@ -161,8 +162,8 @@ class ExamTakingController extends Controller
             'questions' => $questions,
             'responses' => $responses,
             'heartbeatToken' => session('exam_heartbeat_token'),
-            'proctoringSessionId' => $request->input('proctoring_session_id')
-                ?? $request->attributes->get('proctoring_session_id'),
+            'proctoringEnabled' => (bool) $exam->proctoring_enabled,
+            'proctoringSessionId' => session('exam_heartbeat_token'),
         ]);
     }
 

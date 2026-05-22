@@ -221,7 +221,12 @@
 
                                 {{-- Time --}}
                                 <td class="px-5 py-4">
-                                    <span class="text-xs text-slate-600 dark:text-slate-400" x-text="formatTime(participant.elapsed_seconds)"></span>
+                                    <span class="text-xs font-mono whitespace-nowrap"
+                                          :class="{
+                                              'text-red-500': participant.has_duration && participant.remaining_seconds !== null && participant.remaining_seconds <= 300,
+                                              'text-slate-600 dark:text-slate-400': !(participant.has_duration && participant.remaining_seconds !== null && participant.remaining_seconds <= 300)
+                                          }"
+                                          x-text="formatTime(participant)"></span>
                                 </td>
 
                                 {{-- Actions --}}
@@ -496,11 +501,28 @@
                     };
                 },
 
-                formatTime(seconds) {
-                    if (!seconds) return '—';
-                    const mins = Math.floor(seconds / 60);
-                    const secs = seconds % 60;
-                    return `${mins}m ${secs}s`;
+                formatTime(participant) {
+                    const isCompleted = participant.status === 'completed' || participant.status === 'terminated';
+
+                    if (participant.has_duration && participant.remaining_seconds !== null) {
+                        const s = Math.max(0, Math.round(participant.remaining_seconds));
+                        const h = Math.floor(s / 3600);
+                        const m = Math.floor((s % 3600) / 60);
+                        const sec = s % 60;
+                        const label = h > 0
+                            ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+                            : `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+                        return isCompleted ? label : label + ' left';
+                    }
+
+                    const elapsed = participant.elapsed_seconds;
+                    if (!elapsed && elapsed !== 0) return '—';
+                    const h = Math.floor(elapsed / 3600);
+                    const m = Math.floor((elapsed % 3600) / 60);
+                    const sec = elapsed % 60;
+                    return h > 0
+                        ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+                        : `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
                 },
 
                 openMessageModal(participant) {

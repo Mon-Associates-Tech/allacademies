@@ -9,37 +9,83 @@
 
     <script>
         (function () {
-            let hasInitializedProctoring = false;
-            const sessionId = @json($proctoringSessionId ?? null);
-            const endpoint = @json(route('examination-hub.take.proctor.event', ['exam' => $exam]));
+            const proctoringEnabled = @json($proctoringEnabled ?? false);
+            const sessionId         = @json($proctoringSessionId ?? null);
+            const endpoint          = @json(route('examination-hub.take.proctor.event', ['exam' => $exam]));
 
-            function initProctoring() {
-                if (hasInitializedProctoring) return;
-                if (!sessionId) {
-                    console.warn('Proctoring bootstrap skipped: missing proctoringSessionId');
-                    return;
+            if (!proctoringEnabled) return;
+
+            // ── Fullscreen gate ──────────────────────────────────────────────
+            function isFullscreen() {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+            }
+
+            function requestFullscreen() {
+                const el = document.documentElement;
+                const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+                return fn ? fn.call(el) : Promise.resolve();
+            }
+
+            function showGate() {
+                const g = document.getElementById('fullscreen-gate');
+                if (g) g.style.display = 'flex';
+            }
+
+            function hideGate() {
+                const g = document.getElementById('fullscreen-gate');
+                if (g) g.style.display = 'none';
+            }
+
+            // Gate is visible by default in HTML.
+            // Hide it only if already in fullscreen (e.g. user navigated from start page button).
+            // Otherwise the user must click the button to enter fullscreen.
+            if (isFullscreen()) {
+                document.addEventListener('DOMContentLoaded', hideGate);
+            }
+
+            // Also check once DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                if (isFullscreen()) { hideGate(); }
+            });
+
+            // On fullscreen exit: show gate and report violation
+            document.addEventListener('fullscreenchange', () => {
+                if (!isFullscreen()) {
+                    showGate();
+                    window._examProctor?.report('fullscreen_exit');
+                } else {
+                    hideGate();
                 }
-                if (!window.ExamProctoring) return;
+            });
+            document.addEventListener('webkitfullscreenchange', () => {
+                if (!isFullscreen()) { showGate(); } else { hideGate(); }
+            });
 
-                const proctor = new window.ExamProctoring({
-                    sessionId: sessionId,
-                    endpoint: endpoint
-                });
+            // Resume button
+            document.addEventListener('DOMContentLoaded', () => {
+                const btn = document.getElementById('fullscreen-resume-btn');
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        requestFullscreen().then(hideGate).catch(hideGate);
+                    });
+                }
+            });
 
-                proctor.init();
-                proctor.report('exam_enter');
-                hasInitializedProctoring = true;
+            // ── Proctoring boot (only when sessionId available) ──────────────────────
+            if (sessionId) {
+                function boot() {
+                    if (!window.ExamProctoring) { setTimeout(boot, 100); return; }
+                    const proctor = new window.ExamProctoring({ sessionId, endpoint });
+                    proctor.init();
+                    proctor.report('exam_enter');
+                    window._examProctor = proctor;
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', boot, { once: true });
+                } else {
+                    boot();
+                }
             }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initProctoring, { once: true });
-            } else {
-                initProctoring();
-            }
-
-            // If JS bundle registers ExamProctoring slightly later, retry once shortly after load
-            setTimeout(initProctoring, 350);
-            document.addEventListener('livewire:navigated', initProctoring);
         })();
     </script>
     <script>
@@ -149,46 +195,213 @@
     </script>
 
     {{-- Add this section at the bottom of the file, before </x-layouts.exam> --}}
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize the heartbeat system if not already initialized
-        if (typeof ExamHeartbeat !== 'undefined' && !window.examHeartbeat) {
-            window.examHeartbeat = new ExamHeartbeat({
-                examId: {{ $exam->id }},
-                heartbeatUrl: '{{ route('examination-hub.take.heartbeat', $exam) }}',
-                initUrl: '{{ route('examination-hub.take.heartbeat.init', $exam) }}',
-                acknowledgeUrl: '{{ route('examination-hub.take.heartbeat.acknowledge-warning', $exam) }}',
-                interval: 15000,
-                onForceSubmit: function(data) {
-                    alert('Your exam has been submitted by the administrator.');
-                    window.location.href = '{{ route('examination-hub.take.completed', $exam) }}';
-                }
+    <script>
+    (function () {
+        const HEARTBEAT_URL   = '{{ route('examination-hub.take.heartbeat', $exam) }}';
+        const INIT_URL        = '{{ route('examination-hub.take.heartbeat.init', $exam) }}';
+        const COMPLETED_URL   = '{{ route('examination-hub.take.completed', $exam) }}';
+        const CSRF            = document.querySelector('meta[name="csrf-token"]')?.content;
+        const INTERVAL_MS     = 15000;
+        let sectionIndex      = {{ $sectionIndex }};
+        let isFocused         = true;
+        let questionsAnswered = 0;
+        let heartbeatTimer    = null;
+
+        async function post(url, body) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                body: JSON.stringify(body),
             });
         }
 
-        // Update heartbeat with current progress when answers change
-        function updateHeartbeatProgress() {
-            if (window.examHeartbeat) {
-                const answeredCount = document.querySelectorAll('input[type="radio"]:checked, textarea:not(:placeholder-shown), input[type="text"]:not(:placeholder-shown)').length;
-                window.examHeartbeat.updateProgress(
-                    {{ $sectionIndex }}, // current question index (using section for now)
-                    {{ $sectionIndex }}, // current section index
-                    answeredCount
-                );
+        async function initSession() {
+            try {
+                const ua = navigator.userAgent;
+                let browser = 'Unknown', os = 'Unknown';
+                if (ua.includes('Firefox'))     browser = 'Firefox';
+                else if (ua.includes('Chrome')) browser = 'Chrome';
+                else if (ua.includes('Safari')) browser = 'Safari';
+                else if (ua.includes('Edge'))   browser = 'Edge';
+                if (ua.includes('Windows'))     os = 'Windows';
+                else if (ua.includes('Mac'))    os = 'macOS';
+                else if (ua.includes('Linux'))  os = 'Linux';
+                else if (ua.includes('Android')) os = 'Android';
+
+                await post(INIT_URL, { browser, os, screen_width: screen.width, screen_height: screen.height });
+            } catch (e) {
+                console.error('Heartbeat init failed:', e);
             }
         }
 
-        // Listen for answer changes
-        document.querySelectorAll('input, textarea, select').forEach(function(el) {
-            el.addEventListener('change', updateHeartbeatProgress);
-            el.addEventListener('input', updateHeartbeatProgress);
+        function showAdminNotification(type, message) {
+            window.dispatchEvent(new CustomEvent('admin-notification', { detail: { type, message } }));
+        }
+
+        async function sendHeartbeat() {
+            try {
+                const answeredCount = document.querySelectorAll(
+                    'input[type="radio"]:checked, textarea:not([value=""]), input[type="text"]'
+                ).length;
+                questionsAnswered = answeredCount;
+
+                const res  = await post(HEARTBEAT_URL, {
+                    is_focused:             isFocused,
+                    current_question_index: sectionIndex,
+                    current_section_index:  sectionIndex,
+                    questions_answered:     questionsAnswered,
+                });
+                const data = await res.json();
+
+                if (data.status === 'terminated') {
+                    clearInterval(heartbeatTimer);
+                    alert(data.message || 'Your session has been terminated.');
+                    window.location.href = data.redirect || COMPLETED_URL;
+                } else if (data.warning) {
+                    showAdminNotification('warning', data.warning.message);
+                } else if (data.admin_message) {
+                    showAdminNotification('message', data.admin_message);
+                }
+            } catch (e) {
+                console.error('Heartbeat failed:', e);
+            }
+        }
+
+        window.addEventListener('focus', () => { isFocused = true; });
+        window.addEventListener('blur',  () => { isFocused = false; });
+        document.addEventListener('visibilitychange', () => {
+            isFocused = document.visibilityState === 'visible';
+        });
+        window.addEventListener('beforeunload', () => {
+            window._examProctor?.reportPageLeave('exam_exit');
         });
 
-        // Initial progress update
-        updateHeartbeatProgress();
-    });
-</script>
-@endpush
+        initSession().then(() => {
+            sendHeartbeat();
+            heartbeatTimer = setInterval(sendHeartbeat, INTERVAL_MS);
+        });
+    })();
+
+    function examTimer(startedAtTimestamp, durationMinutes) {
+        return {
+            startedAt: startedAtTimestamp,
+            duration: durationMinutes,
+            elapsed: 0,
+            remaining: null,
+            display: '--:--',
+            ticker: null,
+            get isCountdown() { return this.duration !== null && this.duration > 0; },
+            get isWarning()   { return this.isCountdown && this.remaining !== null && this.remaining <= 300; },
+            get timerStyle() {
+                if (this.isCountdown) {
+                    return this.isWarning
+                        ? 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);'
+                        : 'background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);';
+                }
+                return 'background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);';
+            },
+            get timerIconClass() {
+                return this.isCountdown ? (this.isWarning ? 'text-red-400' : 'text-emerald-400') : 'text-indigo-400';
+            },
+            get timerTextClass() {
+                return this.isCountdown ? (this.isWarning ? 'text-red-400' : 'text-emerald-400') : 'text-indigo-400';
+            },
+            format(s) {
+                const t = Math.max(0, Math.round(s));
+                const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+                return h > 0
+                    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+                    : `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+            },
+            tick() {
+                const now = Math.floor(Date.now() / 1000);
+                this.elapsed = this.startedAt ? now - this.startedAt : 0;
+                if (this.isCountdown) {
+                    this.remaining = Math.max(0, this.startedAt + this.duration * 60 - now);
+                    this.display   = this.format(this.remaining);
+                    if (this.remaining <= 0) { clearInterval(this.ticker); document.getElementById('exam-submit-form')?.submit(); }
+                } else {
+                    this.display = this.format(this.elapsed);
+                }
+            },
+            init() { this.tick(); this.ticker = setInterval(() => this.tick(), 1000); },
+        };
+    }
+    </script>
+
+    {{-- Fullscreen gate (proctored exams only) --}}
+    @if($proctoringEnabled ?? false)
+    <div id="fullscreen-gate"
+         style="display:flex; position:fixed; inset:0; z-index:9999; background:#0f172a; flex-direction:column; align-items:center; justify-content:center; padding:2rem;">
+        <div style="max-width:28rem; width:100%; background:#1e293b; border-radius:4px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6);">
+            <div style="height:4px; background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
+            <div style="padding:2rem;">
+                <div style="display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem;">
+                    <div style="flex-shrink:0; width:3rem; height:3rem; background:rgba(245,158,11,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                        <svg style="width:1.5rem;height:1.5rem;color:#f59e0b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    </div>
+                    <div>
+                        <p style="font-weight:700; color:#f1f5f9; font-size:1.125rem; margin:0 0 0.5rem;">Fullscreen Required</p>
+                        <p style="color:#94a3b8; font-size:0.875rem; line-height:1.6; margin:0;">This exam must be taken in fullscreen mode. Exiting fullscreen is recorded as a violation. Click the button below to continue.</p>
+                    </div>
+                </div>
+                <button id="fullscreen-resume-btn"
+                        style="width:100%; padding:0.75rem 1.5rem; background:linear-gradient(135deg,#b45309,#d97706); color:#fff; font-weight:600; font-size:0.875rem; border:none; border-radius:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+                    <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    Re-enter Fullscreen & Continue
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Admin notification overlay --}}
+    <div x-data="{
+            show: false,
+            type: 'message',
+            text: '',
+            acknowledgeUrl: '{{ route('examination-hub.take.heartbeat.acknowledge-warning', $exam) }}',
+            csrfToken: '{{ csrf_token() }}',
+            init() {
+                window.addEventListener('admin-notification', (e) => {
+                    this.type = e.detail.type;
+                    this.text = e.detail.message;
+                    this.show = true;
+                });
+            },
+            async dismiss() {
+                if (this.type === 'warning') {
+                    await fetch(this.acknowledgeUrl, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': this.csrfToken, 'Content-Type': 'application/json' },
+                    });
+                }
+                this.show = false;
+                this.text = '';
+            },
+         }"
+         x-show="show"
+         x-transition
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         style="display:none;">
+        <div class="w-full max-w-md overflow-hidden"
+             :class="type === 'warning' ? 'bg-amber-50 dark:bg-amber-950' : 'bg-white dark:bg-slate-900'"
+             style="border-radius:2px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);">
+            <div class="h-1 w-full"
+                 :style="type==='warning' ? 'background:linear-gradient(90deg,#f59e0b,#fbbf24)' : 'background:linear-gradient(90deg,#6366f1,#818cf8)'"></div>
+            <div class="px-6 py-5">
+                <p class="font-bold text-slate-900 dark:text-white mb-2"
+                   x-text="type === 'warning' ? 'Warning from Invigilator' : 'Message from Invigilator'"></p>
+                <p class="text-sm text-slate-700 dark:text-slate-300" x-text="text"></p>
+                <div class="mt-5 flex justify-end">
+                    <button @click="dismiss()"
+                            class="px-5 py-2 text-sm font-semibold text-white"
+                            :style="type==='warning' ? 'background:#d97706;border-radius:2px;' : 'background:#6366f1;border-radius:2px;'">
+                        Acknowledge
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </x-layouts.exam>

@@ -10,7 +10,6 @@ use App\ExaminationHub\Models\ExamParticipantHeartbeat;
 use App\ExaminationHub\Models\ExamProctoringLog;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class LiveMonitoringService
@@ -26,7 +25,7 @@ class LiveMonitoringService
      */
     public function initializeSession(GeneralExamSubmission $submission, array $deviceInfo = []): ExamParticipantHeartbeat
     {
-        $heartbeat = ParticipantHeartbeat::createForSubmission($submission, $deviceInfo);
+        $heartbeat = ExamParticipantHeartbeat::createForSubmission($submission, $deviceInfo);
 
         broadcast(new ParticipantHeartbeatReceived($heartbeat))->toOthers();
 
@@ -40,7 +39,7 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('session_token', $sessionToken)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 
@@ -99,46 +98,71 @@ class LiveMonitoringService
             ->with('submission')
             ->get();
 
-        // Update statuses based on last heartbeat time
+        // Sync status for each heartbeat against ground truth (submission state + timing)
         $heartbeats->each(function ($heartbeat) {
+            $terminal = in_array($heartbeat->status, [
+                ExamParticipantHeartbeat::STATUS_COMPLETED,
+                ExamParticipantHeartbeat::STATUS_TERMINATED,
+            ]);
+
+            if ($terminal) {
+                return;
+            }
+
+            // Submission already submitted → mark completed regardless of heartbeat timing
+            if ($heartbeat->submission?->isSubmitted()) {
+                $heartbeat->update(['status' => ExamParticipantHeartbeat::STATUS_COMPLETED]);
+                $heartbeat->status = ExamParticipantHeartbeat::STATUS_COMPLETED;
+
+                return;
+            }
+
+            // No submission started yet (participant never actually entered) → disconnected
+            if (! $heartbeat->submission || ! $heartbeat->submission->started_at) {
+                $heartbeat->update(['status' => ExamParticipantHeartbeat::STATUS_DISCONNECTED]);
+                $heartbeat->status = ExamParticipantHeartbeat::STATUS_DISCONNECTED;
+
+                return;
+            }
+
+            // Normal timing-based status
             $currentStatus = $heartbeat->calculateStatus();
-            if ($heartbeat->status !== $currentStatus &&
-                !in_array($heartbeat->status, [
-                    ExamParticipantHeartbeat::STATUS_COMPLETED,
-                    ExamParticipantHeartbeat::STATUS_TERMINATED
-                ])) {
+            if ($heartbeat->status !== $currentStatus) {
                 $heartbeat->update(['status' => $currentStatus]);
+                $heartbeat->status = $currentStatus;
             }
         });
 
-        $participants = $heartbeats->map(fn($h) => $h->toLiveData());
+        $durationMinutes = $exam->duration_in_minutes;
+
+        $participants = $heartbeats->map(fn ($h) => $h->toLiveData($durationMinutes));
 
         // Calculate stats
         $stats = [
-            'total_participants'  => $heartbeats->count(),
-            'active'              => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_ACTIVE)->count(),
-            'idle'                => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_IDLE)->count(),
-            'away'                => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_AWAY)->count(),
-            'disconnected'        => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_DISCONNECTED)->count(),
-            'completed'           => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_COMPLETED)->count(),
-            'terminated'          => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_TERMINATED)->count(),
-            'flagged'             => $heartbeats->where('is_flagged', true)->count(),
-            'total_violations'    => $heartbeats->sum('violation_count'),
-            'high_violations'     => $heartbeats->sum('high_severity_count'),
-            'medium_violations'   => $heartbeats->sum('medium_severity_count'),
+            'total_participants' => $heartbeats->count(),
+            'active' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_ACTIVE)->count(),
+            'idle' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_IDLE)->count(),
+            'away' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_AWAY)->count(),
+            'disconnected' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_DISCONNECTED)->count(),
+            'completed' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_COMPLETED)->count(),
+            'terminated' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_TERMINATED)->count(),
+            'flagged' => $heartbeats->where('is_flagged', true)->count(),
+            'total_violations' => $heartbeats->sum('violation_count'),
+            'high_violations' => $heartbeats->sum('high_severity_count'),
+            'medium_violations' => $heartbeats->sum('medium_severity_count'),
         ];
 
         return [
-            'exam'         => [
-                'id'                  => $exam->id,
-                'title'               => $exam->title,
-                'duration_minutes'    => $exam->duration_in_minutes,
-                'total_questions'     => $exam->questions()->count(),
-                'proctoring_enabled'  => $exam->proctoring_enabled,
-                'starts_at'           => $exam->starts_at?->toIso8601String(),
-                'ends_at'             => $exam->ends_at?->toIso8601String(),
+            'exam' => [
+                'id' => $exam->id,
+                'title' => $exam->title,
+                'duration_minutes' => $exam->duration_in_minutes,
+                'total_questions' => $exam->questions()->count(),
+                'proctoring_enabled' => $exam->proctoring_enabled,
+                'starts_at' => $exam->starts_at?->toIso8601String(),
+                'ends_at' => $exam->ends_at?->toIso8601String(),
             ],
-            'stats'        => $stats,
+            'stats' => $stats,
             'participants' => $participants->values()->toArray(),
         ];
     }
@@ -152,7 +176,7 @@ class LiveMonitoringService
             ->with('submission')
             ->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 
@@ -162,12 +186,12 @@ class LiveMonitoringService
             ->get();
 
         return [
-            'participant' => $heartbeat->toLiveData(),
-            'violations'  => $logs->map(fn($log) => [
-                'id'          => $log->id,
-                'event_type'  => $log->event_type,
-                'severity'    => $log->severity,
-                'event_data'  => $log->event_data,
+            'participant' => $heartbeat->toLiveData($heartbeat->exam?->duration_in_minutes),
+            'violations' => $logs->map(fn ($log) => [
+                'id' => $log->id,
+                'event_type' => $log->event_type,
+                'severity' => $log->severity,
+                'event_data' => $log->event_data,
                 'occurred_at' => $log->occurred_at->toIso8601String(),
             ])->toArray(),
         ];
@@ -182,7 +206,7 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 
@@ -200,7 +224,7 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 
@@ -208,7 +232,7 @@ class LiveMonitoringService
 
         // Also mark the submission as auto-submitted due to termination
         $submission = $heartbeat->submission;
-        if ($submission && !$submission->submitted_at) {
+        if ($submission && ! $submission->submitted_at) {
             $submission->submit(autoSubmitted: true, reason: "Terminated by admin: {$reason}");
         }
 
@@ -224,13 +248,13 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 
         $submission = $heartbeat->submission;
 
-        if ($submission && !$submission->submitted_at) {
+        if ($submission && ! $submission->submitted_at) {
             DB::transaction(function () use ($submission, $heartbeat, $reason) {
                 $submission->submit(autoSubmitted: true, reason: "Force submitted by admin: {$reason}");
                 $submission->gradeSubmission();
@@ -250,9 +274,12 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
+
+        // Persist message so it's delivered via next heartbeat poll
+        $heartbeat->update(['admin_message' => $message]);
 
         broadcast(new AdminActionSent($heartbeat, 'message', $message))->toOthers();
 
@@ -266,7 +293,7 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 
@@ -290,7 +317,7 @@ class LiveMonitoringService
     {
         $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
 
-        if (!$heartbeat) {
+        if (! $heartbeat) {
             return null;
         }
 

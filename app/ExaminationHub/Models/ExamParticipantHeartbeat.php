@@ -13,19 +13,26 @@ class ExamParticipantHeartbeat extends Model
     use HasFactory;
 
     // Status constants
-    public const STATUS_ACTIVE       = 'active';
-    public const STATUS_IDLE         = 'idle';
-    public const STATUS_AWAY         = 'away';
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_IDLE = 'idle';
+
+    public const STATUS_AWAY = 'away';
+
     public const STATUS_DISCONNECTED = 'disconnected';
-    public const STATUS_COMPLETED    = 'completed';
-    public const STATUS_TERMINATED   = 'terminated';
+
+    public const STATUS_COMPLETED = 'completed';
+
+    public const STATUS_TERMINATED = 'terminated';
 
     // Timeout thresholds (in seconds)
-    public const IDLE_THRESHOLD         = 60;   // 1 minute without activity
-    public const AWAY_THRESHOLD         = 180;  // 3 minutes
+    public const IDLE_THRESHOLD = 60;   // 1 minute without activity
+
+    public const AWAY_THRESHOLD = 180;  // 3 minutes
+
     public const DISCONNECTED_THRESHOLD = 300;  // 5 minutes
 
- protected $table = 'examhub_participant_heartbeats';
+    protected $table = 'examhub_participant_heartbeats';
 
     protected $fillable = [
         'general_exam_id',
@@ -61,12 +68,12 @@ class ExamParticipantHeartbeat extends Model
     {
         return [
             'last_heartbeat_at' => 'datetime',
-            'started_at'        => 'datetime',
-            'warned_at'         => 'datetime',
-            'terminated_at'     => 'datetime',
-            'is_focused'        => 'boolean',
-            'is_flagged'        => 'boolean',
-            'has_warning'       => 'boolean',
+            'started_at' => 'datetime',
+            'warned_at' => 'datetime',
+            'terminated_at' => 'datetime',
+            'is_focused' => 'boolean',
+            'is_flagged' => 'boolean',
+            'has_warning' => 'boolean',
         ];
     }
 
@@ -123,18 +130,18 @@ class ExamParticipantHeartbeat extends Model
         return self::updateOrCreate(
             ['general_exam_submission_id' => $submission->id],
             [
-                'general_exam_id'    => $exam->id,
-                'participant_name'   => $submission->participant_name,
-                'participant_email'  => $submission->participant_email,
-                'session_token'      => self::generateSessionToken(),
-                'started_at'         => now(),
-                'last_heartbeat_at'  => now(),
-                'status'             => self::STATUS_ACTIVE,
-                'total_questions'    => $exam->questions()->count(),
-                'ip_address'         => $deviceInfo['ip'] ?? request()->ip(),
-                'user_agent'         => $deviceInfo['user_agent'] ?? request()->userAgent(),
-                'browser'            => $deviceInfo['browser'] ?? null,
-                'os'                 => $deviceInfo['os'] ?? null,
+                'general_exam_id' => $exam->id,
+                'participant_name' => $submission->participant_name,
+                'participant_email' => $submission->participant_email,
+                'session_token' => self::generateSessionToken(),
+                'started_at' => now(),
+                'last_heartbeat_at' => now(),
+                'status' => self::STATUS_ACTIVE,
+                'total_questions' => $exam->questions()->count(),
+                'ip_address' => $deviceInfo['ip'] ?? request()->ip(),
+                'user_agent' => $deviceInfo['user_agent'] ?? request()->userAgent(),
+                'browser' => $deviceInfo['browser'] ?? null,
+                'os' => $deviceInfo['os'] ?? null,
             ]
         );
     }
@@ -148,7 +155,7 @@ class ExamParticipantHeartbeat extends Model
     {
         $updateData = [
             'last_heartbeat_at' => now(),
-            'status'            => self::STATUS_ACTIVE,
+            'status' => self::STATUS_ACTIVE,
         ];
 
         if (isset($data['is_focused'])) {
@@ -182,17 +189,17 @@ class ExamParticipantHeartbeat extends Model
             return $this->status;
         }
 
-        if (!$this->last_heartbeat_at) {
+        if (! $this->last_heartbeat_at) {
             return self::STATUS_DISCONNECTED;
         }
 
-        $secondsSinceLastHeartbeat = now()->diffInSeconds($this->last_heartbeat_at);
+        $secondsSinceLastHeartbeat = max(0, (int) $this->last_heartbeat_at->diffInSeconds(now()));
 
         return match (true) {
             $secondsSinceLastHeartbeat >= self::DISCONNECTED_THRESHOLD => self::STATUS_DISCONNECTED,
-            $secondsSinceLastHeartbeat >= self::AWAY_THRESHOLD         => self::STATUS_AWAY,
-            $secondsSinceLastHeartbeat >= self::IDLE_THRESHOLD         => self::STATUS_IDLE,
-            default                                                     => self::STATUS_ACTIVE,
+            $secondsSinceLastHeartbeat >= self::AWAY_THRESHOLD => self::STATUS_AWAY,
+            $secondsSinceLastHeartbeat >= self::IDLE_THRESHOLD => self::STATUS_IDLE,
+            default => self::STATUS_ACTIVE,
         };
     }
 
@@ -204,10 +211,10 @@ class ExamParticipantHeartbeat extends Model
         $logs = ExamProctoringLog::forSubmission($this->general_exam_submission_id)->get();
 
         $this->update([
-            'violation_count'       => $logs->count(),
-            'high_severity_count'   => $logs->where('severity', ExamProctoringLog::SEVERITY_HIGH)->count(),
+            'violation_count' => $logs->count(),
+            'high_severity_count' => $logs->where('severity', ExamProctoringLog::SEVERITY_HIGH)->count(),
             'medium_severity_count' => $logs->where('severity', ExamProctoringLog::SEVERITY_MEDIUM)->count(),
-            'is_flagged'            => $this->high_severity_count >= 3 || $this->medium_severity_count >= 5,
+            'is_flagged' => $this->high_severity_count >= 3 || $this->medium_severity_count >= 5,
         ]);
 
         return $this->refresh();
@@ -219,6 +226,7 @@ class ExamParticipantHeartbeat extends Model
     public function markCompleted(): self
     {
         $this->update(['status' => self::STATUS_COMPLETED]);
+
         return $this;
     }
 
@@ -228,9 +236,9 @@ class ExamParticipantHeartbeat extends Model
     public function terminate(int $adminId, string $reason): self
     {
         $this->update([
-            'status'             => self::STATUS_TERMINATED,
-            'terminated_by'      => $adminId,
-            'terminated_at'      => now(),
+            'status' => self::STATUS_TERMINATED,
+            'terminated_by' => $adminId,
+            'terminated_at' => now(),
             'termination_reason' => $reason,
         ]);
 
@@ -243,9 +251,9 @@ class ExamParticipantHeartbeat extends Model
     public function sendWarning(string $message): self
     {
         $this->update([
-            'has_warning'   => true,
+            'has_warning' => true,
             'admin_message' => $message,
-            'warned_at'     => now(),
+            'warned_at' => now(),
         ]);
 
         return $this;
@@ -257,7 +265,7 @@ class ExamParticipantHeartbeat extends Model
     public function clearWarning(): self
     {
         $this->update([
-            'has_warning'   => false,
+            'has_warning' => false,
             'admin_message' => null,
         ]);
 
@@ -281,43 +289,53 @@ class ExamParticipantHeartbeat extends Model
      */
     public function getElapsedTime(): ?int
     {
-        if (!$this->started_at) {
+        if (! $this->started_at) {
             return null;
         }
 
-        return now()->diffInSeconds($this->started_at);
+        return max(0, (int) $this->started_at->diffInSeconds(now()));
     }
 
     /**
      * Convert to array for broadcasting/API response.
      */
-    public function toLiveData(): array
+    public function toLiveData(?int $examDurationMinutes = null): array
     {
+        $elapsedSeconds = $this->getElapsedTime();
+
+        $remainingSeconds = null;
+        if ($examDurationMinutes && $this->started_at) {
+            $endAt = $this->started_at->copy()->addMinutes($examDurationMinutes);
+            $remainingSeconds = max(0, (int) $endAt->diffInSeconds(now(), false));
+        }
+
         return [
-            'id'                    => $this->id,
-            'submission_id'         => $this->general_exam_submission_id,
-            'participant_name'      => $this->participant_name ?? 'Anonymous',
-            'participant_email'     => $this->participant_email,
-            'session_token'         => $this->session_token,
-            'status'                => $this->calculateStatus(),
-            'is_focused'            => $this->is_focused,
-            'current_question'      => $this->current_question_index + 1,
-            'current_section'       => $this->current_section_index + 1,
-            'questions_answered'    => $this->questions_answered,
-            'total_questions'       => $this->total_questions,
-            'progress_percentage'   => $this->getProgressPercentage(),
-            'violation_count'       => $this->violation_count,
-            'high_severity_count'   => $this->high_severity_count,
+            'id' => $this->id,
+            'submission_id' => $this->general_exam_submission_id,
+            'participant_name' => $this->participant_name ?? 'Anonymous',
+            'participant_email' => $this->participant_email,
+            'session_token' => $this->session_token,
+            'status' => $this->status,
+            'is_focused' => $this->is_focused,
+            'current_question' => $this->current_question_index + 1,
+            'current_section' => $this->current_section_index + 1,
+            'questions_answered' => $this->questions_answered,
+            'total_questions' => $this->total_questions,
+            'progress_percentage' => $this->getProgressPercentage(),
+            'violation_count' => $this->violation_count,
+            'high_severity_count' => $this->high_severity_count,
             'medium_severity_count' => $this->medium_severity_count,
-            'is_flagged'            => $this->is_flagged,
-            'has_warning'           => $this->has_warning,
-            'admin_message'         => $this->admin_message,
-            'started_at'            => $this->started_at?->toIso8601String(),
-            'last_heartbeat_at'     => $this->last_heartbeat_at?->toIso8601String(),
-            'elapsed_seconds'       => $this->getElapsedTime(),
-            'ip_address'            => $this->ip_address,
-            'browser'               => $this->browser,
-            'os'                    => $this->os,
+            'is_flagged' => $this->is_flagged,
+            'has_warning' => $this->has_warning,
+            'admin_message' => $this->admin_message,
+            'started_at' => $this->started_at?->toIso8601String(),
+            'last_heartbeat_at' => $this->last_heartbeat_at?->toIso8601String(),
+            'elapsed_seconds' => $elapsedSeconds,
+            'remaining_seconds' => $remainingSeconds,
+            'has_duration' => $examDurationMinutes !== null && $examDurationMinutes > 0,
+            'ip_address' => $this->ip_address,
+            'browser' => $this->browser,
+            'os' => $this->os,
         ];
     }
 }
