@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" :class="{ 'dark': $store.darkMode.on }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,12 +15,6 @@
         [x-cloak] { display: none !important; }
     </style>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
-</head>
-<body class="font-sans antialiased bg-gray-50 dark:bg-gray-900" x-data x-cloak>
-    {{ $slot }}
-
     <script>
         if (localStorage.getItem('dark-mode') === 'true' ||
             (localStorage.getItem('dark-mode') === null &&
@@ -28,6 +22,12 @@
             document.documentElement.classList.add('dark');
         }
     </script>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+</head>
+<body class="font-sans antialiased bg-gray-50 dark:bg-gray-900" x-data>
+    {{ $slot }}
 
     <script>
         document.addEventListener('alpine:initializing', () => {

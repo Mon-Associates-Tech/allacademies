@@ -1,6 +1,9 @@
 <x-layouts.exam>
     <div class="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+            <div class="flex items-center justify-end mb-4">
+                <x-snippets.theme-toggle />
+            </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
                     <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Examination</p>

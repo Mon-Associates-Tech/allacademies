@@ -42,6 +42,8 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
 
     Route::post('/exams/{exam}/participants/configured', [ParticipantController::class, 'storeConfigured'])->name('participants.configured.store');
     Route::post('/exams/{exam}/participants/configured/import', [ParticipantController::class, 'importConfigured'])->name('participants.configured.import');
+    Route::patch('/exams/{exam}/participants/configured/{participant}/toggle', [ParticipantController::class, 'toggleConfigured'])->name('participants.configured.toggle');
+    Route::delete('/exams/{exam}/participants/configured/{participant}', [ParticipantController::class, 'destroyConfigured'])->name('participants.configured.destroy');
 
     Route::get('/reports', [PerformanceReportController::class, 'index'])->name('reports.index');
     Route::post('/reports/generate', [PerformanceReportController::class, 'generate'])->name('reports.generate');

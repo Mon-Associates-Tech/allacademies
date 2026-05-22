@@ -38,7 +38,6 @@ class DashboardController extends Controller
         $exam->load('sections');
 
         $configuredParticipants = $exam->configuredParticipants()
-            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 

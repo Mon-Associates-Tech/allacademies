@@ -1,6 +1,9 @@
 <x-layouts.exam>
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-gradient-to-br from-slate-900 to-slate-800">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <div class="max-w-md w-full space-y-7">
+            <div class="flex justify-end">
+                <x-snippets.theme-toggle />
+            </div>
 
             {{-- ── SUCCESS CARD ── --}}
             <x-ui.card variant="default" shadow="true">

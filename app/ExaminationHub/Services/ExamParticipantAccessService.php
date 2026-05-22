@@ -26,48 +26,70 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
         return ['success' => true, 'record' => $record];
     }
 
+    /** @return array{success: bool, imported: int, errors: string[]} */
     public function importConfiguredParticipants(GeneralExam $exam, string $csvPath): array
     {
         $handle = fopen($csvPath, 'r');
         if (! $handle) {
-            return ['success' => false, 'imported' => 0];
+            return ['success' => false, 'imported' => 0, 'errors' => ['Could not open the uploaded file.']];
+        }
+
+        $rawHeader = fgetcsv($handle);
+        if (! is_array($rawHeader)) {
+            fclose($handle);
+
+            return ['success' => false, 'imported' => 0, 'errors' => ['The CSV file appears to be empty.']];
+        }
+
+        $header = array_map(fn (string $col) => strtolower(trim($col)), $rawHeader);
+
+        $nameIndex = array_search('name', $header, true);
+        $emailIndex = array_search('email', $header, true);
+        $codeIndex = array_search('unique_code', $header, true);
+
+        if ($nameIndex === false || $emailIndex === false) {
+            fclose($handle);
+            $missing = implode(', ', array_filter([
+                $nameIndex === false ? 'name' : null,
+                $emailIndex === false ? 'email' : null,
+            ]));
+
+            return ['success' => false, 'imported' => 0, 'errors' => ["Missing required column(s): {$missing}. Expected header: name, email, unique_code"]];
         }
 
         $imported = 0;
-        $header = fgetcsv($handle);
-        $hasHeader = is_array($header) && in_array('email', array_map('strtolower', $header), true);
-        if (! $hasHeader && is_array($header)) {
-            $this->upsertCsvRow($exam, $header);
-            $imported++;
-        }
+        $errors = [];
+        $rowNumber = 1;
 
         while (($row = fgetcsv($handle)) !== false) {
-            if ($this->upsertCsvRow($exam, $row)) {
-                $imported++;
+            $rowNumber++;
+            $name = trim((string) ($row[$nameIndex] ?? ''));
+            $email = strtolower(trim((string) ($row[$emailIndex] ?? '')));
+            $uniqueCode = $codeIndex !== false ? trim((string) ($row[$codeIndex] ?? '')) : '';
+
+            if ($name === '') {
+                $errors[] = "Row {$rowNumber}: name is required.";
+
+                continue;
             }
+
+            if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Row {$rowNumber}: '{$email}' is not a valid email address.";
+
+                continue;
+            }
+
+            GeneralExamConfiguredParticipant::updateOrCreate(
+                ['general_exam_id' => $exam->id, 'email' => $email],
+                ['name' => $name, 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null, 'is_active' => true]
+            );
+
+            $imported++;
         }
 
         fclose($handle);
 
-        return ['success' => true, 'imported' => $imported];
-    }
-
-    private function upsertCsvRow(GeneralExam $exam, array $row): bool
-    {
-        $name = trim((string) ($row[0] ?? ''));
-        $email = strtolower(trim((string) ($row[1] ?? '')));
-        $uniqueCode = trim((string) ($row[2] ?? ''));
-
-        if ($email === '') {
-            return false;
-        }
-
-        GeneralExamConfiguredParticipant::updateOrCreate(
-            ['general_exam_id' => $exam->id, 'email' => $email],
-            ['name' => $name !== '' ? $name : $email, 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null, 'is_active' => true]
-        );
-
-        return true;
+        return ['success' => true, 'imported' => $imported, 'errors' => $errors];
     }
 
     public function authorizeJoinByCode(GeneralExam $exam, string $name, string $email, ?string $uniqueCode = null): array

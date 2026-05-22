@@ -4,8 +4,7 @@
          STATE 1 · SECTION INFO OVERLAY
     ═══════════════════════════════════════════════════════════ --}}
     @if($showSectionInfo)
-        <div class="flex items-center justify-center min-h-screen px-4 py-8"
-             style="background: radial-gradient(ellipse at 60% 40%, rgba(15,23,42,0.06) 0%, transparent 70%), #f8fafc;">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 bg-slate-100 dark:bg-slate-950">
             <div class="dark:bg-slate-900 bg-white w-full max-w-lg overflow-hidden"
                  style="border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 20px 60px -10px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.06);">
 
@@ -22,8 +21,8 @@
                         </h2>
                     </div>
                     <button wire:click="toggleSectionInfo"
-                            class="mt-1 flex-shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                            style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.08);">
+                            class="mt-1 flex-shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors"
+                            style="border-radius: 2px;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -40,11 +39,11 @@
 
                     {{-- Stats grid --}}
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06);">
+                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
                             <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Questions</p>
                             <p class="text-xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.03em;">{{ $this->questions->count() }}</p>
                         </div>
-                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06);">
+                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
                             <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Section</p>
                             <p class="text-xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.03em;">
                                 {{ $sectionIndex + 1 }} <span class="text-sm font-normal text-slate-500">of {{ $this->exam->sections->count() }}</span>
@@ -56,7 +55,7 @@
                                 <p class="text-xl font-bold text-amber-800 dark:text-amber-400" style="letter-spacing: -0.03em;">{{ $this->section->time_limit_minutes }} <span class="text-sm font-normal">min</span></p>
                             </div>
                         @endif
-                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06);">
+                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
                             <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Type</p>
                             <p class="text-sm font-semibold text-slate-900 dark:text-white mt-1">{{ str_replace('_', ' ', ucfirst($this->section->question_type)) }}</p>
                         </div>
@@ -71,8 +70,8 @@
 
                     <div class="pt-2 flex justify-end">
                         <button wire:click="startSection"
-                                class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white transition-all duration-200"
-                                style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200"
+                                style="border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                             Begin Section
                             <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -96,8 +95,7 @@
                 <div class="h-1" style="background: linear-gradient(90deg, #b45309, #d97706, #fbbf24);"></div>
 
                 {{-- Exam title strip --}}
-                <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800"
-                     style="background: linear-gradient(to right, #0f172a, #1e293b);">
+                <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-800 dark:bg-slate-900">
                     <p class="text-xs tracking-widest text-amber-400 uppercase mb-1" style="letter-spacing: 0.15em;">Online Examination</p>
                     <h1 class="text-2xl font-bold text-white" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">{{ $this->exam->title }}</h1>
                     <p class="text-slate-400 text-sm mt-1">Section {{ $sectionIndex + 1 }} — {{ $this->section->title }}</p>
@@ -160,8 +158,8 @@
                         </a>
                         @if($sectionIndex < $this->exam->sections->count() - 1)
                             <a href="{{ route('examination-hub.take.section', [$this->exam, $sectionIndex + 1]) }}"
-                               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white transition-colors"
-                               style="background: #1e293b; border-radius: 2px;">
+                               class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+                               style="border-radius: 2px;">
                                 Skip to Next Section
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
@@ -179,19 +177,19 @@
     <div class="flex flex-col h-screen" style="font-family: 'system-ui', -apple-system, sans-serif;">
 
         {{-- ── TOP HEADER BAR ── --}}
-        <div class="flex-shrink-0 bg-slate-900 dark:bg-slate-950 border-b border-slate-800"
-             style="box-shadow: 0 1px 0 rgba(255,255,255,0.04);">
+        <div class="flex-shrink-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800"
+             style="box-shadow: 0 1px 0 rgba(0,0,0,0.06);">
             <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
 
                 {{-- Exam / Section title --}}
                 <div class="min-w-0 flex-1">
-                    <h2 class="text-base font-bold text-white truncate" style="letter-spacing: -0.01em; font-family: 'Georgia', serif;">
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white truncate" style="letter-spacing: -0.01em; font-family: 'Georgia', serif;">
                         {{ $this->exam->title }}
                     </h2>
                     <div class="flex items-center gap-2 mt-0.5">
-                        <span class="text-xs text-slate-400">{{ $this->section->title }}</span>
-                        <span class="text-slate-700">·</span>
-                        <span class="text-xs text-amber-400 font-medium">
+                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ $this->section->title }}</span>
+                        <span class="text-slate-300 dark:text-slate-700">·</span>
+                        <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">
                             Q{{ $currentQuestionIndex + 1 }} / {{ $this->questions->count() }}
                         </span>
                     </div>
@@ -200,8 +198,8 @@
                 <div class="flex items-center gap-3 flex-shrink-0">
                     {{-- Progress pill --}}
                     <div class="hidden sm:flex flex-col items-end gap-1">
-                        <span class="text-xs text-slate-500">{{ $this->getAnsweredCount() }} answered</span>
-                        <div class="w-28 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ $this->getAnsweredCount() }} answered</span>
+                        <div class="w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div class="h-full rounded-full transition-all duration-500"
                                  style="width: {{ $this->questions->count() > 0 ? ($this->getAnsweredCount() / $this->questions->count()) * 100 : 0 }}%; background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
                         </div>
@@ -220,20 +218,22 @@
 
                     {{-- Section info toggle --}}
                     <button wire:click="toggleSectionInfo"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 transition-all"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
                             style="border-radius: 2px;">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Section Info
                     </button>
+
+                    <x-snippets.theme-toggle />
                 </div>
             </div>
         </div>
 
         {{-- ── SCROLLABLE CONTENT AREA ── --}}
-        <div class="flex-1 overflow-y-auto"
-             style="background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%); scrollbar-gutter: stable;">
+        <div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950"
+             style="scrollbar-gutter: stable;">
             <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
 
                 @php
@@ -246,8 +246,7 @@
                      style="border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.06);">
 
                     {{-- Question header strip --}}
-                    <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between"
-                         style="background: linear-gradient(to right, #fafafa, #fff);">
+                    <div class="px-6 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
                         <div class="flex items-center gap-3">
                             <div class="w-7 h-7 flex items-center justify-center text-xs font-bold text-white"
                                  style="background: linear-gradient(135deg, #b45309, #d97706); border-radius: 2px;">
@@ -407,8 +406,8 @@
                 <button
                     wire:click="previousQuestion"
                     @if($currentQuestionIndex === 0) disabled @endif
-                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    style="border-radius: 2px; border-color: rgba(0,0,0,0.12); color: #475569; background: #f8fafc;">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    style="border-radius: 2px;">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>

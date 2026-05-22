@@ -1,15 +1,18 @@
 <x-layouts.exam>
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-gradient-to-br from-slate-900 to-slate-800">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <div class="max-w-md w-full space-y-7">
 
             {{-- ── PAGE HEADER ── --}}
-            <div class="overflow-hidden text-center rounded-[2px] bg-gradient-to-br from-slate-900 to-slate-800 shadow-xl">
+            <div class="overflow-hidden text-center rounded-[2px] bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-transparent shadow-xl">
                 <div class="h-1 w-full bg-gradient-to-r from-violet-600 via-violet-400 to-indigo-300"></div>
                 <div class="px-7 py-6">
-                    <h1 class="text-2xl font-bold text-white leading-snug tracking-tight font-serif">
+                    <div class="flex justify-end mb-2">
+                        <x-snippets.theme-toggle />
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white leading-snug tracking-tight font-serif">
                         Join Examination
                     </h1>
-                    <p class="text-slate-400 mt-2 text-sm">
+                    <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">
                         Enter your access code to begin
                     </p>
                 </div>
