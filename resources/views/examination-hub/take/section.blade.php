@@ -147,4 +147,48 @@
             });
         })();
     </script>
+
+    {{-- Add this section at the bottom of the file, before </x-layouts.exam> --}}
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the heartbeat system if not already initialized
+        if (typeof ExamHeartbeat !== 'undefined' && !window.examHeartbeat) {
+            window.examHeartbeat = new ExamHeartbeat({
+                examId: {{ $exam->id }},
+                heartbeatUrl: '{{ route('examination-hub.take.heartbeat', $exam) }}',
+                initUrl: '{{ route('examination-hub.take.heartbeat.init', $exam) }}',
+                acknowledgeUrl: '{{ route('examination-hub.take.heartbeat.acknowledge-warning', $exam) }}',
+                interval: 15000,
+                onForceSubmit: function(data) {
+                    alert('Your exam has been submitted by the administrator.');
+                    window.location.href = '{{ route('examination-hub.take.completed', $exam) }}';
+                }
+            });
+        }
+
+        // Update heartbeat with current progress when answers change
+        function updateHeartbeatProgress() {
+            if (window.examHeartbeat) {
+                const answeredCount = document.querySelectorAll('input[type="radio"]:checked, textarea:not(:placeholder-shown), input[type="text"]:not(:placeholder-shown)').length;
+                window.examHeartbeat.updateProgress(
+                    {{ $sectionIndex }}, // current question index (using section for now)
+                    {{ $sectionIndex }}, // current section index
+                    answeredCount
+                );
+            }
+        }
+
+        // Listen for answer changes
+        document.querySelectorAll('input, textarea, select').forEach(function(el) {
+            el.addEventListener('change', updateHeartbeatProgress);
+            el.addEventListener('input', updateHeartbeatProgress);
+        });
+
+        // Initial progress update
+        updateHeartbeatProgress();
+    });
+</script>
+@endpush
+
 </x-layouts.exam>

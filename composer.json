@@ -20,6 +20,7 @@
         "jenssegers/agent": "^2.6",
         "lab404/laravel-impersonate": "^1.7",
         "laravel/framework": "^12",
+        "laravel/reverb": "*",
         "laravel/sanctum": "*",
         "laravel/telescope": "^5.7",
         "laravel/tinker": "^2.7",

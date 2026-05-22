@@ -5,6 +5,7 @@ namespace App\ExaminationHub\Controllers;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\ExaminationHub\Services\GradingSystemService;
+use App\ExaminationHub\Services\LiveMonitoringService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -14,12 +15,10 @@ use Illuminate\View\View;
 
 class ExamTakingController extends Controller
 {
-    private $gradingService;
-
-    public function __construct()
-    {
-        $this->gradingService = app()->make(GradingSystemService::class);
-    }
+    public function __construct(
+        private readonly GradingSystemService $gradingService,
+        private readonly LiveMonitoringService $monitoringService
+    ) {}
 
     public function join(): View
     {
@@ -57,9 +56,16 @@ class ExamTakingController extends Controller
             return back()->withErrors(['access_code' => 'You have reached the maximum number of attempts.']);
         }
 
+        // Initialize heartbeat session for live monitoring
+        $heartbeat = $this->monitoringService->initializeSession($submission, [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         session([
             'exam_submission_id' => $submission->id,
             'exam_participant_data' => $participantData,
+            'exam_heartbeat_token' => $heartbeat->session_token,
         ]);
 
         return redirect()->route('examination-hub.take.start', $exam);
@@ -79,6 +85,14 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
+        // Mark submission as started if not already
+        if ($submission->status === 'not_started') {
+            $submission->update([
+                'status' => 'in_progress',
+                'started_at' => $submission->started_at ?? now(),
+            ]);
+        }
+
         $exam->load(['sections' => function ($query) {
             $query->orderBy('order')->withCount('questions');
         }]);
@@ -86,6 +100,7 @@ class ExamTakingController extends Controller
         return view('examination-hub.take.start', [
             'exam' => $exam,
             'submission' => $submission,
+            'heartbeatToken' => session('exam_heartbeat_token'),
         ]);
     }
 
@@ -120,14 +135,12 @@ class ExamTakingController extends Controller
             $randomizedOrder = $submission->randomized_question_order ?? [];
             $sectionKey = "section_{$section->id}";
 
-            // If this section hasn't been randomized for this participant yet, randomize and store
             if (! isset($randomizedOrder[$sectionKey])) {
                 $questionIds = $questions->pluck('id')->shuffle()->values()->toArray();
                 $randomizedOrder[$sectionKey] = $questionIds;
                 $submission->update(['randomized_question_order' => $randomizedOrder]);
             }
 
-            // Reorder questions based on stored randomized order
             $orderedQuestions = collect();
             foreach ($randomizedOrder[$sectionKey] as $questionId) {
                 $question = $questions->firstWhere('id', $questionId);
@@ -147,6 +160,7 @@ class ExamTakingController extends Controller
             'sectionIndex' => $sectionIndex,
             'questions' => $questions,
             'responses' => $responses,
+            'heartbeatToken' => session('exam_heartbeat_token'),
             'proctoringSessionId' => $request->input('proctoring_session_id')
                 ?? $request->attributes->get('proctoring_session_id'),
         ]);
@@ -214,12 +228,19 @@ class ExamTakingController extends Controller
             $submission->update([
                 'submitted_at' => now(),
                 'time_taken_minutes' => $timeTaken,
+                'status' => 'submitted',
             ]);
 
             $this->autoGradeSubmission($submission, $exam);
+
+            // Mark heartbeat as completed
+            $heartbeat = \App\ExaminationHub\Models\ExamParticipantHeartbeat::where('general_exam_submission_id', $submission->id)->first();
+            if ($heartbeat) {
+                $heartbeat->markCompleted();
+            }
         });
 
-        session()->forget(['exam_submission_id', 'exam_participant_data']);
+        session()->forget(['exam_submission_id', 'exam_participant_data', 'exam_heartbeat_token']);
 
         return redirect()->route('examination-hub.take.completed', $exam);
     }
@@ -294,9 +315,7 @@ class ExamTakingController extends Controller
         $participantType = $participantData['type'];
         $participantId = $participantData['id'];
 
-        // For general participants, generate a unique numeric ID from email
         if ($participantType === 'general' && ! empty($participantData['email'])) {
-            // Use CRC32 to convert email to a numeric ID (always positive)
             $participantId = abs(crc32($participantData['email']));
         }
 
@@ -360,8 +379,6 @@ class ExamTakingController extends Controller
         }
 
         $percentage = $totalMarks > 0 ? ($totalScore / $totalMarks) * 100 : 0;
-
-        // ── Use the configurable grading system ──────────────────────────────
         $grade = $this->calculateGrade($percentage, $exam);
 
         $submission->update([
@@ -374,11 +391,6 @@ class ExamTakingController extends Controller
         ]);
     }
 
-    /**
-     * Resolve a percentage to a grade label.
-     *
-     * Priority: exam owner's custom grade scales → built-in fallback.
-     */
     private function calculateGrade(float $percentage, GeneralExam $exam): string
     {
         return $this->gradingService->resolveGrade(

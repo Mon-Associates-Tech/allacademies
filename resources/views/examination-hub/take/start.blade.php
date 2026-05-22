@@ -58,4 +58,31 @@
             </div>
         </div>
     </div>
+
+    {{-- Initialize Heartbeat System --}}
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the heartbeat system
+            if (typeof ExamHeartbeat !== 'undefined') {
+                window.examHeartbeat = new ExamHeartbeat({
+                    examId: {{ $exam->id }},
+                    heartbeatUrl: '{{ route('examination-hub.take.heartbeat', $exam) }}',
+                    initUrl: '{{ route('examination-hub.take.heartbeat.init', $exam) }}',
+                    acknowledgeUrl: '{{ route('examination-hub.take.heartbeat.acknowledge-warning', $exam) }}',
+                    interval: 15000, // 15 seconds
+                    onForceSubmit: function(data) {
+                        alert('Your exam has been submitted by the administrator.');
+                        window.location.href = '{{ route('examination-hub.take.completed', $exam) }}';
+                    },
+                    onTimeExtended: function(minutes, totalExtra) {
+                        console.log('Time extended by ' + minutes + ' minutes. Total extra: ' + totalExtra);
+                    }
+                });
+            } else {
+                console.warn('ExamHeartbeat not loaded. Live monitoring may not work.');
+            }
+        });
+    </script>
+    @endpush
 </x-layouts.exam>

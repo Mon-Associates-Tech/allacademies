@@ -4,12 +4,14 @@ use App\ExaminationHub\Controllers\DashboardController;
 use App\ExaminationHub\Controllers\ExamCreationController;
 use App\ExaminationHub\Controllers\ExamTakingController;
 use App\ExaminationHub\Controllers\GradingSystemController;
+use App\ExaminationHub\Controllers\HeartbeatController;
+use App\ExaminationHub\Controllers\LiveMonitoringController;
 use App\ExaminationHub\Controllers\ParticipantController;
 use App\ExaminationHub\Controllers\ParticipantResultsController;
 use App\ExaminationHub\Controllers\PerformanceReportController;
+use App\ExaminationHub\Controllers\ProctoringController;
 use App\ExaminationHub\Controllers\StudentPerformanceController;
 use App\ExaminationHub\Controllers\SubmissionController;
-use App\ExaminationHub\Controllers\ProctoringController;
 use App\Http\Middleware\EnsureExamSession;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +36,6 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
 
-
     Route::get('/performance', [StudentPerformanceController::class, 'index'])->name('performance.index');
     Route::get('/performance/{participantType}/{participantId}', [StudentPerformanceController::class, 'show'])->name('performance.show');
     Route::get('/performance/{participantType}/{participantId}/export', [StudentPerformanceController::class, 'export'])->name('performance.export');
@@ -49,6 +50,23 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/proctoring', [ProctoringController::class, 'index'])->name('proctoring.index');
     Route::get('/exams/{exam}/submissions/{submission}/proctoring', [ProctoringController::class, 'show'])->name('proctoring.show');
 
+    // ── Live Monitoring (Admin) ───────────────────────────────────────────────
+    Route::prefix('exams/{exam}/live-monitoring')->name('live-monitoring.')->group(function () {
+        Route::get('/', [LiveMonitoringController::class, 'index'])->name('index');
+        Route::get('/participant/{submission}', [LiveMonitoringController::class, 'show'])->name('show');
+
+        // API endpoints
+        Route::get('/api/participants', [LiveMonitoringController::class, 'apiParticipants'])->name('api.participants');
+        Route::get('/api/participant/{submission}', [LiveMonitoringController::class, 'apiParticipant'])->name('api.participant');
+
+        // Admin actions
+        Route::post('/warn/{submission}', [LiveMonitoringController::class, 'warn'])->name('warn');
+        Route::post('/message/{submission}', [LiveMonitoringController::class, 'message'])->name('message');
+        Route::post('/terminate/{submission}', [LiveMonitoringController::class, 'terminate'])->name('terminate');
+        Route::post('/force-submit/{submission}', [LiveMonitoringController::class, 'forceSubmit'])->name('force-submit');
+        Route::post('/extend-time/{submission}', [LiveMonitoringController::class, 'extendTime'])->name('extend-time');
+        Route::post('/clear-warning/{submission}', [LiveMonitoringController::class, 'clearWarning'])->name('clear-warning');
+    });
 
     Route::middleware('can:viewAny,App\ExaminationHub\Models\GradeScale')->group(function () {
         Route::get('/grading-system', [GradingSystemController::class, 'index'])->name('grading-system.index');
@@ -58,32 +76,40 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
         Route::post('/grading-system/initialize', [GradingSystemController::class, 'initializeDefault'])->name('grading-system.initialize');
     });
 
-    // Proctoring event ingestion (JSON, called by exam-proctor.js)
+    // Proctoring event ingestion
     Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])->name('proctor.event');
 });
 
-Route::prefix('examinations-hub/take')->name('examination-hub.take.')->group(function () {
+// ── Exam Taking Routes ────────────────────────────────────────────────────────
+Route::prefix('examinations')->name('examination-hub.take.')->group(function () {
     Route::get('/join', [ExamTakingController::class, 'join'])->name('join');
     Route::post('/authenticate', [ExamTakingController::class, 'authenticate'])->name('authenticate');
 
-    Route::middleware([EnsureExamSession::class, 'proctor.exam:exam'])->group(function () {
+    Route::middleware([EnsureExamSession::class])->group(function () {
         Route::get('/{exam}/start', [ExamTakingController::class, 'start'])->name('start');
         Route::get('/{exam}/section/{sectionIndex}', [ExamTakingController::class, 'section'])->name('section');
         Route::post('/{exam}/save-response', [ExamTakingController::class, 'saveResponse'])->name('save-response');
         Route::post('/{exam}/submit', [ExamTakingController::class, 'submit'])->name('submit');
 
-        // Proctoring event ingestion (JSON, called by exam-proctor.js)
+        // Proctoring event ingestion
         Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])->name('proctor.event');
+
+        // Heartbeat endpoints
+        Route::post('/{exam}/heartbeat', [HeartbeatController::class, 'beat'])->name('heartbeat');
+        Route::post('/{exam}/heartbeat/init', [HeartbeatController::class, 'initialize'])->name('heartbeat.init');
+        Route::post('/{exam}/heartbeat/acknowledge-warning', [HeartbeatController::class, 'acknowledgeWarning'])->name('heartbeat.acknowledge-warning');
     });
 
     Route::get('/{exam}/completed', [ExamTakingController::class, 'completed'])->name('completed');
 });
 
+// ── Public Join Routes ────────────────────────────────────────────────────────
 Route::get('/examinations-hub/join', [ParticipantController::class, 'joinEntry'])->name('examination-hub.join.entry');
 Route::post('/examinations-hub/join', [ParticipantController::class, 'joinLookup'])->name('examination-hub.join.lookup');
 Route::get('/examinations-hub/join/{code}', [ParticipantController::class, 'joinForm'])->name('examination-hub.join');
 Route::post('/examinations-hub/join/{code}', [ParticipantController::class, 'attemptJoin'])->name('examination-hub.join.attempt');
 
+// ── Results Routes ────────────────────────────────────────────────────────────
 Route::prefix('examinations-hub/results')->name('examination-hub.results.')->group(function () {
     Route::get('/', [ParticipantResultsController::class, 'index'])->name('index');
     Route::get('/{submission}', [ParticipantResultsController::class, 'show'])->name('show');

@@ -37,8 +37,8 @@ window.DOMPurify = DOMPurify;
 
 // resources/js/app.js (or a dedicated entry point)
 import './proctoring'; // If proctoring.js is a module that attaches to window
-
-
+import './exam-heartbeat'; // If exam-heartbeat.js is a module that attaches to window
+import './echo';
 // Register Chart.js components (added RadialLinearScale for radar charts)
 Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale);
 
@@ -140,3 +140,11 @@ window.renderMarkdownWithMath = function(content) {
 
 
 Livewire.start();
+
+/**
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events that are broadcast by Laravel. Echo and event broadcasting
+ * allow your team to quickly build robust real-time web applications.
+ */
+
+import './echo';
