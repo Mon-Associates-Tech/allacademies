@@ -4,618 +4,530 @@
     <meta charset="UTF-8">
     <title>{{ $mockExam->title }}</title>
     <style>
+        /* Basic Reset */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
+        /* Page Setup */
         @page {
             size: A4;
-            margin: 18mm 15mm 24mm 15mm;
+            margin: 15mm; /* Standard page margins */
         }
 
         body {
-            font-family: 'DejaVu Serif', Georgia, serif;
-            font-size: {{ $fontSize ?? 10.5 }}pt;
-            color: #111111;
-            line-height: 1.55;
-            background: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Modern, readable font stack */
+            font-size: {{ $fontSize ?? 11 }}pt;
+            color: #1f2937; /* Dark gray for good contrast */
+            line-height: 1.6;
+            background: #fff;
+            /* Ensure content respects page margins and has internal padding */
+            padding: 0; /* Rely on @page margins */
         }
 
-        /* ══════════════════════════════════════════════
-           FIXED – repeated on every page
-        ══════════════════════════════════════════════ */
-
-        /* Outer page border */
-        .pg-border {
-            position: fixed;
-            top: 5mm; left: 5mm; right: 5mm; bottom: 5mm;
-            border: 1.5px solid #0c1f3f;
-        }
-        /* Inner gold accent frame */
-        .pg-border-gold {
-            position: fixed;
-            top: 7.5mm; left: 7.5mm; right: 7.5mm; bottom: 7.5mm;
-            border: 0.75px solid #c9a22a;
+        /* Main Container - Mimicking the example's centered, constrained layout */
+        .exam-container {
+            max-width: 60rem; /* Matches the example's max-w-[60rem] */
+            margin: 0 auto; /* Center the content */
+            padding: 0 1rem; /* Small horizontal padding for breathing room */
+            background: white; /* Ensure background is white for print */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Optional subtle shadow for screen */
         }
 
-        /* Footer ─ sits in the bottom margin */
-        .pg-footer {
-            position: fixed;
-            bottom: -20mm;
-            left: 0; right: 0;
-            border-top: 1px solid #0c1f3f;
-            padding-top: 2px;
+        /* Print-specific adjustments */
+        @media print {
+            .exam-container {
+                max-width: 100%; /* Expand to full width on print */
+                margin: 0;
+                padding: 0;
+                box-shadow: none; /* Remove shadow for print */
+            }
+            /* Hide elements not meant for print */
+            .print\:hidden { display: none !important; }
+            /* Apply padding for readability during print preview */
+            body { padding: 15mm; }
         }
-        .pg-footer table { width: 100%; border-collapse: collapse; }
-        .pg-footer td {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 7pt;
-            color: #555;
-        }
-        .ft-right  { text-align: right; }
-        .ft-center { text-align: center; color: #888; font-style: italic; }
 
-
-        /* ══════════════════════════════════════════════
-           EXAM HEADER
-        ══════════════════════════════════════════════ */
-
-        /* 1 ─ Heavy navy rule + gold line */
-        .hdr-rule-navy { height: 5px;   background: #0c1f3f; }
-        .hdr-rule-gold { height: 2.5px; background: #c9a22a; }
-
-        /* 2 ─ Title block */
-        .hdr-title {
+        /* Header Section */
+        .header-section {
             text-align: center;
-            padding: 9px 18px 8px;
-            border-left: 1px solid #d0d0d0;
-            border-right: 1px solid #d0d0d0;
+            padding: 1rem 0 0.75rem; /* Reduced top padding */
+            border-bottom: 2px solid #3b82f6; /* Primary blue accent */
+            margin-bottom: 1.25rem;
         }
-        .hdr-exam-title {
-            font-family: 'DejaVu Serif', Georgia, serif;
-            font-size: {{ ($fontSize ?? 10.5) + 6 }}pt;
-            font-weight: bold;
+        .school-name {
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt; /* Slightly larger */
+            font-weight: 600; /* Semi-bold */
+            color: #1f2937;
+            letter-spacing: 0.025em;
+            margin-bottom: 0.25rem;
+        }
+        .school-tagline {
+            font-size: {{ ($fontSize ?? 11) - 2 }}pt;
+            color: #6b7280; /* Muted gray */
+            font-style: italic;
+        }
+
+        /* Exam Title Block */
+        .exam-title-block {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+        .exam-main-title {
+            font-size: {{ ($fontSize ?? 11) + 4 }}pt; /* Significantly larger for impact */
+            font-weight: 700; /* Bold */
+            color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #0c1f3f;
-            line-height: 1.25;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3rem;
         }
-        .hdr-exam-date {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) }}pt;
-            color: #555;
-            margin-top: 3px;
-            letter-spacing: 0.03em;
+        .exam-sub-date {
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
+            color: #6b7280;
         }
 
-        /* 3 ─ Info grid (date / subjects / duration / marks) */
-        .hdr-info {
-            width: 100%;
-            border-collapse: collapse;
-            border-top: 2px solid #0c1f3f;
-            border-bottom: 2px solid #0c1f3f;
-            background: #f5f0df;
+        /* Info Grid - Using Flexbox */
+        .info-grid {
+            display: flex;
+            gap: 0.5rem; /* Reduced gap */
+            margin-bottom: 1.25rem;
         }
-        .hdr-info td {
-            padding: 5px 10px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+        .info-grid-item {
+            flex: 1;
+            padding: 0.5rem; /* Reduced padding */
             text-align: center;
-            border-right: 1px solid #c8b870;
+            border: 1px solid #d1d5db; /* Light gray border */
+            border-radius: 0.375rem; /* Rounded corners */
+            background-color: #f9fafb; /* Very light gray background */
         }
-        .hdr-info td:last-child { border-right: none; }
-        .hi-lbl {
+        .ig-lbl {
+            font-size: 0.75rem; /* Smaller label */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af; /* Muted label color */
             display: block;
-            font-size: 6.5pt;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #999;
-            margin-bottom: 3px;
+            margin-bottom: 0.1rem;
         }
-        .hi-val {
-            font-size: {{ ($fontSize ?? 10.5) }}pt;
-            font-weight: bold;
-            color: #0c1f3f;
+        .ig-val {
+            font-size: {{ ($fontSize ?? 11) }}pt; /* Standard value size */
+            font-weight: 600; /* Slightly bolder */
+            color: #1f2937;
         }
 
-
-        /* ══════════════════════════════════════════════
-           CANDIDATE INFORMATION
-        ══════════════════════════════════════════════ */
-
+        /* Candidate Information Box */
         .cand-wrap {
-            border: 1.5px solid #0c1f3f;
-            margin-top: 9px;
-            margin-bottom: 9px;
+            border: 1.5px solid #d1d5db; /* Neutral gray border */
+            border-radius: 0.375rem; /* Rounded corners */
+            margin-bottom: 1.25rem;
+            overflow: hidden;
         }
-        .cand-bar {
-            background: #0c1f3f;
-            color: #c9a22a;
-            padding: 3px 10px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 2.5 }}pt;
-            font-weight: bold;
+        .cand-header {
+            background-color: #3b82f6; /* Primary blue header */
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem; /* Smaller header text */
         }
-        .cand-tbl { width: 100%; border-collapse: collapse; }
-        .cand-tbl td {
-            padding: 6px 10px 5px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            vertical-align: bottom;
+        .cand-content {
+            padding: 1rem;
         }
-        .cand-tbl td + td { border-left: 1px solid #ccc; }
-        .cand-tbl tr + tr td { border-top: 1px solid #ccc; }
+        .cand-field {
+            margin-bottom: 0.75rem; /* Reduced spacing */
+        }
+        .cand-field:last-child { margin-bottom: 0; }
         .cf-lbl {
             display: block;
-            font-size: 7pt;
-            font-weight: bold;
+            font-size: 0.75rem; /* Smaller label */
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #888;
-            margin-bottom: 5px;
-            white-space: nowrap;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
         }
         .cf-line {
             display: block;
-            border-bottom: 1.5px solid #0c1f3f;
-            height: 18px;
+            height: 0.75rem; /* Reduced height */
+            border-bottom: 1px solid #9ca3af; /* Solid underline */
+            width: 100%;
         }
 
-
-        /* ══════════════════════════════════════════════
-           INSTRUCTIONS
-        ══════════════════════════════════════════════ */
-
+        /* Instructions Block */
         .inst-wrap {
-            border: 1px solid #c9a22a;
-            border-left: 5px solid #c9a22a;
-            background: #fffdf0;
-            padding: 6px 10px;
-            margin-bottom: 10px;
+            background-color: #eff6ff; /* Light blue background */
+            border-left: 3px solid #3b82f6; /* Primary blue left border */
+            padding: 0.75rem 1rem; /* Reduced padding */
+            margin-bottom: 1.25rem;
+            border-radius: 0 0.25rem 0.25rem 0; /* Rounded corners matching border */
         }
         .inst-heading {
-            display: block;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 2 }}pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.09em;
-            color: #0c1f3f;
-            margin-bottom: 4px;
-            padding-bottom: 3px;
-            border-bottom: 0.5px solid #ddd5a0;
-        }
-        .inst-body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
-            color: #333;
-            line-height: 1.55;
-        }
-
-
-        /* ══════════════════════════════════════════════
-           SUBJECT BLOCK
-        ══════════════════════════════════════════════ */
-
-        .subj-wrap { margin-top: 6px; margin-bottom: 4px; }
-
-        .subj-bar { width: 100%; border-collapse: collapse; }
-        .subj-bar-name {
-            background: #0c1f3f;
-            color: #ffffff;
-            padding: 6px 12px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) + 1 }}pt;
-            font-weight: bold;
+            font-size: 0.875rem; /* Smaller heading */
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            color: #1d4ed8; /* Darker blue for contrast */
+            margin-bottom: 0.25rem;
         }
-        .subj-bar-meta {
-            background: #0c1f3f;
-            color: #c9a22a;
-            padding: 6px 12px;
-            text-align: right;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 1 }}pt;
-            white-space: nowrap;
+        .inst-body {
+            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt; /* Slightly smaller than base */
+            color: #374151; /* Darker gray for body text */
         }
-        .subj-gold-rule { height: 2.5px; background: #c9a22a; margin-bottom: 8px; }
+
+        /* Subject Wrap */
+        .subj-wrap {
+            margin-top: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .subj-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1.5px solid #3b82f6; /* Primary blue border */
+            margin-bottom: 0.5rem;
+        }
+        .subj-hdr-name {
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
+            font-weight: 600;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        .subj-hdr-meta {
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
+            color: #6b7280;
+        }
 
         .subj-inst {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
+            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
             font-style: italic;
-            color: #444;
-            border-left: 3px solid #c9a22a;
-            background: #fffdf0;
-            padding: 4px 9px;
-            margin-bottom: 8px;
+            color: #6b7280;
+            border-left: 2px solid #3b82f6;
+            padding-left: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
-
-        /* ══════════════════════════════════════════════
-           SECTION HEADER
-        ══════════════════════════════════════════════ */
-
-        .sec-wrap { margin-bottom: 8px; }
-
-        .sec-bar { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
-        .sec-bar-name {
-            background: #1a3a6b;
-            color: #ffffff;
-            padding: 5px 10px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) }}pt;
-            font-weight: bold;
+        /* Section Wrap */
+        .sec-wrap {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .sec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #d1d5db; /* Neutral gray border */
+            margin-bottom: 0.5rem;
+        }
+        .sec-hdr-name {
+            font-size: {{ ($fontSize ?? 11) + 0.5 }}pt;
+            font-weight: 600;
+            color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            border-left: 4px solid #c9a22a;
+            letter-spacing: 0.025em;
         }
-        .sec-bar-meta {
-            background: #1a3a6b;
-            color: #c9a22a;
-            padding: 5px 12px;
-            text-align: right;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
-            white-space: nowrap;
+        .sec-hdr-meta {
+            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
+            color: #6b7280;
         }
-
         .sec-inst {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 1.5 }}pt;
+            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
             font-style: italic;
-            color: #555;
-            padding: 2px 5px;
-            margin-bottom: 5px;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
         }
 
-
-        /* ══════════════════════════════════════════════
-           QUESTIONS  — 3-column table: num | body | marks
-           (no floats — fully dompdf-safe)
-        ══════════════════════════════════════════════ */
-
-        .q-item { margin-bottom: 7px; page-break-inside: avoid; }
-
-        .q-row { width: 100%; border-collapse: collapse; }
-
-        /* column 1: question number */
+        /* Question Item */
+        .q-item {
+            margin-bottom: 1rem; /* Adjusted spacing */
+            page-break-inside: avoid;
+        }
+        .q-header {
+            display: flex;
+            align-items: flex-start; /* Align top */
+            margin-bottom: 0.3rem; /* Reduced space */
+        }
         .q-num {
-            width: 24px;
-            vertical-align: top;
-            padding-top: 1px;
-            padding-right: 4px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-weight: bold;
-            font-size: {{ ($fontSize ?? 10.5) }}pt;
-            color: #0c1f3f;
-            white-space: nowrap;
+            font-weight: 600;
+            color: #1f2937;
+            margin-right: 0.5rem; /* Space between number and text */
+            min-width: 1.5rem; /* Consistent number column width */
         }
-
-        /* column 2: question text + options / lines */
-        .q-body { vertical-align: top; }
-
         .q-text {
-            font-family: 'DejaVu Serif', Georgia, serif;
-            font-size: {{ ($fontSize ?? 10.5) }}pt;
-            color: #111;
-            line-height: 1.55;
+            flex: 1; /* Take remaining space */
+            font-size: {{ ($fontSize ?? 11) }}pt;
+            color: #1f2937;
         }
-
-        /* column 3: marks badge */
-        .q-marks-col {
-            width: 40px;
-            vertical-align: top;
-            text-align: right;
-            padding-left: 5px;
-            padding-top: 1px;
+        .q-marks {
+            font-size: {{ ($fontSize ?? 11) - 2 }}pt;
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 0.5rem; /* Space before marks */
             white-space: nowrap;
         }
-        .q-marks-badge {
-            display: inline-block;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 2 }}pt;
-            color: #555;
-            border: 0.75px solid #bbb;
-            background: #f8f8f6;
-            padding: 1px 4px;
-            font-style: italic;
+
+        /* Options List - Vertical (Default) */
+        .opts-list {
+            list-style-type: upper-alpha;
+            padding-left: 1.25rem; /* Reduced indentation */
+            margin-top: 0.3rem; /* Reduced space */
+        }
+        .opts-list li {
+            margin-bottom: 0.2rem; /* Reduced space between options */
+            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
+            color: #1f2937;
+        }
+        .opts-list li:last-child { margin-bottom: 0; }
+
+        /* Options Grid - Horizontal Layout (Toggleable) - Matches example logic */
+        .opts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Flexible grid, minimum 200px wide */
+            gap: 0.3rem; /* Reduced gap */
+            list-style-type: upper-alpha;
+            padding-left: 1.25rem; /* Maintain indentation */
+            margin-top: 0.3rem; /* Reduced space */
+        }
+        .opts-grid li {
+            margin-bottom: 0; /* Remove default list item margin */
+            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
+            color: #1f2937;
+            display: flex;
+            align-items: flex-start; /* Align option content to top */
+        }
+        .opts-grid li::marker { /* Style the alpha marker */
+            font-weight: 600;
+            color: #1f2937;
         }
 
-
-        /* ══════════════════════════════════════════════
-           MCQ OPTIONS  — 2-column table, indented
-        ══════════════════════════════════════════════ */
-
-        .opts { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .opts td {
-            width: 50%;
-            padding: 2px 6px 2px 2px;
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: {{ ($fontSize ?? 10.5) - 0.5 }}pt;
-            color: #1a1a1a;
-            vertical-align: top;
+        /* Essay Lines */
+        .elines {
+            margin-top: 0.5rem; /* Reduced space */
         }
-        .opt-key {
-            font-weight: bold;
-            color: #0c1f3f;
-            display: inline-block;
-            width: 18px;
-        }
-
-
-        /* ══════════════════════════════════════════════
-           ESSAY ANSWER LINES
-        ══════════════════════════════════════════════ */
-
-        .elines { margin-top: 6px; }
         .eline {
-            border-bottom: 0.75px solid #999;
-            height: 20px;
-            margin-bottom: 1px;
+            height: 0.75rem; /* Reduced height */
+            border-bottom: 1px dashed #d1d5db; /* Dashed line for essay */
+            margin-bottom: 0.1rem; /* Reduced space */
         }
 
-
-        /* ══════════════════════════════════════════════
-           UTILITIES
-        ══════════════════════════════════════════════ */
-
-        .sec-sep { border: none; border-top: 1px dashed #ccc; margin: 11px 0; }
+        /* Page Break */
         .pg-break { page-break-before: always; }
+
+        /* Footer (Basic styling, actual content placement depends on renderer) */
+        .pg-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+            padding: 0.25rem 0;
+            border-top: 1px solid #e5e7eb; /* Light top border */
+        }
+
     </style>
 </head>
 <body>
 
-{{-- ══ Decorative page frame (fixed → every page) ══ --}}
-<div class="pg-border"></div>
-<div class="pg-border-gold"></div>
-
-{{-- ══ Footer ══ --}}
-<div class="pg-footer">
-    <table>
-        <tr>
-            <td style="width:38%;">{{ $mockExam->title }}</td>
-            <td class="ft-center" style="width:24%;">— Turn Over —</td>
-            <td class="ft-right" style="width:38%;">Page <span class="pagenum"></span></td>
-        </tr>
-    </table>
+{{-- Fixed Footer (Note: Implementation varies by PDF renderer) --}}
+<div class="pg-footer print:hidden">
+    <!-- Example footer content: -->
+    <span>{{ $mockExam->title }}</span> |
+    <span>Page <span class="pagenum"></span></span> |
+    <span class="ft-center">— Turn Over —</span>
 </div>
 
-{{-- ══════════════════════════════════════════════
-     EXAM HEADER
-══════════════════════════════════════════════ --}}
-<div class="hdr-rule-navy"></div>
-<div class="hdr-rule-gold"></div>
+{{-- Main Container --}}
+<div class="exam-container">
 
-<div class="hdr-title">
-    <div class="hdr-exam-title">{{ $mockExam->title }}</div>
-    @if($mockExam->starts_at)
-        <div class="hdr-exam-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
+    {{-- Header Section --}}
+    @php
+        $schoolName = null;
+        try { $schoolName = $mockExam->team?->name; } catch (\Throwable $e) {}
+    @endphp
+    @if($schoolName)
+        <div class="header-section">
+            <div class="school-name">{{ $schoolName }}</div>
+            <div class="school-tagline">Mock Examination Series</div>
+        </div>
     @endif
-</div>
 
-@php
-    $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
-    $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
-    $subjectCount  = $mockExam->subjectExams->count();
-@endphp
+    {{-- Exam Title Block --}}
+    <div class="exam-title-block">
+        <div class="exam-main-title">{{ $mockExam->title }}</div>
+        @if($mockExam->starts_at)
+            <div class="exam-sub-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
+        @endif
+    </div>
 
-<table class="hdr-info">
-    <tr>
-        <td>
-            <span class="hi-lbl">Exam Date</span>
-            <span class="hi-val">
-                @if($mockExam->starts_at)
-                    {{ $mockExam->starts_at->format('d M Y') }}
+    {{-- Info Grid --}}
+    @php
+        $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
+        $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
+        $subjectCount  = $mockExam->subjectExams->count();
+    @endphp
+
+    <div class="info-grid">
+        <div class="info-grid-item">
+            <span class="ig-lbl">Exam Date</span>
+            <span class="ig-val">
+                {{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}
+            </span>
+        </div>
+        <div class="info-grid-item">
+            <span class="ig-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
+            <span class="ig-val">
+                @if($subjectCount === 1)
+                    {{ Str::limit($mockExam->subjectExams->first()->getDisplayTitle(), 26) }}
                 @else
-                    {{ now()->format('d M Y') }}
+                    {{ $subjectCount }} Papers
                 @endif
             </span>
-        </td>
-        @if($subjectCount > 0)
-            <td>
-                <span class="hi-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
-                <span class="hi-val">
-                    @if($subjectCount === 1)
-                        {{ Str::limit($mockExam->subjectExams->first()->getDisplayTitle(), 22) }}
-                    @else
-                        {{ $subjectCount }} Papers
-                    @endif
-                </span>
-            </td>
-        @endif
+        </div>
         @if($totalDuration > 0)
-            <td>
-                <span class="hi-lbl">Total Duration</span>
-                <span class="hi-val">
+            <div class="info-grid-item">
+                <span class="ig-lbl">Duration</span>
+                <span class="ig-val">
                     @if($totalDuration >= 60)
-                        {{ floor($totalDuration / 60) }}hr {{ $totalDuration % 60 > 0 ? ($totalDuration % 60).'min' : '' }}
+                        {{ floor($totalDuration / 60) }}hr{{ floor($totalDuration / 60) > 1 ? 's' : '' }}{{ $totalDuration % 60 > 0 ? ' '.($totalDuration % 60).'min' : '' }}
                     @else
                         {{ $totalDuration }} mins
                     @endif
                 </span>
-            </td>
+            </div>
         @endif
         @if($totalMarks > 0)
-            <td>
-                <span class="hi-lbl">Total Marks</span>
-                <span class="hi-val">{{ number_format($totalMarks, 0) }}</span>
-            </td>
+            <div class="info-grid-item">
+                <span class="ig-lbl">Total Marks</span>
+                <span class="ig-val">{{ number_format($totalMarks, 0) }}</span>
+            </div>
         @endif
-        <td>
-            <span class="hi-lbl">Instructions</span>
-            <span class="hi-val">Read carefully</span>
-        </td>
-    </tr>
-</table>
+    </div>
 
-
-{{-- ══════════════════════════════════════════════
-     CANDIDATE INFORMATION
-══════════════════════════════════════════════ --}}
-<div class="cand-wrap">
-    <div class="cand-bar">Candidate Information</div>
-    <table class="cand-tbl">
-        <tr>
-            <td style="width:44%;">
+    {{-- Candidate Information --}}
+    <div class="cand-wrap">
+        <div class="cand-header">Candidate Information</div>
+        <div class="cand-content">
+            <div class="cand-field">
                 <span class="cf-lbl">Full Name</span>
                 <span class="cf-line"></span>
-            </td>
-            <td style="width:26%;">
-                <span class="cf-lbl">Index No.</span>
-                <span class="cf-line"></span>
-            </td>
-            <td style="width:30%;">
-                <span class="cf-lbl">Class / Form</span>
-                <span class="cf-line"></span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <span class="cf-lbl">School / Institution</span>
-                <span class="cf-line"></span>
-            </td>
-            <td>
-                <span class="cf-lbl">Signature</span>
-                <span class="cf-line"></span>
-            </td>
-        </tr>
-    </table>
-</div>
-
-
-{{-- ══════════════════════════════════════════════
-     GLOBAL INSTRUCTIONS
-══════════════════════════════════════════════ --}}
-@if($mockExam->instructions)
-    <div class="inst-wrap">
-        <span class="inst-heading">General Instructions to Candidates</span>
-        <div class="inst-body">{{ $mockExam->instructions }}</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <div class="cand-field" style="flex: 1;">
+                    <span class="cf-lbl">Index No.</span>
+                    <span class="cf-line"></span>
+                </div>
+                <div class="cand-field" style="flex: 1;">
+                    <span class="cf-lbl">Class / Form</span>
+                    <span class="cf-line"></span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <div class="cand-field" style="flex: 2;">
+                    <span class="cf-lbl">Signature</span>
+                    <span class="cf-line"></span>
+                </div>
+                <div class="cand-field" style="flex: 1;">
+                    <span class="cf-lbl">Date</span>
+                    <span class="cf-line"></span>
+                </div>
+            </div>
+        </div>
     </div>
-@endif
 
+    {{-- General Instructions --}}
+    @if($mockExam->instructions)
+        <div class="inst-wrap">
+            <span class="inst-heading">General Instructions to Candidates</span>
+            <div class="inst-body">{!! $mockExam->instructions !!}</div> <!-- Use !! for potential HTML formatting -->
+        </div>
+    @endif
 
-{{-- ══════════════════════════════════════════════
-     SUBJECT EXAMS
-══════════════════════════════════════════════ --}}
-@foreach($mockExam->subjectExams as $seIdx => $se)
-    @if($seIdx > 0) <div class="pg-break"></div> @endif
+    {{-- Subject Exams Loop --}}
+    @foreach($mockExam->subjectExams as $seIdx => $se)
+        @if($seIdx > 0) <div class="pg-break"></div> @endif
 
-    <div class="subj-wrap">
+        <div class="subj-wrap">
 
-        {{-- Subject bar --}}
-        <table class="subj-bar">
-            <tr>
-                <td class="subj-bar-name">{{ $se->getDisplayTitle() }}</td>
+            <div class="subj-header">
+                <div class="subj-hdr-name">{{ $se->getDisplayTitle() }}</div>
                 @if($se->duration_in_minutes)
-                    <td class="subj-bar-meta">
-                        Time Allowed:&nbsp;
+                    <div class="subj-hdr-meta">
+                        Time Allowed:
                         @if($se->duration_in_minutes >= 60)
-                            {{ floor($se->duration_in_minutes / 60) }} hour{{ floor($se->duration_in_minutes / 60) > 1 ? 's' : '' }}
-                            {{ $se->duration_in_minutes % 60 > 0 ? ($se->duration_in_minutes % 60).' mins' : '' }}
+                            {{ floor($se->duration_in_minutes / 60) }}hr{{ floor($se->duration_in_minutes / 60) > 1 ? 's' : '' }}{{ $se->duration_in_minutes % 60 > 0 ? ' '.($se->duration_in_minutes % 60).'min' : '' }}
                         @else
                             {{ $se->duration_in_minutes }} minutes
                         @endif
-                    </td>
-                @endif
-            </tr>
-        </table>
-        <div class="subj-gold-rule"></div>
-
-        @if($se->instructions)
-            <div class="subj-inst">{{ $se->instructions }}</div>
-        @endif
-
-
-        {{-- Sections --}}
-        @foreach($se->sections as $sIdx => $section)
-            @if($sIdx > 0) <hr class="sec-sep"> @endif
-
-            <div class="sec-wrap">
-
-                {{-- Section header --}}
-                <table class="sec-bar">
-                    <tr>
-                        <td class="sec-bar-name">
-                            Section&nbsp;{{ $sIdx + 1 }}:&nbsp;{{ $section->title }}
-                        </td>
-                        <td class="sec-bar-meta">
-                            {{ $section->questions->count() }}&nbsp;{{ Str::plural('Question', $section->questions->count()) }}
-                            &nbsp;·&nbsp;
-                            {{ number_format($section->getTotalMarks(), 0) }}&nbsp;Marks
-                        </td>
-                    </tr>
-                </table>
-
-                @if($section->instructions)
-                    <div class="sec-inst">{{ $section->instructions }}</div>
-                @endif
-
-
-                {{-- Questions --}}
-                @foreach($section->questions as $qIdx => $question)
-                    <div class="q-item">
-                        <table class="q-row">
-                            <tr>
-                                {{-- Col 1: number --}}
-                                <td class="q-num">{{ $qIdx + 1 }}.</td>
-
-                                {{-- Col 2: question body --}}
-                                <td class="q-body">
-                                    <span class="q-text">{{ strip_tags($question->question_text) }}</span>
-
-                                    {{-- ── MCQ ── --}}
-                                    @if($question->isMultipleChoice() && !empty($question->options))
-                                        @php $opts = $question->getOptionsForDisplay(); @endphp
-                                        <table class="opts">
-                                            @foreach(array_chunk(array_keys($opts), 2, true) as $pair)
-                                                <tr>
-                                                    @foreach($pair as $letter)
-                                                        <td>
-                                                            <span class="opt-key">{{ $letter }}.</span>
-                                                            {{ $opts[$letter] }}
-                                                        </td>
-                                                    @endforeach
-                                                    @if(count($pair) < 2)
-                                                        <td></td>
-                                                    @endif
-                                                </tr>
-                                            @endforeach
-                                        </table>
-
-                                    {{-- ── True / False ── --}}
-                                    @elseif($question->isTrueFalse())
-                                        <table class="opts">
-                                            <tr>
-                                                <td><span class="opt-key">A.</span> True</td>
-                                                <td><span class="opt-key">B.</span> False</td>
-                                            </tr>
-                                        </table>
-
-                                    {{-- ── Essay ── --}}
-                                    @elseif($question->isEssay())
-                                        <div class="elines">
-                                            @php $numLines = max(4, (int) round($question->marks * 1.2)); @endphp
-                                            @for($l = 0; $l < $numLines; $l++)
-                                                <div class="eline"></div>
-                                            @endfor
-                                        </div>
-                                    @endif
-                                </td>
-
-                                {{-- Col 3: marks badge --}}
-                                <td class="q-marks-col">
-                                    <span class="q-marks-badge">[{{ $question->marks }}mk]</span>
-                                </td>
-                            </tr>
-                        </table>
                     </div>
-                @endforeach
+                @endif
+            </div>
 
-            </div>{{-- /.sec-wrap --}}
-        @endforeach
+            @if($se->instructions)
+                <div class="subj-inst">{!! $se->instructions !!}</div> <!-- Use !! for potential HTML formatting -->
+            @endif
 
-    </div>{{-- /.subj-wrap --}}
-@endforeach
+            {{-- Sections Loop --}}
+            @foreach($se->sections as $sIdx => $section)
+                <div class="sec-wrap">
+                    <div class="sec-header">
+                        <div class="sec-hdr-name">Section {{ $sIdx + 1 }}: {{ $section->title }}</div>
+                        <div class="sec-hdr-meta">
+                            {{ $section->questions->count() }} {{ Str::plural('Question', $section->questions->count()) }}
+                            &nbsp;·&nbsp;
+                            {{ number_format($section->getTotalMarks(), 0) }} Marks
+                        </div>
+                    </div>
+
+                    @if($section->instructions)
+                        <div class="sec-inst">{!! $section->instructions !!}</div> <!-- Use !! for potential HTML formatting -->
+                    @endif
+
+                    {{-- Questions Loop --}}
+                    @foreach($section->questions as $qIdx => $question)
+                        <div class="q-item">
+                            <div class="q-header">
+                                <span class="q-num">{{ $qIdx + 1 }}.</span>
+                                <span class="q-text">{!! strip_tags($question->question_text) !!}</span> <!-- Use !! and strip_tags -->
+                                <span class="q-marks">[{{ $question->marks }} mk]</span>
+                            </div>
+
+                            {{-- MCQ --}}
+                            @if($question->isMultipleChoice() && !empty($question->options))
+                                @php $opts = $question->getOptionsForDisplay(); @endphp
+                                <ol class="{{ ($format ?? 'lenticular') === 'elliptical' ? 'opts-grid' : 'opts-list' }}"> <!-- Toggle based on $format -->
+                                    @foreach($opts as $letter => $text)
+                                        <li>{!! $text !!}</li> <!-- Use !! for potential HTML in options -->
+                                    @endforeach
+                                </ol>
+
+                            {{-- True / False --}}
+                            @elseif($question->isTrueFalse())
+                                 <ol class="{{ ($format ?? 'lenticular') === 'elliptical' ? 'opts-grid' : 'opts-list' }}"> <!-- Toggle based on $format -->
+                                     <li>True</li>
+                                     <li>False</li>
+                                 </ol>
+
+                            {{-- Essay --}}
+                            @elseif($question->isEssay())
+                                <div class="elines">
+                                    @php $numLines = max(4, (int) round($question->marks * 1.2)); @endphp
+                                    @for($l = 0; $l < $numLines; $l++)
+                                        <div class="eline"></div>
+                                    @endfor
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+
+                </div> {{-- /.sec-wrap --}}
+            @endforeach
+
+        </div> {{-- /.subj-wrap --}}
+    @endforeach
+
+</div> <!-- /.exam-container -->
 
 </body>
 </html>
