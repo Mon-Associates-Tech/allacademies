@@ -104,13 +104,13 @@ Route::prefix('examinations')->name('examination-hub.take.')->group(function () 
 });
 
 // ── Public Join Routes ────────────────────────────────────────────────────────
-Route::get('/examinations-hub/join', [ParticipantController::class, 'joinEntry'])->name('examination-hub.join.entry');
-Route::post('/examinations-hub/join', [ParticipantController::class, 'joinLookup'])->name('examination-hub.join.lookup');
-Route::get('/examinations-hub/join/{code}', [ParticipantController::class, 'joinForm'])->name('examination-hub.join');
-Route::post('/examinations-hub/join/{code}', [ParticipantController::class, 'attemptJoin'])->name('examination-hub.join.attempt');
+Route::get('/examinations/participants/join', [ParticipantController::class, 'joinEntry'])->name('examination-hub.join.entry');
+Route::post('/examinations/participants/join', [ParticipantController::class, 'joinLookup'])->name('examination-hub.join.lookup');
+Route::get('/examinations/participants/join/{code}', [ParticipantController::class, 'joinForm'])->name('examination-hub.join');
+Route::post('/examinations/participants/join/{code}', [ParticipantController::class, 'attemptJoin'])->name('examination-hub.join.attempt');
 
 // ── Results Routes ────────────────────────────────────────────────────────────
-Route::prefix('examinations-hub/results')->name('examination-hub.results.')->group(function () {
+Route::prefix('examinations/results')->name('examination-hub.results.')->group(function () {
     Route::get('/', [ParticipantResultsController::class, 'index'])->name('index');
     Route::get('/{submission}', [ParticipantResultsController::class, 'show'])->name('show');
 });

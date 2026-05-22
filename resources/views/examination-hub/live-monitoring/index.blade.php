@@ -228,7 +228,7 @@
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         {{-- View Details --}}
-                                        <a :href="'{{ route('examination-hub.live-monitoring.show', [$exam->id, '__SUBMISSION_ID__']) }}'.replace('__SUBMISSION_ID__', participant.submission_id)"
+                                        <a :href="'/examinations/exams/' + {{ $exam->id }} + '/live-monitoring/participant/' + participant.submission_id"
                                            class="p-1.5 text-slate-500 hover:text-indigo-600 transition-colors" title="View Details">
                                             <x-heroicon-o-eye class="w-4 h-4" />
                                         </a>

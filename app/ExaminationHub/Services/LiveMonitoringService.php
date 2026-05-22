@@ -26,7 +26,7 @@ class LiveMonitoringService
      */
     public function initializeSession(GeneralExamSubmission $submission, array $deviceInfo = []): ExamParticipantHeartbeat
     {
-        $heartbeat = ExamParticipantHeartbeat::createForSubmission($submission, $deviceInfo);
+        $heartbeat = ParticipantHeartbeat::createForSubmission($submission, $deviceInfo);
 
         broadcast(new ParticipantHeartbeatReceived($heartbeat))->toOthers();
 
