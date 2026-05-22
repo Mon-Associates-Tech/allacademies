@@ -33,11 +33,19 @@ class ProctoringService
         string $eventType,
         array $eventData = []
     ): ExamProctoringLog {
-        $severity = ExamProctoringLog::defaultSeverity($eventType);
+        // Normalise event type (JS may send e.g. 'keyboard_shortcut_blocked')
+        $normalisedType = $this->normaliseEventType($eventType);
+
+        // Skip if this violation type is disabled in config
+        if (! $this->isViolationEnabled($normalisedType)) {
+            return new ExamProctoringLog(['event_type' => $normalisedType, 'severity' => 'low']);
+        }
+
+        $severity = ExamProctoringLog::defaultSeverity($normalisedType);
 
         $log = ExamProctoringLog::create([
             'general_exam_submission_id' => $submission->id,
-            'event_type'                 => $eventType,
+            'event_type'                 => $normalisedType,
             'event_data'                 => $eventData,
             'severity'                   => $severity,
             'occurred_at'                => now(),
@@ -45,7 +53,7 @@ class ProctoringService
 
         Log::info('Proctoring event logged', [
             'submission_id' => $submission->id,
-            'event_type'    => $eventType,
+            'event_type'    => $normalisedType,
             'severity'      => $severity,
         ]);
 
@@ -133,8 +141,12 @@ class ProctoringService
             return false;
         }
 
-        $highThreshold = (int) ($exam->auto_submit_high_severity_threshold ?? 2);
-        $mediumThreshold = (int) ($exam->auto_submit_medium_severity_threshold ?? 5);
+        if (! config('proctoring.auto_submit.enabled', true)) {
+            return false;
+        }
+
+        $highThreshold   = (int) ($exam->auto_submit_high_severity_threshold   ?? config('proctoring.auto_submit.high_threshold', 2));
+        $mediumThreshold = (int) ($exam->auto_submit_medium_severity_threshold ?? config('proctoring.auto_submit.medium_threshold', 5));
 
         $highCount = ExamProctoringLog::forSubmission($submission->id)
             ->where('severity', ExamProctoringLog::SEVERITY_HIGH)
@@ -147,6 +159,23 @@ class ProctoringService
     }
 
     // ─── Private helpers ─────────────────────────────────────────────────────
+
+    private function isViolationEnabled(string $eventType): bool
+    {
+        return (bool) config('proctoring.violations.' . $eventType, true);
+    }
+
+    private function normaliseEventType(string $eventType): string
+    {
+        // Map JS variants to canonical config keys
+        return match ($eventType) {
+            'keyboard_shortcut_blocked', 'keyboard_shortcut_blocked' => 'keyboard_shortcut',
+            'context_menu'                                           => 'right_click',
+            'before_unload', 'page_hide', 'page_leave'               => 'exam_exit',
+            'fullscreen_reject'                                      => 'fullscreen_exit',
+            default                                                  => $eventType,
+        };
+    }
 
     private function checkAndFlagIfNecessary(GeneralExamSubmission $submission): void
     {
