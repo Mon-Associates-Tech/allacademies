@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $mockExam->title }}</title>
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <style>
         /* Basic Reset */
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -489,16 +492,20 @@
                         <div class="q-item">
                             <div class="q-header">
                                 <span class="q-num">{{ $qIdx + 1 }}.</span>
-                                <span class="q-text">{!! strip_tags($question->question_text) !!}</span> <!-- Use !! and strip_tags -->
+                                <span class="q-text">
+                                    <x-form.markdown-with-math :content="$question->question_text" inline="true" />
+                                </span>
                                 <span class="q-marks">[{{ $question->marks }} mk]</span>
                             </div>
 
                             {{-- MCQ --}}
                             @if($question->isMultipleChoice() && !empty($question->options))
                                 @php $opts = $question->getOptionsForDisplay(); @endphp
-                                <ol class="{{ ($format ?? 'lenticular') === 'elliptical' ? 'opts-grid' : 'opts-list' }}"> <!-- Toggle based on $format -->
+                                <ol class="{{ ($format ?? 'lenticular') === 'elliptical' ? 'opts-grid' : 'opts-list' }}">
                                     @foreach($opts as $letter => $text)
-                                        <li>{!! $text !!}</li> <!-- Use !! for potential HTML in options -->
+                                        <li>
+                                            <x-form.markdown-with-math :content="$text" inline="true" />
+                                        </li>
                                     @endforeach
                                 </ol>
 

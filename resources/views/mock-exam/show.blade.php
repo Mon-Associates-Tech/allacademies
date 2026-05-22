@@ -262,7 +262,58 @@
     ════════════════════════════════════════ --}}
     <div x-show="tab === 'subjects'" x-transition>
 
-        <div class="flex justify-end mb-4">
+        <div class="flex justify-end mb-4 gap-3">
+            {{-- Quick Generate from Template --}}
+            @php
+                $availableTemplates = \App\MockExam\Models\MockExamTemplate::where('user_id', auth()->id())
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->get();
+            @endphp
+            
+            @if($availableTemplates->isNotEmpty())
+                <div x-data="{ showDropdown: false }" class="relative">
+                    <button @click="showDropdown = !showDropdown" 
+                            @click.away="showDropdown = false"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 transition-all"
+                            style="border-radius: 2px;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Quick Generate
+                    </button>
+                    
+                    <div x-show="showDropdown" 
+                         x-transition
+                         class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg z-10"
+                         style="border-radius: 2px; max-height: 400px; overflow-y: auto;">
+                        <div class="p-3 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Select a Template</p>
+                        </div>
+                        @foreach($availableTemplates as $tpl)
+                            <form method="POST" action="{{ route('mock-exams.quick-generate', $mockExam) }}">
+                                @csrf
+                                <input type="hidden" name="template_id" value="{{ $tpl->id }}">
+                                <button type="submit"
+                                        class="w-full text-left px-4 py-3 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-b-0">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ $tpl->getDisplayName() }}</p>
+                                            <p class="text-xs text-slate-500 mt-0.5">
+                                                {{ $tpl->academicSubject?->name }} • {{ $tpl->getTotalQuestions() }} questions • {{ number_format($tpl->getTotalMarks(), 1) }} marks
+                                            </p>
+                                        </div>
+                                        <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+            
             <a href="{{ route('mock-exams.subject-exams.create', $mockExam) }}"
                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
@@ -309,9 +360,30 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1">
+                            {{-- Preview Subject Exam --}}
+                            <a href="{{ route('mock-exams.subject-exams.pdf.page', [$mockExam, $se]) }}"
+                               class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-emerald-600 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 transition-all"
+                               style="border-radius: 2px;"
+                               title="Preview Subject Exam">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </a>
+                            {{-- Print Subject Exam --}}
+                            <a href="{{ route('mock-exams.subject-exams.pdf.download', [$mockExam, $se]) }}"
+                               target="_blank"
+                               class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 border border-slate-200 dark:border-slate-700 hover:border-blue-400 transition-all"
+                               style="border-radius: 2px;"
+                               title="Print Subject Exam">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                </svg>
+                            </a>
                             <a href="{{ route('mock-exams.subject-exams.edit', [$mockExam, $se]) }}"
                                class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-violet-600 border border-slate-200 dark:border-slate-700 hover:border-violet-400 transition-all"
-                               style="border-radius: 2px;">
+                               style="border-radius: 2px;"
+                               title="Edit Subject Exam">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
@@ -321,7 +393,8 @@
                                 @csrf @method('DELETE')
                                 <button type="submit"
                                         class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-red-500 border border-slate-200 dark:border-slate-700 hover:border-red-400 transition-all"
-                                        style="border-radius: 2px;">
+                                        style="border-radius: 2px;"
+                                        title="Delete Subject Exam">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>

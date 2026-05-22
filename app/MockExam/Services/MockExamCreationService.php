@@ -5,6 +5,7 @@ namespace App\MockExam\Services;
 use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSection;
 use App\MockExam\Models\MockExamSubjectExam;
+use App\MockExam\Models\MockExamTemplate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -185,5 +186,42 @@ class MockExamCreationService
                 'warnings'          => $warnings,
             ];
         });
+    }
+
+    /**
+     * Create a subject exam from a predefined template.
+     *
+     * @param MockExam $mockExam The parent mock exam
+     * @param MockExamTemplate $template The template to use
+     * @param array $overrides Optional overrides for title, instructions, duration, etc.
+     * @return array{subject_exam: MockExamSubjectExam, questions_created: int, warnings: list<string>}
+     */
+    public function createSubjectExamFromTemplate(
+        MockExam $mockExam,
+        MockExamTemplate $template,
+        array $overrides = []
+    ): array {
+        // Build payload from template with optional overrides
+        $payload = $template->toSubjectExamPayload();
+        
+        // Apply overrides
+        if (isset($overrides['title'])) {
+            $payload['title'] = $overrides['title'];
+        }
+        if (isset($overrides['instructions'])) {
+            $payload['instructions'] = $overrides['instructions'];
+        }
+        if (isset($overrides['duration_in_minutes'])) {
+            $payload['duration_in_minutes'] = $overrides['duration_in_minutes'];
+        }
+        if (isset($overrides['topic_ids'])) {
+            $payload['topic_ids'] = $overrides['topic_ids'];
+        }
+        if (isset($overrides['subtopic_ids'])) {
+            $payload['subtopic_ids'] = $overrides['subtopic_ids'];
+        }
+
+        // Delegate to existing createSubjectExam method
+        return $this->createSubjectExam($mockExam, $payload);
     }
 }

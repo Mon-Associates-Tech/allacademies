@@ -139,4 +139,5 @@ window.renderMarkdownWithMath = function(content) {
 
 
 
+Alpine.start();
 Livewire.start();

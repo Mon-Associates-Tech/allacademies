@@ -9,6 +9,7 @@ use App\MockExam\Controllers\MockExamProctoringController;
 use App\MockExam\Controllers\MockExamResultController;
 use App\MockExam\Controllers\MockExamSubjectExamController;
 use App\MockExam\Controllers\MockExamTakingController;
+use App\MockExam\Controllers\MockExamTemplateController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Instructor routes ────────────────────────────────────────────────────────
@@ -62,6 +63,28 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/pdf/download',   [MockExamPdfController::class, 'examPdf'])->name('pdf.exam');
         Route::get('/{mockExam}/pdf/preview',    [MockExamPdfController::class, 'previewExamPdf'])->name('pdf.preview');
         Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKeyPdf'])->name('pdf.answer-key');
+        
+        // Subject exam PDF downloads
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf',        [MockExamPdfController::class, 'previewSubjectExamPdf'])->name('subject-exams.pdf.preview');
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExamPdf'])->name('subject-exams.pdf.download');
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])->name('subject-exams.pdf.page');
+
+        // Quick generate from template
+        Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
+    });
+
+// ─── Template Management Routes ──────────────────────────────────────────────
+
+Route::middleware(['web', 'auth'])
+    ->prefix('mock-exam-templates')
+    ->name('mock-exams.templates.')
+    ->group(function () {
+        Route::get('/',              [MockExamTemplateController::class, 'index'])->name('index');
+        Route::get('/create',        [MockExamTemplateController::class, 'create'])->name('create');
+        Route::post('/',             [MockExamTemplateController::class, 'store'])->name('store');
+        Route::get('/{template}/edit', [MockExamTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{template}',    [MockExamTemplateController::class, 'update'])->name('update');
+        Route::delete('/{template}', [MockExamTemplateController::class, 'destroy'])->name('destroy');
     });
 
 // ─── Grade scales — own top-level prefix, zero conflict with {mockExam} ───────

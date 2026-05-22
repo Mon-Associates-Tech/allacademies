@@ -17,6 +17,14 @@
                 </p>
             </div>
             <div class="flex items-center gap-2 mt-1">
+                <a href="{{ route('mock-exams.templates.index') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-300 border border-slate-600 hover:border-slate-400 transition-all"
+                   style="border-radius: 2px;">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                    </svg>
+                    Templates
+                </a>
                 <a href="{{ route('mock-exams.grade-scales.index') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-300 border border-slate-600 hover:border-slate-400 transition-all"
                    style="border-radius: 2px;">

@@ -4,6 +4,7 @@ namespace App\MockExam\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\MockExam\Models\MockExam;
+use App\MockExam\Models\MockExamSubjectExam;
 use App\MockExam\Services\MockExamPdfService;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -53,5 +54,43 @@ class MockExamPdfController extends Controller
         abort_unless($mockExam->user_id === auth()->id(), 403);
 
         return $this->pdfService->generateAnswerKeyPdf($mockExam);
+    }
+
+    public function subjectExamPdf(MockExam $mockExam, MockExamSubjectExam $subjectExam): Response
+    {
+        $this->ensureOwner($mockExam);
+        abort_unless($subjectExam->mock_exam_id === $mockExam->id, 404);
+
+        $fontSize = request()->input('font_size', 10.5);
+        $fontSize = max(8, min(14, (float) $fontSize));
+
+        return $this->pdfService->generateSubjectExamPdf($subjectExam, $fontSize);
+    }
+
+    public function previewSubjectExamPdf(MockExam $mockExam, MockExamSubjectExam $subjectExam): Response
+    {
+        $this->ensureOwner($mockExam);
+        abort_unless($subjectExam->mock_exam_id === $mockExam->id, 404);
+
+        $fontSize = request()->input('font_size', 10.5);
+        $fontSize = max(8, min(14, (float) $fontSize));
+
+        return $this->pdfService->previewSubjectExamPdf($subjectExam, $fontSize);
+    }
+
+    public function previewSubjectExamPage(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
+    {
+        $this->ensureOwner($mockExam);
+        abort_unless($subjectExam->mock_exam_id === $mockExam->id, 404);
+
+        $fontSize = request()->input('font_size', 10.5);
+        $fontSize = max(8, min(14, (float) $fontSize));
+
+        return view('mock-exam.pdf.subject-preview', compact('mockExam', 'subjectExam', 'fontSize'));
+    }
+
+    private function ensureOwner(MockExam $exam): void
+    {
+        abort_unless($exam->user_id === auth()->id(), 403);
     }
 }
