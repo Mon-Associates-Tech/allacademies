@@ -75,7 +75,11 @@
             if (sessionId) {
                 function boot() {
                     if (!window.ExamProctoring) { setTimeout(boot, 100); return; }
-                    const proctor = new window.ExamProctoring({ sessionId, endpoint });
+                    const proctor = new window.ExamProctoring({
+                        sessionId,
+                        endpoint,
+                        violations: @json($exam->resolvedViolationSettings()),
+                    });
                     proctor.init();
                     proctor.report('exam_enter');
                     window._examProctor = proctor;

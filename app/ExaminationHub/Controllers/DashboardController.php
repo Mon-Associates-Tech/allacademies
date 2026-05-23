@@ -169,4 +169,21 @@ class DashboardController extends Controller
 
         return back()->with('success', $message);
     }
+
+    public function updateViolationSettings(Request $request, GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $keys = array_keys(config('proctoring.violations', []));
+
+        $settings = [];
+        foreach ($keys as $key) {
+            $settings[$key] = $request->boolean('violations.' . $key);
+        }
+
+        $exam->update(['violation_settings' => $settings]);
+
+        return back()->with('success', 'Violation settings saved.');
+    }
+    
 }

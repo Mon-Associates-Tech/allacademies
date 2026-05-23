@@ -30,6 +30,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::post('/exams/{exam}/reminder-settings', [DashboardController::class, 'updateReminderSettings'])->name('exams.reminder-settings');
     Route::post('/exams/{exam}/proctoring-settings', [DashboardController::class, 'updateProctoringSettings'])->name('exams.proctoring-settings');
     Route::post('/exams/{exam}/toggle-results', [DashboardController::class, 'toggleResults'])->name('exams.toggle-results');
+    Route::post('/exams/{exam}/violation-settings', [DashboardController::class, 'updateViolationSettings'])->name('exams.violation-settings');
 
     Route::get('/exams/{exam}/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('/exams/{exam}/submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');

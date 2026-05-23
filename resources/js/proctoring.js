@@ -6,11 +6,17 @@
  */
 export default class ExamProctoring {
     constructor(config = {}) {
-        this.sessionId = config.sessionId;
-        this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        this.sessionId  = config.sessionId;
+        this.csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content;
         this.isInitialized = false;
-        this.endpoint = config.endpoint || '/proctoring/violation';
-        console.log('proctoring')
+        this.endpoint   = config.endpoint || '/proctoring/violation';
+        // violations: map of event_type => bool from server config
+        this.violations = config.violations || {};
+    }
+
+    enabled(type) {
+        // Default to true if not specified (fail open)
+        return this.violations[type] !== false;
     }
 
     init() {
@@ -26,14 +32,31 @@ export default class ExamProctoring {
     }
 
     bindEvents() {
-        document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
-        window.addEventListener('blur', () => this.report('window_blur'));
-        window.addEventListener('beforeunload', () => this.reportPageLeave('before_unload'));
-        window.addEventListener('pagehide', () => this.reportPageLeave('page_hide'));
-        document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
-        document.addEventListener('keydown', (e) => this.handleKeydown(e));
-        document.addEventListener('copy', (e) => { e.preventDefault(); this.report('copy_attempt'); });
-        document.addEventListener('contextmenu', (e) => { e.preventDefault(); this.report('context_menu'); });
+        if (this.enabled('tab_switch')) {
+            document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+        }
+        if (this.enabled('window_blur')) {
+            window.addEventListener('blur', () => this.report('window_blur'));
+        }
+        if (this.enabled('exam_exit')) {
+            window.addEventListener('beforeunload', () => this.reportPageLeave('before_unload'));
+            window.addEventListener('pagehide',     () => this.reportPageLeave('page_hide'));
+        }
+        if (this.enabled('fullscreen_exit')) {
+            document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
+        }
+        if (this.enabled('keyboard_shortcut')) {
+            document.addEventListener('keydown', (e) => this.handleKeydown(e));
+        }
+        if (this.enabled('copy_attempt')) {
+            document.addEventListener('copy', (e) => { e.preventDefault(); this.report('copy_attempt'); });
+        }
+        if (this.enabled('paste_attempt')) {
+            document.addEventListener('paste', (e) => { e.preventDefault(); this.report('paste_attempt'); });
+        }
+        if (this.enabled('right_click')) {
+            document.addEventListener('contextmenu', (e) => { e.preventDefault(); this.report('right_click'); });
+        }
     }
 
     handleVisibilityChange() {

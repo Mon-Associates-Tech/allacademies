@@ -426,6 +426,67 @@
                     </div>
                 </div>
 
+                {{-- ── ACTIVE VIOLATIONS (per-exam toggles) ── --}}
+                @if($exam->proctoring_enabled)
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Violation Settings</h2>
+                    </div>
+                    <div class="p-5">
+                        @php
+                            $resolvedViolations = $exam->resolvedViolationSettings();
+                            $violationMeta = [
+                                'tab_switch'        => ['label' => 'Tab Switch',        'severity' => 'medium'],
+                                'window_blur'       => ['label' => 'Window Blur',        'severity' => 'medium'],
+                                'copy_attempt'      => ['label' => 'Copy Attempt',       'severity' => 'low'],
+                                'paste_attempt'     => ['label' => 'Paste Attempt',      'severity' => 'low'],
+                                'right_click'       => ['label' => 'Right Click',        'severity' => 'low'],
+                                'keyboard_shortcut' => ['label' => 'Keyboard Shortcut',  'severity' => 'low'],
+                                'fullscreen_exit'   => ['label' => 'Fullscreen Exit',    'severity' => 'medium'],
+                                'exam_exit'         => ['label' => 'Exam Exit',          'severity' => 'high'],
+                                'multiple_faces'    => ['label' => 'Multiple Faces',     'severity' => 'high'],
+                                'no_face'           => ['label' => 'No Face Detected',   'severity' => 'medium'],
+                                'face_mismatch'     => ['label' => 'Face Mismatch',      'severity' => 'high'],
+                            ];
+                            $severityColors = [
+                                'high'   => 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
+                                'medium' => 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+                                'low'    => 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
+                            ];
+                        @endphp
+                        <form action="{{ route('examination-hub.exams.violation-settings', $exam) }}" method="POST" class="space-y-1">
+                            @csrf
+                            @foreach($violationMeta as $key => $meta)
+                                <label class="flex items-center justify-between py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center text-xs font-semibold px-2 py-0.5 border {{ $severityColors[$meta['severity']] }}"
+                                              style="border-radius: 2px;">{{ ucfirst($meta['severity']) }}</span>
+                                        <span class="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                                            {{ $meta['label'] }}
+                                        </span>
+                                    </div>
+                                    <input type="hidden" name="violations[{{ $key }}]" value="0">
+                                    <input type="checkbox"
+                                           name="violations[{{ $key }}]"
+                                           value="1"
+                                           {{ ($resolvedViolations[$key] ?? true) ? 'checked' : '' }}
+                                           class="w-4 h-4 rounded text-indigo-600 border-slate-300 dark:border-slate-600 focus:ring-indigo-500">
+                                </label>
+                            @endforeach
+                            <div class="pt-3">
+                                <button type="submit"
+                                        class="w-full py-2 text-sm font-medium text-white transition-all"
+                                        style="border-radius: 2px; background: linear-gradient(135deg, #4f46e5, #6366f1); box-shadow: 0 2px 8px rgba(99,102,241,0.25);">
+                                    Save Violation Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                @endif
+
                 <div class="bg-white dark:bg-slate-900 overflow-hidden"
                      style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
                     <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">

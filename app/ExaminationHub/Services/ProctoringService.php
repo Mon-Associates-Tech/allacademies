@@ -33,11 +33,15 @@ class ProctoringService
         string $eventType,
         array $eventData = []
     ): ExamProctoringLog {
-        // Normalise event type (JS may send e.g. 'keyboard_shortcut_blocked')
         $normalisedType = $this->normaliseEventType($eventType);
 
-        // Skip if this violation type is disabled in config
-        if (! $this->isViolationEnabled($normalisedType)) {
+        // Check exam-level setting first, then fall back to global config
+        $exam = $submission->assignment;
+        if ($exam && ! $exam->isViolationEnabled($normalisedType)) {
+            return new ExamProctoringLog(['event_type' => $normalisedType, 'severity' => 'low']);
+        }
+
+        if (! $exam && ! $this->isViolationEnabled($normalisedType)) {
             return new ExamProctoringLog(['event_type' => $normalisedType, 'severity' => 'low']);
         }
 
@@ -45,16 +49,16 @@ class ProctoringService
 
         $log = ExamProctoringLog::create([
             'general_exam_submission_id' => $submission->id,
-            'event_type'                 => $normalisedType,
-            'event_data'                 => $eventData,
-            'severity'                   => $severity,
-            'occurred_at'                => now(),
+            'event_type' => $normalisedType,
+            'event_data' => $eventData,
+            'severity' => $severity,
+            'occurred_at' => now(),
         ]);
 
         Log::info('Proctoring event logged', [
             'submission_id' => $submission->id,
-            'event_type'    => $normalisedType,
-            'severity'      => $severity,
+            'event_type' => $normalisedType,
+            'severity' => $severity,
         ]);
 
         $this->checkAndFlagIfNecessary($submission);
@@ -74,15 +78,15 @@ class ProctoringService
         $logs = ExamProctoringLog::forSubmission($submission->id)->get();
 
         $byType = $logs->groupBy('event_type')->map(fn (Collection $group) => [
-            'count'    => $group->count(),
+            'count' => $group->count(),
             'severity' => $group->first()->severity,
         ])->toArray();
 
         return [
-            'total'   => $logs->count(),
-            'high'    => $logs->where('severity', ExamProctoringLog::SEVERITY_HIGH)->count(),
-            'medium'  => $logs->where('severity', ExamProctoringLog::SEVERITY_MEDIUM)->count(),
-            'low'     => $logs->where('severity', ExamProctoringLog::SEVERITY_LOW)->count(),
+            'total' => $logs->count(),
+            'high' => $logs->where('severity', ExamProctoringLog::SEVERITY_HIGH)->count(),
+            'medium' => $logs->where('severity', ExamProctoringLog::SEVERITY_MEDIUM)->count(),
+            'low' => $logs->where('severity', ExamProctoringLog::SEVERITY_LOW)->count(),
             'by_type' => $byType,
             'flagged' => $this->isFlagged($submission),
         ];
@@ -97,12 +101,12 @@ class ProctoringService
 
         return $exam->submissions->map(function (GeneralExamSubmission $submission) {
             return [
-                'submission'      => $submission,
-                'proctoring'      => $this->getSummaryForSubmission($submission),
+                'submission' => $submission,
+                'proctoring' => $this->getSummaryForSubmission($submission),
             ];
         })->filter(fn ($row) => $row['proctoring']['total'] > 0)
-          ->sortByDesc(fn ($row) => $row['proctoring']['high'])
-          ->values();
+            ->sortByDesc(fn ($row) => $row['proctoring']['high'])
+            ->values();
     }
 
     /**
@@ -122,12 +126,12 @@ class ProctoringService
      */
     public function isFlagged(GeneralExamSubmission $submission): bool
     {
-        $highCount   = ExamProctoringLog::forSubmission($submission->id)
+        $highCount = ExamProctoringLog::forSubmission($submission->id)
             ->where('severity', ExamProctoringLog::SEVERITY_HIGH)->count();
         $mediumCount = ExamProctoringLog::forSubmission($submission->id)
             ->where('severity', ExamProctoringLog::SEVERITY_MEDIUM)->count();
 
-        return $highCount   >= self::HIGH_SEVERITY_THRESHOLD
+        return $highCount >= self::HIGH_SEVERITY_THRESHOLD
             || $mediumCount >= self::MEDIUM_SEVERITY_THRESHOLD;
     }
 
@@ -145,7 +149,7 @@ class ProctoringService
             return false;
         }
 
-        $highThreshold   = (int) ($exam->auto_submit_high_severity_threshold   ?? config('proctoring.auto_submit.high_threshold', 2));
+        $highThreshold = (int) ($exam->auto_submit_high_severity_threshold ?? config('proctoring.auto_submit.high_threshold', 2));
         $mediumThreshold = (int) ($exam->auto_submit_medium_severity_threshold ?? config('proctoring.auto_submit.medium_threshold', 5));
 
         $highCount = ExamProctoringLog::forSubmission($submission->id)
@@ -162,7 +166,7 @@ class ProctoringService
 
     private function isViolationEnabled(string $eventType): bool
     {
-        return (bool) config('proctoring.violations.' . $eventType, true);
+        return (bool) config('proctoring.violations.'.$eventType, true);
     }
 
     private function normaliseEventType(string $eventType): string
@@ -170,10 +174,10 @@ class ProctoringService
         // Map JS variants to canonical config keys
         return match ($eventType) {
             'keyboard_shortcut_blocked', 'keyboard_shortcut_blocked' => 'keyboard_shortcut',
-            'context_menu'                                           => 'right_click',
-            'before_unload', 'page_hide', 'page_leave'               => 'exam_exit',
-            'fullscreen_reject'                                      => 'fullscreen_exit',
-            default                                                  => $eventType,
+            'context_menu' => 'right_click',
+            'before_unload', 'page_hide', 'page_leave' => 'exam_exit',
+            'fullscreen_reject' => 'fullscreen_exit',
+            default => $eventType,
         };
     }
 
