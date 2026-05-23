@@ -91,16 +91,26 @@ Route::prefix('examinations')->name('examination-hub.take.')->group(function () 
     Route::middleware([EnsureExamSession::class])->group(function () {
         Route::get('/{exam}/start', [ExamTakingController::class, 'start'])->name('start');
         Route::get('/{exam}/section/{sectionIndex}', [ExamTakingController::class, 'section'])->name('section');
-        Route::post('/{exam}/save-response', [ExamTakingController::class, 'saveResponse'])->name('save-response');
+        Route::post('/{exam}/save-response', [ExamTakingController::class, 'saveResponse'])
+            ->middleware('throttle:60,1')
+            ->name('save-response');
         Route::post('/{exam}/submit', [ExamTakingController::class, 'submit'])->name('submit');
 
         // Proctoring event ingestion
-        Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])->name('proctor.event');
+        Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])
+            ->middleware('throttle:30,1')
+            ->name('proctor.event');
 
         // Heartbeat endpoints
-        Route::post('/{exam}/heartbeat', [HeartbeatController::class, 'beat'])->name('heartbeat');
-        Route::post('/{exam}/heartbeat/init', [HeartbeatController::class, 'initialize'])->name('heartbeat.init');
-        Route::post('/{exam}/heartbeat/acknowledge-warning', [HeartbeatController::class, 'acknowledgeWarning'])->name('heartbeat.acknowledge-warning');
+        Route::post('/{exam}/heartbeat', [HeartbeatController::class, 'beat'])
+            ->middleware('throttle:10,1')
+            ->name('heartbeat');
+        Route::post('/{exam}/heartbeat/init', [HeartbeatController::class, 'initialize'])
+            ->middleware('throttle:5,1')
+            ->name('heartbeat.init');
+        Route::post('/{exam}/heartbeat/acknowledge-warning', [HeartbeatController::class, 'acknowledgeWarning'])
+            ->middleware('throttle:10,1')
+            ->name('heartbeat.acknowledge-warning');
     });
 
     Route::get('/{exam}/completed', [ExamTakingController::class, 'completed'])->name('completed');

@@ -76,24 +76,42 @@ class ExamCreationService implements ExamCreationServiceInterface
                 'configured_match_mode' => $payload['configured_match_mode'] ?? 'any',
             ]);
 
-            $exam->sections()->delete();
-            foreach (($payload['sections'] ?? []) as $index => $section) {
-                $exam->sections()->create([
-                    'title' => $section['title'],
-                    'instructions' => $section['instructions'] ?? null,
-                    'description' => $section['description'] ?? null,
+            // Diff sections: update existing, create new, delete removed
+            $incomingSectionIds = collect($payload['sections'] ?? [])
+                ->pluck('id')
+                ->filter()
+                ->values();
+
+            // Delete sections that are no longer in the payload
+            // Only delete sections that have NO submissions referencing their questions
+            $exam->sections()
+                ->whereNotIn('id', $incomingSectionIds)
+                ->whereDoesntHave('questions', fn ($q) => $q->whereHas('submissionResponses'))
+                ->delete();
+
+            foreach (($payload['sections'] ?? []) as $index => $sectionData) {
+                $attributes = [
+                    'title' => $sectionData['title'],
+                    'instructions' => $sectionData['instructions'] ?? null,
+                    'description' => $sectionData['description'] ?? null,
                     'order' => $index + 1,
-                    'time_limit_minutes' => $section['time_limit_minutes'] ?? null,
-                    'source_type' => $section['source_type'],
-                    'question_type' => $section['question_type'],
-                    'question_count' => (int) ($section['question_count'] ?? 0),
-                    'academic_group_id' => $section['academic_group_id'] ?? null,
-                    'academic_level_id' => $section['academic_level_id'] ?? null,
-                    'academic_subject_id' => $section['academic_subject_id'] ?? null,
-                    'topic_ids' => $section['topic_ids'] ?? [],
-                    'subtopic_ids' => $section['subtopic_ids'] ?? [],
-                    'is_randomized' => (bool) ($section['is_randomized'] ?? false),
-                ]);
+                    'time_limit_minutes' => $sectionData['time_limit_minutes'] ?? null,
+                    'source_type' => $sectionData['source_type'],
+                    'question_type' => $sectionData['question_type'],
+                    'question_count' => (int) ($sectionData['question_count'] ?? 0),
+                    'academic_group_id' => $sectionData['academic_group_id'] ?? null,
+                    'academic_level_id' => $sectionData['academic_level_id'] ?? null,
+                    'academic_subject_id' => $sectionData['academic_subject_id'] ?? null,
+                    'topic_ids' => $sectionData['topic_ids'] ?? [],
+                    'subtopic_ids' => $sectionData['subtopic_ids'] ?? [],
+                    'is_randomized' => (bool) ($sectionData['is_randomized'] ?? false),
+                ];
+
+                if (! empty($sectionData['id'])) {
+                    $exam->sections()->where('id', $sectionData['id'])->update($attributes);
+                } else {
+                    $exam->sections()->create($attributes);
+                }
             }
 
             return $exam->fresh(['sections']);

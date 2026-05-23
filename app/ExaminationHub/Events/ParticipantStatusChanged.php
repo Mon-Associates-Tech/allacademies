@@ -22,7 +22,7 @@ class ParticipantStatusChanged implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('exam-monitoring.' . $this->heartbeat->general_exam_id),
+            new Channel('exam-monitoring.'.$this->heartbeat->general_exam_id),
         ];
     }
 
@@ -34,9 +34,9 @@ class ParticipantStatusChanged implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'participant'     => $this->heartbeat->toLiveData(),
+            'participant' => $this->heartbeat->toLiveData(),
             'previous_status' => $this->previousStatus,
-            'new_status'      => $this->newStatus,
+            'new_status' => $this->newStatus,
         ];
     }
 }

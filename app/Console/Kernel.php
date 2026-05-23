@@ -5,7 +5,6 @@ namespace App\Console;
 use App\Jobs\ResetMonthlySubscriptionCycles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Services\SubscriptionCycleService;
 
 class Kernel extends ConsoleKernel
 {
@@ -23,6 +22,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('messages:send-scheduled')->everyMinute();
         $schedule->command('calendar:process-reminders')->everyMinute();
         $schedule->command('tokens:check-expired')->daily();
+
+        // Auto-submit exam submissions that have exceeded their time limit
+        $schedule->command('examination-hub:auto-submit-expired')
+            ->everyMinute()
+            ->withoutOverlapping();
 
         // Generate recurring sessions daily
         $schedule->job(new \App\Jobs\GenerateRecurringSessionsJob)

@@ -73,14 +73,14 @@ class GeneralExamSection extends Model
         $this->update(['total_marks' => $total]);
     }
 
+    /**
+     * Returns questions in their stored order.
+     * Randomisation is handled at submission level (randomized_question_order),
+     * not here — calling shuffle() here would give a different order on every
+     * page load for the same participant.
+     */
     public function getQuestionsForDisplay(): \Illuminate\Database\Eloquent\Collection
     {
-        $questions = $this->questions;
-
-        if ($this->is_randomized) {
-            return $questions->shuffle();
-        }
-
-        return $questions;
+        return $this->questions;
     }
 }
