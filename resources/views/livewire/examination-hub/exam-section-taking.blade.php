@@ -68,15 +68,25 @@
                         </div>
                     @endif
 
-                    <div class="pt-2 flex justify-end">
-                        <button wire:click="startSection"
-                                class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200"
-                                style="border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                            Begin Section
-                            <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                            </svg>
-                        </button>
+                    <div class="pt-2 flex justify-end items-center gap-3">
+                        @if($this->section->instructions)
+                            <label class="inline-flex items-center gap-2 text-sm">
+                                <input type="checkbox" wire:model="instructionsAcknowledged" class="h-4 w-4" />
+                                <span>I have read and understood the section instructions</span>
+                            </label>
+                        @endif
+                        <div>
+                            <button wire:click="startSection"
+                                    @if($this->section->instructions) wire:loading.attr="disabled" @endif
+                                    @if($this->section->instructions && ! $this->instructionsAcknowledged) disabled @endif
+                                    class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200"
+                                    style="border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                Begin Section
+                                <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -206,10 +216,14 @@
                     </div>
 
                     {{-- Timer --}}
+                    @php
+                        $sectionStartTs = $this->submission->section_start_times[$this->sectionId] ?? null;
+                        $timerDuration = $this->section->time_limit_minutes ?? $this->exam->duration_in_minutes ?? null;
+                    @endphp
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded"
-                         x-data="examTimer({{ $this->submission->started_at ? $this->submission->started_at->timestamp : 'null' }}, {{ $this->exam->duration_in_minutes ?? 'null' }})"
-                         x-init="init()"
-                         :style="timerStyle">
+                        x-data="examTimer({{ $sectionStartTs ?? 'null' }}, {{ $timerDuration ?? 'null' }})"
+                        x-init="init()"
+                        :style="timerStyle">
                         <svg class="h-4 w-4" :class="timerIconClass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
@@ -257,7 +271,7 @@
                             </span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs px-2 py-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                                                        <span class="text-xs px-2 py-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                                   style="border-radius: 2px;">
                                 {{ str_replace('_', ' ', ucfirst($question->type)) }}
                             </span>
@@ -265,6 +279,18 @@
                                   style="border-radius: 2px;">
                                 {{ $question->marks }} {{ $question->marks === 1 ? 'mark' : 'marks' }}
                             </span>
+                            {{-- Flag/Unflag button --}}
+                            <button wire:click.stop="toggleFlagQuestion({{ $question->id }})"
+                                    class="ml-2 inline-flex items-center gap-2 px-2 py-1 text-xs font-medium border rounded"
+                                    :class="{ 'text-amber-600 border-amber-200 bg-amber-50': @js($this->submission->isFlagged($question->id)), 'text-slate-600 border-slate-200 bg-white': ! @js($this->submission->isFlagged($question->id)) }">
+                                @if($this->submission->isFlagged($question->id))
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a1 1 0 00-1 1v12l6-3 6 3V4a1 1 0 00-1-1H5z"/></svg>
+                                    <span class="sr-only">Flagged</span>
+                                @else
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v14l7-3 7 3V3H5z"/></svg>
+                                    <span class="sr-only">Flag</span>
+                                @endif
+                            </button>
                         </div>
                     </div>
 

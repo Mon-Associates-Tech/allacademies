@@ -61,9 +61,11 @@
                                 </p>
                             </div>
 
+                            @php
+                                $sectionUrl = route('examination-hub.take.section', [$exam, $index]);
+                            @endphp
                             @if($exam->proctoring_enabled && $index === 0)
-                                {{-- Proctored: first section requires fullscreen entry --}}
-                                <button onclick="enterFullscreenAndStart('{{ route('examination-hub.take.section', [$exam, 0]) }}')"
+                                <button onclick="openAckModal('{{ $sectionUrl }}', true)"
                                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
                                     Enter Fullscreen & Start
@@ -71,10 +73,10 @@
                             @elseif($exam->proctoring_enabled)
                                 <span class="text-xs text-slate-400 dark:text-slate-500 italic">Complete previous section first</span>
                             @else
-                                <a href="{{ route('examination-hub.take.section', [$exam, $index]) }}"
-                                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm">
+                                <button onclick="openAckModal('{{ $sectionUrl }}', false)"
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm">
                                     {{ $index === 0 ? 'Start' : 'Open' }}
-                                </a>
+                                </button>
                             @endif
                         </div>
                     @endforeach
@@ -94,5 +96,37 @@
                 window.location.href = url;
             }
         }
+    </script>
+    <div id="ack-modal" style="display:none; position:fixed; inset:0; z-index:60; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+        <div style="background:#fff; max-width:28rem; margin:auto; padding:1.25rem; border-radius:6px;">
+            <h3 style="font-weight:700; margin-bottom:0.5rem;">Confirm Instructions</h3>
+            <p style="margin-bottom:0.75rem; color:#334155;">Please confirm you've read and understood the exam instructions. The timer will start once you confirm.</p>
+            <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;"><input id="ack-checkbox" type="checkbox"> I have read and agree to the instructions</label>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                <button onclick="closeAckModal()" style="padding:0.5rem 0.75rem;">Cancel</button>
+                <button id="ack-continue-btn" disabled style="padding:0.5rem 0.75rem; background:#0f172a; color:#fff;">Continue</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let _ackTarget = null;
+        let _ackProctor = false;
+        function openAckModal(url, proctor) {
+            _ackTarget = url; _ackProctor = !!proctor;
+            document.getElementById('ack-modal').style.display = 'flex';
+            const cb = document.getElementById('ack-checkbox');
+            const btn = document.getElementById('ack-continue-btn');
+            cb.checked = false; btn.disabled = true;
+            cb.onchange = function () { btn.disabled = !this.checked; };
+            btn.onclick = function () {
+                closeAckModal();
+                if (_ackProctor) {
+                    enterFullscreenAndStart(_ackTarget);
+                } else {
+                    window.location.href = _ackTarget;
+                }
+            };
+        }
+        function closeAckModal() { document.getElementById('ack-modal').style.display = 'none'; }
     </script>
 </x-layouts.exam>

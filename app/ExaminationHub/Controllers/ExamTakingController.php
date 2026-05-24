@@ -104,6 +104,17 @@ class ExamTakingController extends Controller
 
         $exam->load(['sections' => fn ($q) => $q->orderBy('order')->withCount('questions')]);
 
+        // If there's a saved last position and the submission is in progress,
+        // redirect the participant straight to that section/question.
+        $lastPos = $submission->last_position ?? null;
+        if ($submission->isInProgress() && is_array($lastPos) && isset($lastPos['section'])) {
+            $sectionIndex = (int) $lastPos['section'];
+            $questionIndex = (int) ($lastPos['question'] ?? 0);
+
+            return redirect()->route('examination-hub.take.section', [$exam, $sectionIndex])
+                ->with('restored_question', $questionIndex);
+        }
+
         return view('examination-hub.take.start', [
             'exam' => $exam,
             'submission' => $submission,
@@ -133,6 +144,9 @@ class ExamTakingController extends Controller
         }
 
         $questions = $this->resolveQuestionOrder($exam, $section, $submission);
+
+        // Section start times are set by the client when the participant
+        // explicitly begins the section (after acknowledging instructions).
 
         return view('examination-hub.take.section', [
             'exam' => $exam,
@@ -167,6 +181,20 @@ class ExamTakingController extends Controller
             'response' => ['required', 'string'],
             'section_index' => ['required', 'integer'],
         ]);
+
+        // Enforce section time limits server-side
+        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
+        $section = $exam->sections->get($data['section_index']);
+        if ($section && $section->time_limit_minutes) {
+            $sectionStartTimes = $submission->section_start_times ?? [];
+            $sectionKey = (string) $section->id;
+            $startedAt = $sectionStartTimes[$sectionKey] ?? null;
+            if (! $startedAt || now()->timestamp >= ($startedAt + ($section->time_limit_minutes * 60))) {
+                return $request->expectsJson()
+                    ? response()->json(['error' => 'Section time expired'], 403)
+                    : back()->withErrors(['error' => 'Section time expired.']);
+            }
+        }
 
         $responses = $submission->responses ?? [];
         $responses[$data['question_id']] = [

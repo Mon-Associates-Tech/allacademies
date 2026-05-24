@@ -126,4 +126,6 @@ Route::post('/examinations/participants/join/{code}', [ParticipantController::cl
 Route::prefix('examinations/results')->name('examination-hub.results.')->group(function () {
     Route::get('/', [ParticipantResultsController::class, 'index'])->name('index');
     Route::get('/{submission}', [ParticipantResultsController::class, 'show'])->name('show');
+    Route::get('/{submission}/certificate', [ParticipantResultsController::class, 'certificate'])->name('certificate');
+    Route::get('/{submission}/certificate/download', [ParticipantResultsController::class, 'certificatePdf'])->name('certificate.download');
 });

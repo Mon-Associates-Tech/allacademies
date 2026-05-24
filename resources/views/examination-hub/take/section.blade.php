@@ -5,6 +5,7 @@
         'section' => $section,
         'sectionIndex' => $sectionIndex,
         'questions' => $questions,
+        'initialQuestionIndex' => session('restored_question', request()->query('q', 0)),
     ])
 
     <script>
@@ -105,11 +106,28 @@
 
             const SAVE_URL     = '{{ route('examination-hub.take.save-response', $exam) }}';
             const CSRF_TOKEN   = '{{ csrf_token() }}';
+            const EXAM_ID      = {{ $exam->id }};
+            const SUBMISSION_ID = {{ $submission->id }};
             const SECTION_IDX  = {{ $sectionIndex }};
             const DEBOUNCE_MS  = 800;
 
             // ── Status indicator ────────────────────────────────────────────────────
             const indicator = document.getElementById('autosave-indicator');
+            // Offline indicator (created dynamically if missing)
+            let offlineIndicator = document.getElementById('offline-indicator');
+            if (!offlineIndicator) {
+                offlineIndicator = document.createElement('div');
+                offlineIndicator.id = 'offline-indicator';
+                offlineIndicator.style.cssText = 'font-size:0.75rem; color:#b91c1c; margin-left:0.5rem; display:none;';
+                if (indicator && indicator.parentNode) {
+                    indicator.parentNode.insertBefore(offlineIndicator, indicator.nextSibling);
+                } else {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const el = document.getElementById('autosave-indicator');
+                        if (el && el.parentNode) el.parentNode.insertBefore(offlineIndicator, el.nextSibling);
+                    });
+                }
+            }
 
             function setStatus(state) {
                 if (!indicator) return;
@@ -126,6 +144,17 @@
             // ── Core save function ──────────────────────────────────────────────────
             async function saveResponse(questionId, response, retries = 2) {
                 setStatus('saving');
+
+                const payload = { question_id: questionId, response: response, section_index: SECTION_IDX };
+
+                // If offline, enqueue the save and show offline status
+                if (!navigator.onLine) {
+                    enqueueSave(payload);
+                    setStatus('error');
+                    setOffline(true);
+                    return;
+                }
+
                 try {
                     const res = await fetch(SAVE_URL, {
                         method:  'POST',
@@ -134,11 +163,7 @@
                             'Accept':        'application/json',
                             'X-CSRF-TOKEN':  CSRF_TOKEN,
                         },
-                        body: JSON.stringify({
-                            question_id:   questionId,
-                            response:      response,
-                            section_index: SECTION_IDX,
-                        }),
+                        body: JSON.stringify(payload),
                     });
 
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -146,20 +171,77 @@
                     const json = await res.json();
 
                     if (json.status === 'already_submitted') {
-                        // Exam was submitted in another tab — reload to the completed page
                         window.location.reload();
                         return;
                     }
 
                     setStatus('saved');
                 } catch (err) {
-                    if (retries > 0) {
-                        setTimeout(() => saveResponse(questionId, response, retries - 1), 1500);
-                    } else {
-                        setStatus('error');
-                        console.error('Auto-save failed:', err);
-                    }
+                    // On failure, enqueue for retry and mark as error
+                    enqueueSave(payload);
+                    setStatus('error');
+                    console.error('Auto-save failed and queued:', err);
                 }
+            }
+
+            // --- Offline save queue helpers ---
+            const QUEUE_KEY = `exam_autosave_queue_${EXAM_ID}_${SUBMISSION_ID}`;
+
+            function enqueueSave(item) {
+                try {
+                    const raw = localStorage.getItem(QUEUE_KEY);
+                    const arr = raw ? JSON.parse(raw) : [];
+                    arr.push(item);
+                    localStorage.setItem(QUEUE_KEY, JSON.stringify(arr));
+                } catch (e) {
+                    console.error('Failed to enqueue save', e);
+                }
+            }
+
+            async function flushQueue() {
+                try {
+                    const raw = localStorage.getItem(QUEUE_KEY);
+                    if (!raw) return;
+                    const arr = JSON.parse(raw);
+                    if (!Array.isArray(arr) || arr.length === 0) return;
+
+                    for (const item of arr) {
+                        try {
+                            const res = await fetch(SAVE_URL, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                body: JSON.stringify(item),
+                            });
+                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        } catch (e) {
+                            console.warn('Flushing queued save failed, will retry later', e);
+                            return; // Stop processing to preserve order
+                        }
+                    }
+
+                    // All flushed successfully
+                    localStorage.removeItem(QUEUE_KEY);
+                    setStatus('saved');
+                    setOffline(false);
+                } catch (e) {
+                    console.error('Failed to flush queue', e);
+                }
+            }
+
+            function setOffline(isOffline) {
+                if (!offlineIndicator) return;
+                offlineIndicator.style.display = isOffline ? 'inline-block' : 'none';
+                offlineIndicator.textContent = isOffline ? 'Offline — responses queued' : '';
+            }
+
+            window.addEventListener('online', () => { setOffline(false); flushQueue(); });
+            window.addEventListener('offline', () => { setOffline(true); });
+
+            // Try to flush any queued saves on load if online
+            if (navigator.onLine) {
+                flushQueue();
+            } else {
+                setOffline(true);
             }
 
             // ── Debounce helper ─────────────────────────────────────────────────────
@@ -321,9 +403,15 @@
                 const now = Math.floor(Date.now() / 1000);
                 this.elapsed = this.startedAt ? now - this.startedAt : 0;
                 if (this.isCountdown) {
-                    this.remaining = Math.max(0, this.startedAt + this.duration * 60 - now);
-                    this.display   = this.format(this.remaining);
-                    if (this.remaining <= 0) { clearInterval(this.ticker); document.getElementById('exam-submit-form')?.submit(); }
+                    if (!this.startedAt) {
+                        // Not started: show full duration but don't auto-submit
+                        this.remaining = this.duration * 60;
+                        this.display = this.format(this.remaining);
+                    } else {
+                        this.remaining = Math.max(0, this.startedAt + this.duration * 60 - now);
+                        this.display   = this.format(this.remaining);
+                        if (this.remaining <= 0) { clearInterval(this.ticker); document.getElementById('exam-submit-form')?.submit(); }
+                    }
                 } else {
                     this.display = this.format(this.elapsed);
                 }

@@ -23,10 +23,13 @@ class ExamSectionTaking extends Component
     public array $responses = [];
 
     public int $currentQuestionIndex = 0;
+    public int $initialQuestionIndex = 0;
 
     public bool $showSectionInfo = true;
+    public bool $instructionsAcknowledged = false;
 
     public ?int $timeRemaining = null;
+    public array $flaggedQuestions = [];
 
     public function mount(GeneralExam $exam, GeneralExamSubmission $submission, $section, int $sectionIndex, $questions): void
     {
@@ -34,11 +37,25 @@ class ExamSectionTaking extends Component
         $this->submissionId = $submission->id;
         $this->sectionId = $section->id;
         $this->sectionIndex = $sectionIndex;
-
+        $this->flaggedQuestions = $submission->flagged_questions ?? [];
         // Load saved responses from fresh submission data
         $this->loadResponses();
 
-        if ($exam->duration_in_minutes && $submission->started_at) {
+        // If the submission has a saved last_position for this section, restore it
+        $lastPos = $submission->last_position ?? null;
+        if (is_array($lastPos) && isset($lastPos['section']) && (int) $lastPos['section'] === $sectionIndex) {
+            $this->currentQuestionIndex = (int) ($lastPos['question'] ?? 0);
+        }
+
+        // Determine time remaining for this view: prefer section-level limits
+        $sectionStartTimes = $submission->section_start_times ?? [];
+        $sectionKey = (string) $section->id;
+
+        if ($section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
+            $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+            $endsAt = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
+            $this->timeRemaining = max(0, now()->diffInSeconds($endsAt, false));
+        } elseif ($exam->duration_in_minutes && $submission->started_at) {
             $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
             $this->timeRemaining = max(0, now()->diffInSeconds($examEndsAt, false));
         }
@@ -103,6 +120,9 @@ class ExamSectionTaking extends Component
     {
         if ($index >= 0 && $index < $this->questions->count()) {
             $this->currentQuestionIndex = $index;
+            // Persist last position
+            $submission = $this->submission;
+            $submission->update(['last_position' => ['section' => $this->sectionIndex, 'question' => $this->currentQuestionIndex]]);
         }
     }
 
@@ -110,6 +130,8 @@ class ExamSectionTaking extends Component
     {
         if ($this->currentQuestionIndex < $this->questions->count() - 1) {
             $this->currentQuestionIndex++;
+            $submission = $this->submission;
+            $submission->update(['last_position' => ['section' => $this->sectionIndex, 'question' => $this->currentQuestionIndex]]);
         }
     }
 
@@ -117,12 +139,25 @@ class ExamSectionTaking extends Component
     {
         if ($this->currentQuestionIndex > 0) {
             $this->currentQuestionIndex--;
+            $submission = $this->submission;
+            $submission->update(['last_position' => ['section' => $this->sectionIndex, 'question' => $this->currentQuestionIndex]]);
         }
     }
 
     public function updatedResponses($value, $key): void
     {
+        // Prevent saving if section time expired
         $submission = $this->submission;
+        $sectionStartTimes = $submission->section_start_times ?? [];
+        $sectionKey = (string) $this->sectionId;
+        if ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
+            $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+            $endsAt = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
+            if (now()->greaterThanOrEqualTo($endsAt)) {
+                return; // ignore updates after expiry
+            }
+        }
+
         $savedResponses = $submission->responses ?? [];
         $savedResponses[$key] = [
             'response' => $value,
@@ -130,6 +165,19 @@ class ExamSectionTaking extends Component
         ];
 
         $submission->update(['responses' => $savedResponses]);
+    }
+
+    public function toggleFlagQuestion(int $questionId): void
+    {
+        $submission = $this->submission;
+
+        if ($submission->isFlagged($questionId)) {
+            $submission->unflagQuestion($questionId);
+            unset($this->flaggedQuestions[(string) $questionId]);
+        } else {
+            $submission->flagQuestion($questionId);
+            $this->flaggedQuestions[(string) $questionId] = now()->toIso8601String();
+        }
     }
 
     public function hydrate(): void
@@ -140,6 +188,23 @@ class ExamSectionTaking extends Component
 
     public function startSection(): void
     {
+        $submission = $this->submission;
+        $sectionStartTimes = $submission->section_start_times ?? [];
+        $sectionKey = (string) $this->sectionId;
+
+        // Only set section start time when participant explicitly begins
+        if (! isset($sectionStartTimes[$sectionKey]) && $this->section->time_limit_minutes) {
+            $sectionStartTimes[$sectionKey] = now()->timestamp;
+            $submission->update(['section_start_times' => $sectionStartTimes]);
+
+            // Compute time remaining for this section
+            $this->timeRemaining = $this->section->time_limit_minutes * 60;
+        } elseif (! $this->section->time_limit_minutes) {
+            // Fallback to exam-wide remaining time
+            $remaining = $submission->getRemainingTime();
+            $this->timeRemaining = $remaining ?? ($this->exam->duration_in_minutes * 60);
+        }
+
         $this->showSectionInfo = false;
     }
 
