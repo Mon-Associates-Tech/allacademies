@@ -10,8 +10,10 @@ use App\ExaminationHub\Controllers\ParticipantController;
 use App\ExaminationHub\Controllers\ParticipantResultsController;
 use App\ExaminationHub\Controllers\PerformanceReportController;
 use App\ExaminationHub\Controllers\ProctoringController;
+use App\ExaminationHub\Controllers\ParticipantPerformanceReportController;
 use App\ExaminationHub\Controllers\StudentPerformanceController;
 use App\ExaminationHub\Controllers\SubmissionController;
+use App\ExaminationHub\Controllers\ExamSettingsController;
 use App\Http\Middleware\EnsureExamSession;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::post('/exams/{exam}/send-reminder', [DashboardController::class, 'sendReminder'])->name('exams.send-reminder');
     Route::post('/exams/{exam}/reminder-settings', [DashboardController::class, 'updateReminderSettings'])->name('exams.reminder-settings');
     Route::post('/exams/{exam}/proctoring-settings', [DashboardController::class, 'updateProctoringSettings'])->name('exams.proctoring-settings');
+    Route::post('/exams/{exam}/participant-mode', [ExamSettingsController::class, 'updateParticipantMode'])->name('exams.participant-mode');
     Route::post('/exams/{exam}/toggle-results', [DashboardController::class, 'toggleResults'])->name('exams.toggle-results');
     Route::post('/exams/{exam}/violation-settings', [DashboardController::class, 'updateViolationSettings'])->name('exams.violation-settings');
 
@@ -36,10 +39,16 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
     Route::get('/exams/{exam}/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
+    
+    // Add route for grading submissions
+    Route::get('/exams/{exam}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
 
-    Route::get('/performance', [StudentPerformanceController::class, 'index'])->name('performance.index');
-    Route::get('/performance/{participantType}/{participantId}', [StudentPerformanceController::class, 'show'])->name('performance.show');
-    Route::get('/performance/{participantType}/{participantId}/export', [StudentPerformanceController::class, 'export'])->name('performance.export');
+    Route::get('/performance', [ParticipantPerformanceReportController::class, 'index'])->name('performance.index');
+    Route::get('/performance/{participantType}/{participantId}', [ParticipantPerformanceReportController::class, 'show'])->name('performance.show');
+    Route::get('/performance/{participantType}/{participantId}/export', [ParticipantPerformanceReportController::class, 'export'])->name('performance.export');
+    Route::get('/performance/{participantType}/{participantId}/export-excel', [ParticipantPerformanceReportController::class, 'exportExcel'])->name('performance.export-excel');
+    Route::get('/performance/export-all-excel', [ParticipantPerformanceReportController::class, 'exportAllExcel'])->name('performance.export-all-excel');
+    Route::get('/performance/export-all-pdf', [ParticipantPerformanceReportController::class, 'exportAllPdf'])->name('performance.export-all-pdf');
 
     Route::post('/exams/{exam}/participants/configured', [ParticipantController::class, 'storeConfigured'])->name('participants.configured.store');
     Route::post('/exams/{exam}/participants/configured/import', [ParticipantController::class, 'importConfigured'])->name('participants.configured.import');
@@ -79,8 +88,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
         Route::post('/grading-system/initialize', [GradingSystemController::class, 'initializeDefault'])->name('grading-system.initialize');
     });
 
-    // Proctoring event ingestion
-    Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])->name('proctor.event');
+    // Remove the duplicate proctoring event route - keeping the one with throttling in the exam taking section
 });
 
 // ── Exam Taking Routes ────────────────────────────────────────────────────────

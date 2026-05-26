@@ -4,6 +4,25 @@
             <div class="flex items-center justify-end mb-4">
                 <x-snippets.theme-toggle />
             </div>
+            
+            @if($exam->starts_at && $exam->starts_at->isFuture())
+                <div class="mb-6 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-sm overflow-hidden">
+                    <div class="px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-amber-800 dark:text-amber-200">Exam Opening Soon</h3>
+                            <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                                This exam will open on {{ $exam->starts_at->format('F j, Y \a\t g:i A') }}.
+                                You can join early and wait for the countdown to finish.
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-amber-800 dark:text-amber-200" id="countdown-display">--:--:--</div>
+                            <div class="text-xs text-amber-600 dark:text-amber-400 mt-1">until start</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+            
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
                     <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Examination</p>
@@ -20,7 +39,7 @@
                     </div>
                     <div class="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
                         <p class="text-slate-500 dark:text-slate-400">Questions</p>
-                        <p class="mt-1 font-semibold text-slate-900 dark:text-white">{{ $exam->sections->sum('questions_count') }}</p>
+                        <p class="mt tast-1 font-semibold text-slate-900 dark:text-white">{{ $exam->sections->sum('questions_count') }}</p>
                     </div>
                     <div class="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
                         <p class="text-slate-500 dark:text-slate-400">Duration</p>
@@ -66,7 +85,8 @@
                             @endphp
                             @if($exam->proctoring_enabled && $index === 0)
                                 <button onclick="openAckModal('{{ $sectionUrl }}', true)"
-                                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm">
+                                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm"
+                                        @if($exam->starts_at && $exam->starts_at->isFuture()) disabled @endif>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
                                     Enter Fullscreen & Start
                                 </button>
@@ -74,7 +94,8 @@
                                 <span class="text-xs text-slate-400 dark:text-slate-500 italic">Complete previous section first</span>
                             @else
                                 <button onclick="openAckModal('{{ $sectionUrl }}', false)"
-                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm">
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-sm"
+                                        @if($exam->starts_at && $exam->starts_at->isFuture()) disabled @endif>
                                     {{ $index === 0 ? 'Start' : 'Open' }}
                                 </button>
                             @endif
@@ -96,6 +117,37 @@
                 window.location.href = url;
             }
         }
+        
+        // Countdown timer for future exam start
+        @if($exam->starts_at && $exam->starts_at->isFuture())
+        function updateCountdown() {
+            const startsAt = new Date('{{ $exam->starts_at->toISOString() }}');
+            const now = new Date();
+            const diff = startsAt.getTime() - now.getTime();
+            
+            if (diff <= 0) {
+                document.getElementById('countdown-display').textContent = '00:00:00';
+                // Enable buttons when countdown finishes
+                document.querySelectorAll('button:not(#ack-continue-btn)').forEach(btn => {
+                    btn.disabled = false;
+                });
+                clearInterval(countdownInterval);
+                return;
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('countdown-display').textContent = 
+                String(hours).padStart(2, '0') + ':' + 
+                String(minutes).padStart(2, '0') + ':' + 
+                String(seconds).padStart(2, '0');
+        }
+        
+        updateCountdown();
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        @endif
     </script>
     <div id="ack-modal" style="display:none; position:fixed; inset:0; z-index:60; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
         <div style="background:#fff; max-width:28rem; margin:auto; padding:1.25rem; border-radius:6px;">

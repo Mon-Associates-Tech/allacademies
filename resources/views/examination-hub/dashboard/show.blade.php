@@ -348,6 +348,38 @@
                                 </div>
                             @endforeach
                         </dl>
+
+                        <!-- Participant Mode Toggle Form -->
+                        <form action="{{ route('examination-hub.exams.participant-mode', $exam) }}" method="POST" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            @csrf
+                            @method('POST')
+                            <div class="flex items-center gap-4">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Participant Mode:</label>
+                                <div class="flex gap-2">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="participant_mode" value="general" 
+                                               {{ $exam->participant_mode === 'general' ? 'checked' : '' }}
+                                               class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+                                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">General</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="participant_mode" value="configured" 
+                                               {{ $exam->participant_mode === 'configured' ? 'checked' : '' }}
+                                               class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+                                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Configured</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="participant_mode" value="both" 
+                                               {{ $exam->participant_mode === 'both' ? 'checked' : '' }}
+                                               class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+                                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Both</span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="ml-4 px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500" style="border-radius: 2px;">
+                                    Update
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 

@@ -88,6 +88,23 @@ class ExamSettingsController extends Controller
         return back()->with('success', 'Proctoring settings updated.');
     }
 
+    // ─── Participant Mode ────────────────────────────────────────────────────
+
+    public function updateParticipantMode(Request $request, GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $data = $request->validate([
+            'participant_mode' => ['required', 'in:general,configured,both']
+        ]);
+
+        $exam->update([
+            'participant_mode' => $data['participant_mode']
+        ]);
+
+        return back()->with('success', 'Participant mode updated successfully.');
+    }
+
     public function updateViolationSettings(Request $request, GeneralExam $exam): RedirectResponse
     {
         $this->ensureOwnerAccess($exam);

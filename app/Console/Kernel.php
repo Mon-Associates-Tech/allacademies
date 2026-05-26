@@ -28,6 +28,11 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping();
 
+        // Auto-submit exam submissions that have exceeded their section time limits
+        $schedule->command('examination-hub:auto-submit-expired-sections')
+            ->everyMinute()
+            ->withoutOverlapping();
+
         // Generate recurring sessions daily
         $schedule->job(new \App\Jobs\GenerateRecurringSessionsJob)
             ->dailyAt('00:00')

@@ -186,26 +186,115 @@ class ExamSectionTaking extends Component
         $this->loadResponses();
     }
 
-    public function startSection(): void
+    protected function validateStartSection(): bool
     {
         $submission = $this->submission;
-        $sectionStartTimes = $submission->section_start_times ?? [];
-        $sectionKey = (string) $this->sectionId;
-
-        // Only set section start time when participant explicitly begins
-        if (! isset($sectionStartTimes[$sectionKey]) && $this->section->time_limit_minutes) {
-            $sectionStartTimes[$sectionKey] = now()->timestamp;
-            $submission->update(['section_start_times' => $sectionStartTimes]);
-
-            // Compute time remaining for this section
-            $this->timeRemaining = $this->section->time_limit_minutes * 60;
-        } elseif (! $this->section->time_limit_minutes) {
-            // Fallback to exam-wide remaining time
-            $remaining = $submission->getRemainingTime();
-            $this->timeRemaining = $remaining ?? ($this->exam->duration_in_minutes * 60);
+        
+        // Check if submission exists
+        if (!$submission) {
+            $this->addError('general', 'No valid submission found.');
+            return false;
         }
 
+        // Check if exam has already been submitted
+        if ($submission->submitted_at) {
+            $this->addError('general', 'This exam has already been submitted.');
+            return false;
+        }
+
+        // Check if section has already been started and completed
+        $sectionProgress = $submission->section_progress ?? [];
+        $sectionKey = (string) $this->sectionId;
+        
+        if (isset($sectionProgress[$sectionKey]) && $sectionProgress[$sectionKey] === 'completed') {
+            $this->addError('general', 'This section has already been completed.');
+            return false;
+        }
+
+        // Check if section time has already expired
+        $sectionStartTimes = $submission->section_start_times ?? [];
+        if ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
+            $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+            $endsAt = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
+            if (now()->greaterThanOrEqualTo($endsAt)) {
+                $this->addError('general', 'Section time limit has expired.');
+                return false;
+            }
+        }
+
+        // All validations passed
+        return true;
+    }
+
+    protected function getOrCreateSubmission(): ?GeneralExamSubmission
+    {
+        // This method should retrieve the current submission
+        // Since it's a property, we can just return it
+        return $this->submission;
+    }
+
+    protected function updateSectionProgress(string $status): void
+    {
+        $submission = $this->submission;
+        $sectionProgress = $submission->section_progress ?? [];
+        $sectionProgress[(string) $this->sectionId] = $status;
+        
+        // Update section start time if starting
+        $sectionStartTimes = $submission->section_start_times ?? [];
+        if ($status === 'started' && !isset($sectionStartTimes[(string) $this->sectionId])) {
+            $sectionStartTimes[(string) $this->sectionId] = now()->timestamp;
+        }
+        
+        $submission->update([
+            'section_progress' => $sectionProgress,
+            'section_start_times' => $sectionStartTimes,
+        ]);
+    }
+
+    protected function resetViolations(): void
+    {
+        // Reset any violations for this section if needed
+        $submission = $this->submission;
+        $proctoringLogs = $submission->proctoring_logs ?? [];
+        
+        // Clear any pending violations for this section
+        // Implementation depends on how violations are tracked
+    }
+
+    public function startSection(): void
+    {
+        if (!$this->validateStartSection()) {
+            return;
+        }
+
+        // Create or get existing submission
+        $this->submission = $this->getOrCreateSubmission();
+        
+        if (!$this->submission) {
+            $this->addError('general', 'Unable to start exam. Please refresh the page and try again.');
+            return;
+        }
+
+        // Record start time
+        $this->start_time = now();
+        
+        // Mark section as started
+        $this->updateSectionProgress('started');
+        
+        // Hide section info to show exam content
         $this->showSectionInfo = false;
+        
+        // Reset any previous violations for this section
+        $this->resetViolations();
+        
+        // Emit event to show exam content
+        $this->dispatch('section-started', 
+            sectionIndex: $this->sectionIndex,
+            submissionId: $this->submission->id
+        );
+        
+        // Also emit an event to show exam content regardless of fullscreen state
+        $this->dispatch('show-exam-content');
     }
 
     public function isQuestionAnswered(int $questionId): bool

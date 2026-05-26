@@ -157,6 +157,9 @@ class ExamTakingController extends Controller
             'responses' => $submission->responses ?? [],
             'proctoringEnabled' => (bool) $exam->proctoring_enabled,
             'proctoringSessionId' => session('exam_heartbeat_token'),
+            'sectionTitle' => $section->title,
+            'sectionTimeLimit' => $section->time_limit_minutes ? $section->time_limit_minutes * 60 : null,
+            'totalMarks' => $section->total_marks,
         ]);
     }
 

@@ -1,3 +1,27 @@
+{{-- Add the exam-specific scripts to the exam-scripts stack --}}
+@push('exam-scripts')
+    @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js'])
+    
+    <!-- Initialize exam sync functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extract exam and submission IDs from the Livewire component
+            const examId = @json($this->exam->id);
+            const submissionId = @json($this->submission->id);
+            const userId = @json(auth()->id());
+            
+            // Initialize exam sync if we have the required data
+            if (examId && submissionId && userId) {
+                const examSync = new window.ExamSessionSync(examId, submissionId, userId);
+                examSync.init();
+                
+                // Store reference globally for potential use by other components
+                window.examSync = examSync;
+            }
+        });
+    </script>
+@endpush
+
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950" style="font-family: 'Georgia', 'Times New Roman', serif;">
 
     {{-- ═══════════════════════════════════════════════════════════
