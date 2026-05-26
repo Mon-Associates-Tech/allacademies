@@ -94,6 +94,7 @@
     </script>
     @stack('scripts')
     
+    @stack('exam-scripts')
     @stack('exam-sync-scripts')
     @livewireScriptConfig
 </body>

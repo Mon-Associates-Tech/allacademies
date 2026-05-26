@@ -135,7 +135,7 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $exam->load(['sections' => fn ($q) => $q->orderBy('order')]);
+        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')]);
 
         $section = $exam->sections->get($sectionIndex);
 

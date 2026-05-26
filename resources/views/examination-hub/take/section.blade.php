@@ -294,14 +294,84 @@
         const endpoint          = @json(route('examination-hub.take.proctor.event', ['exam' => $exam]));
 
         if (proctoringEnabled && sessionId) {
-            // Initialize proctoring using the existing exam-proctor.js functionality
-            // Check if the global ExamProctor is available from exam-proctor.js
-            if (typeof window.ExamProctor !== 'undefined') {
-                console.log('Proctoring system ready via exam-proctor.js');
-            } else {
-                // Fallback: log a warning that proctoring may not be available
-                console.warn('Proctoring system not available. Make sure exam-proctor.js is loaded.');
-            }
+            // Configure the proctoring system BEFORE loading the script
+            window.ExamProctorConfig = {
+                eventUrl: endpoint,
+                csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
+                hardenedMode: @json($exam->hardened_mode ?? false),
+                requireFullscreen: @json($exam->require_fullscreen ?? false),
+                autoSubmitUrl: null // We'll handle submission via Livewire
+            };
         }
     </script>
+    
+    @if($proctoringEnabled ?? false)
+        @push('exam-scripts')
+            <script src="{{ asset('js/exam-proctor.js') }}"></script>
+        @endpush
+    @endif
+    
+    @push('exam-scripts')
+        <script src="{{ asset('js/exam-sync.js') }}"></script>
+    @endpush
+    
+    @push('exam-scripts')
+        <script>
+            // Initialize exam sync after DOM is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                // Only initialize if the exam sync class exists
+                if (typeof ExamSessionSync !== 'undefined') {
+                    const examId = @json($exam->id);
+                    const submissionId = @json($submission->id ?? null);
+                    const userId = @json(auth()->id());
+                    
+                    if (examId && submissionId) {
+                        window.examSync = new ExamSessionSync(examId, submissionId, userId);
+                        window.examSync.init();
+                        
+                        // Set up event listeners to update sync when responses change
+                        Livewire.on('examDataSyncing', () => {
+                            if (window.examSync) {
+                                window.examSync.syncImmediate();
+                            }
+                        });
+                    }
+                }
+                
+                // Initialize exam heartbeat after exam sync
+                if (typeof ExamHeartbeat !== 'undefined') {
+                    const examId = @json($exam->id);
+                    const submissionId = @json($submission->id ?? null);
+                    
+                    if (examId && submissionId) {
+                        window.examHeartbeat = new ExamHeartbeat({
+                            examId: examId,
+                            heartbeatUrl: "{{ route('examination-hub.take.heartbeat', ['exam' => $exam]) }}",
+                            initUrl: "{{ route('examination-hub.take.heartbeat.init', ['exam' => $exam]) }}",
+                            acknowledgeUrl: "{{ route('examination-hub.take.heartbeat.acknowledge-warning', ['exam' => $exam]) }}",
+                            interval: 15000, // 15 seconds
+                            
+                            onWarning: function(warning) {
+                                console.log('Warning received:', warning);
+                                // Show warning modal or notification
+                                alert('Warning: ' + warning.message);
+                            },
+                            
+                            onTerminated: function(data) {
+                                console.log('Session terminated:', data);
+                                // Redirect to completion page
+                                window.location.href = data.redirect || "{{ route('examination-hub.take.completed', $exam) }}";
+                            },
+                            
+                            onMessage: function(message) {
+                                console.log('Admin message:', message);
+                                // Show admin message
+                                alert('Message from admin: ' + message);
+                            }
+                        });
+                    }
+                }
+            });
+        </script>
+    @endpush
 </x-layouts.exam>

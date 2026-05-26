@@ -8,7 +8,7 @@ class ExamSessionSync {
         this.examId = examId;
         this.submissionId = submissionId;
         this.userId = userId;
-        this.syncEndpoint = `/examinations-hub/take/${examId}/sync`;
+        this.syncEndpoint = `/examinations/${examId}`;
         this.heartbeatInterval = null;
         this.lastSyncTime = Date.now();
         this.syncDebounceTimer = null;
@@ -55,16 +55,13 @@ class ExamSessionSync {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                 },
                 body: JSON.stringify({
-                    exam_id: this.examId,
-                    submission_id: this.submissionId,
-                    user_id: this.userId,
                     timestamp: Date.now(),
-                    userAgent: navigator.userAgent,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    exam_id: this.examId,
+                    submission_id: this.submissionId
                 })
             });
         } catch (error) {
-            console.warn('Heartbeat failed:', error);
+            console.error('Heartbeat failed:', error);
         }
     }
 

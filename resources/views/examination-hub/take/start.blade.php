@@ -181,4 +181,26 @@
         }
         function closeAckModal() { document.getElementById('ack-modal').style.display = 'none'; }
     </script>
+
+    <script>
+        // Initialize proctoring if enabled for this exam
+        const proctoringEnabled = @json($proctoringEnabled ?? false);
+        
+        if (proctoringEnabled) {
+            // Configure the proctoring system BEFORE loading the script
+            window.ExamProctorConfig = {
+                eventUrl: @json(route('examination-hub.take.proctor.event', ['exam' => $exam])),
+                csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
+                hardenedMode: @json($exam->hardened_mode ?? false),
+                requireFullscreen: @json($exam->require_fullscreen ?? false),
+                autoSubmitUrl: null // We'll handle submission via Livewire
+            };
+        }
+    </script>
+
+    @if($proctoringEnabled ?? false)
+        @push('exam-scripts')
+            <script src="{{ asset('js/exam-proctor.js') }}"></script>
+        @endpush
+    @endif
 </x-layouts.exam>
