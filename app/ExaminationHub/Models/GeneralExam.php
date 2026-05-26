@@ -76,7 +76,7 @@ class GeneralExam extends Model
             'is_randomized' => 'boolean',
             'results_released' => 'boolean',
             'show_correct_answers' => 'boolean',
-            'show_correct_answers' => 'boolean',
+            'show_score_breakdown' => 'boolean',
             'send_reminders' => 'boolean',
             'reminder_sent' => 'boolean',
             'proctoring_enabled' => 'boolean',

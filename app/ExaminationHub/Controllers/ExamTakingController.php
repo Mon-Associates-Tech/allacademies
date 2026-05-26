@@ -224,27 +224,94 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        DB::transaction(function () use ($submission) {
+        // Check if the submission has any responses saved
+        $hasResponses = !empty($submission->responses) && is_array($submission->responses) && count($submission->responses) > 0;
+
+        DB::transaction(function () use ($submission, $hasResponses) {
             $timeTaken = $submission->started_at
                 ? (int) $submission->started_at->diffInMinutes(now())
                 : 0;
 
-            $submission->update([
+            // Ensure that the submission status is properly updated
+            $updateData = [
                 'submitted_at' => now(),
                 'time_taken_minutes' => $timeTaken,
                 'status' => GeneralExamSubmission::STATUS_SUBMITTED,
-            ]);
+            ];
+
+            // If there are no responses, log this as a potential issue for review
+            if (!$hasResponses) {
+                $updateData['requires_manual_review'] = true;
+                $updateData['teacher_feedback'] = 'No responses were recorded for this submission. May require manual review.';
+            }
+
+            $submission->update($updateData);
 
             $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submission->id)->first();
             $heartbeat?->markCompleted();
         });
 
+        // Attempt to save any pending responses without blocking submission
+        try {
+            $this->savePendingResponses($request, $exam, $submission);
+        } catch (\Exception $e) {
+            \Log::error("Failed to save pending responses before submission: " . $e->getMessage());
+            // Continue with submission even if saving fails
+        }
+
         // Dispatch grading as a background job — don't block the response
+        // Even if no responses were saved, the grading job will handle it appropriately
         $this->gradingService->dispatchGrading($submission);
 
         session()->forget(['exam_submission_id', 'exam_participant_data', 'exam_heartbeat_token']);
 
         return redirect()->route('examination-hub.take.completed', $exam);
+    }
+
+    /**
+     * Save any pending responses in the final submission request.
+     */
+    private function savePendingResponses(Request $request, GeneralExam $exam, GeneralExamSubmission $submission): void
+    {
+        $data = $request->validate([
+            'responses' => ['sometimes', 'array'],
+        ]);
+
+        if (empty($data['responses']) || !is_array($data['responses'])) {
+            return;
+        }
+
+        $responses = $submission->responses ?? [];
+
+        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
+
+        foreach ($data['responses'] as $questionId => $response) {
+            if (!is_numeric($questionId)) {
+                continue;
+            }
+
+            $questionId = (int)$questionId;
+
+            // Ensure the question belongs to the exam
+            $found = false;
+            foreach ($exam->sections as $section) {
+                if ($section->questions->contains('id', $questionId)) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                continue;
+            }
+
+            $responses[$questionId] = [
+                'response' => (string)$response,
+                'answered_at' => now()->toIso8601String(),
+            ];
+        }
+
+        $submission->update(['responses' => $responses]);
     }
 
     public function completed(GeneralExam $exam): View
