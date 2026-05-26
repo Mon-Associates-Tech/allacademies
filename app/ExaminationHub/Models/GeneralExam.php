@@ -76,7 +76,7 @@ class GeneralExam extends Model
             'is_randomized' => 'boolean',
             'results_released' => 'boolean',
             'show_correct_answers' => 'boolean',
-            'show_score_breakdown' => 'boolean',
+            'show_correct_answers' => 'boolean',
             'send_reminders' => 'boolean',
             'reminder_sent' => 'boolean',
             'proctoring_enabled' => 'boolean',
@@ -250,6 +250,7 @@ class GeneralExam extends Model
         return $this->submissions()
             ->where('participant_type', $participantType)
             ->where('participant_id', $participantId)
+            ->whereNotNull('submitted_at') // Only count actual submissions, not just created records
             ->count();
     }
 

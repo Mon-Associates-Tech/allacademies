@@ -135,7 +135,7 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')]);
+        $exam->load(['sections' => fn ($q) => $q->orderBy('order')]);
 
         $section = $exam->sections->get($sectionIndex);
 
@@ -284,6 +284,24 @@ class ExamTakingController extends Controller
             $pid = ! empty($data['email']) ? abs(crc32($data['email'])) : null;
         }
 
+        // First, check if there's an existing submission that hasn't been started yet
+        // If so, we can reuse that submission instead of creating a new one
+        $existingSubmission = GeneralExamSubmission::where([
+            'general_exam_id' => $exam->id,
+            'participant_type' => $type,
+            'participant_id' => $pid,
+        ])
+        ->whereNull('submitted_at') // Not submitted yet
+        ->where('status', GeneralExamSubmission::STATUS_NOT_STARTED) // Not started
+        ->first();
+
+        // If we find an existing submission that was created but never started, 
+        // we can reuse it (meaning authentication failed previously)
+        if ($existingSubmission) {
+            return $existingSubmission;
+        }
+
+        // Check if the participant can attempt the exam based on max attempts
         if (! $exam->canParticipantAttempt($type, $pid)) {
             return null;
         }
