@@ -353,20 +353,73 @@
                             
                             onWarning: function(warning) {
                                 console.log('Warning received:', warning);
-                                // Show warning modal or notification
-                                alert('Warning: ' + warning.message);
+                                // Use default warning handler (modal popup)
+                                window.examHeartbeat.defaultWarningHandler(warning);
                             },
                             
                             onTerminated: function(data) {
                                 console.log('Session terminated:', data);
-                                // Redirect to completion page
-                                window.location.href = data.redirect || "{{ route('examination-hub.take.completed', $exam) }}";
+                                // Use default termination handler (modal with redirect)
+                                window.examHeartbeat.defaultTerminatedHandler(data);
                             },
                             
                             onMessage: function(message) {
                                 console.log('Admin message:', message);
-                                // Show admin message
-                                alert('Message from admin: ' + message);
+                                // Use default message handler (toast notification)
+                                window.examHeartbeat.defaultMessageHandler(message);
+                            },
+                            
+                            onForceSubmit: function(data) {
+                                console.log('Force submit received:', data);
+                                // Show force submit notification and redirect
+                                const modal = document.createElement('div');
+                                modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
+                                modal.innerHTML = `
+                                    <div class="bg-white rounded-lg w-full max-w-md p-6 text-center">
+                                        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-red-100">
+                                            <svg class="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Exam Submitted</h3>
+                                        <p class="text-slate-600 mb-2">Your exam has been submitted by the administrator.</p>
+                                        <p class="text-sm text-slate-500 mb-6">Reason: ${data.message || 'Not specified'}</p>
+                                        <p class="text-sm text-slate-500">Redirecting to results...</p>
+                                    </div>
+                                `;
+                                document.body.appendChild(modal);
+                                
+                                // Redirect after 3 seconds
+                                setTimeout(() => {
+                                    window.location.href = "{{ route('examination-hub.take.completed', $exam) }}";
+                                }, 3000);
+                            },
+                            
+                            onTimeExtended: function(additionalMinutes) {
+                                console.log('Time extended by:', additionalMinutes, 'minutes');
+                                // Show time extension toast
+                                const toast = document.createElement('div');
+                                toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-green-600 text-white rounded-lg shadow-lg';
+                                toast.innerHTML = `
+                                    <div class="flex items-start gap-3">
+                                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold">Time Extended</p>
+                                            <p class="text-sm opacity-90">Your exam time has been extended by ${additionalMinutes} minutes.</p>
+                                        </div>
+                                        <button onclick="this.closest('.fixed').remove();" class="ml-auto text-white/70 hover:text-white">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                `;
+                                document.body.appendChild(toast);
+                                
+                                // Auto remove after 8 seconds
+                                setTimeout(() => toast.remove(), 8000);
                             }
                         });
                     }

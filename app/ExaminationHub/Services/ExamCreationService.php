@@ -33,7 +33,16 @@ class ExamCreationService implements ExamCreationServiceInterface
                 'result_visibility' => 'manual_release',
             ]);
 
-            foreach (($payload['sections'] ?? []) as $index => $section) {
+            // Filter out empty/blank sections from payload before creating
+            $validSections = collect($payload['sections'] ?? [])
+                ->filter(function ($section) {
+                    // Require at least a title for new sections
+                    return !empty($section['title']);
+                })
+                ->values()
+                ->toArray();
+
+            foreach ($validSections as $index => $section) {
                 $exam->sections()->create([
                     'title' => $section['title'],
                     'instructions' => $section['instructions'] ?? null,
@@ -83,13 +92,73 @@ class ExamCreationService implements ExamCreationServiceInterface
                 ->values();
 
             // Delete sections that are no longer in the payload
-            // Only delete sections that have NO submissions referencing their questions
-            $exam->sections()
+            // Only delete sections that have NO submissions with responses for their questions
+            $sectionsToDelete = $exam->sections()
                 ->whereNotIn('id', $incomingSectionIds)
-                ->whereDoesntHave('questions', fn ($q) => $q->whereHas('submissionResponses'))
-                ->delete();
+                ->get();
 
-            foreach (($payload['sections'] ?? []) as $index => $sectionData) {
+            foreach ($sectionsToDelete as $section) {
+                // Check if any submission has responses for questions in this section
+                $questionIds = $section->questions->pluck('id')->toArray();
+                
+                if (empty($questionIds)) {
+                    // No questions in this section, safe to delete
+                    $section->delete();
+                    continue;
+                }
+
+                // Check if any submission has responses for these question IDs
+                $hasResponses = \App\ExaminationHub\Models\GeneralExamSubmission::where('general_exam_id', $exam->id)
+                    ->whereNotNull('responses')
+                    ->get()
+                    ->contains(function ($submission) use ($questionIds) {
+                        $responses = $submission->responses ?? [];
+                        return !empty(array_intersect(array_keys($responses), $questionIds));
+                    });
+
+                // Only delete if no submissions have responses for these questions
+                if (!$hasResponses) {
+                    $section->delete();
+                }
+            }
+
+            // Filter out empty/blank sections from payload before processing
+            $originalCount = count($payload['sections'] ?? []);
+            $validSections = collect($payload['sections'] ?? [])
+                ->filter(function ($sectionData, $index) {
+                    // Keep sections that have an ID (existing sections)
+                    if (!empty($sectionData['id'])) {
+                        return true;
+                    }
+                    
+                    // For new sections, require at least a title
+                    // Also filter out sections that are just blank/default templates
+                    if (empty($sectionData['title'])) {
+                        \Illuminate\Support\Facades\Log::warning('Filtering out section without title', ['index' => $index, 'data' => $sectionData]);
+                        return false;
+                    }
+                    
+                    return true;
+                })
+                ->values()
+                ->toArray();
+            
+            if (count($validSections) !== $originalCount) {
+                \Illuminate\Support\Facades\Log::info('Filtered sections', [
+                    'original_count' => $originalCount,
+                    'filtered_count' => count($validSections),
+                    'removed' => $originalCount - count($validSections),
+                ]);
+            }
+
+            foreach ($validSections as $index => $sectionData) {
+                \Illuminate\Support\Facades\Log::debug('Processing section', [
+                    'index' => $index,
+                    'has_id' => !empty($sectionData['id']),
+                    'id' => $sectionData['id'] ?? null,
+                    'title' => $sectionData['title'],
+                ]);
+
                 $attributes = [
                     'title' => $sectionData['title'],
                     'instructions' => $sectionData['instructions'] ?? null,
@@ -108,8 +177,10 @@ class ExamCreationService implements ExamCreationServiceInterface
                 ];
 
                 if (! empty($sectionData['id'])) {
+                    \Illuminate\Support\Facades\Log::info('Updating existing section', ['section_id' => $sectionData['id']]);
                     $exam->sections()->where('id', $sectionData['id'])->update($attributes);
                 } else {
+                    \Illuminate\Support\Facades\Log::info('Creating new section', ['title' => $sectionData['title']]);
                     $exam->sections()->create($attributes);
                 }
             }

@@ -28,6 +28,10 @@ class ExamQuestionPersistenceService
 
     private function persistQuestionsForSection(GeneralExamSection $section, array $questions): void
     {
+        // Get existing question IDs for this section
+        $existingQuestionIds = $section->questions->pluck('id')->toArray();
+        $incomingQuestionIds = [];
+        
         foreach ($questions as $order => $questionData) {
             // Skip non-array items (hardened mode flags, etc.)
             if (!is_array($questionData)) {
@@ -44,7 +48,7 @@ class ExamQuestionPersistenceService
                 continue;
             }
 
-            $section->questions()->create([
+            $attributes = [
                 'general_exam_id' => $section->general_exam_id,
                 'type' => $this->normalizeQuestionType($questionData['type'] ?? 'multiple_choice'),
                 'question' => $questionData['question'] ?? '',
@@ -58,6 +62,32 @@ class ExamQuestionPersistenceService
                 'order' => $order + 1,
                 'ai_generated' => $questionData['ai_generated'] ?? false,
                 'is_edited' => $questionData['is_edited'] ?? false,
+            ];
+
+            // Check if this is an existing question (has ID)
+            if (!empty($questionData['id'])) {
+                $questionId = (int) $questionData['id'];
+                $incomingQuestionIds[] = $questionId;
+                
+                // Update existing question
+                $section->questions()->where('id', $questionId)->update($attributes);
+                Log::debug('Updated existing question', ['question_id' => $questionId, 'section_id' => $section->id]);
+            } else {
+                // Create new question
+                $newQuestion = $section->questions()->create($attributes);
+                $incomingQuestionIds[] = $newQuestion->id;
+                Log::debug('Created new question', ['question_id' => $newQuestion->id, 'section_id' => $section->id]);
+            }
+        }
+
+        // Delete questions that are no longer in the incoming data
+        $questionsToDelete = array_diff($existingQuestionIds, $incomingQuestionIds);
+        if (!empty($questionsToDelete)) {
+            $section->questions()->whereIn('id', $questionsToDelete)->delete();
+            Log::info('Deleted orphaned questions', [
+                'section_id' => $section->id,
+                'deleted_count' => count($questionsToDelete),
+                'deleted_ids' => $questionsToDelete,
             ]);
         }
 

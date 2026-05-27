@@ -1,6 +1,26 @@
 @php
     $seed = $formData ?? old();
-    $seedSections = $seed['sections'] ?? [['title'=>'Section A','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+    
+    // When editing, use formData sections; when creating new or after validation error, use old() or default
+    if (!empty($seed['sections']) && is_array($seed['sections'])) {
+        // Filter out completely empty sections that might come from old() or defaults
+        $seedSections = array_values(array_filter($seed['sections'], function($section) {
+            // Keep sections with IDs (existing sections)
+            if (!empty($section['id'])) {
+                return true;
+            }
+            // For new sections, require at least a title
+            return !empty($section['title']);
+        }));
+        
+        // If filtering resulted in no sections, add one default
+        if (empty($seedSections)) {
+            $seedSections = [['title'=>'','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+        }
+    } else {
+        // No sections in seed, use default
+        $seedSections = [['title'=>'','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+    }
 
     // Set default dates if not provided
     $defaultStartsAt = $seed['starts_at'] ?? now()->format('Y-m-d\TH:i');
