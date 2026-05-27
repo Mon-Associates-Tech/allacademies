@@ -195,7 +195,7 @@
         </div>
 
         {{-- ── ACADEMIC CLASSIFICATION ── --}}
-        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+        <div class="bg-white dark:bg-slate-900"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                 <div class="w-1 h-5" style="background: linear-gradient(180deg, #059669, #10b981); border-radius: 1px;"></div>
