@@ -44,7 +44,9 @@
         </div>
 
         <!-- Scrollable content area -->
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar">
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar hide-scrollbar"
+             x-init="$nextTick(() => { const active = $el.querySelector('.bg-violet-500'); if (active) active.scrollIntoView({ block: 'center', behavior: 'instant' }); })"
+        >
             <div class="lg:pt-6">
                 <div :class="$store.sidebar.open ? 'w-16 h-16' : 'w-12 h-12'" class="mx-auto mb-2">
                     <x-avatar
