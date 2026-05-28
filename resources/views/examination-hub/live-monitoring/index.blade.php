@@ -107,6 +107,12 @@
                     <span class="text-xs text-slate-400" x-text="'(' + filteredParticipants.length + ')'"></span>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button @click="openMessageAllModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                        <x-heroicon-o-chat-bubble-left-right class="w-4 h-4" />
+                        Message All Active
+                    </button>
                     <input type="text"
                            x-model="searchQuery"
                            placeholder="Search participants..."
@@ -327,6 +333,52 @@
             </div>
         </template>
 
+        {{-- ── MESSAGE ALL MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showMessageAllModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showMessageAllModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-chat-bubble-left-right class="w-5 h-5 text-blue-500" />
+                            Message All Active Participants
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">This message will be sent to all currently active participants</p>
+                    </div>
+                    <div class="px-6 py-4">
+                        <textarea x-model="messageAllText"
+                                  rows="3"
+                                  placeholder="Type your message to all participants..."
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-blue-500"
+                                  style="border-radius: 2px;"></textarea>
+                        <p class="text-xs text-slate-500 mt-2" x-text="'Active participants: ' + stats.active"></p>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showMessageAllModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="sendMessageToAll()"
+                                :disabled="!messageAllText.trim() || stats.active === 0"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            Send to All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
         {{-- ── WARNING MODAL ── --}}
         <template x-teleport="body">
             <div x-show="showWarningModal"
@@ -390,9 +442,11 @@
 
                 // Modals
                 showMessageModal: false,
+                showMessageAllModal: false,
                 showWarningModal: false,
                 selectedParticipant: null,
                 messageText: '',
+                messageAllText: '',
                 warningText: '',
 
                 get statsCards() {
@@ -531,6 +585,11 @@
                     this.showMessageModal = true;
                 },
 
+                openMessageAllModal() {
+                    this.messageAllText = '';
+                    this.showMessageAllModal = true;
+                },
+
                 openWarningModal(participant) {
                     this.selectedParticipant = participant;
                     this.warningText = '';
@@ -572,6 +631,35 @@
                         this.warningText = '';
                     } catch (error) {
                         console.error('Failed to send warning:', error);
+                    }
+                },
+
+                async sendMessageToAll() {
+                    if (!this.messageAllText.trim()) return;
+
+                    try {
+                        const response = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/message-all') }}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: JSON.stringify({ message: this.messageAllText }),
+                        });
+
+                        const data = await response.json();
+                        
+                        this.showMessageAllModal = false;
+                        this.messageAllText = '';
+                        
+                        // Show success message
+                        alert(`Message sent successfully!\n\nDelivered to: ${data.sent_count} participants\nFailed: ${data.failed_count} participants`);
+                        
+                        // Refresh data
+                        this.refreshData();
+                    } catch (error) {
+                        console.error('Failed to send message to all:', error);
+                        alert('Failed to send message to all participants');
                     }
                 },
 

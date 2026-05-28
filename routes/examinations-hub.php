@@ -74,10 +74,14 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
         // Admin actions
         Route::post('/warn/{submission}', [LiveMonitoringController::class, 'warn'])->name('warn');
         Route::post('/message/{submission}', [LiveMonitoringController::class, 'message'])->name('message');
+        Route::post('/message-all', [LiveMonitoringController::class, 'messageAll'])->name('message-all');
         Route::post('/terminate/{submission}', [LiveMonitoringController::class, 'terminate'])->name('terminate');
         Route::post('/force-submit/{submission}', [LiveMonitoringController::class, 'forceSubmit'])->name('force-submit');
         Route::post('/extend-time/{submission}', [LiveMonitoringController::class, 'extendTime'])->name('extend-time');
         Route::post('/clear-warning/{submission}', [LiveMonitoringController::class, 'clearWarning'])->name('clear-warning');
+        
+        // Audit: View message history
+        Route::get('/messages/{submission}', [LiveMonitoringController::class, 'getMessageHistory'])->name('messages.history');
     });
 
     Route::middleware('can:viewAny,App\ExaminationHub\Models\GradeScale')->group(function () {
