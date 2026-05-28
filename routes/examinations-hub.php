@@ -15,6 +15,7 @@ use App\ExaminationHub\Controllers\StudentPerformanceController;
 use App\ExaminationHub\Controllers\SubmissionController;
 use App\ExaminationHub\Controllers\ExamSettingsController;
 use App\Http\Middleware\EnsureExamSession;
+use App\Http\Middleware\ValidateExamSession;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examination-hub.')->group(function () {
@@ -100,9 +101,10 @@ Route::prefix('examinations')->name('examination-hub.take.')->group(function () 
     Route::get('/join', [ExamTakingController::class, 'join'])->name('join');
     Route::post('/authenticate', [ExamTakingController::class, 'authenticate'])->name('authenticate');
 
-    Route::middleware([EnsureExamSession::class])->group(function () {
+    Route::middleware([EnsureExamSession::class, ValidateExamSession::class])->group(function () {
         Route::get('/{exam}/start', [ExamTakingController::class, 'start'])->name('start');
         Route::get('/{exam}/section/{sectionIndex}', [ExamTakingController::class, 'section'])->name('section');
+        Route::get('/{exam}/review', [ExamTakingController::class, 'review'])->name('review');
         Route::post('/{exam}/save-response', [ExamTakingController::class, 'saveResponse'])
             ->middleware('throttle:60,1')
             ->name('save-response');

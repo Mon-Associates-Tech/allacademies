@@ -1,6 +1,6 @@
 <x-layouts.exam>
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-950">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+    <div class="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 overflow-y-auto">
+        <div class="w-full max-w-5xl py-8">
             <div class="flex items-center justify-end mb-4">
                 <x-snippets.theme-toggle />
             </div>

@@ -165,6 +165,9 @@ class ExamSectionTaking extends Component
         ];
 
         $submission->update(['responses' => $savedResponses]);
+        
+        // Emit event for JavaScript auto-save tracking
+        $this->dispatch('responseUpdated', questionId: $key, response: $value);
     }
 
     public function toggleFlagQuestion(int $questionId): void

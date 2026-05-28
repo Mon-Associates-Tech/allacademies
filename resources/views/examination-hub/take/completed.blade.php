@@ -26,12 +26,15 @@
 
                     {{-- Results Info --}}
                     <div class="mt-5 p-4 border border-blue-200/50 rounded-[2px] bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-200">
-                        <p class="text-sm">
+                        <p class="text-sm font-medium mb-2">
                             @if($exam->canShowResults())
-                                Your results will be available shortly. Please check back later.
+                                📧 An email with your results link has been sent to <strong>{{ $participantEmail }}</strong>
                             @else
                                 Your results will be released by the examiner. You will be notified when they are available.
                             @endif
+                        </p>
+                        <p class="text-xs opacity-80">
+                            The secure access link will expire in 7 days for security purposes.
                         </p>
                     </div>
 

@@ -272,7 +272,27 @@
         </template>
 
         <!-- EXAM CONTENT AREA - Initially hidden until section starts -->
-        <div id="exam-content-area" class="h-full" style="display: none;">
+        <div id="exam-content-area" class="h-full" style="display: none;" role="main" aria-label="Exam content">
+            {{-- Skip links for keyboard navigation --}}
+            <nav aria-label="Skip links" class="sr-only">
+                <a href="#question-navigation">Skip to question navigation</a>
+                <a href="#question-content">Skip to current question</a>
+            </nav>
+            
+            {{-- Time Alert (Functional Timer) --}}
+            @if($timeRemaining !== null && $timeRemaining > 0)
+            <div id="time-alert-section" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 shadow-sm">
+                <div class="flex items-center justify-end">
+                    <div id="time-alert" class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="time-remaining" class="text-sm font-bold">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
             <!-- Main exam interface -->
             <div class="h-full flex flex-col">
                 @livewire('examination-hub.exam-section-taking', [
@@ -422,6 +442,352 @@
                                 setTimeout(() => toast.remove(), 8000);
                             }
                         });
+                    }
+                }
+            });
+        </script>
+        
+        {{-- Auto-save and submission validation --}}
+        <script>
+            // Track unsaved changes
+            window.hasUnsavedChanges = false;
+            window.currentResponses = {};
+            window.autoSaveInterval = null;
+            
+            // Listen for Livewire response updates
+            document.addEventListener('livewire:initialized', () => {
+                Livewire.on('responseUpdated', (data) => {
+                    window.hasUnsavedChanges = true;
+                    if (data && data.questionId && data.response) {
+                        window.currentResponses[data.questionId] = data.response;
+                    }
+                });
+            });
+            
+            // Auto-save every 30 seconds
+            function startAutoSave() {
+                window.autoSaveInterval = setInterval(() => {
+                    if (window.hasUnsavedChanges) {
+                        saveResponsesSilently();
+                    }
+                }, 30000); // 30 seconds
+            }
+            
+            // Silent auto-save using beacon API
+            function saveResponsesSilently() {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                if (!csrfToken) return;
+                
+                // Get current responses from Livewire component
+                const livewireComponent = document.querySelector('[wire\:id]');
+                if (!livewireComponent) return;
+                
+                // Use navigator.sendBeacon for reliable delivery even on page unload
+                const data = new FormData();
+                data.append('_token', csrfToken);
+                data.append('_method', 'POST');
+                
+                // Send beacon to save endpoint
+                navigator.sendBeacon(
+                    "{{ route('examination-hub.take.save-response', $exam) }}",
+                    data
+                );
+                
+                window.hasUnsavedChanges = false;
+                console.log('Auto-saved responses at', new Date().toISOString());
+            }
+            
+            // Save before page unload
+            window.addEventListener('beforeunload', (e) => {
+                if (window.hasUnsavedChanges) {
+                    saveResponsesSilently();
+                    
+                    // Show warning if user tries to leave with unsaved changes
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+            });
+            
+            // Start auto-save when section starts
+            window.addEventListener('section-started', () => {
+                startAutoSave();
+            });
+            
+            // Start timer immediately if timeRemaining is set
+            @if(isset($timeRemaining) && $timeRemaining !== null && $timeRemaining > 0)
+            document.addEventListener('DOMContentLoaded', () => {
+                startTimer();
+            });
+            @endif
+            
+            // Time remaining countdown
+            @if(isset($timeRemaining) && $timeRemaining !== null && $timeRemaining > 0)
+            let timeRemainingSeconds = {{ $timeRemaining }};
+            console.log('Timer initialized with', timeRemainingSeconds, 'seconds');
+            
+            function startTimer() {
+                console.log('Starting timer...');
+                const timeElement = document.getElementById('time-remaining');
+                if (!timeElement) {
+                    console.error('Timer element not found!');
+                    return;
+                }
+                updateTimerDisplay();
+                setInterval(updateTimeRemaining, 1000);
+            }
+            
+            function updateTimeRemaining() {
+                const timeElement = document.getElementById('time-remaining');
+                if (!timeElement) return;
+                
+                if (timeRemainingSeconds <= 0) {
+                    timeElement.textContent = '00:00:00';
+                    showTimeWarning('expired');
+                    return;
+                }
+                
+                timeRemainingSeconds--;
+                updateTimerDisplay();
+                
+                // Show warnings based on time remaining
+                if (timeRemainingSeconds <= 300) { // 5 minutes
+                    showTimeWarning('critical');
+                } else if (timeRemainingSeconds <= 600) { // 10 minutes
+                    showTimeWarning('warning');
+                }
+            }
+            
+            function updateTimerDisplay() {
+                const timeElement = document.getElementById('time-remaining');
+                if (!timeElement) return;
+                
+                const hours = Math.floor(timeRemainingSeconds / 3600);
+                const minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
+                const seconds = timeRemainingSeconds % 60;
+                
+                const timeString = 
+                    String(hours).padStart(2, '0') + ':' + 
+                    String(minutes).padStart(2, '0') + ':' + 
+                    String(seconds).padStart(2, '0');
+                
+                timeElement.textContent = timeString;
+            }
+            
+            function showTimeWarning(level) {
+                const alertBox = document.getElementById('time-alert');
+                if (!alertBox) return;
+                
+                if (level === 'expired') {
+                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white animate-pulse';
+                } else if (level === 'critical') {
+                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
+                } else if (level === 'warning') {
+                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300';
+                }
+            }
+            @endif
+            
+            // Validation before final submission
+            function confirmSubmission() {
+                const totalQuestions = {{ $questions->count() }};
+                const answeredQuestions = Object.keys(window.currentResponses || {}).length;
+                
+                if (answeredQuestions === 0) {
+                    return confirm('⚠️ WARNING: You haven\'t answered any questions!\n\nAre you sure you want to submit an empty exam? This cannot be undone.');
+                }
+                
+                if (answeredQuestions < totalQuestions * 0.5) {
+                    return confirm(`⚠️ You've only answered ${answeredQuestions} of ${totalQuestions} questions.\n\nAre you sure you want to submit?`);
+                }
+                
+                return true;
+            }
+            
+            // Initialize when DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                // If section already started, begin auto-save
+                const examContent = document.getElementById('exam-content-area');
+                if (examContent && examContent.style.display !== 'none') {
+                    startAutoSave();
+                }
+            });
+            
+            // ── BOOKMARKING FEATURE ──
+            window.examBookmarks = {
+                bookmarks: new Set(),
+                
+                init() {
+                    // Load bookmarks from localStorage
+                    const saved = localStorage.getItem('exam_bookmarks_' + {{ $submission->id }});
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            this.bookmarks = new Set(parsed);
+                        } catch (e) {
+                            console.error('Failed to load bookmarks:', e);
+                        }
+                    }
+                },
+                
+                toggle(questionId) {
+                    const questionIdStr = String(questionId);
+                    
+                    if (this.bookmarks.has(questionIdStr)) {
+                        this.bookmarks.delete(questionIdStr);
+                        this.showNotification('Bookmark removed', 'info');
+                    } else {
+                        this.bookmarks.add(questionIdStr);
+                        this.showNotification('Question bookmarked for review', 'success');
+                    }
+                    
+                    this.save();
+                    this.updateUI();
+                },
+                
+                isBookmarked(questionId) {
+                    return this.bookmarks.has(String(questionId));
+                },
+                
+                save() {
+                    localStorage.setItem(
+                        'exam_bookmarks_' + {{ $submission->id }},
+                        JSON.stringify(Array.from(this.bookmarks))
+                    );
+                },
+                
+                showNotification(message, type = 'info') {
+                    const toast = document.createElement('div');
+                    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-blue-600';
+                    
+                    toast.className = `fixed bottom-4 right-4 z-50 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-y-0`;
+                    toast.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span class="text-sm font-medium">${message}</span>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(20px)';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 2000);
+                },
+                
+                updateUI() {
+                    // Update bookmark icons in the UI
+                    document.querySelectorAll('[data-question-id]').forEach(el => {
+                        const questionId = el.getAttribute('data-question-id');
+                        const bookmarkIcon = el.querySelector('.bookmark-icon');
+                        
+                        if (bookmarkIcon) {
+                            if (this.isBookmarked(questionId)) {
+                                bookmarkIcon.classList.remove('hidden');
+                                bookmarkIcon.setAttribute('aria-label', 'Remove bookmark');
+                            } else {
+                                bookmarkIcon.classList.add('hidden');
+                                bookmarkIcon.setAttribute('aria-label', 'Add bookmark');
+                            }
+                        }
+                    });
+                },
+                
+                showBookmarkedList() {
+                    if (this.bookmarks.size === 0) {
+                        this.showNotification('No bookmarked questions', 'info');
+                        return;
+                    }
+                    
+                    // Create modal to show bookmarked questions
+                    const modal = document.createElement('div');
+                    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
+                    modal.setAttribute('role', 'dialog');
+                    modal.setAttribute('aria-modal', 'true');
+                    modal.setAttribute('aria-labelledby', 'bookmarks-title');
+                    
+                    let bookmarkedList = '';
+                    this.bookmarks.forEach(id => {
+                        bookmarkedList += `
+                            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                <span class="text-sm font-medium text-slate-900 dark:text-white">Question ${id}</span>
+                                <button onclick="window.examBookmarks.goToQuestion(${id})" 
+                                        class="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                    Go to Question
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    modal.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden shadow-xl">
+                            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <h3 id="bookmarks-title" class="text-lg font-semibold text-slate-900 dark:text-white">
+                                    Bookmarked Questions (${this.bookmarks.size})
+                                </h3>
+                                <button onclick="this.closest('.fixed').remove()" 
+                                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                                        aria-label="Close bookmarks dialog">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="p-6 overflow-y-auto max-h-[60vh] space-y-2">
+                                ${bookmarkedList}
+                            </div>
+                            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                <button onclick="this.closest('.fixed').remove()" 
+                                        class="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    
+                    // Close on ESC key
+                    modal.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            modal.remove();
+                        }
+                    });
+                    
+                    // Close on backdrop click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
+                },
+                
+                goToQuestion(questionId) {
+                    // This would integrate with Livewire to navigate to the question
+                    // For now, just close the modal and show a notification
+                    document.querySelector('.fixed[role="dialog"]')?.remove();
+                    this.showNotification(`Navigate to question ${questionId} (integration needed)`, 'info');
+                }
+            };
+            
+            // Initialize bookmarks when DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                window.examBookmarks.init();
+            });
+            
+            // Keyboard shortcut for bookmarks (Ctrl+B or Cmd+B)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                    e.preventDefault();
+                    // Get current question ID from Livewire component
+                    const livewireComponent = document.querySelector('[wire\:id]');
+                    if (livewireComponent) {
+                        // This would need to get the current question ID from Livewire
+                        console.log('Bookmark shortcut pressed - integration needed');
                     }
                 }
             });
