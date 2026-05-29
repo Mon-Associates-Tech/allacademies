@@ -26,6 +26,9 @@ class QuestionImportController extends Controller
     /**
      * Show the import form for questions
      */
+    /**
+     * Show the import form for questions at topic level
+     */
     public function showImportForm(
         AcademicGroup $academic_group, 
         AcademicLevel $academic_level, 
@@ -33,16 +36,30 @@ class QuestionImportController extends Controller
         AcademicTopic $academic_topic, 
         ?AcademicSubtopic $academicSubtopic = null
     ): View {
-        // $this->authorize('update', $academic_topic);
-        
         return view('questions.import', [
             'academicTopic' => $academic_topic,
             'academicSubtopic' => $academicSubtopic,
+            'academicSubject' => $academic_subject,
         ]);
     }
 
     /**
-     * Preview the questions from the uploaded file before saving
+     * Show the import form for questions at subject level
+     */
+    public function showSubjectImportForm(
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject
+    ): View {
+        return view('questions.import', [
+            'academicTopic' => null,
+            'academicSubtopic' => null,
+            'academicSubject' => $academic_subject,
+        ]);
+    }
+
+    /**
+     * Preview the questions from the uploaded file before saving (at topic level)
      */
     public function previewQuestions(
         Request $request, 
@@ -52,15 +69,49 @@ class QuestionImportController extends Controller
         AcademicTopic $academic_topic, 
         ?AcademicSubtopic $academicSubtopic = null
     ) {
+        return $this->performPreview($request, $academic_group, $academic_level, $academic_subject, $academic_topic, $academicSubtopic);
+    }
+
+    /**
+     * Preview the questions from the uploaded file before saving (at subject level)
+     */
+    public function previewSubjectQuestions(
+        Request $request, 
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject
+    ) {
+        return $this->performPreview($request, $academic_group, $academic_level, $academic_subject, null, null);
+    }
+
+    /**
+     * Common method to perform preview at either topic or subject level
+     */
+    private function performPreview(
+        Request $request, 
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject, 
+        ?AcademicTopic $academic_topic = null, 
+        ?AcademicSubtopic $academicSubtopic = null
+    ) {
         // Check if this is actually a file upload request
         if (!$request->hasFile('questions_file')) {
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.import.form';
+            } else {
+                $route = 'questions.subject.import.form';
+            }
+
             return redirect()
-                ->route('questions.import.form', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->with('error', 'Please select a file to preview questions.');
         }
 
@@ -69,13 +120,21 @@ class QuestionImportController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.import.form';
+            } else {
+                $route = 'questions.subject.import.form';
+            }
+
             return redirect()
-                ->route('questions.import.form', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -86,6 +145,7 @@ class QuestionImportController extends Controller
             // Preview the questions without saving them
             $previewResult = $this->importService->previewQuestions(
                 $file,
+                $academic_subject,
                 $academic_topic,
                 $academicSubtopic,
                 Auth::id()
@@ -95,16 +155,31 @@ class QuestionImportController extends Controller
             $filePath = $file->store('temp/question-imports', 'local');
             session(['question_import_file_path' => $filePath]);
             session(['question_import_file_original_name' => $file->getClientOriginalName()]);
-            session(['question_import_academic_topic_id' => $academic_topic->id]);
+            session(['question_import_academic_subject_id' => $academic_subject->id]);
+            session(['question_import_academic_topic_id' => $academic_topic?->id]); // May be null for subject-level import
             session(['question_import_academic_subtopic_id' => $academicSubtopic?->id]);
             // Store the preview results to reuse during import
             session(['question_import_preview_results' => $previewResult]);
             // Set a flag to prevent duplicate imports
             session(['question_import_processing' => false]);
 
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.preview';
+            } else {
+                $route = 'questions.subject.preview';
+            }
+
             return view('questions.preview', [
                 'academicTopic' => $academic_topic,
                 'academicSubtopic' => $academicSubtopic,
+                'academicSubject' => $academic_subject,
                 'previewData' => $previewResult,
                 'file' => $file,
                 'academic_group' => $academic_group,
@@ -116,24 +191,33 @@ class QuestionImportController extends Controller
             \Log::error('Question preview failed', [
                 'error' => $e->getMessage(),
                 'file' => $file->getClientOriginalName(),
-                'topic_id' => $academic_topic->id,
+                'subject_id' => $academic_subject->id,
+                'topic_id' => $academic_topic?->id,
                 'subtopic_id' => $academicSubtopic?->id,
             ]);
 
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.import.form';
+            } else {
+                $route = 'questions.subject.import.form';
+            }
+
             return redirect()
-                ->route('questions.import.form', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->with('error', 'An error occurred while previewing questions: ' . $e->getMessage())
                 ->withInput();
         }
     }
 
     /**
-     * Import the questions after preview
+     * Import the questions after preview (at topic level)
      */
     public function importQuestions(
         Request $request, 
@@ -143,15 +227,49 @@ class QuestionImportController extends Controller
         AcademicTopic $academic_topic, 
         ?AcademicSubtopic $academicSubtopic = null
     ): RedirectResponse {
+        return $this->performImport($request, $academic_group, $academic_level, $academic_subject, $academic_topic, $academicSubtopic);
+    }
+
+    /**
+     * Import the questions after preview (at subject level)
+     */
+    public function importSubjectQuestions(
+        Request $request, 
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject
+    ): RedirectResponse {
+        return $this->performImport($request, $academic_group, $academic_level, $academic_subject, null, null);
+    }
+
+    /**
+     * Common method to perform import at either topic or subject level
+     */
+    private function performImport(
+        Request $request, 
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject, 
+        ?AcademicTopic $academic_topic = null, 
+        ?AcademicSubtopic $academicSubtopic = null
+    ): RedirectResponse {
         // Check if import is already in progress to prevent duplicates
         if (session('question_import_processing', false)) {
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.import.form';
+            } else {
+                $route = 'questions.subject.import.form';
+            }
+
             return redirect()
-                ->route('questions.import.form', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->with('error', 'Import is already in progress. Please wait or refresh the page.');
         }
 
@@ -162,21 +280,30 @@ class QuestionImportController extends Controller
         $previewResults = session('question_import_preview_results');
         $filePath = session('question_import_file_path');
         $originalFileName = session('question_import_file_original_name');
+        $storedSubjectId = session('question_import_academic_subject_id');
         $storedTopicId = session('question_import_academic_topic_id');
         $storedSubtopicId = session('question_import_academic_subtopic_id');
 
         // Verify that the session data exists and matches the current request
-        if (!$previewResults || $storedTopicId != $academic_topic->id) {
+        if (!$previewResults || $storedSubjectId != $academic_subject->id) {
             // Clear the processing flag
             session()->forget('question_import_processing');
             
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.import.form';
+            } else {
+                $route = 'questions.subject.import.form';
+            }
+
             return redirect()
-                ->route('questions.import.form', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->with('error', 'Import session expired. Please restart the import process.');
         }
 
@@ -184,6 +311,7 @@ class QuestionImportController extends Controller
             // Perform the actual import using the preview data
             $result = $this->importService->importFromPreviewData(
                 $previewResults,
+                $academic_subject,
                 $academic_topic,
                 $academicSubtopic,
                 Auth::id()
@@ -201,6 +329,7 @@ class QuestionImportController extends Controller
             session()->forget([
                 'question_import_file_path', 
                 'question_import_file_original_name', 
+                'question_import_academic_subject_id', 
                 'question_import_academic_topic_id', 
                 'question_import_academic_subtopic_id', 
                 'question_import_preview_results',
@@ -220,24 +349,41 @@ class QuestionImportController extends Controller
             if (!empty($result['errors'])) {
                 $message .= ". " . count($result['errors']) . " errors occurred during import.";
                 
+                $route_params = [
+                    'academic_subject' => $academic_subject,
+                    'academic_level' => $academic_level,
+                    'academic_group' => $academic_group
+                ];
+                
+                if ($academic_topic) {
+                    $route_params['academic_topic'] = $academic_topic;
+                    $route = 'academic-topics.show';
+                } else {
+                    $route = 'academic-subjects.show';
+                }
+
                 return redirect()
-                    ->route('academic-topics.show', [
-                        'academic_topic' => $academic_topic,
-                        'academic_subject' => $academic_subject,
-                        'academic_level' => $academic_level,
-                        'academic_group' => $academic_group
-                    ])
+                    ->route($route, $route_params)
                     ->with('warning', $message)
                     ->with('import_errors', $result['errors']);
             }
 
+            // Redirect to the appropriate page based on import level
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'academic-topics.show';
+            } else {
+                $route = 'academic-subjects.show';
+            }
+
             return redirect()
-                ->route('academic-topics.show', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->with('success', $message);
                 
         } catch (\Exception $e) {
@@ -250,6 +396,7 @@ class QuestionImportController extends Controller
             session()->forget([
                 'question_import_file_path', 
                 'question_import_file_original_name', 
+                'question_import_academic_subject_id', 
                 'question_import_academic_topic_id', 
                 'question_import_academic_subtopic_id', 
                 'question_import_preview_results',
@@ -258,23 +405,32 @@ class QuestionImportController extends Controller
 
             \Log::error('Question import failed', [
                 'error' => $e->getMessage(),
-                'topic_id' => $academic_topic->id,
+                'subject_id' => $academic_subject->id,
+                'topic_id' => $academic_topic?->id,
                 'subtopic_id' => $academicSubtopic?->id,
             ]);
 
+            $route_params = [
+                'academic_subject' => $academic_subject,
+                'academic_level' => $academic_level,
+                'academic_group' => $academic_group
+            ];
+            
+            if ($academic_topic) {
+                $route_params['academic_topic'] = $academic_topic;
+                $route = 'questions.import.form';
+            } else {
+                $route = 'questions.subject.import.form';
+            }
+
             return redirect()
-                ->route('questions.import.form', [
-                    'academic_topic' => $academic_topic,
-                    'academic_subject' => $academic_subject,
-                    'academic_level' => $academic_level,
-                    'academic_group' => $academic_group
-                ])
+                ->route($route, $route_params)
                 ->with('error', 'An error occurred while importing questions: ' . $e->getMessage());
         }
     }
 
     /**
-     * Download Excel template for question import
+     * Download Excel template for question import at topic level
      */
     public function downloadTemplate(
         AcademicGroup $academic_group, 
@@ -282,13 +438,37 @@ class QuestionImportController extends Controller
         AcademicSubject $academic_subject, 
         AcademicTopic $academic_topic
     ) {
+        return $this->generateTemplate($academic_group, $academic_level, $academic_subject, $academic_topic);
+    }
+
+    /**
+     * Download Excel template for question import at subject level
+     */
+    public function downloadSubjectTemplate(
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject
+    ) {
+        return $this->generateTemplate($academic_group, $academic_level, $academic_subject, null);
+    }
+
+    /**
+     * Generate Excel template for question import
+     */
+    private function generateTemplate(
+        AcademicGroup $academic_group, 
+        AcademicLevel $academic_level, 
+        AcademicSubject $academic_subject, 
+        ?AcademicTopic $academic_topic = null
+    ) {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Define the headers - using the exact format expected by the system
+        // Define the headers - including academic_topic_id for flexibility
         $headers = [
             'question',
             'type',
+            'academic_topic_id', // New required column
             'option_a',
             'option_b',
             'option_c',
@@ -309,36 +489,39 @@ class QuestionImportController extends Controller
         // Add some example data
         $sheet->setCellValue('A2', 'What is the capital of France?');
         $sheet->setCellValue('B2', 'multiple_choice');
-        $sheet->setCellValue('C2', 'London');
-        $sheet->setCellValue('D2', 'Paris');
-        $sheet->setCellValue('E2', 'Berlin');
-        $sheet->setCellValue('F2', 'Madrid');
-        $sheet->setCellValue('G2', '');
-        $sheet->setCellValue('H2', 'B');
-        $sheet->setCellValue('I2', 'medium');
-        $sheet->setCellValue('J2', '1');
+        $sheet->setCellValue('C2', $academic_topic?->id ?: 'TOPIC_ID'); // Use specific topic ID or placeholder for subject-level import
+        $sheet->setCellValue('D2', 'London');
+        $sheet->setCellValue('E2', 'Paris');
+        $sheet->setCellValue('F2', 'Berlin');
+        $sheet->setCellValue('G2', 'Madrid');
+        $sheet->setCellValue('H2', '');
+        $sheet->setCellValue('I2', 'B');
+        $sheet->setCellValue('J2', 'medium');
+        $sheet->setCellValue('K2', '1');
         
         $sheet->setCellValue('A3', 'The Earth is round.');
         $sheet->setCellValue('B3', 'true_false');
-        $sheet->setCellValue('C3', '');
+        $sheet->setCellValue('C3', $academic_topic?->id ?: 'TOPIC_ID');
         $sheet->setCellValue('D3', '');
         $sheet->setCellValue('E3', '');
         $sheet->setCellValue('F3', '');
         $sheet->setCellValue('G3', '');
-        $sheet->setCellValue('H3', 'true');
-        $sheet->setCellValue('I3', 'easy');
-        $sheet->setCellValue('J3', '1');
+        $sheet->setCellValue('H3', '');
+        $sheet->setCellValue('I3', 'true');
+        $sheet->setCellValue('J3', 'easy');
+        $sheet->setCellValue('K3', '1');
         
         $sheet->setCellValue('A4', 'Explain the theory of relativity.');
         $sheet->setCellValue('B4', 'essay');
-        $sheet->setCellValue('C4', '');
+        $sheet->setCellValue('C4', $academic_topic?->id ?: 'TOPIC_ID');
         $sheet->setCellValue('D4', '');
         $sheet->setCellValue('E4', '');
         $sheet->setCellValue('F4', '');
         $sheet->setCellValue('G4', '');
-        $sheet->setCellValue('H4', 'Brief explanation...');
-        $sheet->setCellValue('I4', 'hard');
-        $sheet->setCellValue('J4', '5');
+        $sheet->setCellValue('H4', '');
+        $sheet->setCellValue('I4', 'Brief explanation...');
+        $sheet->setCellValue('J4', 'hard');
+        $sheet->setCellValue('K4', '5');
         
         // Set column widths
         $column = 'A';
@@ -347,7 +530,7 @@ class QuestionImportController extends Controller
             $column++;
         }
         
-        // Style the header row
+        // Style the header row - DO NOT override the actual headers
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -358,7 +541,7 @@ class QuestionImportController extends Controller
             ],
         ];
         
-        $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
         
         // Create the writer and save to a temporary file
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');

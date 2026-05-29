@@ -34,7 +34,7 @@ class QuestionImportService
     /**
      * Import questions from a file (Excel, Word, or PDF)
      */
-    public function importQuestions(mixed $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null): array
+    public function importQuestions(mixed $file, AcademicSubject $academicSubject, ?AcademicTopic $topic = null, ?AcademicSubtopic $subtopic = null, ?int $userId = null): array
     {
         $this->errors = [];
         $this->resetImportedCount();
@@ -59,14 +59,14 @@ class QuestionImportService
         switch ($extension) {
             case 'xlsx':
             case 'xls':
-                return $this->importFromExcel($file, $topic, $subtopic, $userId);
+                return $this->importFromExcel($file, $academicSubject, $topic, $subtopic, $userId);
             
             case 'docx':
             case 'doc':
-                return $this->importFromWord($file, $topic, $subtopic, $userId);
+                return $this->importFromWord($file, $academicSubject, $topic, $subtopic, $userId);
             
             case 'pdf':
-                return $this->importFromPdf($file, $topic, $subtopic, $userId);
+                return $this->importFromPdf($file, $academicSubject, $topic, $subtopic, $userId);
             
             default:
                 throw new \InvalidArgumentException("Unsupported file format: {$extension}. Supported formats: Excel (xlsx, xls), Word (docx, doc), PDF (pdf)");
@@ -76,7 +76,7 @@ class QuestionImportService
     /**
      * Import questions from preview data
      */
-    public function importFromPreviewData(array $previewResults, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null): array
+    public function importFromPreviewData(array $previewResults, AcademicSubject $academicSubject, ?AcademicTopic $topic = null, ?AcademicSubtopic $subtopic = null, ?int $userId = null): array
     {
         $this->errors = [];
         $this->resetImportedCount();
@@ -234,7 +234,7 @@ class QuestionImportService
     /**
      * Preview questions from a file without saving them
      */
-    public function previewQuestions(mixed $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null): array
+    public function previewQuestions(mixed $file, AcademicSubject $academicSubject, ?AcademicTopic $topic = null, ?AcademicSubtopic $subtopic = null, ?int $userId = null): array
     {
         // Convert Symfony UploadedFile to Illuminate UploadedFile if needed
         if ($file instanceof SymfonyUploadedFile && !$file instanceof UploadedFile) {
@@ -256,7 +256,7 @@ class QuestionImportService
         switch ($extension) {
             case 'xlsx':
             case 'xls':
-                return $this->previewFromExcel($file, $topic, $subtopic, $userId);
+                return $this->previewFromExcel($file, $academicSubject, $topic, $subtopic, $userId);
             
             case 'docx':
             case 'doc':
@@ -279,7 +279,7 @@ class QuestionImportService
                     ];
                 }
                 
-                return $this->previewQuestionsFromText($text, $topic, $subtopic, $userId);
+                return $this->previewQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId);
             
             default:
                 throw new \InvalidArgumentException("Unsupported file format: {$extension}. Supported formats: Excel (xlsx, xls), Word (docx, doc), PDF (pdf)");
@@ -289,13 +289,13 @@ class QuestionImportService
     /**
      * Import questions from Excel file
      */
-    private function importFromExcel(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
+    private function importFromExcel(UploadedFile $file, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
         try {
             $spreadsheet = IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
             
-            return $this->processWorksheet($worksheet, $topic, $subtopic, $userId, true); // Save to DB
+            return $this->processWorksheet($worksheet, $academicSubject, $topic, $subtopic, $userId, true); // Save to DB
         } catch (\Exception $e) {
             Log::error('Error importing questions from Excel', [
                 'error' => $e->getMessage(),
@@ -308,13 +308,13 @@ class QuestionImportService
     /**
      * Preview questions from Excel file
      */
-    private function previewFromExcel(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
+    private function previewFromExcel(UploadedFile $file, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
         try {
             $spreadsheet = IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
             
-            return $this->processWorksheet($worksheet, $topic, $subtopic, $userId, false); // Don't save to DB, just preview
+            return $this->processWorksheet($worksheet, $academicSubject, $topic, $subtopic, $userId, false); // Don't save to DB, just preview
         } catch (\Exception $e) {
             Log::error('Error previewing questions from Excel', [
                 'error' => $e->getMessage(),
@@ -327,7 +327,7 @@ class QuestionImportService
     /**
      * Process worksheet data and either import or preview questions
      */
-    private function processWorksheet(Worksheet $worksheet, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, bool $saveToDb = true): array
+    private function processWorksheet(Worksheet $worksheet, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, bool $saveToDb = true): array
     {
         $rows = $worksheet->toArray();
         
@@ -342,6 +342,7 @@ class QuestionImportService
         // Find required columns
         $questionCol = $this->findColumnIndex($headers, ['question', 'questions', 'text']);
         $typeCol = $this->findColumnIndex($headers, ['type', 'question_type', 'qtype']);
+        $topicIdCol = $this->findColumnIndex($headers, ['academic_topic_id', 'topic_id']);
         
         // Check if required columns exist
         if ($questionCol === null) {
@@ -376,12 +377,43 @@ class QuestionImportService
             try {
                 $questionType = $this->getColumnValue($row, $typeCol, 'multiple_choice'); // Default to multiple choice
                 
+                // Determine academic_topic_id: prioritize from Excel file, fallback to provided topic
+                $excelTopicId = $this->getColumnValue($row, $topicIdCol, null);
+                $effectiveTopic = null;
+                
+                if ($excelTopicId) {
+                    // If academic_topic_id is provided in Excel, use that topic
+                    $effectiveTopic = AcademicTopic::where('id', $excelTopicId)
+                        ->where('academic_subject_id', $academicSubject->id) // Ensure it belongs to the same subject
+                        ->first();
+                    
+                    if (!$effectiveTopic) {
+                        $importResults['errors'][] = [
+                            'row' => $rowNumber,
+                            'message' => "Invalid academic_topic_id: {$excelTopicId}. Topic does not exist or does not belong to the selected subject."
+                        ];
+                        continue;
+                    }
+                } else {
+                    // Otherwise use the topic passed to the method (could be null for subject-level import)
+                    $effectiveTopic = $topic;
+                }
+                
+                // If no effective topic is determined, show error
+                if (!$effectiveTopic) {
+                    $importResults['errors'][] = [
+                        'row' => $rowNumber,
+                        'message' => "academic_topic_id is required but not provided in Excel file and no default topic specified."
+                    ];
+                    continue;
+                }
+
                 $questionData = [
                     'question' => $this->getColumnValue($row, $questionCol, ''),
                     'answer' => $this->getColumnValue($row, $answerCol, ''),
                     'difficulty_level' => $this->getColumnValue($row, $difficultyCol, 'medium'),
                     'score' => (float) $this->getColumnValue($row, $scoreCol, 1),
-                    'academic_topic_id' => $topic->id,
+                    'academic_topic_id' => $effectiveTopic->id,
                     'academic_subtopic_id' => $subtopic?->id,
                     'added_by' => $userId,
                     'modified_by' => $userId,
@@ -406,6 +438,8 @@ class QuestionImportService
                     'answer' => $questionData['answer'],
                     'difficulty_level' => $questionData['difficulty_level'],
                     'score' => $questionData['score'],
+                    'academic_topic_id' => $effectiveTopic->id,
+                    'academic_topic_name' => $effectiveTopic->name,
                 ];
 
                 switch (strtolower($questionType)) {
@@ -507,7 +541,7 @@ class QuestionImportService
     /**
      * Import questions from Word document
      */
-    private function importFromWord(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
+    private function importFromWord(UploadedFile $file, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
         try {
             // Extract the text content from the Word document
@@ -541,7 +575,7 @@ class QuestionImportService
     /**
      * Import questions from PDF
      */
-    private function importFromPdf(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
+    private function importFromPdf(UploadedFile $file, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
         try {
             // Extract the text content from the PDF
@@ -575,7 +609,7 @@ class QuestionImportService
     /**
      * Preview questions from text content using AI
      */
-    private function previewQuestionsFromText(string $text, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
+    private function previewQuestionsFromText(string $text, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
         return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, false); // Don't save to DB
     }
@@ -583,7 +617,7 @@ class QuestionImportService
     /**
      * Parse questions from text content using AI
      */
-    private function parseQuestionsFromText(string $text, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, bool $saveToDb = true): array
+    private function parseQuestionsFromText(string $text, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, bool $saveToDb = true): array
     {
         try {
             // Build a prompt for the AI to extract and format questions from the text

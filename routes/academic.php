@@ -36,16 +36,19 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
                     // Keep the subtopic route within the hierarchy
                     Route::resource('subtopics', SubtopicController::class);
                     
-                    // Add import route for questions - properly nested within the hierarchy
-                    Route::get('/import-questions', [QuestionImportController::class, 'showImportForm'])
-                        ->name('questions.import.form');
-                    Route::post('/preview-questions', [QuestionImportController::class, 'previewQuestions'])
-                        ->name('questions.preview');
-                    Route::post('/import-questions', [QuestionImportController::class, 'importQuestions'])
-                        ->name('questions.import');
-                    Route::get('/download-template', [QuestionImportController::class, 'downloadTemplate'])
-                        ->name('questions.template.download');
                 });
+                
+                // Flat routes for topic-level imports to avoid nesting conflicts
+                Route::get('academic-topics/{academic_topic}/import-questions', [QuestionImportController::class, 'showImportForm'])->name('questions.import.form');
+                Route::post('academic-topics/{academic_topic}/preview-questions', [QuestionImportController::class, 'previewQuestions'])->name('questions.preview');
+                Route::post('academic-topics/{academic_topic}/import-questions', [QuestionImportController::class, 'importQuestions'])->name('questions.import');
+                Route::get('academic-topics/{academic_topic}/download-template', [QuestionImportController::class, 'downloadTemplate'])->name('questions.download.template');
+
+                // Flat routes for subject-level imports to avoid nesting conflicts
+                Route::get('academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/import-questions', [QuestionImportController::class, 'showSubjectImportForm'])->name('questions.subject.import.form');
+                Route::post('academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/preview-questions', [QuestionImportController::class, 'previewSubjectQuestions'])->name('questions.subject.preview');
+                Route::post('academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/import-questions', [QuestionImportController::class, 'importSubjectQuestions'])->name('questions.subject.import');
+                Route::get('academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/download-template', [QuestionImportController::class, 'downloadSubjectTemplate'])->name('questions.subject.download.template');
 
                 // Keep examinations and quizzes routes within the subject hierarchy
                 Route::get('/examinations/preview', [ExaminationController::class, 'preview'])

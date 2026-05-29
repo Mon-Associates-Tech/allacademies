@@ -41,19 +41,32 @@
                                     Add Subtopic
                                 </x-link.primary>
                                 
-                                <!-- Import Questions Button - updated the route to match the new structure -->
-                                <x-link.secondary :to="route('questions.import.form', [
+                                <!-- Import Questions Button -->
+                                <a href="{{ route('questions.import.form', [
                                     'academic_topic' => $academicTopic,
                                     'academic_subject' => $academicTopic->academicSubject,
                                     'academic_level' => $academicTopic->academicSubject->academicLevel,
                                     'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup
-                                ])"
-                                                class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                ]) }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150 ml-2">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                     </svg>
-                                    Import Questions
-                                </x-link.secondary>
+                                    Import Topic Questions
+                                </a>
+                                
+                                <!-- Import Questions for Subject Button -->
+                                <a href="{{ route('questions.subject.import.form', [
+                                    'academic_subject' => $academicTopic->academicSubject,
+                                    'academic_level' => $academicTopic->academicSubject->academicLevel,
+                                    'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup
+                                ]) }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150 ml-2">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    Import Subject Questions
+                                </a>
                             @endcan
                             <x-link.secondary :to="route('academic-topics.edit', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105">
