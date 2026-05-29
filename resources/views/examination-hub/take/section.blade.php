@@ -319,7 +319,8 @@
         <!-- EXAM CONTENT AREA - Initially hidden until section starts -->
         <div id="exam-content-area" class="h-full" style="display: none;" role="main" aria-label="Exam content">
         <style>
-            #exam-reading-area {
+            /* Defaults live on :root so Livewire morphdom never clobbers them. */
+            :root {
                 --exam-qfont: 1rem;
                 --exam-afont: 0.875rem;
                 --exam-tfont: 1rem;

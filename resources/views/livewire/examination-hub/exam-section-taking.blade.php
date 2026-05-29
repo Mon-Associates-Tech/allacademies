@@ -17,15 +17,12 @@
             const KEY = 'exam_font_level_v1';
             let cur = DEFAULT;
 
-            function area() { return document.getElementById('exam-reading-area'); }
-
             function applyVars() {
-                const el = area();
-                if (!el) return;
+                // Write to :root so Livewire morphdom never clobbers the values.
                 const lv = LEVELS[cur];
-                el.style.setProperty('--exam-qfont', lv.q);
-                el.style.setProperty('--exam-afont', lv.a);
-                el.style.setProperty('--exam-tfont', lv.t);
+                document.documentElement.style.setProperty('--exam-qfont', lv.q);
+                document.documentElement.style.setProperty('--exam-afont', lv.a);
+                document.documentElement.style.setProperty('--exam-tfont', lv.t);
             }
 
             function applyButtons() {
@@ -48,10 +45,6 @@
                 } catch (_) {}
                 apply();
             }
-
-            // Re-apply after every Livewire update (morphdom replaces exam-reading-area)
-            document.addEventListener('livewire:navigated', apply);
-            document.addEventListener('livewire:update', apply);
 
             return {
                 init,
