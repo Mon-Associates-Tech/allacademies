@@ -2,6 +2,67 @@
 @push('exam-scripts')
     @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js', 'resources/js/exam-heartbeat.js'])
 
+    <!-- Font size control -->
+    <script>
+        window.examFontSize = (function () {
+            const LEVELS = [
+                { q: '0.8rem',    a: '0.75rem',  t: '0.85rem'  },
+                { q: '0.875rem',  a: '0.8125rem',t: '0.9rem'   },
+                { q: '1rem',      a: '0.875rem', t: '1rem'     },  // default (index 2)
+                { q: '1.1rem',    a: '0.975rem', t: '1.1rem'   },
+                { q: '1.225rem',  a: '1.075rem', t: '1.225rem' },
+                { q: '1.375rem',  a: '1.175rem', t: '1.375rem' },
+            ];
+            const DEFAULT = 2;
+            const KEY = 'exam_font_level_v1';
+            let cur = DEFAULT;
+
+            function area() { return document.getElementById('exam-reading-area'); }
+
+            function applyVars() {
+                const el = area();
+                if (!el) return;
+                const lv = LEVELS[cur];
+                el.style.setProperty('--exam-qfont', lv.q);
+                el.style.setProperty('--exam-afont', lv.a);
+                el.style.setProperty('--exam-tfont', lv.t);
+            }
+
+            function applyButtons() {
+                document.querySelectorAll('[data-font-action="decrease"]')
+                    .forEach(b => { b.disabled = cur === 0; });
+                document.querySelectorAll('[data-font-action="increase"]')
+                    .forEach(b => { b.disabled = cur === LEVELS.length - 1; });
+            }
+
+            function apply() { applyVars(); applyButtons(); }
+
+            function save() {
+                try { localStorage.setItem(KEY, cur); } catch (_) {}
+            }
+
+            function init() {
+                try {
+                    const saved = parseInt(localStorage.getItem(KEY), 10);
+                    if (!isNaN(saved) && saved >= 0 && saved < LEVELS.length) cur = saved;
+                } catch (_) {}
+                apply();
+            }
+
+            // Re-apply after every Livewire update (morphdom replaces exam-reading-area)
+            document.addEventListener('livewire:navigated', apply);
+            document.addEventListener('livewire:update', apply);
+
+            return {
+                init,
+                increase() { if (cur < LEVELS.length - 1) { cur++; save(); apply(); } },
+                decrease() { if (cur > 0)                 { cur--; save(); apply(); } },
+            };
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => window.examFontSize.init());
+    </script>
+
     <!-- Initialize exam sync functionality -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -376,6 +437,29 @@
                             <span id="time-remaining" class="tabular-nums">–</span>
                         </div>
 
+                        {{-- Font size controls (desktop) --}}
+                        <div wire:ignore
+                             class="inline-flex items-center border border-slate-200 dark:border-slate-700 overflow-hidden"
+                             style="border-radius: 2px;"
+                             role="group"
+                             aria-label="Font size">
+                            <button data-font-action="decrease"
+                                    onclick="window.examFontSize.decrease()"
+                                    aria-label="Decrease font size"
+                                    class="inline-flex items-center justify-center w-7 h-7 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
+                                    style="font-size:11px; font-weight:700; letter-spacing:-0.03em;">
+                                A<sup style="font-size:7px;">−</sup>
+                            </button>
+                            <span class="w-px h-3.5 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></span>
+                            <button data-font-action="increase"
+                                    onclick="window.examFontSize.increase()"
+                                    aria-label="Increase font size"
+                                    class="inline-flex items-center justify-center w-7 h-7 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
+                                    style="font-size:14px; font-weight:700; letter-spacing:-0.03em;">
+                                A<sup style="font-size:7px;">+</sup>
+                            </button>
+                        </div>
+
                         {{-- Section info toggle --}}
                         <button wire:click="toggleSectionInfo"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
@@ -410,6 +494,28 @@
 
                     {{-- Row 2: Actions --}}
                     <div class="flex items-center justify-end gap-2">
+                        {{-- Font size (mobile) --}}
+                        <div wire:ignore
+                             class="inline-flex items-center border border-slate-200 dark:border-slate-700 overflow-hidden"
+                             style="border-radius: 2px;"
+                             role="group"
+                             aria-label="Font size">
+                            <button data-font-action="decrease"
+                                    onclick="window.examFontSize.decrease()"
+                                    aria-label="Decrease font size"
+                                    class="inline-flex items-center justify-center w-6 h-6 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
+                                    style="font-size:10px; font-weight:700;">
+                                A<sup style="font-size:6px;">−</sup>
+                            </button>
+                            <span class="w-px h-3 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></span>
+                            <button data-font-action="increase"
+                                    onclick="window.examFontSize.increase()"
+                                    aria-label="Increase font size"
+                                    class="inline-flex items-center justify-center w-6 h-6 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
+                                    style="font-size:12px; font-weight:700;">
+                                A<sup style="font-size:6px;">+</sup>
+                            </button>
+                        </div>
                         {{-- Timer (mobile) — wire:ignore for same reason as desktop timer --}}
                         <div id="time-alert-mobile" wire:ignore
                              class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold transition-all duration-300 text-slate-500 dark:text-slate-400"
@@ -435,7 +541,7 @@
         {{-- ── SCROLLABLE CONTENT AREA ── --}}
         <div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950"
              style="scrollbar-gutter: stable;">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-5">
+            <div id="exam-reading-area" class="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-5">
 
                 @php
                     $question = $this->questions[$currentQuestionIndex];
@@ -484,7 +590,7 @@
                     {{-- Question body --}}
                     <div class="px-4 sm:px-6 pt-3 sm:pt-4 pb-3 sm:pb-4">
                         {{-- Question text --}}
-                        <div class="text-slate-800 dark:text-slate-200 mb-3 sm:mb-4 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
+                        <div class="exam-q-text text-slate-800 dark:text-slate-200 mb-3 sm:mb-4 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
                              wire:key="question-text-{{ $question->id }}">
                             <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
                         </div>
@@ -511,7 +617,7 @@
                         <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold flex-shrink-0 mt-0.5 transition-colors rounded-[2px] {{ $isSelected ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
                             {{ $key }}
                         </span>
-                                            <div class="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
+                                            <div class="exam-opt-text flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
                                                 <x-form.markdown-with-math :content="$optionText" class="text-slate-800 dark:text-slate-200" />
                                             </div>
                                         </div>
@@ -536,7 +642,7 @@
                                             wire:model.live="responses.{{ $question->id }}"
                                             class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-slate-300 flex-shrink-0"
                                         >
-                                        <span class="text-base font-semibold text-slate-700 dark:text-slate-200">{{ $tfValue }}</span>
+                                        <span class="exam-tf-text text-base font-semibold text-slate-700 dark:text-slate-200">{{ $tfValue }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -548,7 +654,7 @@
                                 <textarea
                                     wire:model.live.debounce.500ms="responses.{{ $question->id }}"
                                     rows="10"
-                                    class="w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
+                                    class="exam-essay w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
                                     placeholder="Type your answer here…"
                                 ></textarea>
                                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Responses are saved automatically as you type.</p>

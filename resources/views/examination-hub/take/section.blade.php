@@ -318,6 +318,20 @@
 
         <!-- EXAM CONTENT AREA - Initially hidden until section starts -->
         <div id="exam-content-area" class="h-full" style="display: none;" role="main" aria-label="Exam content">
+        <style>
+            #exam-reading-area {
+                --exam-qfont: 1rem;
+                --exam-afont: 0.875rem;
+                --exam-tfont: 1rem;
+            }
+            #exam-reading-area .exam-q-text             { font-size: var(--exam-qfont) !important; line-height: 1.75; }
+            #exam-reading-area .exam-q-text .prose      { font-size: inherit !important; }
+            #exam-reading-area .exam-q-text .prose *    { font-size: inherit !important; }
+            #exam-reading-area .exam-opt-text           { font-size: var(--exam-afont) !important; }
+            #exam-reading-area .exam-opt-text .prose *  { font-size: inherit !important; }
+            #exam-reading-area .exam-tf-text            { font-size: var(--exam-tfont) !important; }
+            #exam-reading-area .exam-essay              { font-size: var(--exam-afont) !important; }
+        </style>
             {{-- Skip links for keyboard navigation --}}
             <nav aria-label="Skip links" class="sr-only">
                 <a href="#question-navigation">Skip to question navigation</a>
