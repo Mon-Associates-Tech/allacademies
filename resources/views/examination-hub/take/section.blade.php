@@ -22,7 +22,7 @@
                         this.showExamContentOnly();
                     }
                 });
-                
+
                 // Listen for show exam content event
                 window.addEventListener('show-exam-content', () => {
                     if (this.isActive) {
@@ -47,17 +47,16 @@
                         }
                         throw e;
                     });
-                    
+
                     this.isActive = true;
-                    
-                    // IMPORTANT: Only hide the instruction panel after successfully entering fullscreen
-                    // This ensures the exam content is displayed when in fullscreen
+                    this.hideFullscreenAlert();
+
                     setTimeout(() => {
                         if (this.isActive) {
                             this.hideInstructionPanel();
                         }
-                    }, 100); // Small delay to ensure fullscreen is established
-                    
+                    }, 100);
+
                 } catch (err) {
                     console.error('Fullscreen request denied:', err);
                     alert('Fullscreen mode is required for this exam. Please allow fullscreen permissions.');
@@ -68,11 +67,11 @@
                 if (!this.isActive) return;
 
                 try {
-                    await (document.exitFullscreen 
-                        || document.webkitExitFullscreen 
-                        || document.mozCancelFullScreen 
+                    await (document.exitFullscreen
+                        || document.webkitExitFullscreen
+                        || document.mozCancelFullScreen
                         || document.msExitFullscreen).call(document);
-                    
+
                     this.isActive = false;
                 } catch (err) {
                     console.error('Error exiting fullscreen:', err);
@@ -80,29 +79,22 @@
             },
 
             onFullscreenChange() {
-                const nowFullscreen = document.fullscreenElement != null;
-                
+                const nowFullscreen = document.fullscreenElement != null || document.webkitFullscreenElement != null;
+
                 if (this.isActive && !nowFullscreen) {
-                    // Fullscreen was unexpectedly exited - record violation
+                    // Unexpected exit — record violation and show blocking overlay
                     this.handleUnexpectedExit();
+                } else if (!this.isActive && nowFullscreen) {
+                    // Returned to fullscreen — clear blocking overlay
+                    this.hideFullscreenAlert();
                 }
-                
+
                 this.isActive = nowFullscreen;
-                
-                // If we're no longer in fullscreen and were showing exam content, 
-                // decide whether to show instructions or keep showing exam content
-                if (!this.isActive) {
-                    // When leaving fullscreen, keep showing exam content if section has started
-                    // We can determine this by checking if the exam content area is supposed to be visible
+
+                if (this.isActive) {
                     const examContent = document.getElementById('exam-content-area');
-                    const instructionPanel = document.getElementById('fullscreen-instruction-panel');
-                    
                     if (examContent && examContent.style.display !== 'none') {
-                        // Section has started, keep showing exam content
-                        this.showExamContentOnly();
-                    } else {
-                        // Section hasn't started, show instructions
-                        this.showInstructionPanel();
+                        this.hideInstructionPanel();
                     }
                 }
             },
@@ -118,7 +110,7 @@
                     examContent.style.display = 'block';
                 }
             },
-            
+
             showInstructionPanel() {
                 const instructionPanel = document.getElementById('fullscreen-instruction-panel');
                 if (instructionPanel) {
@@ -130,7 +122,7 @@
                     examContent.style.display = 'none';
                 }
             },
-            
+
             showExamContentOnly() {
                 const instructionPanel = document.getElementById('fullscreen-instruction-panel');
                 if (instructionPanel) {
@@ -143,13 +135,42 @@
                 }
             },
 
+            showFullscreenAlert() {
+                if (document.getElementById('fullscreen-alert-overlay')) return;
+                const overlay = document.createElement('div');
+                overlay.id = 'fullscreen-alert-overlay';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:16px;';
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;padding:36px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+                        <div style="width:64px;height:64px;background:#fef3c7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                            <svg style="width:32px;height:32px;color:#d97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
+                            </svg>
+                        </div>
+                        <h3 style="font-size:1.2rem;font-weight:700;color:#111;margin:0 0 10px;">Fullscreen Required</h3>
+                        <p style="color:#555;font-size:.9rem;margin:0 0 8px;">You exited fullscreen mode. This has been recorded as a <strong>violation</strong>.</p>
+                        <p style="color:#555;font-size:.9rem;margin:0 0 24px;">The timer is still running. Return to fullscreen to continue your exam.</p>
+                        <button onclick="window.fullscreenGate.request()"
+                                style="background:linear-gradient(135deg,#b45309,#d97706);color:#fff;border:none;padding:13px 28px;border-radius:8px;font-weight:600;font-size:1rem;cursor:pointer;width:100%;">
+                            Return to Fullscreen
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            },
+
+            hideFullscreenAlert() {
+                const overlay = document.getElementById('fullscreen-alert-overlay');
+                if (overlay) overlay.remove();
+            },
+
             handleUnexpectedExit() {
                 // Report violation to backend
                 fetch(`{{ route('examination-hub.take.proctor.event', $exam) }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
@@ -157,7 +178,9 @@
                         data: { reason: 'unexpected_exit' },
                         timestamp: Date.now()
                     })
-                }).catch(console.error); // Don't let network errors break the flow
+                }).catch(console.error);
+
+                this.showFullscreenAlert();
             }
         };
 
@@ -187,7 +210,7 @@
                                 <p class="text-slate-600 dark:text-slate-400 text-sm">{{ $sectionTitle }}</p>
                             </div>
                         </div>
-                        <button @click="Livewire.dispatch('close-exam')" 
+                        <button @click="Livewire.dispatch('close-exam')"
                                 class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -239,8 +262,8 @@
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                            <button 
-                                @click="fullscreenGate.request(); setTimeout(() => { 
+                            <button
+                                @click="fullscreenGate.request(); setTimeout(() => {
                                     $wire.call('startSection');
                                     // Make sure to show exam content after section starts
                                     setTimeout(() => {
@@ -250,7 +273,7 @@
                                             fullscreenGate.showExamContentOnly();
                                         }
                                     }, 100);
-                                }, 200);" 
+                                }, 200);"
                                 class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg">
                                 <div class="flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,8 +282,8 @@
                                     Enter Fullscreen & Start Exam
                                 </div>
                             </button>
-                            
-                            <button 
+
+                            <button
                                 @click="Livewire.dispatch('close-exam')"
                                 class="px-6 py-4 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 Cancel
@@ -278,9 +301,15 @@
                 <a href="#question-navigation">Skip to question navigation</a>
                 <a href="#question-content">Skip to current question</a>
             </nav>
-            
+
             {{-- Time Alert (Functional Timer) --}}
-            @if($timeRemaining !== null && $timeRemaining > 0)
+            {{-- DEBUG: timeRemaining = {{ var_export($timeRemaining ?? 'NOT_SET', true) }} --}}
+            {{-- DEBUG: section time_limit_minutes = {{ $section->time_limit_minutes ?? 'NULL' }} --}}
+            @php
+                // Force timer to show for debugging - remove this after fixing
+                $debugTimeRemaining = $timeRemaining ?? ($section->time_limit_minutes ? $section->time_limit_minutes * 60 : 1800);
+            @endphp
+            @if(true) {{-- Always show for debugging --}}
             <div id="time-alert-section" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 shadow-sm">
                 <div class="flex items-center justify-end">
                     <div id="time-alert" class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300">
@@ -288,11 +317,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span id="time-remaining" class="text-sm font-bold">Loading...</span>
+                        <span class="text-xs text-slate-500 ml-2">(Debug: {{ $debugTimeRemaining }}s)</span>
                     </div>
                 </div>
             </div>
             @endif
-            
+
             <!-- Main exam interface -->
             <div class="h-full flex flex-col">
                 @livewire('examination-hub.exam-section-taking', [
@@ -324,17 +354,17 @@
             };
         }
     </script>
-    
+
     @if($proctoringEnabled ?? false)
         @push('exam-scripts')
             <script src="{{ asset('js/exam-proctor.js') }}"></script>
         @endpush
     @endif
-    
+
     @push('exam-scripts')
         <script src="{{ asset('js/exam-sync.js') }}"></script>
     @endpush
-    
+
     @push('exam-scripts')
         <script>
             // Initialize exam sync after DOM is ready
@@ -344,11 +374,11 @@
                     const examId = @json($exam->id);
                     const submissionId = @json($submission->id ?? null);
                     const userId = @json(auth()->id());
-                    
+
                     if (examId && submissionId) {
                         window.examSync = new ExamSessionSync(examId, submissionId, userId);
                         window.examSync.init();
-                        
+
                         // Set up event listeners to update sync when responses change
                         Livewire.on('examDataSyncing', () => {
                             if (window.examSync) {
@@ -357,12 +387,12 @@
                         });
                     }
                 }
-                
+
                 // Initialize exam heartbeat after exam sync
                 if (typeof ExamHeartbeat !== 'undefined') {
                     const examId = @json($exam->id);
                     const submissionId = @json($submission->id ?? null);
-                    
+
                     if (examId && submissionId) {
                         window.examHeartbeat = new ExamHeartbeat({
                             examId: examId,
@@ -370,25 +400,24 @@
                             initUrl: "{{ route('examination-hub.take.heartbeat.init', ['exam' => $exam]) }}",
                             acknowledgeUrl: "{{ route('examination-hub.take.heartbeat.acknowledge-warning', ['exam' => $exam]) }}",
                             interval: 15000, // 15 seconds
-                            
+
                             onWarning: function(warning) {
                                 console.log('Warning received:', warning);
                                 // Use default warning handler (modal popup)
                                 window.examHeartbeat.defaultWarningHandler(warning);
                             },
-                            
+
                             onTerminated: function(data) {
-                                console.log('Session terminated:', data);
-                                // Use default termination handler (modal with redirect)
+                                data.redirect = "{{ route('examination-hub.take.completed', $exam) }}";
                                 window.examHeartbeat.defaultTerminatedHandler(data);
                             },
-                            
+
                             onMessage: function(message) {
                                 console.log('Admin message:', message);
                                 // Use default message handler (toast notification)
                                 window.examHeartbeat.defaultMessageHandler(message);
                             },
-                            
+
                             onForceSubmit: function(data) {
                                 console.log('Force submit received:', data);
                                 // Show force submit notification and redirect
@@ -408,13 +437,13 @@
                                     </div>
                                 `;
                                 document.body.appendChild(modal);
-                                
+
                                 // Redirect after 3 seconds
                                 setTimeout(() => {
                                     window.location.href = "{{ route('examination-hub.take.completed', $exam) }}";
                                 }, 3000);
                             },
-                            
+
                             onTimeExtended: function(additionalMinutes) {
                                 console.log('Time extended by:', additionalMinutes, 'minutes');
                                 // Show time extension toast
@@ -437,7 +466,7 @@
                                     </div>
                                 `;
                                 document.body.appendChild(toast);
-                                
+
                                 // Auto remove after 8 seconds
                                 setTimeout(() => toast.remove(), 8000);
                             }
@@ -446,14 +475,14 @@
                 }
             });
         </script>
-        
+
         {{-- Auto-save and submission validation --}}
         <script>
             // Track unsaved changes
             window.hasUnsavedChanges = false;
             window.currentResponses = {};
             window.autoSaveInterval = null;
-            
+
             // Listen for Livewire response updates
             document.addEventListener('livewire:initialized', () => {
                 Livewire.on('responseUpdated', (data) => {
@@ -463,7 +492,7 @@
                     }
                 });
             });
-            
+
             // Auto-save every 30 seconds
             function startAutoSave() {
                 window.autoSaveInterval = setInterval(() => {
@@ -472,60 +501,62 @@
                     }
                 }, 30000); // 30 seconds
             }
-            
+
             // Silent auto-save using beacon API
             function saveResponsesSilently() {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                const csrfToken = document.queryDEBUGSelector('meta[name="csrf-token"]')?.content;
                 if (!csrfToken) return;
-                
+
                 // Get current responses from Livewire component
                 const livewireComponent = document.querySelector('[wire\:id]');
                 if (!livewireComponent) return;
-                
+
                 // Use navigator.sendBeacon for reliable delivery even on page unload
                 const data = new FormData();
                 data.append('_token', csrfToken);
                 data.append('_method', 'POST');
-                
+
                 // Send beacon to save endpoint
                 navigator.sendBeacon(
                     "{{ route('examination-hub.take.save-response', $exam) }}",
                     data
                 );
-                
+
                 window.hasUnsavedChanges = false;
                 console.log('Auto-saved responses at', new Date().toISOString());
             }
-            
+
             // Save before page unload
             window.addEventListener('beforeunload', (e) => {
                 if (window.hasUnsavedChanges) {
                     saveResponsesSilently();
-                    
+
                     // Show warning if user tries to leave with unsaved changes
                     e.preventDefault();
                     e.returnValue = '';
                     return '';
                 }
             });
-            
+
             // Start auto-save when section starts
             window.addEventListener('section-started', () => {
                 startAutoSave();
             });
-            
-            // Start timer immediately if timeRemaining is set
-            @if(isset($timeRemaining) && $timeRemaining !== null && $timeRemaining > 0)
+
+            // Start timer immediately
             document.addEventListener('DOMContentLoaded', () => {
                 startTimer();
             });
-            @endif
-            
+
             // Time remaining countdown
-            @if(isset($timeRemaining) && $timeRemaining !== null && $timeRemaining > 0)
-            let timeRemainingSeconds = {{ $timeRemaining }};
+            @php
+                $jsTimeRemaining = $timeRemaining ?? ($section->time_limit_minutes ? $section->time_limit_minutes * 60 : 1800);
+            @endphp
+            let timeRemainingSeconds = {{ $jsTimeRemaining }};
             console.log('Timer initialized with', timeRemainingSeconds, 'seconds');
-            
+            console.log('Original timeRemaining:', @json($timeRemaining));
+            console.log('Section time_limit_minutes:', @json($section->time_limit_minutes));
+
             function startTimer() {
                 console.log('Starting timer...');
                 const timeElement = document.getElementById('time-remaining');
@@ -536,48 +567,92 @@
                 updateTimerDisplay();
                 setInterval(updateTimeRemaining, 1000);
             }
-            
+
             function updateTimeRemaining() {
                 const timeElement = document.getElementById('time-remaining');
                 if (!timeElement) return;
-                
+
                 if (timeRemainingSeconds <= 0) {
                     timeElement.textContent = '00:00:00';
-                    showTimeWarning('expired');
+                    if (!window.__timerExpired) {
+                        window.__timerExpired = true;
+                        showTimeWarning('expired');
+                        autoSubmitExpired();
+                    }
                     return;
                 }
-                
+
                 timeRemainingSeconds--;
                 updateTimerDisplay();
-                
-                // Show warnings based on time remaining
-                if (timeRemainingSeconds <= 300) { // 5 minutes
+
+                if (timeRemainingSeconds <= 300) {
                     showTimeWarning('critical');
-                } else if (timeRemainingSeconds <= 600) { // 10 minutes
+                } else if (timeRemainingSeconds <= 600) {
                     showTimeWarning('warning');
                 }
             }
-            
+
+            function autoSubmitExpired() {
+                const overlay = document.createElement('div');
+                overlay.id = 'time-expired-overlay';
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;padding:16px;pointer-events:all;';
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;padding:36px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+                        <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                            <svg style="width:32px;height:32px;color:#dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 style="font-size:1.25rem;font-weight:700;color:#111;margin:0 0 8px;">Time Expired</h3>
+                        <p style="color:#555;font-size:.95rem;margin:0 0 20px;">Your exam time has ended. Submitting your answers automatically&hellip;</p>
+                        <div style="width:100%;height:5px;background:#f3f4f6;border-radius:3px;overflow:hidden;">
+                            <div id="expire-progress-bar" style="height:100%;background:linear-gradient(90deg,#dc2626,#ef4444);width:0%;transition:width 2s linear;border-radius:3px;"></div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                requestAnimationFrame(() => {
+                    const bar = document.getElementById('expire-progress-bar');
+                    if (bar) bar.style.width = '100%';
+                });
+                setTimeout(() => {
+                    const form = document.getElementById('exam-submit-form');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        const f = document.createElement('form');
+                        f.method = 'POST';
+                        f.action = '{{ route('examination-hub.take.submit', $exam) }}';
+                        const t = document.createElement('input');
+                        t.type = 'hidden'; t.name = '_token';
+                        t.value = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                        f.appendChild(t);
+                        document.body.appendChild(f);
+                        f.submit();
+                    }
+                }, 2000);
+            }
+
             function updateTimerDisplay() {
                 const timeElement = document.getElementById('time-remaining');
                 if (!timeElement) return;
-                
+
                 const hours = Math.floor(timeRemainingSeconds / 3600);
                 const minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
                 const seconds = timeRemainingSeconds % 60;
-                
-                const timeString = 
-                    String(hours).padStart(2, '0') + ':' + 
-                    String(minutes).padStart(2, '0') + ':' + 
+
+                const timeString =
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
                     String(seconds).padStart(2, '0');
-                
+
                 timeElement.textContent = timeString;
             }
-            
+
             function showTimeWarning(level) {
                 const alertBox = document.getElementById('time-alert');
                 if (!alertBox) return;
-                
+
                 if (level === 'expired') {
                     alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white animate-pulse';
                 } else if (level === 'critical') {
@@ -586,24 +661,23 @@
                     alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300';
                 }
             }
-            @endif
-            
+
             // Validation before final submission
             function confirmSubmission() {
                 const totalQuestions = {{ $questions->count() }};
                 const answeredQuestions = Object.keys(window.currentResponses || {}).length;
-                
+
                 if (answeredQuestions === 0) {
                     return confirm('⚠️ WARNING: You haven\'t answered any questions!\n\nAre you sure you want to submit an empty exam? This cannot be undone.');
                 }
-                
+
                 if (answeredQuestions < totalQuestions * 0.5) {
                     return confirm(`⚠️ You've only answered ${answeredQuestions} of ${totalQuestions} questions.\n\nAre you sure you want to submit?`);
                 }
-                
+
                 return true;
             }
-            
+
             // Initialize when DOM is ready
             document.addEventListener('DOMContentLoaded', () => {
                 // If section already started, begin auto-save
@@ -612,11 +686,11 @@
                     startAutoSave();
                 }
             });
-            
+
             // ── BOOKMARKING FEATURE ──
             window.examBookmarks = {
                 bookmarks: new Set(),
-                
+
                 init() {
                     // Load bookmarks from localStorage
                     const saved = localStorage.getItem('exam_bookmarks_' + {{ $submission->id }});
@@ -629,10 +703,10 @@
                         }
                     }
                 },
-                
+
                 toggle(questionId) {
                     const questionIdStr = String(questionId);
-                    
+
                     if (this.bookmarks.has(questionIdStr)) {
                         this.bookmarks.delete(questionIdStr);
                         this.showNotification('Bookmark removed', 'info');
@@ -640,26 +714,26 @@
                         this.bookmarks.add(questionIdStr);
                         this.showNotification('Question bookmarked for review', 'success');
                     }
-                    
+
                     this.save();
                     this.updateUI();
                 },
-                
+
                 isBookmarked(questionId) {
                     return this.bookmarks.has(String(questionId));
                 },
-                
+
                 save() {
                     localStorage.setItem(
                         'exam_bookmarks_' + {{ $submission->id }},
                         JSON.stringify(Array.from(this.bookmarks))
                     );
                 },
-                
+
                 showNotification(message, type = 'info') {
                     const toast = document.createElement('div');
                     const bgColor = type === 'success' ? 'bg-green-600' : 'bg-blue-600';
-                    
+
                     toast.className = `fixed bottom-4 right-4 z-50 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-y-0`;
                     toast.innerHTML = `
                         <div class="flex items-center gap-2">
@@ -669,22 +743,22 @@
                             <span class="text-sm font-medium">${message}</span>
                         </div>
                     `;
-                    
+
                     document.body.appendChild(toast);
-                    
+
                     setTimeout(() => {
                         toast.style.opacity = '0';
                         toast.style.transform = 'translateY(20px)';
                         setTimeout(() => toast.remove(), 300);
                     }, 2000);
                 },
-                
+
                 updateUI() {
                     // Update bookmark icons in the UI
                     document.querySelectorAll('[data-question-id]').forEach(el => {
                         const questionId = el.getAttribute('data-question-id');
                         const bookmarkIcon = el.querySelector('.bookmark-icon');
-                        
+
                         if (bookmarkIcon) {
                             if (this.isBookmarked(questionId)) {
                                 bookmarkIcon.classList.remove('hidden');
@@ -696,40 +770,40 @@
                         }
                     });
                 },
-                
+
                 showBookmarkedList() {
                     if (this.bookmarks.size === 0) {
                         this.showNotification('No bookmarked questions', 'info');
                         return;
                     }
-                    
+
                     // Create modal to show bookmarked questions
                     const modal = document.createElement('div');
                     modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
                     modal.setAttribute('role', 'dialog');
                     modal.setAttribute('aria-modal', 'true');
                     modal.setAttribute('aria-labelledby', 'bookmarks-title');
-                    
+
                     let bookmarkedList = '';
                     this.bookmarks.forEach(id => {
                         bookmarkedList += `
                             <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                 <span class="text-sm font-medium text-slate-900 dark:text-white">Question ${id}</span>
-                                <button onclick="window.examBookmarks.goToQuestion(${id})" 
+                                <button onclick="window.examBookmarks.goToQuestion(${id})"
                                         class="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                                     Go to Question
                                 </button>
                             </div>
                         `;
                     });
-                    
+
                     modal.innerHTML = `
                         <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden shadow-xl">
                             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h3 id="bookmarks-title" class="text-lg font-semibold text-slate-900 dark:text-white">
                                     Bookmarked Questions (${this.bookmarks.size})
                                 </h3>
-                                <button onclick="this.closest('.fixed').remove()" 
+                                <button onclick="this.closest('.fixed').remove()"
                                         class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                                         aria-label="Close bookmarks dialog">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,23 +815,23 @@
                                 ${bookmarkedList}
                             </div>
                             <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                                <button onclick="this.closest('.fixed').remove()" 
+                                <button onclick="this.closest('.fixed').remove()"
                                         class="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
                                     Close
                                 </button>
                             </div>
                         </div>
                     `;
-                    
+
                     document.body.appendChild(modal);
-                    
+
                     // Close on ESC key
                     modal.addEventListener('keydown', (e) => {
                         if (e.key === 'Escape') {
                             modal.remove();
                         }
                     });
-                    
+
                     // Close on backdrop click
                     modal.addEventListener('click', (e) => {
                         if (e.target === modal) {
@@ -765,7 +839,7 @@
                         }
                     });
                 },
-                
+
                 goToQuestion(questionId) {
                     // This would integrate with Livewire to navigate to the question
                     // For now, just close the modal and show a notification
@@ -773,12 +847,17 @@
                     this.showNotification(`Navigate to question ${questionId} (integration needed)`, 'info');
                 }
             };
-            
+
             // Initialize bookmarks when DOM is ready
             document.addEventListener('DOMContentLoaded', () => {
                 window.examBookmarks.init();
             });
-            
+
+            // Right-click always disabled on exam interface
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            }, true);
+
             // Keyboard shortcut for bookmarks (Ctrl+B or Cmd+B)
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'b') {

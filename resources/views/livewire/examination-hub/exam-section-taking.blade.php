@@ -1,24 +1,80 @@
 {{-- Add the exam-specific scripts to the exam-scripts stack --}}
 @push('exam-scripts')
-    @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js'])
-    
+    @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js', 'resources/js/exam-heartbeat.js'])
+
     <!-- Initialize exam sync functionality -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Extract exam and submission IDs from the Livewire component
             const examId = @json($this->exam->id);
             const submissionId = @json($this->submission->id);
             const userId = @json(auth()->id());
-            
-            // Initialize exam sync if we have the required data
+
             if (examId && submissionId && userId) {
                 const examSync = new window.ExamSessionSync(examId, submissionId, userId);
                 examSync.init();
-                
-                // Store reference globally for potential use by other components
                 window.examSync = examSync;
             }
         });
+
+        function showExamSubmitConfirmation() {
+            if (document.getElementById('exam-submit-modal')) return;
+
+            const navBtns = document.querySelectorAll('[data-answered]');
+            const totalQ = navBtns.length;
+            const answeredQ = document.querySelectorAll('[data-answered="1"]').length;
+            const unanswered = Math.max(0, totalQ - answeredQ);
+
+            const modal = document.createElement('div');
+            modal.id = 'exam-submit-modal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;';
+            modal.innerHTML = `
+                <div style="background:#fff;border-radius:12px;max-width:460px;width:100%;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.4);">
+                    <div style="height:4px;background:linear-gradient(90deg,#065f46,#059669);"></div>
+                    <div style="padding:28px 28px 20px;">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                            <div style="width:48px;height:48px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg style="width:24px;height:24px;color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 style="font-size:1.1rem;font-weight:700;color:#111;margin:0 0 4px;">Submit Examination?</h3>
+                                <p style="font-size:.875rem;color:#6b7280;margin:0;">This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:${unanswered > 0 ? '16px' : '4px'};">
+                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;text-align:center;">
+                                <p style="font-size:1.6rem;font-weight:700;color:#16a34a;margin:0 0 2px;">${answeredQ}</p>
+                                <p style="font-size:.75rem;color:#15803d;margin:0;font-weight:500;">Answered</p>
+                            </div>
+                            <div style="background:${unanswered > 0 ? '#fffbeb' : '#f0fdf4'};border:1px solid ${unanswered > 0 ? '#fde68a' : '#bbf7d0'};border-radius:8px;padding:14px;text-align:center;">
+                                <p style="font-size:1.6rem;font-weight:700;color:${unanswered > 0 ? '#92400e' : '#16a34a'};margin:0 0 2px;">${unanswered}</p>
+                                <p style="font-size:.75rem;color:${unanswered > 0 ? '#b45309' : '#15803d'};margin:0;font-weight:500;">Unanswered</p>
+                            </div>
+                        </div>
+                        ${unanswered > 0 ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;display:flex;align-items:start;gap:10px;">
+                            <svg style="width:18px;height:18px;color:#d97706;flex-shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <p style="font-size:.8rem;color:#92400e;margin:0;"><strong>${unanswered} unanswered question${unanswered !== 1 ? 's' : ''}</strong> will receive no marks.</p>
+                        </div>` : ''}
+                    </div>
+                    <div style="padding:16px 28px 24px;display:flex;gap:12px;flex-direction:row-reverse;">
+                        <button id="confirm-submit-btn"
+                                onclick="document.getElementById('exam-submit-form').submit();"
+                                style="flex:1;background:linear-gradient(135deg,#065f46,#059669);color:#fff;border:none;padding:13px;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer;">
+                            Submit Exam
+                        </button>
+                        <button onclick="document.getElementById('exam-submit-modal').remove();"
+                                style="flex:1;background:#f9fafb;border:1px solid #e5e7eb;color:#374151;padding:13px;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer;">
+                            Review First
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        }
     </script>
 @endpush
 
@@ -54,6 +110,25 @@
                 </div>
 
                 <div class="px-8 py-7 space-y-6" style="font-family: 'system-ui', sans-serif;">
+
+                    {{-- Error Display --}}
+                    @if($errors->any())
+                        <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded" style="border-radius: 2px;">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">Error</h4>
+                                    <ul class="text-sm text-red-700 dark:text-red-400 space-y-1">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     @if($this->section->description)
                         <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -239,7 +314,7 @@
                                      style="width: {{ $this->questions->count() > 0 ? ($this->getAnsweredCount() / $this->questions->count()) * 100 : 0 }}%; background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
                             </div>
                         </div>
-                    
+
                         {{-- Section info toggle --}}
                         <button wire:click="toggleSectionInfo"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
@@ -253,7 +328,7 @@
                         <x-snippets.theme-toggle />
                     </div>
                 </div>
-                
+
                 {{-- Mobile: two-row layout --}}
                 <div class="sm:hidden space-y-2">
                     {{-- Row 1: Title --}}
@@ -271,7 +346,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {{-- Row 2: Actions --}}
                     <div class="flex items-center justify-end gap-2">
                         <button wire:click="toggleSectionInfo"
@@ -426,6 +501,7 @@
                                 <button
                                     wire:key="nav-btn-{{ $q->id }}"
                                     wire:click="goToQuestion({{ $index }})"
+                                    data-answered="{{ !empty($responses[$q->id]) ? '1' : '0' }}"
                                     title="Question {{ $index + 1 }}"
                                     class="w-7 h-7 sm:w-8 sm:h-8 text-xs font-semibold transition-all duration-150 flex items-center justify-center relative"
                                     style="border-radius: 2px;
@@ -492,7 +568,8 @@
                     @else
                         <form id="exam-submit-form" method="POST" action="{{ route('examination-hub.take.submit', $this->exam) }}">
                             @csrf
-                            <button type="submit"
+                            <button type="button"
+                                    onclick="showExamSubmitConfirmation()"
                                     class="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white transition-all"
                                     style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 12px rgba(5,150,105,0.35);">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

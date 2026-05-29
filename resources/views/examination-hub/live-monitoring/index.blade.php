@@ -257,7 +257,7 @@
                                         </button>
 
                                         {{-- Force Submit --}}
-                                        <button @click="confirmForceSubmit(participant)"
+                                        <button @click="openForceSubmitModal(participant)"
                                                 :disabled="participant.status === 'completed' || participant.status === 'terminated'"
                                                 class="p-1.5 text-slate-500 hover:text-orange-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                 title="Force Submit">
@@ -265,7 +265,7 @@
                                         </button>
 
                                         {{-- Terminate --}}
-                                        <button @click="confirmTerminate(participant)"
+                                        <button @click="openTerminateModal(participant)"
                                                 :disabled="participant.status === 'completed' || participant.status === 'terminated'"
                                                 class="p-1.5 text-slate-500 hover:text-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                 title="Terminate Session">
@@ -379,6 +379,104 @@
             </div>
         </template>
 
+        {{-- ── TERMINATE MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showTerminateModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showTerminateModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full bg-gradient-to-r from-red-600 to-red-400"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-x-circle class="w-5 h-5 text-red-500" />
+                            Terminate Session
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1" x-text="'Participant: ' + (selectedParticipant?.participant_name || '')"></p>
+                    </div>
+                    <div class="px-6 py-4">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason for termination <span class="text-red-500">*</span></label>
+                        <textarea x-model="terminateReason"
+                                  rows="3"
+                                  placeholder="Enter a reason (required)..."
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-red-500"
+                                  style="border-radius: 2px;"></textarea>
+                        <p class="text-xs text-slate-500 mt-2">This reason will be shown to the participant and logged in the audit trail.</p>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showTerminateModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeTerminate()"
+                                :disabled="!terminateReason.trim() || actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Terminate Session</span>
+                            <span x-show="actionLoading">Terminating...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- ── FORCE SUBMIT MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showForceSubmitModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showForceSubmitModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full bg-gradient-to-r from-orange-500 to-orange-400"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-paper-airplane class="w-5 h-5 text-orange-500" />
+                            Force Submit Exam
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1" x-text="'Participant: ' + (selectedParticipant?.participant_name || '')"></p>
+                    </div>
+                    <div class="px-6 py-4">
+                        <div class="p-3 mb-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded text-sm text-orange-800 dark:text-orange-300">
+                            This will immediately submit the participant's exam with all current answers. This action cannot be undone.
+                        </div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason (optional)</label>
+                        <textarea x-model="forceSubmitReason"
+                                  rows="2"
+                                  placeholder="Optional reason..."
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-orange-500"
+                                  style="border-radius: 2px;"></textarea>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showForceSubmitModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeForceSubmit()"
+                                :disabled="actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Force Submit</span>
+                            <span x-show="actionLoading">Submitting...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
         {{-- ── WARNING MODAL ── --}}
         <template x-teleport="body">
             <div x-show="showWarningModal"
@@ -435,6 +533,7 @@
                 stats: initialData.stats,
                 participants: initialData.participants,
                 loading: false,
+                actionLoading: false,
                 lastUpdated: new Date().toLocaleTimeString(),
                 activeFilter: 'all',
                 searchQuery: '',
@@ -444,10 +543,14 @@
                 showMessageModal: false,
                 showMessageAllModal: false,
                 showWarningModal: false,
+                showTerminateModal: false,
+                showForceSubmitModal: false,
                 selectedParticipant: null,
                 messageText: '',
                 messageAllText: '',
                 warningText: '',
+                terminateReason: '',
+                forceSubmitReason: '',
 
                 get statsCards() {
                     return [
@@ -663,43 +766,52 @@
                     }
                 },
 
-                async confirmForceSubmit(participant) {
-                    if (!confirm(`Are you sure you want to force submit the exam for ${participant.participant_name}? This action cannot be undone.`)) {
-                        return;
-                    }
-
-                    try {
-                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/force-submit') }}/${participant.submission_id}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            },
-                            body: JSON.stringify({ reason: 'Admin force submission' }),
-                        });
-                        this.refreshData();
-                    } catch (error) {
-                        console.error('Failed to force submit:', error);
-                    }
+                openForceSubmitModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.forceSubmitReason = '';
+                    this.showForceSubmitModal = true;
                 },
 
-                async confirmTerminate(participant) {
-                    const reason = prompt(`Enter reason for terminating ${participant.participant_name}'s session:`);
-                    if (!reason) return;
-
+                async executeForceSubmit() {
+                    if (!this.selectedParticipant) return;
+                    this.actionLoading = true;
                     try {
-                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/terminate') }}/${participant.submission_id}`, {
+                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/force-submit') }}/${this.selectedParticipant.submission_id}`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            },
-                            body: JSON.stringify({ reason }),
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ reason: this.forceSubmitReason || 'Admin force submission' }),
                         });
+                        this.showForceSubmitModal = false;
+                        this.addToast('success', `Exam force submitted for ${this.selectedParticipant.participant_name}`);
                         this.refreshData();
                     } catch (error) {
-                        console.error('Failed to terminate:', error);
+                        this.addToast('error', 'Failed to force submit');
                     }
+                    this.actionLoading = false;
+                },
+
+                openTerminateModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.terminateReason = '';
+                    this.showTerminateModal = true;
+                },
+
+                async executeTerminate() {
+                    if (!this.selectedParticipant || !this.terminateReason.trim()) return;
+                    this.actionLoading = true;
+                    try {
+                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/terminate') }}/${this.selectedParticipant.submission_id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ reason: this.terminateReason }),
+                        });
+                        this.showTerminateModal = false;
+                        this.addToast('success', `Session terminated for ${this.selectedParticipant.participant_name}`);
+                        this.refreshData();
+                    } catch (error) {
+                        this.addToast('error', 'Failed to terminate session');
+                    }
+                    this.actionLoading = false;
                 },
 
                 showViolationToast(data) {
