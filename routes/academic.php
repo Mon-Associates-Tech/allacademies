@@ -10,6 +10,7 @@ use App\Http\Controllers\Questions\MultipleChoiceQuestionController;
 use App\Http\Controllers\Questions\TrueOrFalseQuestionController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\SubtopicController;
+use App\Http\Controllers\QuestionImportController;
 use App\Livewire\AcademicManagement\AcademicHierarchy;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,16 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
 
                     // Keep the subtopic route within the hierarchy
                     Route::resource('subtopics', SubtopicController::class);
+                    
+                    // Add import route for questions - properly nested within the hierarchy
+                    Route::get('/import-questions', [QuestionImportController::class, 'showImportForm'])
+                        ->name('questions.import.form');
+                    Route::post('/preview-questions', [QuestionImportController::class, 'previewQuestions'])
+                        ->name('questions.preview');
+                    Route::post('/import-questions', [QuestionImportController::class, 'importQuestions'])
+                        ->name('questions.import');
+                    Route::get('/download-template', [QuestionImportController::class, 'downloadTemplate'])
+                        ->name('questions.template.download');
                 });
 
                 // Keep examinations and quizzes routes within the subject hierarchy
