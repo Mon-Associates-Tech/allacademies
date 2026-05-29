@@ -39,6 +39,15 @@
             async request() {
                 if (this.isActive) return;
 
+                // Grace period: suppress the blocking overlay for 1.5 s after a
+                // programmatic fullscreen request.  Browsers sometimes fire a
+                // spurious exit event while the fullscreen transition is settling.
+                window.__fullscreenGracePeriod = true;
+                clearTimeout(window.__fullscreenGraceTimer);
+                window.__fullscreenGraceTimer = setTimeout(() => {
+                    window.__fullscreenGracePeriod = false;
+                }, 1500);
+
                 try {
                     await document.documentElement.requestFullscreen().catch(e => {
                         // Safari/iOS
@@ -58,6 +67,7 @@
                     }, 100);
 
                 } catch (err) {
+                    window.__fullscreenGracePeriod = false;
                     console.error('Fullscreen request denied:', err);
                     alert('Fullscreen mode is required for this exam. Please allow fullscreen permissions.');
                 }
@@ -180,6 +190,11 @@
                     })
                 }).catch(console.error);
 
+                // During the grace period right after a programmatic fullscreen
+                // request, skip the blocking overlay — the browser sometimes fires
+                // a spurious exit event while the transition is settling.
+                if (window.__fullscreenGracePeriod) return;
+
                 this.showFullscreenAlert();
             }
         };
@@ -193,104 +208,111 @@
     </script>
 
     <div x-data="{ showSectionInfo: true }" class="w-full h-full">
-        <!-- SECTION INFO OVERLAY -->
+        <!-- FULLSCREEN GATE -->
         <template x-if="showSectionInfo">
-            <div id="fullscreen-instruction-panel" class="fixed inset-0 z-[100] bg-white dark:bg-slate-900 overflow-y-auto">
-                <div class="max-w-4xl mx-auto px-6 py-8">
-                    <!-- Header with logo -->
-                    <div class="flex items-start justify-between mb-8">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ $exam->title }}</h1>
-                                <p class="text-slate-600 dark:text-slate-400 text-sm">{{ $sectionTitle }}</p>
-                            </div>
-                        </div>
-                        <button @click="Livewire.dispatch('close-exam')"
-                                class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+            <div id="fullscreen-instruction-panel"
+                 class="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-950 flex flex-col overflow-y-auto"
+                 style="font-family: 'system-ui', -apple-system, sans-serif;">
 
-                    <!-- Section Info Content -->
-                    <div class="space-y-6">
-                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-5">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {{-- Centred card --}}
+                <div class="flex-1 flex items-center justify-center px-4 py-10">
+                    <div class="w-full max-w-md">
+
+                        {{-- Card --}}
+                        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                             style="border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.07), 0 20px 60px -10px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06);">
+
+                            <div class="h-1 w-full" style="background: linear-gradient(90deg,#b45309,#d97706,#fbbf24);"></div>
+
+                            {{-- Card header --}}
+                            <div class="px-8 pt-7 pb-6 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                                         style="background: linear-gradient(135deg,#fef3c7,#fde68a); border-radius: 50%;">
+                                        <svg class="w-5 h-5" style="color:#b45309;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-lg font-bold text-slate-900 dark:text-white" style="letter-spacing:-0.02em;">
+                                            Fullscreen Required
+                                        </h2>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                            This exam must be taken in fullscreen mode
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    Before you can begin, your browser will switch to fullscreen mode to maintain exam integrity.
+                                    You will be able to review the section details and exam rules on the next screen.
+                                </p>
+                            </div>
+
+                            {{-- Steps --}}
+                            <div class="px-8 py-5 space-y-3 border-b border-slate-100 dark:border-slate-800">
+                                <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                                   style="font-size:10px; letter-spacing:0.12em;">What happens next</p>
+
+                                @foreach([
+                                    ['icon' => 'M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5', 'label' => 'Your browser enters fullscreen mode'],
+                                    ['icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'label' => 'Section details and exam rules are displayed'],
+                                    ['icon' => 'M13 7l5 5m0 0l-5 5m5-5H6', 'label' => 'You click Begin Section to start the timer'],
+                                ] as $i => $step)
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center text-xs font-bold text-amber-700 dark:text-amber-400"
+                                             style="background:rgba(217,119,6,0.1); border-radius:50%;">
+                                            {{ $i + 1 }}
+                                        </div>
+                                        <div class="flex items-center gap-2.5 flex-1">
+                                            <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $step['icon'] }}"/>
+                                            </svg>
+                                            <span class="text-sm text-slate-700 dark:text-slate-300">{{ $step['label'] }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            {{-- Notice --}}
+                            <div class="px-8 py-4 border-b border-slate-100 dark:border-slate-800"
+                                 style="background: rgba(251,191,36,0.04);">
+                                <div class="flex items-start gap-2.5">
+                                    <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                     </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-amber-800 dark:text-amber-200">Important Instructions</h3>
-                                    <ul class="mt-2 space-y-2 text-amber-700 dark:text-amber-300 text-sm list-disc pl-5">
-                                        <li>This exam requires full screen mode for integrity</li>
-                                        <li>You must remain in full screen throughout the exam</li>
-                                        <li>Exiting full screen will be recorded as a violation</li>
-                                        <li>Ensure you have a stable internet connection</li>
-                                        <li>Complete all questions before the time expires</li>
-                                    </ul>
+                                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                                        Exiting fullscreen at any point during the exam will be recorded as a violation and will block your screen until you return. The timer continues running while you are outside fullscreen.
+                                    </p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                                <div class="text-slate-500 dark:text-slate-400 text-sm">Questions</div>
-                                <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ $questions->count() }}</div>
-                            </div>
-                            <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                                <div class="text-slate-500 dark:text-slate-400 text-sm">Time Limit</div>
-                                <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                    @if($sectionTimeLimit)
-                                        {{ gmdate('H:i:s', $sectionTimeLimit) }}
-                                    @else
-                                        No Limit
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                                <div class="text-slate-500 dark:text-slate-400 text-sm">Total Marks</div>
-                                <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ $totalMarks }}</div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                            <button
-                                @click="fullscreenGate.request(); setTimeout(() => {
-                                    $wire.call('startSection');
-                                    // Make sure to show exam content after section starts
-                                    setTimeout(() => {
-                                        if (fullscreenGate.isActive) {
-                                            fullscreenGate.hideInstructionPanel();
-                                        } else {
-                                            fullscreenGate.showExamContentOnly();
-                                        }
-                                    }, 100);
-                                }, 200);"
-                                class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg">
-                                <div class="flex items-center justify-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" />
+                            {{-- Actions --}}
+                            <div class="px-8 py-6 flex flex-col sm:flex-row gap-3">
+                                <button @click="fullscreenGate.request();"
+                                        class="flex-1 inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-semibold text-white transition-all"
+                                        style="background: linear-gradient(135deg,#b45309,#d97706); border-radius: 2px; box-shadow: 0 2px 12px rgba(180,83,9,0.35);">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
                                     </svg>
-                                    Enter Fullscreen & Start Exam
-                                </div>
-                            </button>
-
-                            <button
-                                @click="Livewire.dispatch('close-exam')"
-                                class="px-6 py-4 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                Cancel
-                            </button>
+                                    Enter Fullscreen to Begin
+                                </button>
+                                <a href="{{ route('examination-hub.take.start', $exam) }}"
+                                   class="inline-flex items-center justify-center gap-2 py-3 px-5 text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                   style="border-radius: 2px;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                    </svg>
+                                    Exit
+                                </a>
+                            </div>
                         </div>
+
                     </div>
                 </div>
+
             </div>
         </template>
 
@@ -301,27 +323,6 @@
                 <a href="#question-navigation">Skip to question navigation</a>
                 <a href="#question-content">Skip to current question</a>
             </nav>
-
-            {{-- Time Alert (Functional Timer) --}}
-            {{-- DEBUG: timeRemaining = {{ var_export($timeRemaining ?? 'NOT_SET', true) }} --}}
-            {{-- DEBUG: section time_limit_minutes = {{ $section->time_limit_minutes ?? 'NULL' }} --}}
-            @php
-                // Force timer to show for debugging - remove this after fixing
-                $debugTimeRemaining = $timeRemaining ?? ($section->time_limit_minutes ? $section->time_limit_minutes * 60 : 1800);
-            @endphp
-            @if(true) {{-- Always show for debugging --}}
-            <div id="time-alert-section" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 shadow-sm">
-                <div class="flex items-center justify-end">
-                    <div id="time-alert" class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span id="time-remaining" class="text-sm font-bold">Loading...</span>
-                        <span class="text-xs text-slate-500 ml-2">(Debug: {{ $debugTimeRemaining }}s)</span>
-                    </div>
-                </div>
-            </div>
-            @endif
 
             <!-- Main exam interface -->
             <div class="h-full flex flex-col">
@@ -355,11 +356,6 @@
         }
     </script>
 
-    @if($proctoringEnabled ?? false)
-        @push('exam-scripts')
-            <script src="{{ asset('js/exam-proctor.js') }}"></script>
-        @endpush
-    @endif
 
     @push('exam-scripts')
         <script src="{{ asset('js/exam-sync.js') }}"></script>
@@ -538,30 +534,41 @@
                 }
             });
 
-            // Start auto-save when section starts
+            // Activate violation monitoring only once the section has actually started.
+            // Loading the proctoring script and enabling right-click prevention before
+            // this point would record false violations while the candidate is still on
+            // the pre-fullscreen gate page.
             window.addEventListener('section-started', () => {
-                startAutoSave();
-            });
-
-            // Start timer immediately
-            document.addEventListener('DOMContentLoaded', () => {
                 startTimer();
-            });
+                startAutoSave();
+
+                // Disable right-click now that the exam is live
+                document.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                }, true);
+
+                // Load the proctoring script now that the section is active
+                @if($proctoringEnabled ?? false)
+                if (window.ExamProctorConfig) {
+                    const s = document.createElement('script');
+                    s.src = @json(asset('js/exam-proctor.js'));
+                    document.head.appendChild(s);
+                }
+                @endif
+            }, { once: true });
 
             // Time remaining countdown
             @php
                 $jsTimeRemaining = $timeRemaining ?? ($section->time_limit_minutes ? $section->time_limit_minutes * 60 : 1800);
             @endphp
             let timeRemainingSeconds = {{ $jsTimeRemaining }};
-            console.log('Timer initialized with', timeRemainingSeconds, 'seconds');
-            console.log('Original timeRemaining:', @json($timeRemaining));
-            console.log('Section time_limit_minutes:', @json($section->time_limit_minutes));
 
-            function startTimer() {
-                console.log('Starting timer...');
+            function startTimer(attemptsLeft) {
+                attemptsLeft = (attemptsLeft === undefined) ? 20 : attemptsLeft;
                 const timeElement = document.getElementById('time-remaining');
                 if (!timeElement) {
-                    console.error('Timer element not found!');
+                    // Livewire morph may not have completed yet — retry up to 2 s
+                    if (attemptsLeft > 0) setTimeout(() => startTimer(attemptsLeft - 1), 100);
                     return;
                 }
                 updateTimerDisplay();
@@ -634,32 +641,40 @@
             }
 
             function updateTimerDisplay() {
-                const timeElement = document.getElementById('time-remaining');
-                if (!timeElement) return;
-
-                const hours = Math.floor(timeRemainingSeconds / 3600);
+                const hours   = Math.floor(timeRemainingSeconds / 3600);
                 const minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
                 const seconds = timeRemainingSeconds % 60;
-
-                const timeString =
+                const str =
                     String(hours).padStart(2, '0') + ':' +
                     String(minutes).padStart(2, '0') + ':' +
                     String(seconds).padStart(2, '0');
 
-                timeElement.textContent = timeString;
+                const el = document.getElementById('time-remaining');
+                if (el) el.textContent = str;
+                const elM = document.getElementById('time-remaining-mobile');
+                if (elM) elM.textContent = str;
             }
 
             function showTimeWarning(level) {
-                const alertBox = document.getElementById('time-alert');
-                if (!alertBox) return;
+                const base = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-all duration-300';
+                const baseM = 'inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold transition-all duration-300';
+                let cls, clsM;
 
                 if (level === 'expired') {
-                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white animate-pulse';
+                    cls  = base  + ' bg-red-600 text-white animate-pulse';
+                    clsM = baseM + ' bg-red-600 text-white animate-pulse';
                 } else if (level === 'critical') {
-                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
+                    cls  = base  + ' bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
+                    clsM = baseM + ' bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
                 } else if (level === 'warning') {
-                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300';
+                    cls  = base  + ' bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300';
+                    clsM = baseM + ' bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300';
                 }
+
+                const alertBox = document.getElementById('time-alert');
+                if (alertBox && cls) { alertBox.className = cls; alertBox.style.borderRadius = '2px'; }
+                const alertBoxM = document.getElementById('time-alert-mobile');
+                if (alertBoxM && clsM) { alertBoxM.className = clsM; alertBoxM.style.borderRadius = '2px'; }
             }
 
             // Validation before final submission
@@ -853,10 +868,6 @@
                 window.examBookmarks.init();
             });
 
-            // Right-click always disabled on exam interface
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            }, true);
 
             // Keyboard shortcut for bookmarks (Ctrl+B or Cmd+B)
             document.addEventListener('keydown', (e) => {

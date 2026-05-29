@@ -160,6 +160,56 @@
                         </div>
                     </div>
 
+                    {{-- Exam Rules / Proctoring Requirements --}}
+                    <div style="border-radius: 2px; border: 1px solid rgba(180,83,9,0.18); background: rgba(251,191,36,0.04);">
+                        <div class="px-4 py-2.5 border-b flex items-center gap-2" style="border-color: rgba(180,83,9,0.12);">
+                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <h4 class="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.12em;">Exam Rules &amp; Proctoring</h4>
+                        </div>
+                        <ul class="px-4 py-3 space-y-2">
+                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Fullscreen mode is required throughout the exam. Exiting fullscreen will be recorded as a violation and block your screen until you return.</span>
+                            </li>
+                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Right-clicking is disabled on the exam interface.</span>
+                            </li>
+                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Switching tabs or windows is monitored and recorded.</span>
+                            </li>
+                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Developer tools and keyboard shortcuts (F12, Ctrl+Shift+I, Print Screen) are blocked.</span>
+                            </li>
+                            @if($this->exam->hardened_mode ?? false)
+                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Copy and paste are disabled (hardened mode).</span>
+                            </li>
+                            @endif
+                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+                                <svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>The timer continues running even if you exit fullscreen. Your session is monitored in real time.</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     @if($this->section->instructions)
                         <div style="border-left: 3px solid #d97706; padding-left: 1rem;">
                             <h4 class="text-xs font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-2" style="font-size: 10px; letter-spacing: 0.12em;">Instructions</h4>
@@ -176,6 +226,7 @@
                         @endif
                         <div>
                             <button wire:click="startSection"
+                                    @click="window.__fullscreenGracePeriod = true; clearTimeout(window.__fullscreenGraceTimer); window.__fullscreenGraceTimer = setTimeout(function(){ window.__fullscreenGracePeriod = false; }, 2000);"
                                     @if($this->section->instructions) wire:loading.attr="disabled" @endif
                                     @if($this->section->instructions && ! $this->instructionsAcknowledged) disabled @endif
                                     class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200"
@@ -315,6 +366,16 @@
                             </div>
                         </div>
 
+                        {{-- Timer — wire:ignore prevents Livewire morphdom from resetting the JS-updated text --}}
+                        <div id="time-alert" wire:ignore
+                             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-all duration-300 text-slate-500 dark:text-slate-400"
+                             style="border-radius: 2px;">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span id="time-remaining" class="tabular-nums">–</span>
+                        </div>
+
                         {{-- Section info toggle --}}
                         <button wire:click="toggleSectionInfo"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
@@ -349,6 +410,15 @@
 
                     {{-- Row 2: Actions --}}
                     <div class="flex items-center justify-end gap-2">
+                        {{-- Timer (mobile) — wire:ignore for same reason as desktop timer --}}
+                        <div id="time-alert-mobile" wire:ignore
+                             class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold transition-all duration-300 text-slate-500 dark:text-slate-400"
+                             style="border-radius: 2px;">
+                            <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span id="time-remaining-mobile" class="tabular-nums">–</span>
+                        </div>
                         <button wire:click="toggleSectionInfo"
                                 class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
                                 style="border-radius: 2px;">
@@ -365,7 +435,7 @@
         {{-- ── SCROLLABLE CONTENT AREA ── --}}
         <div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950"
              style="scrollbar-gutter: stable;">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-5">
 
                 @php
                     $question = $this->questions[$currentQuestionIndex];
@@ -412,9 +482,9 @@
                     </div>
 
                     {{-- Question body --}}
-                    <div class="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5">
+                    <div class="px-4 sm:px-6 pt-3 sm:pt-4 pb-3 sm:pb-4">
                         {{-- Question text --}}
-                        <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
+                        <div class="text-slate-800 dark:text-slate-200 mb-3 sm:mb-4 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
                              wire:key="question-text-{{ $question->id }}">
                             <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
                         </div>

@@ -123,24 +123,27 @@ class ExamTakingController extends Controller
             ]);
         }
 
-        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->withCount('questions')]);
+        // If the exam hasn't opened yet show the waiting/countdown page — that
+        // is the only scenario where the start view adds value.
+        if ($exam->starts_at && $exam->starts_at->isFuture()) {
+            $exam->load(['sections' => fn ($q) => $q->orderBy('order')->withCount('questions')]);
 
-        // If there's a saved last position and the submission is in progress,
-        // redirect the participant straight to that section/question.
-        $lastPos = $submission->last_position ?? null;
-        if ($submission->isInProgress() && is_array($lastPos) && isset($lastPos['section'])) {
-            $sectionIndex = (int) $lastPos['section'];
-            $questionIndex = (int) ($lastPos['question'] ?? 0);
-
-            return redirect()->route('examination-hub.take.section', [$exam, $sectionIndex])
-                ->with('restored_question', $questionIndex);
+            return view('examination-hub.take.start', [
+                'exam'              => $exam,
+                'submission'        => $submission,
+                'proctoringEnabled' => (bool) $exam->proctoring_enabled,
+            ]);
         }
 
-        return view('examination-hub.take.start', [
-            'exam' => $exam,
-            'submission' => $submission,
-            'proctoringEnabled' => (bool) $exam->proctoring_enabled,
-        ]);
+        // Resume from the last saved position when the candidate returns mid-exam.
+        $lastPos = $submission->last_position ?? null;
+        if ($submission->isInProgress() && is_array($lastPos) && isset($lastPos['section'])) {
+            return redirect()->route('examination-hub.take.section', [$exam, (int) $lastPos['section']])
+                ->with('restored_question', (int) ($lastPos['question'] ?? 0));
+        }
+
+        // First visit — go straight to section 0.
+        return redirect()->route('examination-hub.take.section', [$exam, 0]);
     }
 
     public function section(GeneralExam $exam, int $sectionIndex): View|RedirectResponse
