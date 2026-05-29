@@ -298,44 +298,75 @@ class ExamParticipantHeartbeat extends Model
 
     /**
      * Convert to array for broadcasting/API response.
+     *
+     * @param  \Illuminate\Support\Collection|null  $examSections  Pre-loaded sections
+     *         (ordered) to avoid N+1 queries; section time limits take precedence
+     *         over the exam-level duration.
      */
-    public function toLiveData(?int $examDurationMinutes = null): array
+    public function toLiveData(?int $examDurationMinutes = null, $examSections = null): array
     {
-        $elapsedSeconds = $this->getElapsedTime();
-
+        $elapsedSeconds  = $this->getElapsedTime();
         $remainingSeconds = null;
-        if ($examDurationMinutes && $this->started_at) {
-            $endAt = $this->started_at->copy()->addMinutes($examDurationMinutes);
-            $remainingSeconds = max(0, (int) $endAt->diffInSeconds(now(), false));
+        $hasDuration      = false;
+
+        // ── 1. Section-level remaining (most accurate) ─────────────────────────
+        // Use the current section's time limit + its recorded start timestamp from
+        // the submission.  This is more meaningful than the exam-level duration
+        // when sections have individual time caps.
+        $submission = $this->submission;
+
+        if ($submission && $examSections && $examSections->isNotEmpty()) {
+            $sectionStartTimes  = $submission->section_start_times ?? [];
+            $currentSectionIdx  = (int) ($this->current_section_index ?? 0);
+            $currentSection     = $examSections->get($currentSectionIdx);
+
+            if ($currentSection && $currentSection->time_limit_minutes) {
+                $sectionKey = (string) $currentSection->id;
+
+                if (isset($sectionStartTimes[$sectionKey])) {
+                    $sectionStart = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+                    $sectionEnd   = $sectionStart->copy()->addMinutes((int) $currentSection->time_limit_minutes);
+
+                    $remainingSeconds = max(0, (int) now()->diffInSeconds($sectionEnd, false));
+                    $hasDuration      = true;
+                }
+            }
+        }
+
+        // ── 2. Exam-level fallback ─────────────────────────────────────────────
+        if (! $hasDuration && $examDurationMinutes && $this->started_at) {
+            $endAt            = $this->started_at->copy()->addMinutes($examDurationMinutes);
+            $remainingSeconds = max(0, (int) now()->diffInSeconds($endAt, false));
+            $hasDuration      = true;
         }
 
         return [
-            'id' => $this->id,
-            'submission_id' => $this->general_exam_submission_id,
-            'participant_name' => $this->participant_name ?? 'Anonymous',
-            'participant_email' => $this->participant_email,
-            'session_token' => $this->session_token,
-            'status' => $this->status,
-            'is_focused' => $this->is_focused,
-            'current_question' => $this->current_question_index + 1,
-            'current_section' => $this->current_section_index + 1,
-            'questions_answered' => $this->questions_answered,
-            'total_questions' => $this->total_questions,
-            'progress_percentage' => $this->getProgressPercentage(),
-            'violation_count' => $this->violation_count,
-            'high_severity_count' => $this->high_severity_count,
-            'medium_severity_count' => $this->medium_severity_count,
-            'is_flagged' => $this->is_flagged,
-            'has_warning' => $this->has_warning,
-            'admin_message' => $this->admin_message,
-            'started_at' => $this->started_at?->toIso8601String(),
-            'last_heartbeat_at' => $this->last_heartbeat_at?->toIso8601String(),
-            'elapsed_seconds' => $elapsedSeconds,
-            'remaining_seconds' => $remainingSeconds,
-            'has_duration' => $examDurationMinutes !== null && $examDurationMinutes > 0,
-            'ip_address' => $this->ip_address,
-            'browser' => $this->browser,
-            'os' => $this->os,
+            'id'                   => $this->id,
+            'submission_id'        => $this->general_exam_submission_id,
+            'participant_name'     => $this->participant_name ?? 'Anonymous',
+            'participant_email'    => $this->participant_email,
+            'session_token'        => $this->session_token,
+            'status'               => $this->status,
+            'is_focused'           => $this->is_focused,
+            'current_question'     => $this->current_question_index + 1,
+            'current_section'      => $this->current_section_index + 1,
+            'questions_answered'   => $this->questions_answered,
+            'total_questions'      => $this->total_questions,
+            'progress_percentage'  => $this->getProgressPercentage(),
+            'violation_count'      => $this->violation_count,
+            'high_severity_count'  => $this->high_severity_count,
+            'medium_severity_count'=> $this->medium_severity_count,
+            'is_flagged'           => $this->is_flagged,
+            'has_warning'          => $this->has_warning,
+            'admin_message'        => $this->admin_message,
+            'started_at'           => $this->started_at?->toIso8601String(),
+            'last_heartbeat_at'    => $this->last_heartbeat_at?->toIso8601String(),
+            'elapsed_seconds'      => $elapsedSeconds,
+            'remaining_seconds'    => $remainingSeconds,
+            'has_duration'         => $hasDuration,
+            'ip_address'           => $this->ip_address,
+            'browser'              => $this->browser,
+            'os'                   => $this->os,
         ];
     }
 }

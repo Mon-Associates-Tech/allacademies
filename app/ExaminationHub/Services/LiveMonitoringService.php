@@ -136,8 +136,9 @@ class LiveMonitoringService
         });
 
         $durationMinutes = $exam->duration_in_minutes;
+        $sections        = $exam->sections()->orderBy('order')->get();
 
-        $participants = $heartbeats->map(fn ($h) => $h->toLiveData($durationMinutes));
+        $participants = $heartbeats->map(fn ($h) => $h->toLiveData($durationMinutes, $sections));
 
         // Calculate stats
         $stats = [
@@ -187,8 +188,11 @@ class LiveMonitoringService
             ->limit(50)
             ->get();
 
+        $exam     = $heartbeat->exam;
+        $sections = $exam?->sections()->orderBy('order')->get() ?? collect();
+
         return [
-            'participant' => $heartbeat->toLiveData($heartbeat->exam?->duration_in_minutes),
+            'participant' => $heartbeat->toLiveData($exam?->duration_in_minutes, $sections),
             'violations' => $logs->map(fn ($log) => [
                 'id' => $log->id,
                 'event_type' => $log->event_type,
