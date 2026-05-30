@@ -309,24 +309,23 @@ class ExamParticipantHeartbeat extends Model
         $remainingSeconds = null;
         $hasDuration      = false;
 
+        $totalAllowedSeconds = null;
+
         // ── 1. Section-level remaining (most accurate) ─────────────────────────
-        // Use the current section's time limit + its recorded start timestamp from
-        // the submission.  This is more meaningful than the exam-level duration
-        // when sections have individual time caps.
         $submission = $this->submission;
 
         if ($submission && $examSections && $examSections->isNotEmpty()) {
-            $sectionStartTimes  = $submission->section_start_times ?? [];
-            $currentSectionIdx  = (int) ($this->current_section_index ?? 0);
-            $currentSection     = $examSections->get($currentSectionIdx);
+            $sectionStartTimes = $submission->section_start_times ?? [];
+            $currentSectionIdx = (int) ($this->current_section_index ?? 0);
+            $currentSection    = $examSections->get($currentSectionIdx);
 
             if ($currentSection && $currentSection->time_limit_minutes) {
-                $sectionKey = (string) $currentSection->id;
+                $sectionKey          = (string) $currentSection->id;
+                $totalAllowedSeconds = $currentSection->time_limit_minutes * 60;
 
                 if (isset($sectionStartTimes[$sectionKey])) {
-                    $sectionStart = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-                    $sectionEnd   = $sectionStart->copy()->addMinutes((int) $currentSection->time_limit_minutes);
-
+                    $sectionStart     = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+                    $sectionEnd       = $sectionStart->copy()->addMinutes((int) $currentSection->time_limit_minutes);
                     $remainingSeconds = max(0, (int) now()->diffInSeconds($sectionEnd, false));
                     $hasDuration      = true;
                 }
@@ -335,9 +334,20 @@ class ExamParticipantHeartbeat extends Model
 
         // ── 2. Exam-level fallback ─────────────────────────────────────────────
         if (! $hasDuration && $examDurationMinutes && $this->started_at) {
-            $endAt            = $this->started_at->copy()->addMinutes($examDurationMinutes);
-            $remainingSeconds = max(0, (int) now()->diffInSeconds($endAt, false));
-            $hasDuration      = true;
+            $totalAllowedSeconds = $examDurationMinutes * 60;
+            $endAt               = $this->started_at->copy()->addMinutes($examDurationMinutes);
+            $remainingSeconds    = max(0, (int) now()->diffInSeconds($endAt, false));
+            $hasDuration         = true;
+        }
+
+        // ── 3. Time taken (final — for completed / terminated participants) ────
+        $timeTakenSeconds = null;
+        if ($submission) {
+            if ($submission->submitted_at && $submission->started_at) {
+                $timeTakenSeconds = (int) $submission->started_at->diffInSeconds($submission->submitted_at);
+            } elseif ($submission->time_taken_minutes !== null) {
+                $timeTakenSeconds = (int) $submission->time_taken_minutes * 60;
+            }
         }
 
         return [
@@ -363,6 +373,8 @@ class ExamParticipantHeartbeat extends Model
             'last_heartbeat_at'    => $this->last_heartbeat_at?->toIso8601String(),
             'elapsed_seconds'      => $elapsedSeconds,
             'remaining_seconds'    => $remainingSeconds,
+            'total_allowed_seconds'=> $totalAllowedSeconds,
+            'time_taken_seconds'   => $timeTakenSeconds,
             'has_duration'         => $hasDuration,
             'ip_address'           => $this->ip_address,
             'browser'              => $this->browser,

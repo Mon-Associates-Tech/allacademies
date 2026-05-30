@@ -169,19 +169,27 @@ class ExamTakingController extends Controller
 
         $questions = $this->resolveQuestionOrder($exam, $section, $submission);
 
-        // Calculate time remaining for this section
-        $timeRemaining = null;
-        if ($section->time_limit_minutes) {
+        // Calculate time remaining.
+        // Rule: for a single-section exam that has an exam-level duration, the exam
+        // clock is authoritative (the section's own time_limit_minutes is ignored for
+        // timing purposes so the two clocks never diverge).
+        $timeRemaining    = null;
+        $isSingleSection  = $exam->sections->count() === 1;
+
+        if ($isSingleSection && $exam->duration_in_minutes && $submission->started_at) {
+            $examEndsAt    = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+            $timeRemaining = max(0, (int) now()->diffInSeconds($examEndsAt, false));
+        } elseif ($isSingleSection && $exam->duration_in_minutes) {
+            $timeRemaining = $exam->duration_in_minutes * 60;
+        } elseif ($section->time_limit_minutes) {
             $sectionStartTimes = $submission->section_start_times ?? [];
-            $sectionKey = (string) $section->id;
-            $startedAt = $sectionStartTimes[$sectionKey] ?? null;
-            
+            $sectionKey        = (string) $section->id;
+            $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
+
             if ($startedAt) {
-                $elapsed = now()->timestamp - $startedAt;
-                $totalSeconds = $section->time_limit_minutes * 60;
-                $timeRemaining = max(0, $totalSeconds - $elapsed);
+                $elapsed       = now()->timestamp - $startedAt;
+                $timeRemaining = max(0, ($section->time_limit_minutes * 60) - $elapsed);
             } else {
-                // Section hasn't started yet, use full time limit
                 $timeRemaining = $section->time_limit_minutes * 60;
             }
         }
@@ -224,13 +232,24 @@ class ExamTakingController extends Controller
             'section_index' => ['required', 'integer'],
         ]);
 
-        // Enforce section time limits server-side
+        // Enforce time limits server-side (exam clock for single-section, section clock otherwise)
         $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
-        $section = $exam->sections->get($data['section_index']);
-        if ($section && $section->time_limit_minutes) {
+        $section         = $exam->sections->get($data['section_index']);
+        $isSingleSection = $exam->sections->count() === 1;
+
+        if ($isSingleSection && $exam->duration_in_minutes) {
+            if ($submission->started_at) {
+                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    return $request->expectsJson()
+                        ? response()->json(['error' => 'Exam time expired'], 403)
+                        : back()->withErrors(['error' => 'Exam time has expired.']);
+                }
+            }
+        } elseif ($section && $section->time_limit_minutes) {
             $sectionStartTimes = $submission->section_start_times ?? [];
-            $sectionKey = (string) $section->id;
-            $startedAt = $sectionStartTimes[$sectionKey] ?? null;
+            $sectionKey        = (string) $section->id;
+            $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
             if (! $startedAt || now()->timestamp >= ($startedAt + ($section->time_limit_minutes * 60))) {
                 return $request->expectsJson()
                     ? response()->json(['error' => 'Section time expired'], 403)

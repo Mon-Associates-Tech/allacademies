@@ -129,7 +129,8 @@
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Participant</th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Progress</th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Violations</th>
-                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Time</th>
+                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Time Spent</th>
+                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Limit</th>
                             <th class="px-5 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -225,14 +226,49 @@
                                     </div>
                                 </td>
 
-                                {{-- Time --}}
+                                {{-- Time Spent --}}
                                 <td class="px-5 py-4">
-                                    <span class="text-xs font-mono whitespace-nowrap"
-                                          :class="{
-                                              'text-red-500': participant.has_duration && participant.remaining_seconds !== null && participant.remaining_seconds <= 300,
-                                              'text-slate-600 dark:text-slate-400': !(participant.has_duration && participant.remaining_seconds !== null && participant.remaining_seconds <= 300)
-                                          }"
-                                          x-text="formatTime(participant)"></span>
+                                    <template x-if="participant.status === 'completed' || participant.status === 'terminated'">
+                                        <div>
+                                            <span class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-200"
+                                                  x-text="formatSeconds(participant.time_taken_seconds ?? participant.elapsed_seconds)"></span>
+                                            <span class="ml-1 text-xs px-1 py-0.5 rounded font-medium"
+                                                  :class="participant.status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                                                  x-text="participant.status === 'completed' ? 'submitted' : 'terminated'"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="participant.status !== 'completed' && participant.status !== 'terminated'">
+                                        <span class="text-xs font-mono text-slate-600 dark:text-slate-400"
+                                              x-text="formatSeconds(participant.elapsed_seconds)"></span>
+                                    </template>
+                                </td>
+
+                                {{-- Limit --}}
+                                <td class="px-5 py-4">
+                                    <template x-if="participant.has_duration">
+                                        <div class="space-y-0.5">
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-xs text-slate-400 dark:text-slate-500">Allowed:</span>
+                                                <span class="text-xs font-mono font-semibold text-slate-600 dark:text-slate-300"
+                                                      x-text="formatSeconds(participant.total_allowed_seconds)"></span>
+                                            </div>
+                                            <template x-if="participant.status !== 'completed' && participant.status !== 'terminated'">
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-xs text-slate-400 dark:text-slate-500">Left:</span>
+                                                    <span class="text-xs font-mono font-semibold"
+                                                          :class="{
+                                                              'text-red-500 animate-pulse': participant.remaining_seconds !== null && participant.remaining_seconds <= 300,
+                                                              'text-amber-600 dark:text-amber-400': participant.remaining_seconds !== null && participant.remaining_seconds > 300 && participant.remaining_seconds <= 600,
+                                                              'text-slate-600 dark:text-slate-300': participant.remaining_seconds === null || participant.remaining_seconds > 600
+                                                          }"
+                                                          x-text="participant.remaining_seconds !== null ? formatSeconds(participant.remaining_seconds) : '—'"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="!participant.has_duration">
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">No limit</span>
+                                    </template>
                                 </td>
 
                                 {{-- Actions --}}
@@ -278,7 +314,7 @@
 
                         <template x-if="filteredParticipants.length === 0">
                             <tr>
-                                <td colspan="6" class="px-5 py-12 text-center">
+                                <td colspan="7" class="px-5 py-12 text-center">
                                     <div class="w-12 h-12 mx-auto flex items-center justify-center mb-4"
                                          style="border-radius: 2px; background: linear-gradient(135deg, #64748b, #94a3b8);">
                                         <x-heroicon-o-users class="w-6 h-6 text-white" />
@@ -656,6 +692,18 @@
                         terminated: this.participants.filter(p => p.status === 'terminated').length,
                         flagged: this.participants.filter(p => p.is_flagged).length,
                     };
+                },
+
+                formatSeconds(s) {
+                    if (s === null || s === undefined) return '—';
+                    s = Math.max(0, Math.round(s));
+                    const h = Math.floor(s / 3600);
+                    const m = Math.floor((s % 3600) / 60);
+                    const sec = s % 60;
+                    if (h > 0) {
+                        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+                    }
+                    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
                 },
 
                 formatTime(participant) {

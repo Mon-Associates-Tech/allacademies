@@ -146,15 +146,27 @@ class ExamSectionTaking extends Component
 
     public function updatedResponses($value, $key): void
     {
-        // Prevent saving if section time expired
-        $submission = $this->submission;
-        $sectionStartTimes = $submission->section_start_times ?? [];
-        $sectionKey = (string) $this->sectionId;
-        if ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
-            $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-            $endsAt = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
-            if (now()->greaterThanOrEqualTo($endsAt)) {
-                return; // ignore updates after expiry
+        // Reject saves after the authoritative time limit has expired.
+        $submission      = $this->submission;
+        $exam            = $this->exam;
+        $isSingleSection = $exam->sections->count() === 1;
+        $sectionKey      = (string) $this->sectionId;
+
+        if ($isSingleSection && $exam->duration_in_minutes) {
+            if ($submission->started_at) {
+                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    return;
+                }
+            }
+        } else {
+            $sectionStartTimes = $submission->section_start_times ?? [];
+            if ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
+                $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+                $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
+                if (now()->greaterThanOrEqualTo($endsAt)) {
+                    return;
+                }
             }
         }
 
@@ -214,18 +226,28 @@ class ExamSectionTaking extends Component
             return false;
         }
 
-        // Check if section time has already expired
+        // Check time expiry — exam clock for single-section exams, section clock otherwise.
+        $exam            = $this->exam;
+        $isSingleSection = $exam->sections->count() === 1;
         $sectionStartTimes = $submission->section_start_times ?? [];
-        if ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
+
+        if ($isSingleSection && $exam->duration_in_minutes) {
+            if ($submission->started_at) {
+                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    $this->addError('general', 'Exam time limit has expired.');
+                    return false;
+                }
+            }
+        } elseif ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
             $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-            $endsAt = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
+            $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
             if (now()->greaterThanOrEqualTo($endsAt)) {
                 $this->addError('general', 'Section time limit has expired.');
                 return false;
             }
         }
 
-        // All validations passed
         return true;
     }
 
