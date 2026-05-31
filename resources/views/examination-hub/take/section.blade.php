@@ -515,7 +515,7 @@
 
             // Silent auto-save using beacon API
             function saveResponsesSilently() {
-                const csrfToken = document.queryDEBUGSelector('meta[name="csrf-token"]')?.content;
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
                 if (!csrfToken) return;
 
                 // Get current responses from Livewire component
@@ -643,22 +643,88 @@
                     const bar = document.getElementById('expire-progress-bar');
                     if (bar) bar.style.width = '100%';
                 });
+                
+                // Try Livewire submission first
                 setTimeout(() => {
-                    const form = document.getElementById('exam-submit-form');
-                    if (form) {
-                        form.submit();
-                    } else {
-                        const f = document.createElement('form');
-                        f.method = 'POST';
-                        f.action = '{{ route('examination-hub.take.submit', $exam) }}';
-                        const t = document.createElement('input');
-                        t.type = 'hidden'; t.name = '_token';
-                        t.value = document.querySelector('meta[name="csrf-token"]')?.content || '';
-                        f.appendChild(t);
-                        document.body.appendChild(f);
-                        f.submit();
+                    // Check if Livewire is available and we can dispatch to the component
+                    const livewireComponent = document.querySelector('[wire\\:id]');
+                    if (livewireComponent && typeof Livewire !== 'undefined') {
+                        try {
+                            // Dispatch submit event to Livewire component
+                            Livewire.dispatch('submit-section', { 
+                                examId: {{ $exam->id }}, 
+                                submissionId: {{ $submission->id ?? 'null' }} 
+                            });
+                            console.log('Livewire submit-section dispatched');
+                            return;
+                        } catch (error) {
+                            console.error('Livewire dispatch failed:', error);
+                        }
                     }
+                    
+                    // Fallback to direct API call
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                    if (!csrfToken) {
+                        console.error('CSRF token not found');
+                        showSubmissionError('Failed to submit: security token missing');
+                        return;
+                    }
+                    
+                    fetch('{{ route('examination-hub.take.submit', $exam) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            _token: csrfToken,
+                            exam_id: {{ $exam->id }},
+                            submission_id: {{ $submission->id ?? 'null' }}
+                        })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                    })
+                    .then(data => {
+                        console.log('Submission successful:', data);
+                        // Redirect to completion page
+                        window.location.href = '{{ route('examination-hub.take.completed', $exam) }}';
+                    })
+                    .catch(error => {
+                        console.error('Submission failed:', error);
+                        showSubmissionError('Failed to submit automatically. Please try again or contact support.');
+                    });
                 }, 2000);
+            }
+            
+            function showSubmissionError(message) {
+                const overlay = document.getElementById('time-expired-overlay');
+                if (overlay) overlay.remove();
+                
+                const errorOverlay = document.createElement('div');
+                errorOverlay.id = 'submission-error-overlay';
+                errorOverlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;padding:16px;pointer-events:all;';
+                errorOverlay.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;padding:36px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+                        <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                            <svg style="width:32px;height:32px;color:#dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 style="font-size:1.25rem;font-weight:700;color:#111;margin:0 0 8px;">Submission Failed</h3>
+                        <p style="color:#555;font-size:.95rem;margin:0 0 20px;">${message}</p>
+                        <button onclick="document.getElementById('submission-error-overlay').remove();"
+                                style="background:linear-gradient(135deg,#b45309,#d97706);color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:1rem;cursor:pointer;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(errorOverlay);
             }
 
             function updateTimerDisplay() {
