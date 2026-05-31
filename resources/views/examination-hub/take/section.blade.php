@@ -207,9 +207,9 @@
         }
     </script>
 
-    <div x-data="{ showSectionInfo: true }" class="w-full h-full">
+    <div x-data="{ showSectionInfo: true, timerExpired: false }" x-init="window.sectionInfoAlpine = $data" class="w-full h-full">
         <!-- FULLSCREEN GATE -->
-        <template x-if="showSectionInfo">
+        <template x-if="showSectionInfo && !timerExpired">
             <div id="fullscreen-instruction-panel"
                  class="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-950 flex flex-col overflow-y-auto"
                  style="font-family: 'system-ui', -apple-system, sans-serif;">
@@ -317,7 +317,7 @@
         </template>
 
         <!-- EXAM CONTENT AREA - Initially hidden until section starts -->
-        <div id="exam-content-area" class="h-full" style="display: none;" role="main" aria-label="Exam content">
+        <div id="exam-content-area" class="h-full" x-show="!timerExpired" style="display: none;" role="main" aria-label="Exam content">
         <style>
             /* Defaults live on :root so Livewire morphdom never clobbers them. */
             :root {
@@ -600,6 +600,12 @@
                         window.__timerExpired = true;
                         showTimeWarning('expired');
                         autoSubmitExpired();
+                        if (window.Alpine) {
+                            window.Alpine.store('examState').timerExpired = true;
+                        }
+                        if (window.sectionInfoAlpine) {
+                            window.sectionInfoAlpine.timerExpired = true;
+                        }
                     }
                     return;
                 }
