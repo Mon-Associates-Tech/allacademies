@@ -72,3 +72,15 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     Route::get('/academic-structure', AcademicHierarchy::class)->name('academic.structure');
 
 });
+
+// Topic-level question import routes
+Route::get('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/academic-topics/{academic_topic}/import-questions', [QuestionImportController::class, 'showImportForm'])->name('questions.import.form');
+Route::post('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/academic-topics/{academic_topic}/preview-questions', [QuestionImportController::class, 'previewQuestions'])->name('questions.preview');
+Route::post('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/academic-topics/{academic_topic}/import-questions', [QuestionImportController::class, 'importQuestions'])->name('questions.import');
+Route::get('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/academic-topics/{academic_topic}/download-template', [QuestionImportController::class, 'downloadTemplate'])->name('questions.download.template');
+
+// Subject-level question import routes
+Route::get('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/import-questions', [QuestionImportController::class, 'showSubjectImportForm'])->name('questions.subject.import.form');
+Route::post('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/preview-questions', [QuestionImportController::class, 'previewSubjectQuestions'])->name('questions.subject.preview');
+Route::post('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/import-questions', [QuestionImportController::class, 'importSubjectQuestions'])->name('questions.subject.import');
+Route::get('dashboard/academic-groups/{academic_group}/academic-levels/{academic_level}/academic-subjects/{academic_subject}/download-template', [QuestionImportController::class, 'downloadSubjectTemplate'])->name('questions.subject.download.template');
