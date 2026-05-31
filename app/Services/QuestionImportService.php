@@ -8,6 +8,7 @@ use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\EssayQuestion;
 use App\Support\Mark;
+use App\Models\AcademicSubject;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
