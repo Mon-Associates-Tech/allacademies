@@ -241,9 +241,22 @@ class ExamTakingController extends Controller
             if ($submission->started_at) {
                 $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    // Auto-submit the exam if it's past the time limit
+                    $submission->update([
+                        'submitted_at' => now(),
+                        'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
+                        'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+                        'auto_submitted' => true,
+                        'auto_submit_reason' => 'Time limit exceeded (server-side auto-submit)',
+                    ]);
+
+                    // Dispatch grading as a background job
+                    $this->gradingService->dispatchGrading($submission);
+
+                    // Redirect to the completed page
                     return $request->expectsJson()
-                        ? response()->json(['error' => 'Exam time expired'], 403)
-                        : back()->withErrors(['error' => 'Exam time has expired.']);
+                        ? response()->json(['status' => 'auto_submitted'])
+                        : redirect()->route('examination-hub.take.completed', $exam);
                 }
             }
         } elseif ($section && $section->time_limit_minutes) {
@@ -251,9 +264,22 @@ class ExamTakingController extends Controller
             $sectionKey        = (string) $section->id;
             $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
             if (! $startedAt || now()->timestamp >= ($startedAt + ($section->time_limit_minutes * 60))) {
+                // Auto-submit the exam if it's past the section time limit
+                $submission->update([
+                    'submitted_at' => now(),
+                    'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
+                    'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+                    'auto_submitted' => true,
+                    'auto_submit_reason' => "Section '{$section->title}' time limit exceeded (server-side auto-submit)",
+                ]);
+
+                // Dispatch grading as a background job
+                $this->gradingService->dispatchGrading($submission);
+
+                // Redirect to the completed page
                 return $request->expectsJson()
-                    ? response()->json(['error' => 'Section time expired'], 403)
-                    : back()->withErrors(['error' => 'Section time expired.']);
+                    ? response()->json(['status' => 'auto_submitted'])
+                    : redirect()->route('examination-hub.take.completed', $exam);
             }
         }
 

@@ -1,134 +1,24 @@
 {{-- Add the exam-specific scripts to the exam-scripts stack --}}
 @push('exam-scripts')
-    @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js', 'resources/js/exam-heartbeat.js'])
-
-    <!-- Font size control -->
-    <script>
-        window.examFontSize = (function () {
-            const LEVELS = [
-                { q: '0.8rem',    a: '0.75rem',  t: '0.85rem'  },
-                { q: '0.875rem',  a: '0.8125rem',t: '0.9rem'   },
-                { q: '1rem',      a: '0.875rem', t: '1rem'     },  // default (index 2)
-                { q: '1.1rem',    a: '0.975rem', t: '1.1rem'   },
-                { q: '1.225rem',  a: '1.075rem', t: '1.225rem' },
-                { q: '1.375rem',  a: '1.175rem', t: '1.375rem' },
-            ];
-            const DEFAULT = 2;
-            const KEY = 'exam_font_level_v1';
-            let cur = DEFAULT;
-
-            function applyVars() {
-                // Write to :root so Livewire morphdom never clobbers the values.
-                const lv = LEVELS[cur];
-                document.documentElement.style.setProperty('--exam-qfont', lv.q);
-                document.documentElement.style.setProperty('--exam-afont', lv.a);
-                document.documentElement.style.setProperty('--exam-tfont', lv.t);
-            }
-
-            function applyButtons() {
-                document.querySelectorAll('[data-font-action="decrease"]')
-                    .forEach(b => { b.disabled = cur === 0; });
-                document.querySelectorAll('[data-font-action="increase"]')
-                    .forEach(b => { b.disabled = cur === LEVELS.length - 1; });
-            }
-
-            function apply() { applyVars(); applyButtons(); }
-
-            function save() {
-                try { localStorage.setItem(KEY, cur); } catch (_) {}
-            }
-
-            function init() {
-                try {
-                    const saved = parseInt(localStorage.getItem(KEY), 10);
-                    if (!isNaN(saved) && saved >= 0 && saved < LEVELS.length) cur = saved;
-                } catch (_) {}
-                apply();
-            }
-
-            return {
-                init,
-                increase() { if (cur < LEVELS.length - 1) { cur++; save(); apply(); } },
-                decrease() { if (cur > 0)                 { cur--; save(); apply(); } },
-            };
-        })();
-
-        document.addEventListener('DOMContentLoaded', () => window.examFontSize.init());
-    </script>
-
+    @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js'])
+    
     <!-- Initialize exam sync functionality -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Extract exam and submission IDs from the Livewire component
             const examId = @json($this->exam->id);
             const submissionId = @json($this->submission->id);
             const userId = @json(auth()->id());
-
+            
+            // Initialize exam sync if we have the required data
             if (examId && submissionId && userId) {
                 const examSync = new window.ExamSessionSync(examId, submissionId, userId);
                 examSync.init();
+                
+                // Store reference globally for potential use by other components
                 window.examSync = examSync;
             }
         });
-
-        function showExamSubmitConfirmation() {
-            if (document.getElementById('exam-submit-modal')) return;
-
-            const navBtns = document.querySelectorAll('[data-answered]');
-            const totalQ = navBtns.length;
-            const answeredQ = document.querySelectorAll('[data-answered="1"]').length;
-            const unanswered = Math.max(0, totalQ - answeredQ);
-
-            const modal = document.createElement('div');
-            modal.id = 'exam-submit-modal';
-            modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;';
-            modal.innerHTML = `
-                <div style="background:#fff;border-radius:12px;max-width:460px;width:100%;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.4);">
-                    <div style="height:4px;background:linear-gradient(90deg,#065f46,#059669);"></div>
-                    <div style="padding:28px 28px 20px;">
-                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                            <div style="width:48px;height:48px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <svg style="width:24px;height:24px;color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 style="font-size:1.1rem;font-weight:700;color:#111;margin:0 0 4px;">Submit Examination?</h3>
-                                <p style="font-size:.875rem;color:#6b7280;margin:0;">This action cannot be undone.</p>
-                            </div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:${unanswered > 0 ? '16px' : '4px'};">
-                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;text-align:center;">
-                                <p style="font-size:1.6rem;font-weight:700;color:#16a34a;margin:0 0 2px;">${answeredQ}</p>
-                                <p style="font-size:.75rem;color:#15803d;margin:0;font-weight:500;">Answered</p>
-                            </div>
-                            <div style="background:${unanswered > 0 ? '#fffbeb' : '#f0fdf4'};border:1px solid ${unanswered > 0 ? '#fde68a' : '#bbf7d0'};border-radius:8px;padding:14px;text-align:center;">
-                                <p style="font-size:1.6rem;font-weight:700;color:${unanswered > 0 ? '#92400e' : '#16a34a'};margin:0 0 2px;">${unanswered}</p>
-                                <p style="font-size:.75rem;color:${unanswered > 0 ? '#b45309' : '#15803d'};margin:0;font-weight:500;">Unanswered</p>
-                            </div>
-                        </div>
-                        ${unanswered > 0 ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;display:flex;align-items:start;gap:10px;">
-                            <svg style="width:18px;height:18px;color:#d97706;flex-shrink:0;margin-top:1px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                            <p style="font-size:.8rem;color:#92400e;margin:0;"><strong>${unanswered} unanswered question${unanswered !== 1 ? 's' : ''}</strong> will receive no marks.</p>
-                        </div>` : ''}
-                    </div>
-                    <div style="padding:16px 28px 24px;display:flex;gap:12px;flex-direction:row-reverse;">
-                        <button id="confirm-submit-btn"
-                                onclick="document.getElementById('exam-submit-form').submit();"
-                                style="flex:1;background:linear-gradient(135deg,#065f46,#059669);color:#fff;border:none;padding:13px;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer;">
-                            Submit Exam
-                        </button>
-                        <button onclick="document.getElementById('exam-submit-modal').remove();"
-                                style="flex:1;background:#f9fafb;border:1px solid #e5e7eb;color:#374151;padding:13px;border-radius:8px;font-weight:600;font-size:.95rem;cursor:pointer;">
-                            Review First
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-        }
     </script>
 @endpush
 
@@ -214,56 +104,6 @@
                         </div>
                     </div>
 
-                    {{-- Exam Rules / Proctoring Requirements --}}
-                    <div style="border-radius: 2px; border: 1px solid rgba(180,83,9,0.18); background: rgba(251,191,36,0.04);">
-                        <div class="px-4 py-2.5 border-b flex items-center gap-2" style="border-color: rgba(180,83,9,0.12);">
-                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                            <h4 class="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.12em;">Exam Rules &amp; Proctoring</h4>
-                        </div>
-                        <ul class="px-4 py-3 space-y-2">
-                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Fullscreen mode is required throughout the exam. Exiting fullscreen will be recorded as a violation and block your screen until you return.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Right-clicking is disabled on the exam interface.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Switching tabs or windows is monitored and recorded.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Developer tools and keyboard shortcuts (F12, Ctrl+Shift+I, Print Screen) are blocked.</span>
-                            </li>
-                            @if($this->exam->hardened_mode ?? false)
-                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Copy and paste are disabled (hardened mode).</span>
-                            </li>
-                            @endif
-                            <li class="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                                <svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>The timer continues running even if you exit fullscreen. Your session is monitored in real time.</span>
-                            </li>
-                        </ul>
-                    </div>
-
                     @if($this->section->instructions)
                         <div style="border-left: 3px solid #d97706; padding-left: 1rem;">
                             <h4 class="text-xs font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-2" style="font-size: 10px; letter-spacing: 0.12em;">Instructions</h4>
@@ -280,7 +120,6 @@
                         @endif
                         <div>
                             <button wire:click="startSection"
-                                    @click="window.__fullscreenGracePeriod = true; clearTimeout(window.__fullscreenGraceTimer); window.__fullscreenGraceTimer = setTimeout(function(){ window.__fullscreenGracePeriod = false; }, 2000);"
                                     @if($this->section->instructions) wire:loading.attr="disabled" @endif
                                     @if($this->section->instructions && ! $this->instructionsAcknowledged) disabled @endif
                                     class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200"
@@ -419,40 +258,7 @@
                                      style="width: {{ $this->questions->count() > 0 ? ($this->getAnsweredCount() / $this->questions->count()) * 100 : 0 }}%; background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
                             </div>
                         </div>
-
-                        {{-- Timer — wire:ignore prevents Livewire morphdom from resetting the JS-updated text --}}
-                        <div id="time-alert" wire:ignore
-                             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-all duration-300 text-slate-500 dark:text-slate-400"
-                             style="border-radius: 2px;">
-                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span id="time-remaining" class="tabular-nums">–</span>
-                        </div>
-
-                        {{-- Font size controls (desktop) --}}
-                        <div wire:ignore
-                             class="inline-flex items-center border border-slate-200 dark:border-slate-700 overflow-hidden"
-                             style="border-radius: 2px;"
-                             role="group"
-                             aria-label="Font size">
-                            <button data-font-action="decrease"
-                                    onclick="window.examFontSize.decrease()"
-                                    aria-label="Decrease font size"
-                                    class="inline-flex items-center justify-center w-7 h-7 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
-                                    style="font-size:11px; font-weight:700; letter-spacing:-0.03em;">
-                                A<sup style="font-size:7px;">−</sup>
-                            </button>
-                            <span class="w-px h-3.5 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></span>
-                            <button data-font-action="increase"
-                                    onclick="window.examFontSize.increase()"
-                                    aria-label="Increase font size"
-                                    class="inline-flex items-center justify-center w-7 h-7 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
-                                    style="font-size:14px; font-weight:700; letter-spacing:-0.03em;">
-                                A<sup style="font-size:7px;">+</sup>
-                            </button>
-                        </div>
-
+                    
                         {{-- Section info toggle --}}
                         <button wire:click="toggleSectionInfo"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
@@ -466,7 +272,7 @@
                         <x-snippets.theme-toggle />
                     </div>
                 </div>
-
+                
                 {{-- Mobile: two-row layout --}}
                 <div class="sm:hidden space-y-2">
                     {{-- Row 1: Title --}}
@@ -484,40 +290,9 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     {{-- Row 2: Actions --}}
                     <div class="flex items-center justify-end gap-2">
-                        {{-- Font size (mobile) --}}
-                        <div wire:ignore
-                             class="inline-flex items-center border border-slate-200 dark:border-slate-700 overflow-hidden"
-                             style="border-radius: 2px;"
-                             role="group"
-                             aria-label="Font size">
-                            <button data-font-action="decrease"
-                                    onclick="window.examFontSize.decrease()"
-                                    aria-label="Decrease font size"
-                                    class="inline-flex items-center justify-center w-6 h-6 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
-                                    style="font-size:10px; font-weight:700;">
-                                A<sup style="font-size:6px;">−</sup>
-                            </button>
-                            <span class="w-px h-3 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></span>
-                            <button data-font-action="increase"
-                                    onclick="window.examFontSize.increase()"
-                                    aria-label="Increase font size"
-                                    class="inline-flex items-center justify-center w-6 h-6 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed select-none"
-                                    style="font-size:12px; font-weight:700;">
-                                A<sup style="font-size:6px;">+</sup>
-                            </button>
-                        </div>
-                        {{-- Timer (mobile) — wire:ignore for same reason as desktop timer --}}
-                        <div id="time-alert-mobile" wire:ignore
-                             class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold transition-all duration-300 text-slate-500 dark:text-slate-400"
-                             style="border-radius: 2px;">
-                            <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span id="time-remaining-mobile" class="tabular-nums">–</span>
-                        </div>
                         <button wire:click="toggleSectionInfo"
                                 class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
                                 style="border-radius: 2px;">
@@ -534,7 +309,7 @@
         {{-- ── SCROLLABLE CONTENT AREA ── --}}
         <div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950"
              style="scrollbar-gutter: stable;">
-            <div id="exam-reading-area" class="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-5">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
 
                 @php
                     $question = $this->questions[$currentQuestionIndex];
@@ -581,9 +356,9 @@
                     </div>
 
                     {{-- Question body --}}
-                    <div class="px-4 sm:px-6 pt-3 sm:pt-4 pb-3 sm:pb-4">
+                    <div class="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5">
                         {{-- Question text --}}
-                        <div class="exam-q-text text-slate-800 dark:text-slate-200 mb-3 sm:mb-4 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
+                        <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
                              wire:key="question-text-{{ $question->id }}">
                             <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" />
                         </div>
@@ -610,7 +385,7 @@
                         <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold flex-shrink-0 mt-0.5 transition-colors rounded-[2px] {{ $isSelected ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
                             {{ $key }}
                         </span>
-                                            <div class="exam-opt-text flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
+                                            <div class="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
                                                 <x-form.markdown-with-math :content="$optionText" class="text-slate-800 dark:text-slate-200" />
                                             </div>
                                         </div>
@@ -635,7 +410,7 @@
                                             wire:model.live="responses.{{ $question->id }}"
                                             class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-slate-300 flex-shrink-0"
                                         >
-                                        <span class="exam-tf-text text-base font-semibold text-slate-700 dark:text-slate-200">{{ $tfValue }}</span>
+                                        <span class="text-base font-semibold text-slate-700 dark:text-slate-200">{{ $tfValue }}</span>
                                     </label>
                                 @endforeach
                             </div>
@@ -647,7 +422,7 @@
                                 <textarea
                                     wire:model.live.debounce.500ms="responses.{{ $question->id }}"
                                     rows="10"
-                                    class="exam-essay w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
+                                    class="w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
                                     placeholder="Type your answer here…"
                                 ></textarea>
                                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Responses are saved automatically as you type.</p>
@@ -670,7 +445,6 @@
                                 <button
                                     wire:key="nav-btn-{{ $q->id }}"
                                     wire:click="goToQuestion({{ $index }})"
-                                    data-answered="{{ !empty($responses[$q->id]) ? '1' : '0' }}"
                                     title="Question {{ $index + 1 }}"
                                     class="w-7 h-7 sm:w-8 sm:h-8 text-xs font-semibold transition-all duration-150 flex items-center justify-center relative"
                                     style="border-radius: 2px;
@@ -737,8 +511,7 @@
                     @else
                         <form id="exam-submit-form" method="POST" action="{{ route('examination-hub.take.submit', $this->exam) }}">
                             @csrf
-                            <button type="button"
-                                    onclick="showExamSubmitConfirmation()"
+                            <button type="submit"
                                     class="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white transition-all"
                                     style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 12px rgba(5,150,105,0.35);">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

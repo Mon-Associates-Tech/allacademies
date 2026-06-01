@@ -156,6 +156,25 @@ class ExamSectionTaking extends Component
             if ($submission->started_at) {
                 $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    // Auto-submit the exam
+                    $submission->update([
+                        'submitted_at' => now(),
+                        'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
+                        'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+                        'auto_submitted' => true,
+                        'auto_submit_reason' => 'Time limit exceeded (server-side auto-submit)',
+                    ]);
+
+                    // Dispatch grading as a background job
+                    $this->gradingService->dispatchGrading($submission);
+
+                    // Emit event for auto-submit
+                    $this->dispatch('examAutoSubmitted', [
+                        'autoSubmitted' => true,
+                        'reason' => 'Time limit exceeded (server-side auto-submit)',
+                        'redirectUrl' => route('examination-hub.take.completed', $exam)
+                    ]);
+
                     return;
                 }
             }
@@ -165,6 +184,25 @@ class ExamSectionTaking extends Component
                 $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
                 $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
                 if (now()->greaterThanOrEqualTo($endsAt)) {
+                    // Auto-submit the exam
+                    $submission->update([
+                        'submitted_at' => now(),
+                        'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
+                        'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+                        'auto_submitted' => true,
+                        'auto_submit_reason' => "Section '{$this->section->title}' time limit exceeded (server-side auto-submit)",
+                    ]);
+
+                    // Dispatch grading as a background job
+                    $this->gradingService->dispatchGrading($submission);
+
+                    // Emit event for auto-submit
+                    $this->dispatch('examAutoSubmitted', [
+                        'autoSubmitted' => true,
+                        'reason' => "Section '{$this->section->title}' time limit exceeded (server-side auto-submit)",
+                        'redirectUrl' => route('examination-hub.take.completed', $exam)
+                    ]);
+
                     return;
                 }
             }
