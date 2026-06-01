@@ -19,14 +19,28 @@ class Mark implements Castable
         $this->html = is_string($down) ? new HtmlString($down) : null;
     }
 
-    public static function fromArray(array $array)
+    public static function fromArray(?array $array)
     {
-        return new static($array['up'], $array['down']);
+        if (!is_array($array)) {
+            return new static(null, null);
+        }
+        
+        return new static($array['up'] ?? null, $array['down'] ?? null);
     }
 
-    public static function fromString(string $string)
+    public static function fromString(?string $string)
     {
-        return static::fromArray(json_decode($string, true));
+        if (is_null($string) || $string === '') {
+            return new static(null, null);
+        }
+        
+        $decoded = json_decode($string, true);
+        
+        if (is_null($decoded)) {
+            return new static(null, null);
+        }
+        
+        return static::fromArray($decoded);
     }
 
     public function toArray(): array
@@ -62,6 +76,10 @@ class Mark implements Castable
                 }
 
                 if (! $value instanceof Mark) {
+                    if (is_null($value)) {
+                        return (new static(null, null))->toString();
+                    }
+                    
                     throw new \InvalidArgumentException('Expected an instanceof of App\Support\Mark');
                 }
 
