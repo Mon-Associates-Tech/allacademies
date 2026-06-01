@@ -3,10 +3,10 @@
         <x-breadcrumb :paths="[
             'Dashboard' => route('dashboard'),
             'Academic Groups' => route('academic-groups.index'),
-            $academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-            $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-            $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-            $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
+            $academicTopic?->academicSubject?->academicLevel?->academicGroup?->name ?? ($academicSubject?->academicLevel?->academicGroup?->name ?? '') => $academicTopic?->academicSubject?->academicLevel?->academicGroup ? route('academic-groups.show', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]) : ($academicSubject?->academicLevel?->academicGroup ? route('academic-groups.show', ['academic_group' => $academicSubject->academicLevel->academicGroup]) : ''),
+            $academicTopic?->academicSubject?->academicLevel?->name ?? ($academicSubject?->academicLevel?->name ?? '') => $academicTopic?->academicSubject?->academicLevel ? route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]) : ($academicSubject?->academicLevel ? route('academic-levels.show', ['academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) : ''),
+            $academicTopic?->academicSubject?->name ?? ($academicSubject?->name ?? '') => $academicTopic?->academicSubject ? route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]) : ($academicSubject ? route('academic-subjects.show', ['academic_subject' => $academicSubject, 'academic_level' => $academicSubject->academicLevel, 'academic_group' => $academicSubject->academicLevel->academicGroup]) : ''),
+            $academicTopic?->name ?? 'Import Questions' => $academicTopic ? route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]) : null,
             'Preview Questions' => null,
         ]" />
     </x-slot>
@@ -16,7 +16,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-semibold text-gray-800 dark:text-white">
-                        Preview Questions for "{{ $academicTopic->name }}"
+                        Preview Questions for "{{ $academicTopic?->name ?? $academicSubject?->name }}"
                         @if($academicSubtopic)
                             <span class="text-sm font-normal text-gray-600 dark:text-gray-400"> / "{{ $academicSubtopic->name }}"</span>
                         @endif
@@ -114,8 +114,12 @@
                         </div>
 
                         <div class="mt-6 flex items-center justify-between">
-                            <a href="{{ route('questions.import.form', [
+                            <a href="{{ $academicTopic ? route('questions.import.form', [
                                 'academic_topic' => $academicTopic,
+                                'academic_subject' => $academic_subject,
+                                'academic_level' => $academic_level,
+                                'academic_group' => $academic_group
+                            ]) : route('questions.subject.import.form', [
                                 'academic_subject' => $academic_subject,
                                 'academic_level' => $academic_level,
                                 'academic_group' => $academic_group
@@ -123,8 +127,12 @@
                                 Back to Import
                             </a>
                             
-                            <form method="POST" action="{{ route('questions.import', [
+                            <form method="POST" action="{{ $academicTopic ? route('questions.import', [
                                 'academic_topic' => $academicTopic,
+                                'academic_subject' => $academic_subject,
+                                'academic_level' => $academic_level,
+                                'academic_group' => $academic_group
+                            ]) : route('questions.subject.import', [
                                 'academic_subject' => $academic_subject,
                                 'academic_level' => $academic_level,
                                 'academic_group' => $academic_group
@@ -146,8 +154,12 @@
                             The file does not contain any valid questions to import.
                         </p>
                         <div class="mt-6">
-                            <a href="{{ route('questions.import.form', [
+                            <a href="{{ $academicTopic ? route('questions.import.form', [
                                 'academic_topic' => $academicTopic,
+                                'academic_subject' => $academic_subject,
+                                'academic_level' => $academic_level,
+                                'academic_group' => $academic_group
+                            ]) : route('questions.subject.import.form', [
                                 'academic_subject' => $academic_subject,
                                 'academic_level' => $academic_level,
                                 'academic_group' => $academic_group
