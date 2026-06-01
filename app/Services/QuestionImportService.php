@@ -103,11 +103,46 @@ class QuestionImportService
                     // Create Mark object for the question text
                     $questionMark = new Mark($questionText, $questionText);
 
+                    // Determine topic ID: prioritize topic ID from preview item (for subject-level imports with topic_id column),
+                    // fallback to the topic parameter passed to the method
+                    $previewItemTopicId = $previewItem['academic_topic_id'] ?? null;
+                    $effectiveTopicId = $previewItemTopicId ?? $topic?->id;
+                    
+                    // If no effective topic ID is determined from the above, try to find it from the preview item topic name if available
+                    if (!$effectiveTopicId && isset($previewItem['academic_topic_name'])) {
+                        $effectiveTopic = AcademicTopic::where('name', $previewItem['academic_topic_name'])
+                            ->where('academic_subject_id', $academicSubject->id)
+                            ->first();
+                        if ($effectiveTopic) {
+                            $effectiveTopicId = $effectiveTopic->id;
+                        }
+                    }
+                    
+                    // Only proceed if we have a valid topic ID
+                    if (!$effectiveTopicId) {
+                        Log::error('Cannot import question without a valid topic ID', [
+                            'question' => $questionText,
+                            'topic' => $topic,
+                            'preview_item_topic_id' => $previewItemTopicId,
+                            'preview_item_topic_name' => $previewItem['academic_topic_name'] ?? null,
+                            'subtopic' => $subtopic,
+                            'user_id' => $userId
+                        ]);
+                        
+                        // Add error to results so user knows what went wrong
+                        $importResults['errors'][] = [
+                            'row' => $previewItem['row_number'] ?? 'unknown',
+                            'message' => 'Cannot import question: no valid topic ID specified. For subject-level import, academic_topic_id column is required in the file.'
+                        ];
+                        
+                        continue; // Skip this question
+                    }
+
                     $commonData = [
                         'question' => $questionMark, // Use the Mark object
                         'difficulty_level' => $previewItem['difficulty_level'] ?? 'medium',
                         'score' => $previewItem['score'] ?? 1,
-                        'academic_topic_id' => $topic->id, // Make sure this is set properly
+                        'academic_topic_id' => $effectiveTopicId, // Use the validated topic ID
                         'academic_subtopic_id' => $subtopic?->id, // This might be null
                         'added_by' => $userId,
                         'modified_by' => $userId,
@@ -131,7 +166,7 @@ class QuestionImportService
                             }
 
                             // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = MultipleChoiceQuestion::where('academic_topic_id', $topic->id)
+                            $existingQuestion = MultipleChoiceQuestion::where('academic_topic_id', $effectiveTopicId)
                                 ->where('academic_subtopic_id', $subtopic?->id)
                                 ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
                                 ->first();
@@ -144,7 +179,7 @@ class QuestionImportService
                                 // Optionally log that a duplicate was skipped
                                 \Log::info('Skipping duplicate multiple choice question', [
                                     'question_text' => $questionText,
-                                    'topic_id' => $topic->id
+                                    'topic_id' => $effectiveTopicId
                                 ]);
                             }
                             break;
@@ -166,7 +201,7 @@ class QuestionImportService
                             }
 
                             // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = TrueOrFalseQuestion::where('academic_topic_id', $topic->id)
+                            $existingQuestion = TrueOrFalseQuestion::where('academic_topic_id', $effectiveTopicId)
                                 ->where('academic_subtopic_id', $subtopic?->id)
                                 ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
                                 ->first();
@@ -179,7 +214,7 @@ class QuestionImportService
                                 // Optionally log that a duplicate was skipped
                                 \Log::info('Skipping duplicate true/false question', [
                                     'question_text' => $questionText,
-                                    'topic_id' => $topic->id
+                                    'topic_id' => $effectiveTopicId
                                 ]);
                             }
                             break;
@@ -196,7 +231,7 @@ class QuestionImportService
                             }
 
                             // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = EssayQuestion::where('academic_topic_id', $topic->id)
+                            $existingQuestion = EssayQuestion::where('academic_topic_id', $effectiveTopicId)
                                 ->where('academic_subtopic_id', $subtopic?->id)
                                 ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
                                 ->first();
@@ -209,7 +244,7 @@ class QuestionImportService
                                 // Optionally log that a duplicate was skipped
                                 \Log::info('Skipping duplicate essay question', [
                                     'question_text' => $questionText,
-                                    'topic_id' => $topic->id
+                                    'topic_id' => $effectiveTopicId
                                 ]);
                             }
                             break;
@@ -222,7 +257,7 @@ class QuestionImportService
                     Log::error('Error creating question from preview data', [
                         'error' => $e->getMessage(),
                         'preview_item' => $previewItem,
-                        'topic_id' => $topic->id,
+                        'topic_id' => $effectiveTopicId,
                     ]);
                     continue; // Continue to next question
                 }
