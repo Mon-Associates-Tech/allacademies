@@ -38,7 +38,7 @@ window.DOMPurify = DOMPurify;
 // resources/js/app.js (or a dedicated entry point)
 import './proctoring'; // If proctoring.js is a module that attaches to window
 import './exam-heartbeat'; // If exam-heartbeat.js is a module that attaches to window
-import './echo';
+//import './echo';
 // Register Chart.js components (added RadialLinearScale for radar charts)
 Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, RadialLinearScale);
 
