@@ -34,17 +34,31 @@ document.addEventListener('alpine:init', () => {
                         this.updateDisplay();
                         
                         // Update styles based on remaining time
-                        if (this.remaining <= 300) { // 5 minutes
-                            this.timerTextClass = 'text-amber-600 dark:text-amber-400 font-bold';
-                        } else if (this.remaining <= 60) { // 1 minute
+                        if (this.remaining <= 60) { // 1 minute
                             this.timerTextClass = 'text-red-600 dark:text-red-400 font-bold';
-                            // Add animation effect for urgency
                             this.timerStyle.animation = 'pulse 1s infinite';
+                        } else if (this.remaining <= 300) { // 5 minutes
+                            this.timerTextClass = 'text-amber-600 dark:text-amber-400 font-bold';
                         }
                     } else {
                         this.display = 'EXPIRED';
                         this.timerTextClass = 'text-red-600 dark:text-red-400 font-bold';
                         clearInterval(this.timerInterval);
+
+                        // Only call Livewire once even if the interval fires again
+                        if (!window._timerExpiredCalled) {
+                            window._timerExpiredCalled = true;
+
+                            // Ask the Livewire component to perform the authoritative
+                            // server-side auto-submit and dispatch examAutoSubmitted.
+                            const wireEl = document.querySelector('[wire\\:id]');
+                            if (wireEl) {
+                                const wire = Livewire.find(wireEl.getAttribute('wire:id'));
+                                if (wire) {
+                                    wire.call('handleTimerExpired');
+                                }
+                            }
+                        }
                     }
                 }, 1000);
             } else {

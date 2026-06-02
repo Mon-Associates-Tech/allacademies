@@ -32,6 +32,8 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+
     
     {{-- Enhanced dark mode styles --}}
     <link rel="stylesheet" href="{{ asset('css/exam-dark-mode.css') }}">

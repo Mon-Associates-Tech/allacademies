@@ -21,7 +21,7 @@
                     </h3>
 
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                        @if($submission->auto_submitted)
+                        @if($submission?->auto_submitted)
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                                 <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
@@ -50,7 +50,7 @@
                         </p>
                     </div>
 
-                    @if($submission->auto_submitted)
+                    @if($submission?->auto_submitted)
                     <div class="mt-5 p-4 border border-amber-200/50 rounded-[2px] bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-300">
                         <p class="text-sm font-medium mb-2">
                             <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@
                             This exam was automatically submitted because the time duration for the exam has expired.
                         </p>
                         <p class="text-xs opacity-80">
-                            @if($submission->auto_submit_reason)
+                            @if($submission?->auto_submit_reason)
                                 <span class="italic">Reason: {{ $submission->auto_submit_reason }}</span>
                             @endif
                         </p>

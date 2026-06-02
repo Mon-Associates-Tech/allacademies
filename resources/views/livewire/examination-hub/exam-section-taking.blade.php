@@ -1,26 +1,43 @@
-{{-- Add the exam-specific scripts to the exam-scripts stack --}}
-@push('exam-scripts')
-    @vite(['resources/js/exam-timer.js', 'resources/js/exam-sync.js'])
-    
-    <!-- Initialize exam sync functionality -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Extract exam and submission IDs from the Livewire component
-            const examId = @json($this->exam->id);
-            const submissionId = @json($this->submission->id);
-            const userId = @json(auth()->id());
-            
-            // Initialize exam sync if we have the required data
-            if (examId && submissionId && userId) {
-                const examSync = new window.ExamSessionSync(examId, submissionId, userId);
-                examSync.init();
-                
-                // Store reference globally for potential use by other components
-                window.examSync = examSync;
-            }
-        });
-    </script>
-@endpush
+{{-- ─────────────────────────────────────────────────────────────────────────
+     COMPONENT SCRIPT  — runs once when this Livewire component is initialised.
+     $wire is available here and refers to this component instance.
+
+     NOTE: Do NOT use @push or @assets inside a Livewire component view.
+     @push requires the parent layout's View Factory context (startPush state)
+     which does not exist during Livewire's isolated AJAX re-renders, causing
+     "Undefined property: Illuminate\View\Factory::$startPush".
+     Load all external scripts from the parent controller view (section.blade.php).
+
+     ExamSessionSync is already initialised by section.blade.php; no need
+     to duplicate it here.
+────────────────────────────────────────────────────────────────────────── --}}
+@script
+<script>
+    // ── Auto-submit redirect ─────────────────────────────────────────────────
+    // Fired by ExamSectionTaking::performAutoSubmit() after the submission has
+    // been written to the database and the grading job has been queued.
+    //
+    // The parent section view (section_blade.php) already handles showing the
+    // countdown modal via Livewire.on('examAutoSubmitted', ...).  This $wire
+    // listener is the Livewire 3 idiomatic layer that actually performs the
+    // navigation, guaranteeing it fires even if the parent-view listener
+    // registers late (e.g. slow livewire:initialized event).
+    $wire.on('examAutoSubmitted', (payload) => {
+        // Suppress the beforeunload confirmation so the redirect is not blocked.
+        window.hasUnsavedChanges = false;
+
+        const redirectUrl = payload?.redirectUrl;
+        if (!redirectUrl) return;
+
+        // 3.1 s: the parent modal counts down 3 s before navigating, so this
+        // fires 100 ms after the modal countdown ends as a safety net.  If the
+        // parent already navigated away this is a no-op.
+        setTimeout(() => {
+            window.location.href = redirectUrl;
+        }, 3100);
+    });
+</script>
+@endscript
 
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950" style="font-family: 'Georgia', 'Times New Roman', serif;">
 
