@@ -452,6 +452,10 @@ Route::get('/components', function () {
     return view('components');
 })->name('components');
 
+Route::get('/license-expired', fn() => view('license.expired'))
+    ->name('license.expired')
+    ->withoutMiddleware([\App\Http\Middleware\ValidateLicense::class]);
+
 /*
 |--------------------------------------------------------------------------
 | Include Additional Route Files

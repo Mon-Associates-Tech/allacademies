@@ -1,6 +1,26 @@
 @php
     $seed = $formData ?? old();
-    $seedSections = $seed['sections'] ?? [['title'=>'Section A','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+    
+    // When editing, use formData sections; when creating new or after validation error, use old() or default
+    if (!empty($seed['sections']) && is_array($seed['sections'])) {
+        // Filter out completely empty sections that might come from old() or defaults
+        $seedSections = array_values(array_filter($seed['sections'], function($section) {
+            // Keep sections with IDs (existing sections)
+            if (!empty($section['id'])) {
+                return true;
+            }
+            // For new sections, require at least a title
+            return !empty($section['title']);
+        }));
+        
+        // If filtering resulted in no sections, add one default
+        if (empty($seedSections)) {
+            $seedSections = [['title'=>'','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+        }
+    } else {
+        // No sections in seed, use default
+        $seedSections = [['title'=>'','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+    }
 
     // Set default dates if not provided
     $defaultStartsAt = $seed['starts_at'] ?? now()->format('Y-m-d\TH:i');
@@ -175,7 +195,7 @@
         </div>
 
         {{-- ── ACADEMIC CLASSIFICATION ── --}}
-        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+        <div class="bg-white dark:bg-slate-900"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                 <div class="w-1 h-5" style="background: linear-gradient(180deg, #059669, #10b981); border-radius: 1px;"></div>

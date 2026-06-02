@@ -2,6 +2,7 @@
 
 namespace App\ExaminationHub\Controllers;
 
+use App\ExaminationHub\Models\ExamAdminMessage;
 use App\ExaminationHub\Models\ExamParticipantHeartbeat;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Services\LiveMonitoringService;
@@ -139,6 +140,27 @@ class LiveMonitoringController extends Controller
     }
 
     /**
+     * POST /examinations/exams/{exam}/live-monitoring/message-all
+     * Send message to all active participants.
+     */
+    public function messageAll(Request $request, GeneralExam $exam): JsonResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:500'],
+        ]);
+
+        $result = $this->monitoringService->sendMessageToAllActiveParticipants($exam, $data['message']);
+
+        return response()->json([
+            'status' => 'messages_sent',
+            'sent_count' => $result['sent_count'],
+            'failed_count' => $result['failed_count'],
+        ]);
+    }
+
+    /**
      * POST /examinations/exams/{exam}/live-monitoring/terminate/{submission}
      * Terminate participant session.
      */
@@ -232,5 +254,43 @@ class LiveMonitoringController extends Controller
         }
 
         return response()->json(['status' => 'warning_cleared']);
+    }
+
+    /**
+     * GET /examinations/exams/{exam}/live-monitoring/messages/{submission}
+     * Get message history for a participant (audit trail).
+     */
+    public function getMessageHistory(GeneralExam $exam, int $submissionId): JsonResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $messages = ExamAdminMessage::forSubmission($submissionId)
+            ->with('sender')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($message) {
+                return [
+                    'id' => $message->id,
+                    'message_type' => $message->message_type,
+                    'type_label' => $message->getTypeLabel(),
+                    'message' => $message->message,
+                    'metadata' => $message->metadata,
+                    'sent_by' => $message->sender ? [
+                        'id' => $message->sender->id,
+                        'name' => $message->sender->name,
+                        'email' => $message->sender->email,
+                    ] : null,
+                    'sent_at' => $message->created_at->toIso8601String(),
+                    'delivered_at' => $message->delivered_at?->toIso8601String(),
+                    'acknowledged_at' => $message->acknowledged_at?->toIso8601String(),
+                    'is_delivered' => $message->isDelivered(),
+                    'is_acknowledged' => $message->isAcknowledged(),
+                ];
+            });
+
+        return response()->json([
+            'messages' => $messages,
+            'total' => $messages->count(),
+        ]);
     }
 }
