@@ -27,7 +27,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrackUserLoginActivity::class,
-        \App\Http\Middleware\ValidateLicense::class,
+        // \App\Http\Middleware\ValidateLicense::class,
 
     ];
 
