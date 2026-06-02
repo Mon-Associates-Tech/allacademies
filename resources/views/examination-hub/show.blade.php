@@ -1,15 +1,13 @@
-@extends('layouts.exam')
-
-@section('content')
-<x-examinations-hub.navigation active="manage" />
+<x-layouts.exam>
+<x-examination-hub.navigation active="manage" />
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
     {{-- Breadcrumb --}}
     <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-        <a href="{{ route('examinations-hub.exams.show', $exam) }}" class="hover:text-indigo-600">{{ $exam->title }}</a>
+        <a href="{{ route('examination-hub.exams.show', $exam) }}" class="hover:text-indigo-600">{{ $exam->title }}</a>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        <a href="{{ route('examinations-hub.proctoring.index', $exam) }}" class="hover:text-indigo-600">Proctoring</a>
+        <a href="{{ route('examination-hub.proctoring.index', $exam) }}" class="hover:text-indigo-600">Proctoring</a>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         <span>{{ $submission->participant_name ?? 'Submission #'.$submission->id }}</span>
     </div>
@@ -106,4 +104,4 @@
         @endif
     </div>
 </div>
-@endsection
+</x-layouts.exam>
