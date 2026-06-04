@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Debug;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class EmailTestController extends Controller
@@ -37,6 +39,7 @@ class EmailTestController extends Controller
     /**
      * Test sending an email and check if it was intercepted.
      *
+     * @param  string  $testEmail
      * @return array<string, mixed>
      */
     public function testEmailSending(string $testEmail = 'test@example.com'): array
@@ -69,7 +72,7 @@ class EmailTestController extends Controller
                 'email_sending_enabled' => $isEnabled,
                 'email_intercepted' => $intercepted,
                 'message' => $intercepted
-                    ? 'Test email was intercepted (EMAIL_SENDING_ENABLED is disabled)'
+                    ? "Test email was intercepted (EMAIL_SENDING_ENABLED is disabled)"
                     : 'Test email was sent successfully (or queued for sending)',
             ];
         } catch (\Exception $e) {

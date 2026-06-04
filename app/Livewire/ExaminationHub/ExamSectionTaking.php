@@ -31,6 +31,8 @@ class ExamSectionTaking extends Component
     public ?int $timeRemaining = null;
     public array $flaggedQuestions = [];
 
+    public string|int|null $start_time = '';
+
     public function mount(GeneralExam $exam, GeneralExamSubmission $submission, $section, int $sectionIndex, $questions): void
     {
         $this->examId = $exam->id;
@@ -300,7 +302,7 @@ class ExamSectionTaking extends Component
     protected function validateStartSection(): bool
     {
         $submission = $this->submission;
-        
+
         // Check if submission exists
         if (!$submission) {
             $this->addError('general', 'No valid submission found.');
@@ -316,7 +318,7 @@ class ExamSectionTaking extends Component
         // Check if section has already been started and completed
         $sectionProgress = $submission->section_progress ?? [];
         $sectionKey = (string) $this->sectionId;
-        
+
         if (isset($sectionProgress[$sectionKey]) && $sectionProgress[$sectionKey] === 'completed') {
             $this->addError('general', 'This section has already been completed.');
             return false;
@@ -359,13 +361,13 @@ class ExamSectionTaking extends Component
         $submission = $this->submission;
         $sectionProgress = $submission->section_progress ?? [];
         $sectionProgress[(string) $this->sectionId] = $status;
-        
+
         // Update section start time if starting
         $sectionStartTimes = $submission->section_start_times ?? [];
         if ($status === 'started' && !isset($sectionStartTimes[(string) $this->sectionId])) {
             $sectionStartTimes[(string) $this->sectionId] = now()->timestamp;
         }
-        
+
         $submission->update([
             'section_progress' => $sectionProgress,
             'section_start_times' => $sectionStartTimes,
@@ -377,7 +379,7 @@ class ExamSectionTaking extends Component
         // Reset any violations for this section if needed
         $submission = $this->submission;
         $proctoringLogs = $submission->proctoring_logs ?? [];
-        
+
         // Clear any pending violations for this section
         // Implementation depends on how violations are tracked
     }
@@ -390,7 +392,7 @@ class ExamSectionTaking extends Component
 
         // Create or get existing submission
         $this->submission = $this->getOrCreateSubmission();
-        
+
         if (!$this->submission) {
             $this->addError('general', 'Unable to start exam. Please refresh the page and try again.');
             return;
@@ -398,22 +400,22 @@ class ExamSectionTaking extends Component
 
         // Record start time
         $this->start_time = now();
-        
+
         // Mark section as started
         $this->updateSectionProgress('started');
-        
+
         // Hide section info to show exam content
         $this->showSectionInfo = false;
-        
+
         // Reset any previous violations for this section
         $this->resetViolations();
-        
+
         // Emit event to show exam content
-        $this->dispatch('section-started', 
+        $this->dispatch('section-started',
             sectionIndex: $this->sectionIndex,
             submissionId: $this->submission->id
         );
-        
+
         // Also emit an event to show exam content regardless of fullscreen state
         $this->dispatch('show-exam-content');
     }
