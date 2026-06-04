@@ -6,6 +6,7 @@ use App\Events\SubscriptionUpdated;
 use App\Events\UpdateSubscription;
 use App\Listeners\CreateTrialSubscriptionOnVerification;
 use App\Listeners\EvaluateSubscriptionListener;
+use App\Listeners\PreventDisabledMailSending;
 use App\Services\UserLoginService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -13,6 +14,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
@@ -31,13 +33,16 @@ class EventServiceProvider extends ServiceProvider
             UpdateSubscription::class,
         ],
         Login::class => [
-         //   StoreUserLoginHistory::class,
+            //   StoreUserLoginHistory::class,
         ],
         Logout::class => [
-         //   StoreUserLogoutHistory::class,
+            //   StoreUserLogoutHistory::class,
         ],
         Verified::class => [
             CreateTrialSubscriptionOnVerification::class,
+        ],
+        MessageSending::class => [
+            PreventDisabledMailSending::class,
         ],
     ];
 
