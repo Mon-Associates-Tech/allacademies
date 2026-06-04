@@ -340,6 +340,7 @@
     
     @push('exam-scripts')
         <script src="{{ asset('js/exam-sync.js') }}"></script>
+        <script src="{{ asset('js/exam-timer.js') }}"></script>
     @endpush
     
     @push('exam-scripts')
@@ -469,6 +470,56 @@
                         window.currentResponses[data.questionId] = data.response;
                     }
                 });
+
+                // ── AUTO-SUBMIT REDIRECT ────────────────────────────────────────
+                // Fired by ExamSectionTaking::performAutoSubmit() after the server
+                // has marked the submission as submitted.  Show a brief modal then
+                // navigate to the completion page using the URL the server supplied.
+                Livewire.on('examAutoSubmitted', (payload) => {
+                    // Prevent the beforeunload prompt from blocking the redirect
+                    window.hasUnsavedChanges = false;
+
+                    const redirectUrl = (payload && payload.redirectUrl)
+                        ? payload.redirectUrl
+                        : @json(route('examination-hub.take.completed', $exam));
+
+                    // Remove any existing auto-submit modal
+                    const existingModal = document.getElementById('auto-submit-modal');
+                    if (existingModal) existingModal.remove();
+
+                    const modal = document.createElement('div');
+                    modal.id = 'auto-submit-modal';
+                    modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70';
+                    modal.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 rounded-lg w-full max-w-md p-6 text-center shadow-xl">
+                            <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                                <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Time\'s Up!</h3>
+                            <p class="text-slate-600 dark:text-slate-400 mb-2">Your exam has been automatically submitted.</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">${(payload && payload.reason) ? payload.reason : ''}</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                Redirecting to results in <span id="auto-submit-countdown">3</span>s&hellip;
+                            </p>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+
+                    // Countdown display + redirect
+                    let secondsLeft = 3;
+                    const countdownEl = document.getElementById('auto-submit-countdown');
+                    const countdownInterval = setInterval(() => {
+                        secondsLeft--;
+                        if (countdownEl) countdownEl.textContent = secondsLeft;
+                        if (secondsLeft <= 0) {
+                            clearInterval(countdownInterval);
+                            window.location.href = redirectUrl;
+                        }
+                    }, 1000);
+                });
             });
             
             // Auto-save every 30 seconds
@@ -482,7 +533,7 @@
             
             // Silent auto-save using beacon API
             function saveResponsesSilently() {
-                const csrfToken = document.queryDEBUGSelector('meta[name="csrf-token"]')?.content;
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
                 if (!csrfToken) return;
                 
                 // Get current responses from Livewire component
@@ -546,19 +597,38 @@
                 setInterval(updateTimeRemaining, 1000);
             }
             
+            // Guard flag so handleTimerExpired() is only called once even if the
+            // interval fires a second time before Livewire responds.
+            window._timerExpiredCalled = false;
+
             function updateTimeRemaining() {
                 const timeElement = document.getElementById('time-remaining');
                 if (!timeElement) return;
-                
+
                 if (timeRemainingSeconds <= 0) {
                     timeElement.textContent = '00:00:00';
                     showTimeWarning('expired');
+
+                    if (!window._timerExpiredCalled) {
+                        window._timerExpiredCalled = true;
+
+                        // Tell the Livewire component the timer has expired so it can
+                        // perform the authoritative server-side auto-submit and dispatch
+                        // the examAutoSubmitted event (which carries the redirect URL).
+                        const wireEl = document.querySelector('[wire\\:id]');
+                        if (wireEl) {
+                            const wire = Livewire.find(wireEl.getAttribute('wire:id'));
+                            if (wire) {
+                                wire.call('handleTimerExpired');
+                            }
+                        }
+                    }
                     return;
                 }
-                
+
                 timeRemainingSeconds--;
                 updateTimerDisplay();
-                
+
                 // Show warnings based on time remaining
                 if (timeRemainingSeconds <= 300) { // 5 minutes
                     showTimeWarning('critical');
