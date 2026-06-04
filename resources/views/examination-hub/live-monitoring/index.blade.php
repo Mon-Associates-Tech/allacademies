@@ -107,6 +107,12 @@
                     <span class="text-xs text-slate-400" x-text="'(' + filteredParticipants.length + ')'"></span>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button @click="openMessageAllModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                        <x-heroicon-o-chat-bubble-left-right class="w-4 h-4" />
+                        Message All Active
+                    </button>
                     <input type="text"
                            x-model="searchQuery"
                            placeholder="Search participants..."
@@ -123,7 +129,8 @@
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Participant</th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Progress</th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Violations</th>
-                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Time</th>
+                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Time Spent</th>
+                            <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Limit</th>
                             <th class="px-5 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -219,14 +226,49 @@
                                     </div>
                                 </td>
 
-                                {{-- Time --}}
+                                {{-- Time Spent --}}
                                 <td class="px-5 py-4">
-                                    <span class="text-xs font-mono whitespace-nowrap"
-                                          :class="{
-                                              'text-red-500': participant.has_duration && participant.remaining_seconds !== null && participant.remaining_seconds <= 300,
-                                              'text-slate-600 dark:text-slate-400': !(participant.has_duration && participant.remaining_seconds !== null && participant.remaining_seconds <= 300)
-                                          }"
-                                          x-text="formatTime(participant)"></span>
+                                    <template x-if="participant.status === 'completed' || participant.status === 'terminated'">
+                                        <div>
+                                            <span class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-200"
+                                                  x-text="formatSeconds(participant.time_taken_seconds ?? participant.elapsed_seconds)"></span>
+                                            <span class="ml-1 text-xs px-1 py-0.5 rounded font-medium"
+                                                  :class="participant.status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                                                  x-text="participant.status === 'completed' ? 'submitted' : 'terminated'"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="participant.status !== 'completed' && participant.status !== 'terminated'">
+                                        <span class="text-xs font-mono text-slate-600 dark:text-slate-400"
+                                              x-text="formatSeconds(participant.elapsed_seconds)"></span>
+                                    </template>
+                                </td>
+
+                                {{-- Limit --}}
+                                <td class="px-5 py-4">
+                                    <template x-if="participant.has_duration">
+                                        <div class="space-y-0.5">
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-xs text-slate-400 dark:text-slate-500">Allowed:</span>
+                                                <span class="text-xs font-mono font-semibold text-slate-600 dark:text-slate-300"
+                                                      x-text="formatSeconds(participant.total_allowed_seconds)"></span>
+                                            </div>
+                                            <template x-if="participant.status !== 'completed' && participant.status !== 'terminated'">
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-xs text-slate-400 dark:text-slate-500">Left:</span>
+                                                    <span class="text-xs font-mono font-semibold"
+                                                          :class="{
+                                                              'text-red-500 animate-pulse': participant.remaining_seconds !== null && participant.remaining_seconds <= 300,
+                                                              'text-amber-600 dark:text-amber-400': participant.remaining_seconds !== null && participant.remaining_seconds > 300 && participant.remaining_seconds <= 600,
+                                                              'text-slate-600 dark:text-slate-300': participant.remaining_seconds === null || participant.remaining_seconds > 600
+                                                          }"
+                                                          x-text="participant.remaining_seconds !== null ? formatSeconds(participant.remaining_seconds) : '—'"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="!participant.has_duration">
+                                        <span class="text-xs text-slate-400 dark:text-slate-500">No limit</span>
+                                    </template>
                                 </td>
 
                                 {{-- Actions --}}
@@ -251,7 +293,7 @@
                                         </button>
 
                                         {{-- Force Submit --}}
-                                        <button @click="confirmForceSubmit(participant)"
+                                        <button @click="openForceSubmitModal(participant)"
                                                 :disabled="participant.status === 'completed' || participant.status === 'terminated'"
                                                 class="p-1.5 text-slate-500 hover:text-orange-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                 title="Force Submit">
@@ -259,7 +301,7 @@
                                         </button>
 
                                         {{-- Terminate --}}
-                                        <button @click="confirmTerminate(participant)"
+                                        <button @click="openTerminateModal(participant)"
                                                 :disabled="participant.status === 'completed' || participant.status === 'terminated'"
                                                 class="p-1.5 text-slate-500 hover:text-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                 title="Terminate Session">
@@ -272,7 +314,7 @@
 
                         <template x-if="filteredParticipants.length === 0">
                             <tr>
-                                <td colspan="6" class="px-5 py-12 text-center">
+                                <td colspan="7" class="px-5 py-12 text-center">
                                     <div class="w-12 h-12 mx-auto flex items-center justify-center mb-4"
                                          style="border-radius: 2px; background: linear-gradient(135deg, #64748b, #94a3b8);">
                                         <x-heroicon-o-users class="w-6 h-6 text-white" />
@@ -321,6 +363,150 @@
                                 class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                 style="border-radius: 2px;">
                             Send Message
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- ── MESSAGE ALL MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showMessageAllModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showMessageAllModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-chat-bubble-left-right class="w-5 h-5 text-blue-500" />
+                            Message All Active Participants
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">This message will be sent to all currently active participants</p>
+                    </div>
+                    <div class="px-6 py-4">
+                        <textarea x-model="messageAllText"
+                                  rows="3"
+                                  placeholder="Type your message to all participants..."
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-blue-500"
+                                  style="border-radius: 2px;"></textarea>
+                        <p class="text-xs text-slate-500 mt-2" x-text="'Active participants: ' + stats.active"></p>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showMessageAllModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="sendMessageToAll()"
+                                :disabled="!messageAllText.trim() || stats.active === 0"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            Send to All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- ── TERMINATE MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showTerminateModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showTerminateModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full bg-gradient-to-r from-red-600 to-red-400"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-x-circle class="w-5 h-5 text-red-500" />
+                            Terminate Session
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1" x-text="'Participant: ' + (selectedParticipant?.participant_name || '')"></p>
+                    </div>
+                    <div class="px-6 py-4">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason for termination <span class="text-red-500">*</span></label>
+                        <textarea x-model="terminateReason"
+                                  rows="3"
+                                  placeholder="Enter a reason (required)..."
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-red-500"
+                                  style="border-radius: 2px;"></textarea>
+                        <p class="text-xs text-slate-500 mt-2">This reason will be shown to the participant and logged in the audit trail.</p>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showTerminateModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeTerminate()"
+                                :disabled="!terminateReason.trim() || actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Terminate Session</span>
+                            <span x-show="actionLoading">Terminating...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- ── FORCE SUBMIT MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showForceSubmitModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showForceSubmitModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full bg-gradient-to-r from-orange-500 to-orange-400"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-paper-airplane class="w-5 h-5 text-orange-500" />
+                            Force Submit Exam
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1" x-text="'Participant: ' + (selectedParticipant?.participant_name || '')"></p>
+                    </div>
+                    <div class="px-6 py-4">
+                        <div class="p-3 mb-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded text-sm text-orange-800 dark:text-orange-300">
+                            This will immediately submit the participant's exam with all current answers. This action cannot be undone.
+                        </div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason (optional)</label>
+                        <textarea x-model="forceSubmitReason"
+                                  rows="2"
+                                  placeholder="Optional reason..."
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-orange-500"
+                                  style="border-radius: 2px;"></textarea>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showForceSubmitModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeForceSubmit()"
+                                :disabled="actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Force Submit</span>
+                            <span x-show="actionLoading">Submitting...</span>
                         </button>
                     </div>
                 </div>
@@ -383,6 +569,7 @@
                 stats: initialData.stats,
                 participants: initialData.participants,
                 loading: false,
+                actionLoading: false,
                 lastUpdated: new Date().toLocaleTimeString(),
                 activeFilter: 'all',
                 searchQuery: '',
@@ -390,10 +577,16 @@
 
                 // Modals
                 showMessageModal: false,
+                showMessageAllModal: false,
                 showWarningModal: false,
+                showTerminateModal: false,
+                showForceSubmitModal: false,
                 selectedParticipant: null,
                 messageText: '',
+                messageAllText: '',
                 warningText: '',
+                terminateReason: '',
+                forceSubmitReason: '',
 
                 get statsCards() {
                     return [
@@ -501,6 +694,18 @@
                     };
                 },
 
+                formatSeconds(s) {
+                    if (s === null || s === undefined) return '—';
+                    s = Math.max(0, Math.round(s));
+                    const h = Math.floor(s / 3600);
+                    const m = Math.floor((s % 3600) / 60);
+                    const sec = s % 60;
+                    if (h > 0) {
+                        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+                    }
+                    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+                },
+
                 formatTime(participant) {
                     const isCompleted = participant.status === 'completed' || participant.status === 'terminated';
 
@@ -529,6 +734,11 @@
                     this.selectedParticipant = participant;
                     this.messageText = '';
                     this.showMessageModal = true;
+                },
+
+                openMessageAllModal() {
+                    this.messageAllText = '';
+                    this.showMessageAllModal = true;
                 },
 
                 openWarningModal(participant) {
@@ -575,43 +785,81 @@
                     }
                 },
 
-                async confirmForceSubmit(participant) {
-                    if (!confirm(`Are you sure you want to force submit the exam for ${participant.participant_name}? This action cannot be undone.`)) {
-                        return;
-                    }
+                async sendMessageToAll() {
+                    if (!this.messageAllText.trim()) return;
 
                     try {
-                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/force-submit') }}/${participant.submission_id}`, {
+                        const response = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/message-all') }}`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             },
-                            body: JSON.stringify({ reason: 'Admin force submission' }),
+                            body: JSON.stringify({ message: this.messageAllText }),
                         });
+
+                        const data = await response.json();
+                        
+                        this.showMessageAllModal = false;
+                        this.messageAllText = '';
+                        
+                        // Show success message
+                        alert(`Message sent successfully!\n\nDelivered to: ${data.sent_count} participants\nFailed: ${data.failed_count} participants`);
+                        
+                        // Refresh data
                         this.refreshData();
                     } catch (error) {
-                        console.error('Failed to force submit:', error);
+                        console.error('Failed to send message to all:', error);
+                        alert('Failed to send message to all participants');
                     }
                 },
 
-                async confirmTerminate(participant) {
-                    const reason = prompt(`Enter reason for terminating ${participant.participant_name}'s session:`);
-                    if (!reason) return;
+                openForceSubmitModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.forceSubmitReason = '';
+                    this.showForceSubmitModal = true;
+                },
 
+                async executeForceSubmit() {
+                    if (!this.selectedParticipant) return;
+                    this.actionLoading = true;
                     try {
-                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/terminate') }}/${participant.submission_id}`, {
+                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/force-submit') }}/${this.selectedParticipant.submission_id}`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            },
-                            body: JSON.stringify({ reason }),
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ reason: this.forceSubmitReason || 'Admin force submission' }),
                         });
+                        this.showForceSubmitModal = false;
+                        this.addToast('success', `Exam force submitted for ${this.selectedParticipant.participant_name}`);
                         this.refreshData();
                     } catch (error) {
-                        console.error('Failed to terminate:', error);
+                        this.addToast('error', 'Failed to force submit');
                     }
+                    this.actionLoading = false;
+                },
+
+                openTerminateModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.terminateReason = '';
+                    this.showTerminateModal = true;
+                },
+
+                async executeTerminate() {
+                    if (!this.selectedParticipant || !this.terminateReason.trim()) return;
+                    this.actionLoading = true;
+                    try {
+                        await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/terminate') }}/${this.selectedParticipant.submission_id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ reason: this.terminateReason }),
+                        });
+                        this.showTerminateModal = false;
+                        this.addToast('success', `Session terminated for ${this.selectedParticipant.participant_name}`);
+                        this.refreshData();
+                    } catch (error) {
+                        this.addToast('error', 'Failed to terminate session');
+                    }
+                    this.actionLoading = false;
                 },
 
                 showViolationToast(data) {

@@ -80,6 +80,7 @@ class ExamCreationController extends Controller
             'academic_level_id' => $exam->sections->first()?->academic_level_id,
             'academic_subject_id' => $exam->academic_subject_id,
             'sections' => $exam->sections->map(fn ($section) => [
+                'id' => $section->id, // Include section ID for editing
                 'title' => $section->title,
                 'description' => $section->description,
                 'instructions' => $section->instructions,
@@ -103,12 +104,15 @@ class ExamCreationController extends Controller
     public function preview(Request $request): View
     {
         Log::info('Preview request received', [
+            'all_input' => $request->all(),
+            'sections_count' => count($request->input('sections', [])),
             'sections' => $request->input('sections'),
         ]);
 
         $payload = $this->validatedPayload($request);
 
         Log::info('Validated payload', [
+            'sections_count' => count($payload['sections']),
             'sections' => $payload['sections'],
         ]);
 
@@ -125,12 +129,13 @@ class ExamCreationController extends Controller
                 $generatedQuestions[$sectionIndex] = $section->questions->map(function ($question) {
                     return [
                         'id' => $question->id,
-                        'question_text' => $question->question_text,
-                        'question_type' => $question->question_type,
-                        'marks' => $question->marks,
-                        'options' => $question->options ?? [],
+                        'question' => $question->question ?? '',
+                        'type' => $question->type ?? 'multiple_choice',
+                        'marks' => $question->marks ?? 1,
+                        'options' => $this->flattenOptionsToStrings($question->options ?? []),
                         'correct_answer' => $question->correct_answer,
                         'explanation' => $question->explanation,
+                        'difficulty' => $question->difficulty ?? 'medium',
                     ];
                 })->values()->all();
             }
@@ -247,6 +252,7 @@ class ExamCreationController extends Controller
             'academic_level_id' => ['nullable', 'integer', 'exists:academic_levels,id'],
             'academic_subject_id' => ['nullable', 'integer', 'exists:academic_subjects,id'],
             'sections' => ['required', 'array', 'min:1'],
+            'sections.*.id' => ['nullable', 'integer', 'exists:general_exam_sections,id'],
             'sections.*.title' => ['required', 'string', 'max:255'],
             'sections.*.description' => ['nullable', 'string'],
             'sections.*.instructions' => ['nullable', 'string'],
@@ -352,5 +358,72 @@ class ExamCreationController extends Controller
                     ])->values()->all(),
                 ])->values()->all(),
             ])->values()->all();
+    }
+
+    /**
+     * Flatten deeply nested options to simple key-value pairs.
+     * Options can become nested during multiple edits, this fixes that.
+     */
+    private function flattenOptions(array $options): array
+    {
+        if (empty($options)) {
+            return [];
+        }
+
+        return array_map(function ($option) {
+            // If option value is already a simple string, keep it
+            if (is_string($option['value'] ?? null)) {
+                return [
+                    'key' => $option['key'] ?? '',
+                    'value' => $option['value'],
+                ];
+            }
+
+            // If option value is nested (has 'value' key), extract the deepest value
+            if (is_array($option['value'] ?? null)) {
+                $deepestValue = $option['value'];
+                while (is_array($deepestValue) && isset($deepestValue['value'])) {
+                    $deepestValue = $deepestValue['value'];
+                }
+                return [
+                    'key' => $option['key'] ?? '',
+                    'value' => is_string($deepestValue) ? $deepestValue : '',
+                ];
+            }
+
+            return $option;
+        }, $options);
+    }
+
+    /**
+     * Convert options to simple strings for the question editor.
+     * The editor expects simple string options, not key/value arrays.
+     */
+    private function flattenOptionsToStrings(array $options): array
+    {
+        if (empty($options)) {
+            return [];
+        }
+
+        return array_map(function ($option) {
+            // If already a string, return as-is
+            if (is_string($option)) {
+                return $option;
+            }
+
+            // If it's an array with key/value, extract the value
+            if (is_array($option)) {
+                $value = $option['value'] ?? '';
+                
+                // Handle nested values
+                while (is_array($value) && isset($value['value'])) {
+                    $value = $value['value'];
+                }
+                
+                return is_string($value) ? $value : '';
+            }
+
+            return '';
+        }, $options);
     }
 }

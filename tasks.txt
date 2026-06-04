@@ -1,7 +1,0 @@
-unclear subscription message.
-token subscription button
-
-    A copy of the Certificate of Registration used to sign up
-    A recent bank statement for your payout bank account (this can be redacted and should not be older than 3 months)
-    Your login email
-    A valid government-issued ID card with the same name as the one on the ID card you used to open your Paystack account

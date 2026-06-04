@@ -26,6 +26,11 @@
                      hasDocument = true;
                  ">
                 <div class="flex items-center justify-between mb-4">
+                    {{-- Hidden input for section ID to preserve it during form submission --}}
+                    @if(!empty($section['id']))
+                        <input type="hidden" name="sections[{{ $index }}][id]" value="{{ $section['id'] }}">
+                    @endif
+                    
                     <h3 class="font-semibold text-slate-900 dark:text-white">Section {{ $index + 1 }}</h3>
                     <button type="button"
                             class="text-xs font-semibold text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors"

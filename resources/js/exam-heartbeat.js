@@ -115,6 +115,8 @@ class ExamHeartbeat {
                 this.onTerminated(data);
             } else if (data.warning) {
                 this.onWarning(data.warning);
+            } else if (data.admin_message) {
+                this.onMessage(data.admin_message);
             }
         } catch (error) {
             console.error('Heartbeat failed:', error);

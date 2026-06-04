@@ -76,7 +76,7 @@ class ExamGradingService
             'total_marks' => $totalMarks,
             'percentage' => round($percentage, 2),
             'grade' => $this->resolveGrade($percentage, $exam),
-            'status' => 'auto_graded',
+            'status' => GeneralExamSubmission::STATUS_AUTO_GRADED,
             'requires_manual_review' => $needsReview,
             'graded_at' => now(),
         ]);

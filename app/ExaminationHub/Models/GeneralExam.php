@@ -250,6 +250,7 @@ class GeneralExam extends Model
         return $this->submissions()
             ->where('participant_type', $participantType)
             ->where('participant_id', $participantId)
+            ->whereNotNull('submitted_at') // Only count actual submissions, not just created records
             ->count();
     }
 

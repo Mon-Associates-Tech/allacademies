@@ -272,7 +272,34 @@
         </template>
 
         <!-- EXAM CONTENT AREA - Initially hidden until section starts -->
-        <div id="exam-content-area" class="h-full" style="display: none;">
+        <div id="exam-content-area" class="h-full" style="display: none;" role="main" aria-label="Exam content">
+            {{-- Skip links for keyboard navigation --}}
+            <nav aria-label="Skip links" class="sr-only">
+                <a href="#question-navigation">Skip to question navigation</a>
+                <a href="#question-content">Skip to current question</a>
+            </nav>
+            
+            {{-- Time Alert (Functional Timer) --}}
+            {{-- DEBUG: timeRemaining = {{ var_export($timeRemaining ?? 'NOT_SET', true) }} --}}
+            {{-- DEBUG: section time_limit_minutes = {{ $section->time_limit_minutes ?? 'NULL' }} --}}
+            @php
+                // Force timer to show for debugging - remove this after fixing
+                $debugTimeRemaining = $timeRemaining ?? ($section->time_limit_minutes ? $section->time_limit_minutes * 60 : 1800);
+            @endphp
+            @if(true) {{-- Always show for debugging --}}
+            <div id="time-alert-section" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 shadow-sm">
+                <div class="flex items-center justify-end">
+                    <div id="time-alert" class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="time-remaining" class="text-sm font-bold">Loading...</span>
+                        <span class="text-xs text-slate-500 ml-2">(Debug: {{ $debugTimeRemaining }}s)</span>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
             <!-- Main exam interface -->
             <div class="h-full flex flex-col">
                 @livewire('examination-hub.exam-section-taking', [
@@ -294,14 +321,484 @@
         const endpoint          = @json(route('examination-hub.take.proctor.event', ['exam' => $exam]));
 
         if (proctoringEnabled && sessionId) {
-            // Initialize proctoring using the existing exam-proctor.js functionality
-            // Check if the global ExamProctor is available from exam-proctor.js
-            if (typeof window.ExamProctor !== 'undefined') {
-                console.log('Proctoring system ready via exam-proctor.js');
-            } else {
-                // Fallback: log a warning that proctoring may not be available
-                console.warn('Proctoring system not available. Make sure exam-proctor.js is loaded.');
-            }
+            // Configure the proctoring system BEFORE loading the script
+            window.ExamProctorConfig = {
+                eventUrl: endpoint,
+                csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
+                hardenedMode: @json($exam->hardened_mode ?? false),
+                requireFullscreen: @json($exam->require_fullscreen ?? false),
+                autoSubmitUrl: null // We'll handle submission via Livewire
+            };
         }
     </script>
+    
+    @if($proctoringEnabled ?? false)
+        @push('exam-scripts')
+            <script src="{{ asset('js/exam-proctor.js') }}"></script>
+        @endpush
+    @endif
+    
+    @push('exam-scripts')
+        <script src="{{ asset('js/exam-sync.js') }}"></script>
+    @endpush
+    
+    @push('exam-scripts')
+        <script>
+            // Initialize exam sync after DOM is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                // Only initialize if the exam sync class exists
+                if (typeof ExamSessionSync !== 'undefined') {
+                    const examId = @json($exam->id);
+                    const submissionId = @json($submission->id ?? null);
+                    const userId = @json(auth()->id());
+                    
+                    if (examId && submissionId) {
+                        window.examSync = new ExamSessionSync(examId, submissionId, userId);
+                        window.examSync.init();
+                        
+                        // Set up event listeners to update sync when responses change
+                        Livewire.on('examDataSyncing', () => {
+                            if (window.examSync) {
+                                window.examSync.syncImmediate();
+                            }
+                        });
+                    }
+                }
+                
+                // Initialize exam heartbeat after exam sync
+                if (typeof ExamHeartbeat !== 'undefined') {
+                    const examId = @json($exam->id);
+                    const submissionId = @json($submission->id ?? null);
+                    
+                    if (examId && submissionId) {
+                        window.examHeartbeat = new ExamHeartbeat({
+                            examId: examId,
+                            heartbeatUrl: "{{ route('examination-hub.take.heartbeat', ['exam' => $exam]) }}",
+                            initUrl: "{{ route('examination-hub.take.heartbeat.init', ['exam' => $exam]) }}",
+                            acknowledgeUrl: "{{ route('examination-hub.take.heartbeat.acknowledge-warning', ['exam' => $exam]) }}",
+                            interval: 15000, // 15 seconds
+                            
+                            onWarning: function(warning) {
+                                console.log('Warning received:', warning);
+                                // Use default warning handler (modal popup)
+                                window.examHeartbeat.defaultWarningHandler(warning);
+                            },
+                            
+                            onTerminated: function(data) {
+                                console.log('Session terminated:', data);
+                                // Use default termination handler (modal with redirect)
+                                window.examHeartbeat.defaultTerminatedHandler(data);
+                            },
+                            
+                            onMessage: function(message) {
+                                console.log('Admin message:', message);
+                                // Use default message handler (toast notification)
+                                window.examHeartbeat.defaultMessageHandler(message);
+                            },
+                            
+                            onForceSubmit: function(data) {
+                                console.log('Force submit received:', data);
+                                // Show force submit notification and redirect
+                                const modal = document.createElement('div');
+                                modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
+                                modal.innerHTML = `
+                                    <div class="bg-white rounded-lg w-full max-w-md p-6 text-center">
+                                        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-red-100">
+                                            <svg class="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-2">Exam Submitted</h3>
+                                        <p class="text-slate-600 mb-2">Your exam has been submitted by the administrator.</p>
+                                        <p class="text-sm text-slate-500 mb-6">Reason: ${data.message || 'Not specified'}</p>
+                                        <p class="text-sm text-slate-500">Redirecting to results...</p>
+                                    </div>
+                                `;
+                                document.body.appendChild(modal);
+                                
+                                // Redirect after 3 seconds
+                                setTimeout(() => {
+                                    window.location.href = "{{ route('examination-hub.take.completed', $exam) }}";
+                                }, 3000);
+                            },
+                            
+                            onTimeExtended: function(additionalMinutes) {
+                                console.log('Time extended by:', additionalMinutes, 'minutes');
+                                // Show time extension toast
+                                const toast = document.createElement('div');
+                                toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-green-600 text-white rounded-lg shadow-lg';
+                                toast.innerHTML = `
+                                    <div class="flex items-start gap-3">
+                                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold">Time Extended</p>
+                                            <p class="text-sm opacity-90">Your exam time has been extended by ${additionalMinutes} minutes.</p>
+                                        </div>
+                                        <button onclick="this.closest('.fixed').remove();" class="ml-auto text-white/70 hover:text-white">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                `;
+                                document.body.appendChild(toast);
+                                
+                                // Auto remove after 8 seconds
+                                setTimeout(() => toast.remove(), 8000);
+                            }
+                        });
+                    }
+                }
+            });
+        </script>
+        
+        {{-- Auto-save and submission validation --}}
+        <script>
+            // Track unsaved changes
+            window.hasUnsavedChanges = false;
+            window.currentResponses = {};
+            window.autoSaveInterval = null;
+            
+            // Listen for Livewire response updates
+            document.addEventListener('livewire:initialized', () => {
+                Livewire.on('responseUpdated', (data) => {
+                    window.hasUnsavedChanges = true;
+                    if (data && data.questionId && data.response) {
+                        window.currentResponses[data.questionId] = data.response;
+                    }
+                });
+            });
+            
+            // Auto-save every 30 seconds
+            function startAutoSave() {
+                window.autoSaveInterval = setInterval(() => {
+                    if (window.hasUnsavedChanges) {
+                        saveResponsesSilently();
+                    }
+                }, 30000); // 30 seconds
+            }
+            
+            // Silent auto-save using beacon API
+            function saveResponsesSilently() {
+                const csrfToken = document.queryDEBUGSelector('meta[name="csrf-token"]')?.content;
+                if (!csrfToken) return;
+                
+                // Get current responses from Livewire component
+                const livewireComponent = document.querySelector('[wire\:id]');
+                if (!livewireComponent) return;
+                
+                // Use navigator.sendBeacon for reliable delivery even on page unload
+                const data = new FormData();
+                data.append('_token', csrfToken);
+                data.append('_method', 'POST');
+                
+                // Send beacon to save endpoint
+                navigator.sendBeacon(
+                    "{{ route('examination-hub.take.save-response', $exam) }}",
+                    data
+                );
+                
+                window.hasUnsavedChanges = false;
+                console.log('Auto-saved responses at', new Date().toISOString());
+            }
+            
+            // Save before page unload
+            window.addEventListener('beforeunload', (e) => {
+                if (window.hasUnsavedChanges) {
+                    saveResponsesSilently();
+                    
+                    // Show warning if user tries to leave with unsaved changes
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+            });
+            
+            // Start auto-save when section starts
+            window.addEventListener('section-started', () => {
+                startAutoSave();
+            });
+            
+            // Start timer immediately
+            document.addEventListener('DOMContentLoaded', () => {
+                startTimer();
+            });
+            
+            // Time remaining countdown
+            @php
+                $jsTimeRemaining = $timeRemaining ?? ($section->time_limit_minutes ? $section->time_limit_minutes * 60 : 1800);
+            @endphp
+            let timeRemainingSeconds = {{ $jsTimeRemaining }};
+            console.log('Timer initialized with', timeRemainingSeconds, 'seconds');
+            console.log('Original timeRemaining:', @json($timeRemaining));
+            console.log('Section time_limit_minutes:', @json($section->time_limit_minutes));
+            
+            function startTimer() {
+                console.log('Starting timer...');
+                const timeElement = document.getElementById('time-remaining');
+                if (!timeElement) {
+                    console.error('Timer element not found!');
+                    return;
+                }
+                updateTimerDisplay();
+                setInterval(updateTimeRemaining, 1000);
+            }
+            
+            function updateTimeRemaining() {
+                const timeElement = document.getElementById('time-remaining');
+                if (!timeElement) return;
+                
+                if (timeRemainingSeconds <= 0) {
+                    timeElement.textContent = '00:00:00';
+                    showTimeWarning('expired');
+                    return;
+                }
+                
+                timeRemainingSeconds--;
+                updateTimerDisplay();
+                
+                // Show warnings based on time remaining
+                if (timeRemainingSeconds <= 300) { // 5 minutes
+                    showTimeWarning('critical');
+                } else if (timeRemainingSeconds <= 600) { // 10 minutes
+                    showTimeWarning('warning');
+                }
+            }
+            
+            function updateTimerDisplay() {
+                const timeElement = document.getElementById('time-remaining');
+                if (!timeElement) return;
+                
+                const hours = Math.floor(timeRemainingSeconds / 3600);
+                const minutes = Math.floor((timeRemainingSeconds % 3600) / 60);
+                const seconds = timeRemainingSeconds % 60;
+                
+                const timeString = 
+                    String(hours).padStart(2, '0') + ':' + 
+                    String(minutes).padStart(2, '0') + ':' + 
+                    String(seconds).padStart(2, '0');
+                
+                timeElement.textContent = timeString;
+            }
+            
+            function showTimeWarning(level) {
+                const alertBox = document.getElementById('time-alert');
+                if (!alertBox) return;
+                
+                if (level === 'expired') {
+                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white animate-pulse';
+                } else if (level === 'critical') {
+                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300';
+                } else if (level === 'warning') {
+                    alertBox.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300';
+                }
+            }
+            
+            // Validation before final submission
+            function confirmSubmission() {
+                const totalQuestions = {{ $questions->count() }};
+                const answeredQuestions = Object.keys(window.currentResponses || {}).length;
+                
+                if (answeredQuestions === 0) {
+                    return confirm('⚠️ WARNING: You haven\'t answered any questions!\n\nAre you sure you want to submit an empty exam? This cannot be undone.');
+                }
+                
+                if (answeredQuestions < totalQuestions * 0.5) {
+                    return confirm(`⚠️ You've only answered ${answeredQuestions} of ${totalQuestions} questions.\n\nAre you sure you want to submit?`);
+                }
+                
+                return true;
+            }
+            
+            // Initialize when DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                // If section already started, begin auto-save
+                const examContent = document.getElementById('exam-content-area');
+                if (examContent && examContent.style.display !== 'none') {
+                    startAutoSave();
+                }
+            });
+            
+            // ── BOOKMARKING FEATURE ──
+            window.examBookmarks = {
+                bookmarks: new Set(),
+                
+                init() {
+                    // Load bookmarks from localStorage
+                    const saved = localStorage.getItem('exam_bookmarks_' + {{ $submission->id }});
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            this.bookmarks = new Set(parsed);
+                        } catch (e) {
+                            console.error('Failed to load bookmarks:', e);
+                        }
+                    }
+                },
+                
+                toggle(questionId) {
+                    const questionIdStr = String(questionId);
+                    
+                    if (this.bookmarks.has(questionIdStr)) {
+                        this.bookmarks.delete(questionIdStr);
+                        this.showNotification('Bookmark removed', 'info');
+                    } else {
+                        this.bookmarks.add(questionIdStr);
+                        this.showNotification('Question bookmarked for review', 'success');
+                    }
+                    
+                    this.save();
+                    this.updateUI();
+                },
+                
+                isBookmarked(questionId) {
+                    return this.bookmarks.has(String(questionId));
+                },
+                
+                save() {
+                    localStorage.setItem(
+                        'exam_bookmarks_' + {{ $submission->id }},
+                        JSON.stringify(Array.from(this.bookmarks))
+                    );
+                },
+                
+                showNotification(message, type = 'info') {
+                    const toast = document.createElement('div');
+                    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-blue-600';
+                    
+                    toast.className = `fixed bottom-4 right-4 z-50 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-y-0`;
+                    toast.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span class="text-sm font-medium">${message}</span>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(20px)';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 2000);
+                },
+                
+                updateUI() {
+                    // Update bookmark icons in the UI
+                    document.querySelectorAll('[data-question-id]').forEach(el => {
+                        const questionId = el.getAttribute('data-question-id');
+                        const bookmarkIcon = el.querySelector('.bookmark-icon');
+                        
+                        if (bookmarkIcon) {
+                            if (this.isBookmarked(questionId)) {
+                                bookmarkIcon.classList.remove('hidden');
+                                bookmarkIcon.setAttribute('aria-label', 'Remove bookmark');
+                            } else {
+                                bookmarkIcon.classList.add('hidden');
+                                bookmarkIcon.setAttribute('aria-label', 'Add bookmark');
+                            }
+                        }
+                    });
+                },
+                
+                showBookmarkedList() {
+                    if (this.bookmarks.size === 0) {
+                        this.showNotification('No bookmarked questions', 'info');
+                        return;
+                    }
+                    
+                    // Create modal to show bookmarked questions
+                    const modal = document.createElement('div');
+                    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
+                    modal.setAttribute('role', 'dialog');
+                    modal.setAttribute('aria-modal', 'true');
+                    modal.setAttribute('aria-labelledby', 'bookmarks-title');
+                    
+                    let bookmarkedList = '';
+                    this.bookmarks.forEach(id => {
+                        bookmarkedList += `
+                            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                <span class="text-sm font-medium text-slate-900 dark:text-white">Question ${id}</span>
+                                <button onclick="window.examBookmarks.goToQuestion(${id})" 
+                                        class="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                    Go to Question
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    modal.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden shadow-xl">
+                            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <h3 id="bookmarks-title" class="text-lg font-semibold text-slate-900 dark:text-white">
+                                    Bookmarked Questions (${this.bookmarks.size})
+                                </h3>
+                                <button onclick="this.closest('.fixed').remove()" 
+                                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                                        aria-label="Close bookmarks dialog">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="p-6 overflow-y-auto max-h-[60vh] space-y-2">
+                                ${bookmarkedList}
+                            </div>
+                            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                                <button onclick="this.closest('.fixed').remove()" 
+                                        class="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    
+                    // Close on ESC key
+                    modal.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            modal.remove();
+                        }
+                    });
+                    
+                    // Close on backdrop click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
+                },
+                
+                goToQuestion(questionId) {
+                    // This would integrate with Livewire to navigate to the question
+                    // For now, just close the modal and show a notification
+                    document.querySelector('.fixed[role="dialog"]')?.remove();
+                    this.showNotification(`Navigate to question ${questionId} (integration needed)`, 'info');
+                }
+            };
+            
+            // Initialize bookmarks when DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                window.examBookmarks.init();
+            });
+            
+            // Keyboard shortcut for bookmarks (Ctrl+B or Cmd+B)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                    e.preventDefault();
+                    // Get current question ID from Livewire component
+                    const livewireComponent = document.querySelector('[wire\:id]');
+                    if (livewireComponent) {
+                        // This would need to get the current question ID from Livewire
+                        console.log('Bookmark shortcut pressed - integration needed');
+                    }
+                }
+            });
+        </script>
+    @endpush
 </x-layouts.exam>

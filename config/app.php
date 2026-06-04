@@ -218,4 +218,7 @@ return [
     'enable_otp' => env('ENABLE_OTP', false),
     'enable_importers' => env('ENABLE_IMPORTERS', false),
 
+    'license_secret'  => env('LICENSE_HMAC_SECRET'),
+    'license_binary'  => env('LICENSE_BINARY_PATH', '/usr/local/bin/license_guard'),
+
 ];
