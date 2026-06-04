@@ -73,7 +73,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ $background ? $background : 'bg-[radial-gradient(73%_147%,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
+<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ $background ? $background : 'bg-[radial-gradient(73%_147%_at_center,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%_at_center,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
     dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
     bg-blend-screen' }}"
             :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
