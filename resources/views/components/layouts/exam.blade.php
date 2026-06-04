@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     {{-- PWA Meta Tags --}}
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,12 +32,13 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/js/exam-sync.js', 'resources/js/exam-timer.js', 'resources/js/exam-heartbeat.js'])
 
 
-    
+
     {{-- Enhanced dark mode styles --}}
     <link rel="stylesheet" href="{{ asset('css/exam-dark-mode.css') }}">
-    
+
     {{-- PWA Service Worker Registration --}}
     <script>
         // Register service worker for PWA support
@@ -46,17 +47,17 @@
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
                     .then((registration) => {
                         console.log('[PWA] Service Worker registered successfully:', registration.scope);
-                        
+
                         // Check for updates periodically
                         setInterval(() => {
                             registration.update();
                         }, 60 * 60 * 1000); // Check every hour
-                        
+
                         // Listen for updates
                         registration.addEventListener('updatefound', () => {
                             const newWorker = registration.installing;
                             console.log('[PWA] New version available');
-                            
+
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                     // New version is ready, show notification
@@ -72,7 +73,7 @@
                     });
             });
         }
-        
+
         // Handle online/offline events
         window.addEventListener('online', () => {
             console.log('[PWA] Back online');
@@ -85,7 +86,7 @@
                 });
             }
         });
-        
+
         window.addEventListener('offline', () => {
             console.log('[PWA] Offline mode activated');
             // Show offline indicator
@@ -107,7 +108,7 @@
             indicator.textContent = '⚠️ You are offline. Your work will sync when reconnected.';
             document.body.appendChild(indicator);
         });
-        
+
         // Remove offline indicator when back online
         window.addEventListener('online', () => {
             const indicator = document.getElementById('offline-indicator');
@@ -116,10 +117,10 @@
             }
         });
     </script>
-    
+
     <!-- Conditionally load exam-specific JavaScript -->
     @stack('exam-scripts')
-    
+
     @livewireStyles
 
     <!-- Exam synchronization component -->
@@ -140,7 +141,7 @@
             return {
                 isSyncing: false,
                 syncMessage: 'Syncing exam data...',
-                
+
                 init() {
                     this.$watch('isSyncing', value => {
                         if (value) {
@@ -150,12 +151,12 @@
                             }, 1000);
                         }
                     });
-                    
+
                     // Listen for Livewire sync events
                     Livewire.on('examDataSyncing', () => {
                         this.isSyncing = true;
                     });
-                    
+
                     Livewire.on('examDataSynced', () => {
                         this.isSyncing = false;
                     });
@@ -185,7 +186,7 @@
         });
     </script>
     @stack('scripts')
-    
+
     @stack('exam-scripts')
     @stack('exam-sync-scripts')
     @livewireScriptConfig
