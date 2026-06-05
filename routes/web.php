@@ -36,6 +36,8 @@ use App\Livewire\Forums\ForumManagement;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\Route;
 
+use App\Livewire\StatusPage;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -455,6 +457,11 @@ Route::get('/components', function () {
 Route::get('/license-expired', fn() => view('license.expired'))
     ->name('license.expired')
     ->withoutMiddleware([\App\Http\Middleware\ValidateLicense::class]);
+
+ 
+Route::get('/status', StatusPage::class)->name('status');
+ 
+
 
 /*
 |--------------------------------------------------------------------------

@@ -32,9 +32,11 @@
     </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @vite(['resources/js/exam-sync.js', 'resources/js/exam-timer.js', 'resources/js/exam-heartbeat.js'])
+    <!-- @vite(['resources/js/exam-sync.js', 'resources/js/exam-timer.js', 'resources/js/exam-heartbeat.js']) -->
 
-
+<!-- @asset('/js/exam-sync.js') -->
+<!-- @asset('/js/exam-timer.js') -->
+<!-- @asset('/js/exam-heartbeat.js') -->
 
     {{-- Enhanced dark mode styles --}}
     <link rel="stylesheet" href="{{ asset('css/exam-dark-mode.css') }}">
