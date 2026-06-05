@@ -31,6 +31,8 @@ class ExamSectionTaking extends Component
     public ?int $timeRemaining = null;
     public array $flaggedQuestions = [];
 
+    public string|int|null $start_time = '';
+
     public function mount(GeneralExam $exam, GeneralExamSubmission $submission, $section, int $sectionIndex, $questions): void
     {
         $this->examId = $exam->id;
@@ -156,25 +158,11 @@ class ExamSectionTaking extends Component
             if ($submission->started_at) {
                 $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
-                    // Auto-submit the exam
-                    $submission->update([
-                        'submitted_at' => now(),
-                        'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
-                        'status' => GeneralExamSubmission::STATUS_SUBMITTED,
-                        'auto_submitted' => true,
-                        'auto_submit_reason' => 'Time limit exceeded (server-side auto-submit)',
-                    ]);
-
-                    // Dispatch grading as a background job
-                    $this->gradingService->dispatchGrading($submission);
-
-                    // Emit event for auto-submit
-                    $this->dispatch('examAutoSubmitted', [
-                        'autoSubmitted' => true,
-                        'reason' => 'Time limit exceeded (server-side auto-submit)',
-                        'redirectUrl' => route('examination-hub.take.completed', $exam)
-                    ]);
-
+                    $this->performAutoSubmit(
+                        $submission,
+                        'Time limit exceeded (server-side auto-submit)',
+                        $exam
+                    );
                     return;
                 }
             }
@@ -184,25 +172,11 @@ class ExamSectionTaking extends Component
                 $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
                 $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
                 if (now()->greaterThanOrEqualTo($endsAt)) {
-                    // Auto-submit the exam
-                    $submission->update([
-                        'submitted_at' => now(),
-                        'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
-                        'status' => GeneralExamSubmission::STATUS_SUBMITTED,
-                        'auto_submitted' => true,
-                        'auto_submit_reason' => "Section '{$this->section->title}' time limit exceeded (server-side auto-submit)",
-                    ]);
-
-                    // Dispatch grading as a background job
-                    $this->gradingService->dispatchGrading($submission);
-
-                    // Emit event for auto-submit
-                    $this->dispatch('examAutoSubmitted', [
-                        'autoSubmitted' => true,
-                        'reason' => "Section '{$this->section->title}' time limit exceeded (server-side auto-submit)",
-                        'redirectUrl' => route('examination-hub.take.completed', $exam)
-                    ]);
-
+                    $this->performAutoSubmit(
+                        $submission,
+                        "Section '{$this->section->title}' time limit exceeded (server-side auto-submit)",
+                        $exam
+                    );
                     return;
                 }
             }
@@ -215,9 +189,95 @@ class ExamSectionTaking extends Component
         ];
 
         $submission->update(['responses' => $savedResponses]);
-        
+
         // Emit event for JavaScript auto-save tracking
         $this->dispatch('responseUpdated', questionId: $key, response: $value);
+    }
+
+    /**
+     * Called directly by the client-side timer when it counts down to zero.
+     * Performs the same server-side validation and auto-submit as updatedResponses(),
+     * but fires even when the candidate is idle (no response change in flight).
+     */
+    public function handleTimerExpired(): void
+    {
+        $submission      = $this->submission;
+        $exam            = $this->exam;
+        $isSingleSection = $exam->sections->count() === 1;
+        $sectionKey      = (string) $this->sectionId;
+
+        // Guard: already submitted — just redirect
+        if ($submission->submitted_at) {
+            $this->dispatch('examAutoSubmitted', [
+                'autoSubmitted' => true,
+                'reason'        => 'Exam already submitted.',
+                'redirectUrl'   => route('examination-hub.take.completed', $exam),
+            ]);
+            return;
+        }
+
+        if ($isSingleSection && $exam->duration_in_minutes) {
+            $examEndsAt = $submission->started_at
+                ? $submission->started_at->copy()->addMinutes($exam->duration_in_minutes)
+                : now()->subSecond(); // treat as expired when no start time
+            if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                $this->performAutoSubmit(
+                    $submission,
+                    'Time limit exceeded (client timer, server-verified)',
+                    $exam
+                );
+                return;
+            }
+        } elseif ($this->section->time_limit_minutes) {
+            $sectionStartTimes = $submission->section_start_times ?? [];
+            if (isset($sectionStartTimes[$sectionKey])) {
+                $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+                $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
+                if (now()->greaterThanOrEqualTo($endsAt)) {
+                    $this->performAutoSubmit(
+                        $submission,
+                        "Section '{$this->section->title}' time limit exceeded (client timer, server-verified)",
+                        $exam
+                    );
+                    return;
+                }
+            }
+        }
+
+        // If the server clock disagrees (e.g. clock skew), do nothing —
+        // the timer will re-fire on the next Livewire tick.
+    }
+
+    /**
+     * Marks the submission as auto-submitted, kicks off grading, and dispatches
+     * the examAutoSubmitted browser event with the redirect URL.
+     *
+     * Uses app() to resolve ExamGradingService so the Livewire component does not
+     * need a declared $gradingService property (Livewire serialises all public/
+     * protected properties between requests, which would break for service objects).
+     */
+    protected function performAutoSubmit(
+        GeneralExamSubmission $submission,
+        string $reason,
+        \App\ExaminationHub\Models\GeneralExam $exam
+    ): void {
+        $submission->update([
+            'submitted_at'       => now(),
+            'time_taken_minutes' => (int) $submission->started_at?->diffInMinutes(now()),
+            'status'             => GeneralExamSubmission::STATUS_SUBMITTED,
+            'auto_submitted'     => true,
+            'auto_submit_reason' => $reason,
+        ]);
+
+        // Resolve the grading service via the container — never store service
+        // objects as component properties because Livewire will try to serialise them.
+        app(\App\ExaminationHub\Services\ExamGradingService::class)->dispatchGrading($submission);
+
+        $this->dispatch('examAutoSubmitted', [
+            'autoSubmitted' => true,
+            'reason'        => $reason,
+            'redirectUrl'   => route('examination-hub.take.completed', $exam),
+        ]);
     }
 
     public function toggleFlagQuestion(int $questionId): void
@@ -242,7 +302,7 @@ class ExamSectionTaking extends Component
     protected function validateStartSection(): bool
     {
         $submission = $this->submission;
-        
+
         // Check if submission exists
         if (!$submission) {
             $this->addError('general', 'No valid submission found.');
@@ -258,7 +318,7 @@ class ExamSectionTaking extends Component
         // Check if section has already been started and completed
         $sectionProgress = $submission->section_progress ?? [];
         $sectionKey = (string) $this->sectionId;
-        
+
         if (isset($sectionProgress[$sectionKey]) && $sectionProgress[$sectionKey] === 'completed') {
             $this->addError('general', 'This section has already been completed.');
             return false;
@@ -301,13 +361,13 @@ class ExamSectionTaking extends Component
         $submission = $this->submission;
         $sectionProgress = $submission->section_progress ?? [];
         $sectionProgress[(string) $this->sectionId] = $status;
-        
+
         // Update section start time if starting
         $sectionStartTimes = $submission->section_start_times ?? [];
         if ($status === 'started' && !isset($sectionStartTimes[(string) $this->sectionId])) {
             $sectionStartTimes[(string) $this->sectionId] = now()->timestamp;
         }
-        
+
         $submission->update([
             'section_progress' => $sectionProgress,
             'section_start_times' => $sectionStartTimes,
@@ -319,7 +379,7 @@ class ExamSectionTaking extends Component
         // Reset any violations for this section if needed
         $submission = $this->submission;
         $proctoringLogs = $submission->proctoring_logs ?? [];
-        
+
         // Clear any pending violations for this section
         // Implementation depends on how violations are tracked
     }
@@ -332,7 +392,7 @@ class ExamSectionTaking extends Component
 
         // Create or get existing submission
         $this->submission = $this->getOrCreateSubmission();
-        
+
         if (!$this->submission) {
             $this->addError('general', 'Unable to start exam. Please refresh the page and try again.');
             return;
@@ -340,22 +400,22 @@ class ExamSectionTaking extends Component
 
         // Record start time
         $this->start_time = now();
-        
+
         // Mark section as started
         $this->updateSectionProgress('started');
-        
+
         // Hide section info to show exam content
         $this->showSectionInfo = false;
-        
+
         // Reset any previous violations for this section
         $this->resetViolations();
-        
+
         // Emit event to show exam content
-        $this->dispatch('section-started', 
+        $this->dispatch('section-started',
             sectionIndex: $this->sectionIndex,
             submissionId: $this->submission->id
         );
-        
+
         // Also emit an event to show exam content regardless of fullscreen state
         $this->dispatch('show-exam-content');
     }

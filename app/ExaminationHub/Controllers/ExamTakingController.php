@@ -367,6 +367,14 @@ class ExamTakingController extends Controller
             }
         }
 
+        // Persist a lightweight completion record before clearing the main exam
+        // session keys, so completed() can retrieve the submission even after
+        // exam_submission_id has been forgotten.
+        session([
+            'exam_completed_submission_id'    => $submission->id,
+            'exam_completed_participant_email' => $submission->participant_email,
+        ]);
+
         session()->forget(['exam_submission_id', 'exam_participant_data', 'exam_heartbeat_token']);
 
         return redirect()->route('examination-hub.take.completed', $exam);
@@ -420,9 +428,33 @@ class ExamTakingController extends Controller
 
     public function completed(GeneralExam $exam): View
     {
+        // Two paths lead here; the session state differs between them:
+        //
+        // a) Auto-submit (Livewire performAutoSubmit): the Livewire component
+        //    redirects client-side without touching the session, so
+        //    exam_submission_id is still present and resolveSessionSubmission()
+        //    returns the submission directly.
+        //
+        // b) Manual submit (submit() controller): the session is cleared before
+        //    redirecting, so we fall back to exam_completed_submission_id which
+        //    submit() writes just before calling session()->forget().
+        $submission = $this->resolveSessionSubmission($exam);
+
+        if (! $submission) {
+            $id = session('exam_completed_submission_id');
+            $submission = $id ? GeneralExamSubmission::find($id) : null;
+        }
+
+        // Derive email: live session key (auto-submit) → completion key (manual
+        // submit) → submission model (last resort, covers both paths).
+        $participantEmail = session('exam_participant_data.email')
+                         ?? session('exam_completed_participant_email')
+                         ?? $submission?->participant_email;
+
         return view('examination-hub.take.completed', [
-            'exam' => $exam,
-            'participantEmail' => session('exam_participant_data.email'),
+            'exam'             => $exam,
+            'submission'       => $submission,
+            'participantEmail' => $participantEmail,
         ]);
     }
     
