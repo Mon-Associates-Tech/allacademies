@@ -173,39 +173,36 @@ class ResearchAssistant extends Component
         $this->messages = $messages;
     }
 
-    protected function normalizeStoredAssistantContent(?string $content): string
-    {
-        if (empty($content)) {
-            return '';
-        }
-
-        $decoded = json_decode($content, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $segments = [];
-
-            if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
-                foreach ($decoded[0]['content'] as $segment) {
-                    if (is_string($segment)) {
-                        $segments[] = $segment;
-
-                        continue;
-                    }
-
-                    if (isset($segment['text']) && is_string($segment['text'])) {
-                        $segments[] = $segment['text'];
-                    }
+ protected function normalizeStoredAssistantContent(string|array|null $content): string
+{
+    if (empty($content)) {
+        return '';
+    }
+    
+    // Ensure we are working with a string for json_decode
+    $contentString = is_array($content) ? json_encode($content) : $content;
+    $decoded = json_decode($contentString, true);
+    
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $segments = [];
+        if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
+            foreach ($decoded[0]['content'] as $segment) {
+                if (is_string($segment)) {
+                    $segments[] = $segment;
+                    continue;
+                }
+                if (isset($segment['text']) && is_string($segment['text'])) {
+                    $segments[] = $segment['text'];
                 }
             }
-
-            $fallback = trim(json_encode($decoded));
-            $joined = trim(implode("\n\n", array_filter($segments, static fn ($segment) => trim($segment) !== '')));
-
-            return $joined !== '' ? $joined : $fallback;
         }
-
-        return $content;
+        $fallback = trim(json_encode($decoded));
+        $joined = trim(implode("\n", array_filter($segments, static fn ($segment) => trim($segment) !== '')));
+        return $joined !== '' ? $joined : $fallback;
     }
+    
+    return $contentString;
+}
 
     protected function loadConversationTitle(): void
     {
@@ -318,31 +315,36 @@ class ResearchAssistant extends Component
         $conversationHistory = $this->getConversationHistory();
         $response = $this->chatService->processRequest($parameters, $conversationHistory);
 
-        if ($response['success']) {
-            $aiMessage = [
-                'role' => 'assistant',
-                'content' => $response['content'],
-                'timestamp' => now()->toISOString(),
-                'usage' => $response['usage'] ?? null,
-                'images' => $response['images'] ?? null,
-                'model_used' => $response['model_used'] ?? null,
-            ];
-            $this->messages[] = $aiMessage;
-
-            AcademicChatMessage::create([
-                'user_id' => Auth::id(),
-                'conversation_id' => $this->conversationId,
-                'conversation_title' => $title,
-                'content' => $response['content'],
-                'role' => 'assistant',
-                'parameters' => $parameters,
-                'usage' => $response['usage'] ?? null,
-                'model_used' => $response['model_used'] ?? null,
-                'images' => $response['images'] ?? null,
-            ]);
-        } else {
-            $this->errors[] = $response['error'] ?? 'Unknown error occurred';
-        }
+    if ($response['success']) {
+        // ✅ NORMALIZE THE CONTENT BEFORE ADDING TO THE UI
+        $normalizedContent = $this->normalizeStoredAssistantContent($response['content']);
+        
+        $aiMessage = [
+            'role' => 'assistant',
+            'content' => $normalizedContent, // Use the clean Markdown string here
+            'timestamp' => now()->toISOString(),
+            'usage' => $response['usage'] ?? null,
+            'images' => $response['images'] ?? null,
+            'model_used' => $response['model_used'] ?? null,
+        ];
+        
+        $this->messages[] = $aiMessage;
+        
+        // Save to database (keeps original format if that's your DB schema expectation)
+        AcademicChatMessage::create([
+            'user_id' => Auth::id(),
+            'conversation_id' => $this->conversationId,
+            'conversation_title' => $title,
+            'content' => $response['content'], 
+            'role' => 'assistant',
+            'parameters' => $parameters,
+            'usage' => $response['usage'] ?? null,
+            'model_used' => $response['model_used'] ?? null,
+            'images' => $response['images'] ?? null,
+        ]);
+    } else {
+        $this->errors[] = $response['error'] ?? 'Unknown error occurred';
+    }
 
         $this->message = '';
         $this->fileContent = '';

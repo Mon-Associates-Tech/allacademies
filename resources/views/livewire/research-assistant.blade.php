@@ -231,24 +231,7 @@
                                 <!-- Message -->
                                 <div class="flex-1 {{ $message['role'] === 'user' ? 'text-right' : '' }}">
                                     <div class="px-4 py-0.5 rounded-xl shadow-sm {{ $message['role'] === 'user' ? 'bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40' : 'bg-white dark:bg-gray-700/50' }}">
-                                        <div class="prose prose-sm max-w-none text-left dark:prose-invert
-            prose-headings:text-gray-900 dark:prose-headings:text-gray-100
-            prose-p:text-gray-900 dark:prose-p:text-gray-100
-            prose-strong:text-gray-900 dark:prose-strong:text-gray-100
-            prose-em:text-gray-800 dark:prose-em:text-gray-200
-            prose-code:text-gray-900 dark:prose-code:text-gray-100
-            prose-code:bg-gray-100 dark:prose-code:bg-gray-800
-            prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-            prose-pre:text-gray-100 dark:prose-pre:text-gray-100
-            prose-pre:bg-gray-800 dark:prose-pre:bg-gray-900
-            prose-pre:shadow-inner
-            prose-li:text-gray-900 dark:prose-li:text-gray-100
-            prose-ul:text-gray-900 dark:prose-ul:text-gray-100
-            prose-ol:text-gray-900 dark:prose-ol:text-gray-100
-            prose-a:text-blue-600 dark:prose-a:text-blue-400
-            prose-a:no-underline hover:prose-a:underline
-            prose-blockquote:text-gray-800 dark:prose-blockquote:text-gray-200
-            prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-600">
+                                        <div class="prose max-w-none prose-themed">
                                             @if(is_string($message['content']))
                                                 <x-form.markdown-with-math :content="trim($message['content'])"></x-form.markdown-with-math>
                                             @else

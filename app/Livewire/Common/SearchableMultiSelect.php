@@ -400,17 +400,17 @@ class SearchableMultiSelect extends Component
         return $hierarchy;
     }
 
-    private function getItemValue($item)
+    public function getItemValue($item)
     {
         return is_array($item) ? ($item[$this->valueKey] ?? '') : $item->{$this->valueKey} ?? $item->id ?? $item->value ?? '';
     }
 
-    private function getItemLabel($item)
+    public function getItemLabel($item)
     {
         return is_array($item) ? ($item[$this->labelKey] ?? '') : $item->{$this->labelKey} ?? $item->label ?? $item->name ?? '';
     }
 
-    private function hasChildren($item): bool
+    public function hasChildren($item): bool
     {
         if (! $this->hierarchical) {
             return false;
@@ -421,7 +421,7 @@ class SearchableMultiSelect extends Component
         return ! empty($children);
     }
 
-    private function getChildren($item): array
+    public function getChildren($item): array
     {
         return is_array($item) ? ($item[$this->childrenKey] ?? []) : $item->{$this->childrenKey} ?? [];
     }
