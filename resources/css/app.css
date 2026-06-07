@@ -1,6 +1,7 @@
 @import 'katex/dist/katex.css';
 @import './additional-styles/fullcalender.css';
 @import './design-tokens.css';
+@import './prose-themed.css';
 
 @tailwind base;
 @tailwind components;

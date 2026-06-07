@@ -8,7 +8,7 @@ use App\Models\Book;
 use App\Models\QuizSession;
 use App\Models\ReadingProgress;
 use App\Models\User;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use App\Services\BookBasedLearningService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +25,7 @@ class StudentDashboardController extends Controller
     protected $bookLearningService;
 
     public function __construct(
-        AcademicChatService $chatService,
+        ResearchAssistantService $chatService,
         BookBasedLearningService $bookLearningService
     ) {
         $this->chatService = $chatService;

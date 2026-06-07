@@ -141,7 +141,7 @@ class GeneralExamSubmission extends Model
         // Calculate time spent if possible
         $timeSpent = $this->time_spent_seconds;
         if ($this->started_at) {
-            $timeSpent = now()->diffInSeconds($this->started_at);
+            $timeSpent = abs(now()->diffInSeconds($this->started_at));
         }
 
         $this->update([

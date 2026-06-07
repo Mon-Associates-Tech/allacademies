@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\AcademicChatController;
+use App\Http\Controllers\ResearchAssistantController;
 use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
@@ -388,12 +388,12 @@ Route::middleware(['auth'])->group(function () {
     | Educational Chat & Academic Chat
     |--------------------------------------------------------------------------
     */
-    Route::prefix('academic-chats')->middleware(['assignment.session', 'token.subscription'])->name('academic-chat.')->group(function () {
-        Route::get('/', [AcademicChatController::class, 'index'])->name('index');
-        Route::post('/chat', [AcademicChatController::class, 'chat'])->name('chat');
-        Route::get('/subjects', [AcademicChatController::class, 'subjects'])->name('subjects');
-        Route::post('/recommendations', [AcademicChatController::class, 'recommendations'])->name('recommendations');
-        Route::post('/export', [AcademicChatController::class, 'exportChat'])->name('export');
+    Route::prefix('research-assistant')->middleware(['assignment.session', 'token.subscription'])->name('research-assistant.')->group(function () {
+        Route::get('/', [ResearchAssistantController::class, 'index'])->name('index');
+        Route::post('/chat', [ResearchAssistantController::class, 'chat'])->name('chat');
+        Route::get('/subjects', [ResearchAssistantController::class, 'subjects'])->name('subjects');
+        Route::post('/recommendations', [ResearchAssistantController::class, 'recommendations'])->name('recommendations');
+        Route::post('/export', [ResearchAssistantController::class, 'exportChat'])->name('export');
     });
 
     /*
@@ -509,3 +509,4 @@ include_once 'examinations-hub.php';
 // Debug Routes (testing and monitoring - development only)
 include_once 'debug.php';
 
+include_once 'mock-exams.php';

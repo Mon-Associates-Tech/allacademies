@@ -53,7 +53,7 @@ class ChatGPTService
 
     /**
      * Central HTTP request handler with retry logic
-     * This method is used by both ChatGPTService and AcademicChatService
+     * This method is used by both ChatGPTService and ResearchAssistantService
      */
     protected function sendChatRequest(array $requestData, array $options = []): array
     {
@@ -207,7 +207,7 @@ class ChatGPTService
 
     /**
      * Extract content from response data
-     * For enhanced extraction with educational context, use AcademicChatService
+     * For enhanced extraction with educational context, use ResearchAssistantService
      */
     public function extractContent(array $responseData): string
     {

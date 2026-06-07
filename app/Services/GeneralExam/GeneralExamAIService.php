@@ -3,7 +3,7 @@
 namespace App\Services\GeneralExam;
 
 use App\ExaminationHub\Models\GeneralExamQuestion;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use App\Services\PdfContentExtractionService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class GeneralExamAIService
 {
     public function __construct(
-        protected AcademicChatService $chatService,
+        protected ResearchAssistantService $chatService,
         protected PdfContentExtractionService $pdfExtractor
     ) {}
 

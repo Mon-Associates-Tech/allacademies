@@ -1,6 +1,6 @@
 <x-layouts.app>
     <section>
-        <livewire:academic-chat />
+        <livewire:research-assistant />
         @push('scripts')
             <script>
                 // Additional Alpine.js functionality for enhanced UX

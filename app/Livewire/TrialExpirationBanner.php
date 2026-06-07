@@ -69,7 +69,7 @@ class TrialExpirationBanner extends Component
                 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>',
                 'title' => 'AI Chat',
                 'description' => 'Get instant homework help',
-                'link' => route('academic-chat.index'),
+                'link' => route('research-assistant.index'),
                 'gradient' => 'from-blue-500 to-cyan-500',
             ],
             [

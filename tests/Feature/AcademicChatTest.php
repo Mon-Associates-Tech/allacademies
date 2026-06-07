@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\AcademicChat;
 use App\Models\AcademicChatSession;
 use App\Models\User;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +16,7 @@ class AcademicChatTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected AcademicChatService $chatService;
+    protected ResearchAssistantService $chatService;
 
     protected $user;
 
@@ -25,7 +25,7 @@ class AcademicChatTest extends TestCase
         parent::setUp();
 
         Config::set('services.openai.key', 'test-key');
-        $this->chatService = new AcademicChatService;
+        $this->chatService = new ResearchAssistantService;
         $this->user = User::factory()->create();
     }
 

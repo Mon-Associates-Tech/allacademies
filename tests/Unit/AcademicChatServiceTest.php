@@ -2,13 +2,13 @@
 
 namespace Tests\Unit;
 
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
-class AcademicChatServiceTest extends TestCase
+class ResearchAssistantServiceTest extends TestCase
 {
-    protected AcademicChatService $chatService;
+    protected ResearchAssistantService $chatService;
 
     /** @test */
     public function it_returns_correct_available_subjects()
@@ -110,6 +110,6 @@ class AcademicChatServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->chatService = new AcademicChatService;
+        $this->chatService = new ResearchAssistantService;
     }
 }

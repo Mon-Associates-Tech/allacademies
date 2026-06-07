@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\AcademicChatMessage;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use App\Traits\ChecksTokenAvailability;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -12,7 +12,7 @@ use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class AcademicChat extends Component
+class ResearchAssistant extends Component
 {
     use ChecksTokenAvailability;
     use WithFileUploads;
@@ -82,16 +82,16 @@ class AcademicChat extends Component
 
     public $conversationHistory = [];
 
-    public $canSendMessage = true;
+    public $hasAvailableTokens = true;
 
-    public $tokenWarningMessage;
+    public $tokenMessage;
 
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
 
     protected $chatService;
 
-    public function boot(AcademicChatService $chatService): void
+    public function boot(ResearchAssistantService $chatService): void
     {
         $this->chatService = $chatService;
     }
@@ -99,8 +99,8 @@ class AcademicChat extends Component
     public function mount(?string $conversationId = null): void
     {
         $result = $this->checkTokenAvailability();
-        $this->canSendMessage = $result['available'];
-        $this->tokenWarningMessage = $result['message'];
+        $this->hasAvailableTokens = $result['available'];
+        $this->tokenMessage = $result['message'];
 
         $this->availableSubjects = $this->chatService->getAvailableSubjects();
 
@@ -173,39 +173,36 @@ class AcademicChat extends Component
         $this->messages = $messages;
     }
 
-    protected function normalizeStoredAssistantContent(?string $content): string
-    {
-        if (empty($content)) {
-            return '';
-        }
-
-        $decoded = json_decode($content, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $segments = [];
-
-            if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
-                foreach ($decoded[0]['content'] as $segment) {
-                    if (is_string($segment)) {
-                        $segments[] = $segment;
-
-                        continue;
-                    }
-
-                    if (isset($segment['text']) && is_string($segment['text'])) {
-                        $segments[] = $segment['text'];
-                    }
+ protected function normalizeStoredAssistantContent(string|array|null $content): string
+{
+    if (empty($content)) {
+        return '';
+    }
+    
+    // Ensure we are working with a string for json_decode
+    $contentString = is_array($content) ? json_encode($content) : $content;
+    $decoded = json_decode($contentString, true);
+    
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $segments = [];
+        if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
+            foreach ($decoded[0]['content'] as $segment) {
+                if (is_string($segment)) {
+                    $segments[] = $segment;
+                    continue;
+                }
+                if (isset($segment['text']) && is_string($segment['text'])) {
+                    $segments[] = $segment['text'];
                 }
             }
-
-            $fallback = trim(json_encode($decoded));
-            $joined = trim(implode("\n\n", array_filter($segments, static fn ($segment) => trim($segment) !== '')));
-
-            return $joined !== '' ? $joined : $fallback;
         }
-
-        return $content;
+        $fallback = trim(json_encode($decoded));
+        $joined = trim(implode("\n", array_filter($segments, static fn ($segment) => trim($segment) !== '')));
+        return $joined !== '' ? $joined : $fallback;
     }
+    
+    return $contentString;
+}
 
     protected function loadConversationTitle(): void
     {
@@ -318,31 +315,36 @@ class AcademicChat extends Component
         $conversationHistory = $this->getConversationHistory();
         $response = $this->chatService->processRequest($parameters, $conversationHistory);
 
-        if ($response['success']) {
-            $aiMessage = [
-                'role' => 'assistant',
-                'content' => $response['content'],
-                'timestamp' => now()->toISOString(),
-                'usage' => $response['usage'] ?? null,
-                'images' => $response['images'] ?? null,
-                'model_used' => $response['model_used'] ?? null,
-            ];
-            $this->messages[] = $aiMessage;
-
-            AcademicChatMessage::create([
-                'user_id' => Auth::id(),
-                'conversation_id' => $this->conversationId,
-                'conversation_title' => $title,
-                'content' => $response['content'],
-                'role' => 'assistant',
-                'parameters' => $parameters,
-                'usage' => $response['usage'] ?? null,
-                'model_used' => $response['model_used'] ?? null,
-                'images' => $response['images'] ?? null,
-            ]);
-        } else {
-            $this->errors[] = $response['error'] ?? 'Unknown error occurred';
-        }
+    if ($response['success']) {
+        // ✅ NORMALIZE THE CONTENT BEFORE ADDING TO THE UI
+        $normalizedContent = $this->normalizeStoredAssistantContent($response['content']);
+        
+        $aiMessage = [
+            'role' => 'assistant',
+            'content' => $normalizedContent, // Use the clean Markdown string here
+            'timestamp' => now()->toISOString(),
+            'usage' => $response['usage'] ?? null,
+            'images' => $response['images'] ?? null,
+            'model_used' => $response['model_used'] ?? null,
+        ];
+        
+        $this->messages[] = $aiMessage;
+        
+        // Save to database (keeps original format if that's your DB schema expectation)
+        AcademicChatMessage::create([
+            'user_id' => Auth::id(),
+            'conversation_id' => $this->conversationId,
+            'conversation_title' => $title,
+            'content' => $response['content'], 
+            'role' => 'assistant',
+            'parameters' => $parameters,
+            'usage' => $response['usage'] ?? null,
+            'model_used' => $response['model_used'] ?? null,
+            'images' => $response['images'] ?? null,
+        ]);
+    } else {
+        $this->errors[] = $response['error'] ?? 'Unknown error occurred';
+    }
 
         $this->message = '';
         $this->fileContent = '';
@@ -355,7 +357,7 @@ class AcademicChat extends Component
     #[Computed]
     public function messageInputDisabled(): bool
     {
-        return ! $this->canSendMessage();
+        return !$this->hasAvailableTokens;
     }
 
     protected function getParameters(): array
@@ -420,7 +422,7 @@ class AcademicChat extends Component
         $this->conversationId = null;
         $this->urlConversationId = null;
         $this->conversationTitle = null;
-        $this->redirect(route('academic-chat.index'));
+        $this->redirect(route('research-assistant.index'));
     }
 
     public function loadConversation($conversationId): void
@@ -437,7 +439,7 @@ class AcademicChat extends Component
         $this->loadChatHistory();
 
         // Redirect to update URL with query parameter
-        $this->redirect(route('academic-chat.index', ['conversationId' => $conversationId]));
+        $this->redirect(route('research-assistant.index', ['conversationId' => $conversationId]));
     }
 
     public function deleteConversation($conversationId): void
@@ -464,7 +466,7 @@ class AcademicChat extends Component
         $this->conversationTitle = null;
 
         // Redirect to clean URL
-        $this->redirect(route('academic-chat.index'));
+        $this->redirect(route('research-assistant.index'));
     }
 
     public function toggleHistory(): void
@@ -537,6 +539,6 @@ class AcademicChat extends Component
 
     public function render()
     {
-        return view('livewire.academic-chat');
+        return view('livewire.research-assistant');
     }
 }

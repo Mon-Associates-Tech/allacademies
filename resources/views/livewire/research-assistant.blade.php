@@ -1,5 +1,6 @@
 @php use Carbon\Carbon; @endphp
 <div x-data="{
+    message: '',
     newSubtopic: '',
     showScrollToBottom: false,
     sidebarHistoryOpen: true,
@@ -230,24 +231,7 @@
                                 <!-- Message -->
                                 <div class="flex-1 {{ $message['role'] === 'user' ? 'text-right' : '' }}">
                                     <div class="px-4 py-0.5 rounded-xl shadow-sm {{ $message['role'] === 'user' ? 'bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40' : 'bg-white dark:bg-gray-700/50' }}">
-                                        <div class="prose prose-sm max-w-none text-left dark:prose-invert
-            prose-headings:text-gray-900 dark:prose-headings:text-gray-100
-            prose-p:text-gray-900 dark:prose-p:text-gray-100
-            prose-strong:text-gray-900 dark:prose-strong:text-gray-100
-            prose-em:text-gray-800 dark:prose-em:text-gray-200
-            prose-code:text-gray-900 dark:prose-code:text-gray-100
-            prose-code:bg-gray-100 dark:prose-code:bg-gray-800
-            prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-            prose-pre:text-gray-100 dark:prose-pre:text-gray-100
-            prose-pre:bg-gray-800 dark:prose-pre:bg-gray-900
-            prose-pre:shadow-inner
-            prose-li:text-gray-900 dark:prose-li:text-gray-100
-            prose-ul:text-gray-900 dark:prose-ul:text-gray-100
-            prose-ol:text-gray-900 dark:prose-ol:text-gray-100
-            prose-a:text-blue-600 dark:prose-a:text-blue-400
-            prose-a:no-underline hover:prose-a:underline
-            prose-blockquote:text-gray-800 dark:prose-blockquote:text-gray-200
-            prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-600">
+                                        <div class="prose max-w-none prose-themed">
                                             @if(is_string($message['content']))
                                                 <x-form.markdown-with-math :content="trim($message['content'])"></x-form.markdown-with-math>
                                             @else
@@ -317,7 +301,7 @@
                         <!-- Textarea -->
                         <div class="flex-1 min-w-0 flex items-center">
                             <textarea x-ref="messageInput"
-                                      wire:model="message"
+                                      wire:model.live="message"
                                       @input="adjustMessageRows()"
                                       @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
                                       rows="1"
@@ -328,19 +312,19 @@
 
                         <!-- Send Button -->
                         <div class="flex-shrink-0 mr-1 mb-1">
-                            <button wire:click="sendMessage"
-                                    wire:loading.attr="disabled"
-                                    wire:target="sendMessage"
-                                    :disabled="!$wire.message.trim() || {{ $this->messageInputDisabled ? 'true' : 'false' }}"
-                                    class="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-full shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none">
-                                <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"></path>
-                                </svg>
-                                <svg wire:loading wire:target="sendMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </button>
+<button wire:click="sendMessage"
+        wire:loading.attr="disabled"
+        wire:target="sendMessage"
+        class="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-full shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none">
+    
+    <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"></path>
+    </svg>
+    <svg wire:loading wire:target="sendMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+</button>
                         </div>
                     </div>
                     <div class="flex justify-between items-center px-4 mt-2">
