@@ -14,7 +14,7 @@ class BookBasedLearningService
 {
     protected $chatService;
 
-    public function __construct(AcademicChatService $chatService)
+    public function __construct(ResearchAssistantService $chatService)
     {
         $this->chatService = $chatService;
     }

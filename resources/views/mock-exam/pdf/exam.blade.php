@@ -3,382 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $mockExam->title }}</title>
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <style>
-        /* Basic Reset */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Page Setup */
         @page {
             size: A4;
-            margin: 15mm; /* Standard page margins */
+            margin: 22mm 20mm 26mm 20mm;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Modern, readable font stack */
+            font-family: 'Georgia', 'Times New Roman', serif;
             font-size: {{ $fontSize ?? 11 }}pt;
-            color: #1f2937; /* Dark gray for good contrast */
-            line-height: 1.6;
+            color: #111;
+            line-height: 1.65;
             background: #fff;
-            /* Ensure content respects page margins and has internal padding */
-            padding: 0; /* Rely on @page margins */
         }
 
-        /* Main Container - Mimicking the example's centered, constrained layout */
-        .exam-container {
-            max-width: 60rem; /* Matches the example's max-w-[60rem] */
-            margin: 0 auto; /* Center the content */
-            padding: 0 1rem; /* Small horizontal padding for breathing room */
-            background: white; /* Ensure background is white for print */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Optional subtle shadow for screen */
+        /* ─── Fixed Footer ─── */
+        .pg-footer {
+            position: fixed;
+            bottom: -22mm;
+            left: 0; right: 0;
+            border-top: 1px solid #bbb;
+            padding-top: 3px;
         }
-
-        /* Print-specific adjustments */
-        @media print {
-            .exam-container {
-                max-width: 100%; /* Expand to full width on print */
-                margin: 0;
-                padding: 0;
-                box-shadow: none; /* Remove shadow for print */
-            }
-            /* Hide elements not meant for print */
-            .print\:hidden { display: none !important; }
-            /* Apply padding for readability during print preview */
-            body { padding: 15mm; }
+        .pg-footer table { width: 100%; border-collapse: collapse; }
+        .pg-footer td {
+            font-size: 7.5pt;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #777;
+            padding: 0 2px;
         }
+        .ft-right { text-align: right; }
 
-        /* Header Section */
-        .header-section {
+        /* ─── Document Header ─── */
+        .doc-header {
             text-align: center;
-            padding: 1rem 0 0.75rem; /* Reduced top padding */
-            border-bottom: 2px solid #3b82f6; /* Primary blue accent */
-            margin-bottom: 1.25rem;
+            margin-bottom: 18px;
         }
+        .rule-heavy { height: 3px; background: #111; }
+        .rule-light { height: 1px; background: #111; margin: 3px 0; }
+        .header-body { padding: 10px 0 8px; }
+
         .school-name {
-            font-size: {{ ($fontSize ?? 11) + 1 }}pt; /* Slightly larger */
-            font-weight: 600; /* Semi-bold */
-            color: #1f2937;
-            letter-spacing: 0.025em;
-            margin-bottom: 0.25rem;
+            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #111;
+            margin-bottom: 2px;
         }
         .school-tagline {
-            font-size: {{ ($fontSize ?? 11) - 2 }}pt;
-            color: #6b7280; /* Muted gray */
+            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
             font-style: italic;
-        }
-
-        /* Exam Title Block */
-        .exam-title-block {
-            text-align: center;
-            margin-bottom: 1.25rem;
+            color: #666;
+            font-family: Arial, Helvetica, sans-serif;
+            margin-bottom: 9px;
         }
         .exam-main-title {
-            font-size: {{ ($fontSize ?? 11) + 4 }}pt; /* Significantly larger for impact */
-            font-weight: 700; /* Bold */
-            color: #1f2937;
+            font-size: {{ ($fontSize ?? 11) + 5 }}pt;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.3rem;
+            letter-spacing: 0.04em;
+            color: #111;
+            margin-bottom: 3px;
         }
         .exam-sub-date {
             font-size: {{ ($fontSize ?? 11) - 1 }}pt;
-            color: #6b7280;
+            color: #666;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
-        /* Info Grid - Using Flexbox */
-        .info-grid {
-            display: flex;
-            gap: 0.5rem; /* Reduced gap */
-            margin-bottom: 1.25rem;
+        /* ─── Info Table ─── */
+        .info-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #444;
+            margin-bottom: 18px;
         }
-        .info-grid-item {
-            flex: 1;
-            padding: 0.5rem; /* Reduced padding */
+        .info-tbl td {
+            padding: 5px 10px;
             text-align: center;
-            border: 1px solid #d1d5db; /* Light gray border */
-            border-radius: 0.375rem; /* Rounded corners */
-            background-color: #f9fafb; /* Very light gray background */
+            border: 1px solid #bbb;
+            vertical-align: middle;
         }
         .ig-lbl {
-            font-size: 0.75rem; /* Smaller label */
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #9ca3af; /* Muted label color */
             display: block;
-            margin-bottom: 0.1rem;
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #999;
+            font-family: Arial, Helvetica, sans-serif;
+            margin-bottom: 1px;
         }
         .ig-val {
-            font-size: {{ ($fontSize ?? 11) }}pt; /* Standard value size */
-            font-weight: 600; /* Slightly bolder */
-            color: #1f2937;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            font-weight: bold;
+            color: #111;
         }
 
-        /* Candidate Information Box */
-        .cand-wrap {
-            border: 1.5px solid #d1d5db; /* Neutral gray border */
-            border-radius: 0.375rem; /* Rounded corners */
-            margin-bottom: 1.25rem;
-            overflow: hidden;
-        }
-        .cand-header {
-            background-color: #3b82f6; /* Primary blue header */
-            color: white;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
+        /* ─── Candidate Information (no box, just ruled fields) ─── */
+        .cand-section { margin-bottom: 18px; }
+        .section-label {
+            font-size: 8pt;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 0.875rem; /* Smaller header text */
+            letter-spacing: 0.1em;
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+            margin-bottom: 4px;
         }
-        .cand-content {
-            padding: 1rem;
-        }
-        .cand-field {
-            margin-bottom: 0.75rem; /* Reduced spacing */
-        }
-        .cand-field:last-child { margin-bottom: 0; }
-        .cf-lbl {
-            display: block;
-            font-size: 0.75rem; /* Smaller label */
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #6b7280;
-            margin-bottom: 0.25rem;
-        }
-        .cf-line {
-            display: block;
-            height: 0.75rem; /* Reduced height */
-            border-bottom: 1px solid #9ca3af; /* Solid underline */
+        .section-rule { border: none; border-top: 1.5px solid #333; margin-bottom: 12px; }
+
+        .field-row {
+            display: table;
             width: 100%;
+            margin-bottom: 14px;
         }
-
-        /* Instructions Block */
-        .inst-wrap {
-            background-color: #eff6ff; /* Light blue background */
-            border-left: 3px solid #3b82f6; /* Primary blue left border */
-            padding: 0.75rem 1rem; /* Reduced padding */
-            margin-bottom: 1.25rem;
-            border-radius: 0 0.25rem 0.25rem 0; /* Rounded corners matching border */
+        .field-row:last-child { margin-bottom: 0; }
+        .field-cell {
+            display: table-cell;
+            padding-right: 24px;
+            vertical-align: bottom;
         }
-        .inst-heading {
-            font-size: 0.875rem; /* Smaller heading */
-            font-weight: 600;
+        .field-cell:last-child { padding-right: 0; }
+        .field-lbl {
+            display: block;
+            font-size: 7pt;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #1d4ed8; /* Darker blue for contrast */
-            margin-bottom: 0.25rem;
+            letter-spacing: 0.08em;
+            color: #777;
+            font-family: Arial, Helvetica, sans-serif;
+            margin-bottom: 13px;
         }
+        .field-line { border-bottom: 1px solid #444; }
+
+        /* ─── Instructions (no box, just ruled separator) ─── */
+        .inst-section { margin-bottom: 20px; }
         .inst-body {
-            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt; /* Slightly smaller than base */
-            color: #374151; /* Darker gray for body text */
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
+            color: #333;
+            line-height: 1.65;
         }
 
-        /* Subject Wrap */
-        .subj-wrap {
-            margin-top: 1.25rem;
-            margin-bottom: 1rem;
-        }
-        .subj-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1.5px solid #3b82f6; /* Primary blue border */
-            margin-bottom: 0.5rem;
-        }
+        /* ─── Subject Header ─── */
+        .subj-wrap { margin-top: 20px; margin-bottom: 4px; }
+        .subj-rule-top { border: none; border-top: 2.5px solid #111; margin-bottom: 5px; }
+        .subj-rule-btm { border: none; border-top: 1px solid #555; margin-bottom: 10px; }
+        .subj-hdr-tbl { width: 100%; border-collapse: collapse; }
         .subj-hdr-name {
-            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
-            font-weight: 600;
-            color: #1f2937;
+            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.04em;
+            color: #111;
         }
         .subj-hdr-meta {
+            text-align: right;
             font-size: {{ ($fontSize ?? 11) - 1 }}pt;
-            color: #6b7280;
+            color: #666;
+            font-family: Arial, Helvetica, sans-serif;
+            white-space: nowrap;
         }
-
         .subj-inst {
-            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
             font-style: italic;
-            color: #6b7280;
-            border-left: 2px solid #3b82f6;
-            padding-left: 0.5rem;
-            margin-bottom: 0.75rem;
+            color: #555;
+            margin-bottom: 12px;
         }
 
-        /* Section Wrap */
-        .sec-wrap {
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .sec-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #d1d5db; /* Neutral gray border */
-            margin-bottom: 0.5rem;
-        }
+        /* ─── Section Header ─── */
+        .sec-wrap { margin-top: 18px; margin-bottom: 2px; }
+        .sec-hdr-tbl { width: 100%; border-collapse: collapse; }
+        .sec-hdr-rule { border: none; border-top: 1.5px solid #555; margin-bottom: 10px; }
         .sec-hdr-name {
             font-size: {{ ($fontSize ?? 11) + 0.5 }}pt;
-            font-weight: 600;
-            color: #1f2937;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.04em;
+            color: #111;
         }
         .sec-hdr-meta {
+            text-align: right;
             font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
-            color: #6b7280;
+            color: #888;
+            font-family: Arial, Helvetica, sans-serif;
+            white-space: nowrap;
         }
         .sec-inst {
             font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
             font-style: italic;
-            color: #6b7280;
-            margin-bottom: 0.75rem;
+            color: #555;
+            margin-bottom: 10px;
         }
 
-        /* Question Item */
+        /* ─── Questions (no borders, pure flow) ─── */
         .q-item {
-            margin-bottom: 1rem; /* Adjusted spacing */
+            margin-bottom: 14px;
             page-break-inside: avoid;
         }
         .q-header {
-            display: flex;
-            align-items: flex-start; /* Align top */
-            margin-bottom: 0.3rem; /* Reduced space */
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            margin-bottom: 4px;
         }
         .q-num {
-            font-weight: 600;
-            color: #1f2937;
-            margin-right: 0.5rem; /* Space between number and text */
-            min-width: 1.5rem; /* Consistent number column width */
+            display: table-cell;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111;
+            width: 26px;
+            vertical-align: top;
+            padding-top: 1px;
         }
         .q-text {
-            flex: 1; /* Take remaining space */
-            font-size: {{ ($fontSize ?? 11) }}pt;
-            color: #1f2937;
+            display: table-cell;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            color: #111;
+            vertical-align: top;
         }
         .q-marks {
+            display: table-cell;
             font-size: {{ ($fontSize ?? 11) - 2 }}pt;
-            color: #6b7280;
-            font-style: italic;
-            margin-left: 0.5rem; /* Space before marks */
+            color: #888;
+            font-family: Arial, Helvetica, sans-serif;
+            vertical-align: top;
+            padding-top: 2px;
+            padding-left: 8px;
+            text-align: right;
             white-space: nowrap;
+            width: 44px;
         }
 
-        /* Options List - Vertical (Default) */
-        .opts-list {
-            list-style-type: upper-alpha;
-            padding-left: 1.25rem; /* Reduced indentation */
-            margin-top: 0.3rem; /* Reduced space */
+        /* ─── Options (indented, no borders) ─── */
+        .opts-wrap { padding-left: 26px; margin-top: 4px; }
+        .opt-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 2px;
+            page-break-inside: avoid;
         }
-        .opts-list li {
-            margin-bottom: 0.2rem; /* Reduced space between options */
+        .opt-lbl {
+            display: table-cell;
+            width: 22px;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
-            color: #1f2937;
+            color: #333;
+            vertical-align: top;
         }
-        .opts-list li:last-child { margin-bottom: 0; }
-
-        /* Options Grid - Horizontal Layout (Toggleable) - Matches example logic */
-        .opts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Flexible grid, minimum 200px wide */
-            gap: 0.3rem; /* Reduced gap */
-            list-style-type: upper-alpha;
-            padding-left: 1.25rem; /* Maintain indentation */
-            margin-top: 0.3rem; /* Reduced space */
-        }
-        .opts-grid li {
-            margin-bottom: 0; /* Remove default list item margin */
+        .opt-txt {
+            display: table-cell;
             font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
-            color: #1f2937;
-            display: flex;
-            align-items: flex-start; /* Align option content to top */
-        }
-        .opts-grid li::marker { /* Style the alpha marker */
-            font-weight: 600;
-            color: #1f2937;
+            color: #222;
+            vertical-align: top;
         }
 
-        /* Essay Lines */
-        .elines {
-            margin-top: 0.5rem; /* Reduced space */
-        }
-        .eline {
-            height: 0.75rem; /* Reduced height */
-            border-bottom: 1px dashed #d1d5db; /* Dashed line for essay */
-            margin-bottom: 0.1rem; /* Reduced space */
-        }
+        /* ─── Essay Lines ─── */
+        .elines { margin-top: 8px; padding-left: 0; }
+        .eline { border-bottom: 1px solid #ccc; height: 22px; }
 
-        /* Page Break */
+        /* ─── Page Break ─── */
         .pg-break { page-break-before: always; }
-
-        /* Footer (Basic styling, actual content placement depends on renderer) */
-        .pg-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 0.75rem;
-            color: #6b7280;
-            padding: 0.25rem 0;
-            border-top: 1px solid #e5e7eb; /* Light top border */
-        }
-
     </style>
 </head>
 <body>
 
-{{-- Fixed Footer (Note: Implementation varies by PDF renderer) --}}
-<div class="pg-footer print:hidden">
-    <!-- Example footer content: -->
-    <span>{{ $mockExam->title }}</span> |
-    <span>Page <span class="pagenum"></span></span> |
-    <span class="ft-center">— Turn Over —</span>
+{{-- Fixed Footer --}}
+<div class="pg-footer">
+    <table>
+        <tr>
+            <td style="width:50%;">{{ $mockExam->title }}</td>
+            <td class="ft-right" style="width:50%;">Page <span class="pagenum"></span></td>
+        </tr>
+    </table>
 </div>
 
-{{-- Main Container --}}
-<div class="exam-container">
+{{-- Document Header --}}
+@php
+    $schoolName = null;
+    try { $schoolName = $mockExam->team?->name; } catch (\Throwable $e) {}
+@endphp
 
-    {{-- Header Section --}}
-    @php
-        $schoolName = null;
-        try { $schoolName = $mockExam->team?->name; } catch (\Throwable $e) {}
-    @endphp
-    @if($schoolName)
-        <div class="header-section">
+<div class="doc-header">
+    <div class="rule-heavy"></div>
+    <div class="rule-light"></div>
+    <div class="header-body">
+        @if($schoolName)
             <div class="school-name">{{ $schoolName }}</div>
             <div class="school-tagline">Mock Examination Series</div>
-        </div>
-    @endif
-
-    {{-- Exam Title Block --}}
-    <div class="exam-title-block">
+        @endif
         <div class="exam-main-title">{{ $mockExam->title }}</div>
         @if($mockExam->starts_at)
             <div class="exam-sub-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
         @endif
     </div>
+    <div class="rule-light"></div>
+    <div class="rule-heavy"></div>
+</div>
 
-    {{-- Info Grid --}}
-    @php
-        $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
-        $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
-        $subjectCount  = $mockExam->subjectExams->count();
-    @endphp
+{{-- Info Table --}}
+@php
+    $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
+    $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
+    $subjectCount  = $mockExam->subjectExams->count();
+@endphp
 
-    <div class="info-grid">
-        <div class="info-grid-item">
+<table class="info-tbl">
+    <tr>
+        <td>
             <span class="ig-lbl">Exam Date</span>
-            <span class="ig-val">
-                {{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}
-            </span>
-        </div>
-        <div class="info-grid-item">
+            <span class="ig-val">{{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}</span>
+        </td>
+        <td>
             <span class="ig-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
             <span class="ig-val">
                 @if($subjectCount === 1)
@@ -387,154 +329,161 @@
                     {{ $subjectCount }} Papers
                 @endif
             </span>
-        </div>
+        </td>
         @if($totalDuration > 0)
-            <div class="info-grid-item">
+            <td>
                 <span class="ig-lbl">Duration</span>
                 <span class="ig-val">
-                    @if($totalDuration >= 60)
+                @if($totalDuration >= 60)
                         {{ floor($totalDuration / 60) }}hr{{ floor($totalDuration / 60) > 1 ? 's' : '' }}{{ $totalDuration % 60 > 0 ? ' '.($totalDuration % 60).'min' : '' }}
                     @else
                         {{ $totalDuration }} mins
                     @endif
-                </span>
-            </div>
+            </span>
+            </td>
         @endif
         @if($totalMarks > 0)
-            <div class="info-grid-item">
+            <td>
                 <span class="ig-lbl">Total Marks</span>
                 <span class="ig-val">{{ number_format($totalMarks, 0) }}</span>
-            </div>
+            </td>
         @endif
-    </div>
+    </tr>
+</table>
 
-    {{-- Candidate Information --}}
-    <div class="cand-wrap">
-        <div class="cand-header">Candidate Information</div>
-        <div class="cand-content">
-            <div class="cand-field">
-                <span class="cf-lbl">Full Name</span>
-                <span class="cf-line"></span>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <div class="cand-field" style="flex: 1;">
-                    <span class="cf-lbl">Index No.</span>
-                    <span class="cf-line"></span>
-                </div>
-                <div class="cand-field" style="flex: 1;">
-                    <span class="cf-lbl">Class / Form</span>
-                    <span class="cf-line"></span>
-                </div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <div class="cand-field" style="flex: 2;">
-                    <span class="cf-lbl">Signature</span>
-                    <span class="cf-line"></span>
-                </div>
-                <div class="cand-field" style="flex: 1;">
-                    <span class="cf-lbl">Date</span>
-                    <span class="cf-line"></span>
-                </div>
-            </div>
+{{-- Candidate Information --}}
+<div class="cand-section">
+    <div class="section-label">Candidate Information</div>
+    <hr class="section-rule">
+    <div class="field-row">
+        <div class="field-cell" style="width:100%;">
+            <span class="field-lbl">Full Name</span>
+            <div class="field-line"></div>
         </div>
     </div>
-
-    {{-- General Instructions --}}
-    @if($mockExam->instructions)
-        <div class="inst-wrap">
-            <span class="inst-heading">General Instructions to Candidates</span>
-            <div class="inst-body">{!! $mockExam->instructions !!}</div> <!-- Use !! for potential HTML formatting -->
+    <div class="field-row" style="margin-top:10px;">
+        <div class="field-cell" style="width:50%;">
+            <span class="field-lbl">Index No.</span>
+            <div class="field-line"></div>
         </div>
-    @endif
+        <div class="field-cell" style="width:50%;">
+            <span class="field-lbl">Class / Form</span>
+            <div class="field-line"></div>
+        </div>
+    </div>
+    <div class="field-row" style="margin-top:10px;">
+        <div class="field-cell" style="width:65%;">
+            <span class="field-lbl">Signature</span>
+            <div class="field-line"></div>
+        </div>
+        <div class="field-cell" style="width:35%;">
+            <span class="field-lbl">Date</span>
+            <div class="field-line"></div>
+        </div>
+    </div>
+</div>
 
-    {{-- Subject Exams Loop --}}
-    @foreach($mockExam->subjectExams as $seIdx => $se)
-        @if($seIdx > 0) <div class="pg-break"></div> @endif
+{{-- General Instructions --}}
+@if($mockExam->instructions)
+    <div class="inst-section">
+        <div class="section-label">General Instructions to Candidates</div>
+        <hr class="section-rule">
+        <div class="inst-body">{!! $mockExam->instructions !!}</div>
+    </div>
+@endif
 
-        <div class="subj-wrap">
+{{-- Subject Exams --}}
+@foreach($mockExam->subjectExams as $seIdx => $se)
+    @if($seIdx > 0)<div class="pg-break"></div>@endif
 
-            <div class="subj-header">
-                <div class="subj-hdr-name">{{ $se->getDisplayTitle() }}</div>
+    <div class="subj-wrap">
+        <div class="subj-rule-top"></div>
+        <table class="subj-hdr-tbl">
+            <tr>
+                <td class="subj-hdr-name">{{ $se->getDisplayTitle() }}</td>
                 @if($se->duration_in_minutes)
-                    <div class="subj-hdr-meta">
+                    <td class="subj-hdr-meta">
                         Time Allowed:
                         @if($se->duration_in_minutes >= 60)
                             {{ floor($se->duration_in_minutes / 60) }}hr{{ floor($se->duration_in_minutes / 60) > 1 ? 's' : '' }}{{ $se->duration_in_minutes % 60 > 0 ? ' '.($se->duration_in_minutes % 60).'min' : '' }}
                         @else
                             {{ $se->duration_in_minutes }} minutes
                         @endif
-                    </div>
+                    </td>
                 @endif
-            </div>
+            </tr>
+        </table>
+        <div class="subj-rule-btm"></div>
 
-            @if($se->instructions)
-                <div class="subj-inst">{!! $se->instructions !!}</div> <!-- Use !! for potential HTML formatting -->
-            @endif
+        @if($se->instructions)
+            <div class="subj-inst">{!! $se->instructions !!}</div>
+        @endif
 
-            {{-- Sections Loop --}}
-            @foreach($se->sections as $sIdx => $section)
-                <div class="sec-wrap">
-                    <div class="sec-header">
-                        <div class="sec-hdr-name">Section {{ $sIdx + 1 }}: {{ $section->title }}</div>
-                        <div class="sec-hdr-meta">
+        @foreach($se->sections as $sIdx => $section)
+            <div class="sec-wrap">
+                <table class="sec-hdr-tbl">
+                    <tr>
+                        <td class="sec-hdr-name">Section {{ $sIdx + 1 }}: {{ $section->title }}</td>
+                        <td class="sec-hdr-meta">
                             {{ $section->questions->count() }} {{ Str::plural('Question', $section->questions->count()) }}
                             &nbsp;·&nbsp;
                             {{ number_format($section->getTotalMarks(), 0) }} Marks
+                        </td>
+                    </tr>
+                </table>
+                <div class="sec-hdr-rule"></div>
+
+                @if($section->instructions)
+                    <div class="sec-inst">{!! $section->instructions !!}</div>
+                @endif
+
+                @foreach($section->questions as $qIdx => $question)
+                    <div class="q-item">
+                        <div class="q-header">
+                            <span class="q-num">{{ $qIdx + 1 }}.</span>
+                            <span class="q-text">
+                                <x-form.markdown-with-math :content="$question->question_text" inline="true" />
+                            </span>
+                            <span class="q-marks">[{{ $question->marks }} mk]</span>
                         </div>
-                    </div>
 
-                    @if($section->instructions)
-                        <div class="sec-inst">{!! $section->instructions !!}</div> <!-- Use !! for potential HTML formatting -->
-                    @endif
-
-                    {{-- Questions Loop --}}
-                    @foreach($section->questions as $qIdx => $question)
-                        <div class="q-item">
-                            <div class="q-header">
-                                <span class="q-num">{{ $qIdx + 1 }}.</span>
-                                <span class="q-text">
-                                    <x-form.markdown-with-math :content="$question->question_text" inline="true" />
-                                </span>
-                                <span class="q-marks">[{{ $question->marks }} mk]</span>
+                        @if($question->isMultipleChoice() && !empty($question->options))
+                            @php $opts = $question->getOptionsForDisplay(); @endphp
+                            <div class="opts-wrap">
+                                @php $optIdx = 0; @endphp
+                                @foreach($opts as $letter => $text)
+                                    <div class="opt-row">
+                                        <span class="opt-lbl">{{ chr(65 + $optIdx) }}.</span>
+                                        <span class="opt-txt"><x-form.markdown-with-math :content="$text" inline="true" /></span>
+                                    </div>
+                                    @php $optIdx++; @endphp
+                                @endforeach
                             </div>
 
-                            {{-- MCQ --}}
-                            @if($question->isMultipleChoice() && !empty($question->options))
-                                @php $opts = $question->getOptionsForDisplay(); @endphp
-                                <ol class="{{ ($format ?? 'lenticular') === 'elliptical' ? 'opts-grid' : 'opts-list' }}">
-                                    @foreach($opts as $letter => $text)
-                                        <li>
-                                            <x-form.markdown-with-math :content="$text" inline="true" />
-                                        </li>
-                                    @endforeach
-                                </ol>
+                        @elseif($question->isTrueFalse())
+                            <div class="opts-wrap">
+                                @foreach([['A','True'],['B','False']] as [$lbl,$val])
+                                    <div class="opt-row">
+                                        <span class="opt-lbl">{{ $lbl }}.</span>
+                                        <span class="opt-txt">{{ $val }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
 
-                            {{-- True / False --}}
-                            @elseif($question->isTrueFalse())
-                                 <ol class="{{ ($format ?? 'lenticular') === 'elliptical' ? 'opts-grid' : 'opts-list' }}"> <!-- Toggle based on $format -->
-                                     <li>True</li>
-                                     <li>False</li>
-                                 </ol>
-
-                            {{-- Essay --}}
-                            @elseif($question->isEssay())
-                                <div class="elines">
-                                    @php $numLines = max(4, (int) round($question->marks * 1.2)); @endphp
-                                    @for($l = 0; $l < $numLines; $l++)
-                                        <div class="eline"></div>
-                                    @endfor
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-
-                </div> {{-- /.sec-wrap --}}
-            @endforeach
-
-        </div> {{-- /.subj-wrap --}}
-    @endforeach
-
-</div> <!-- /.exam-container -->
+                        @elseif($question->isEssay())
+                            <div class="elines">
+                                @php $numLines = max(4, (int) round($question->marks * 1.2)); @endphp
+                                @for($l = 0; $l < $numLines; $l++)
+                                    <div class="eline"></div>
+                                @endfor
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endforeach
+    </div>
+@endforeach
 
 </body>
 </html>

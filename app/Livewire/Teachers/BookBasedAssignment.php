@@ -5,7 +5,7 @@ namespace App\Livewire\Teachers;
 use App\Models\AcademicSubject;
 use App\Models\Assignment;
 use App\Models\Book;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use App\Services\AssignmentNotificationService;
 use App\Services\BookBasedLearningService;
 use App\Services\PdfContentExtractionService;
@@ -141,13 +141,13 @@ class BookBasedAssignment extends Component
 
     protected BookBasedLearningService $bookLearningService;
 
-    protected AcademicChatService $chatService;
+    protected ResearchAssistantService $chatService;
 
     protected PdfContentExtractionService $pdfExtractor;
 
     public function boot(
         BookBasedLearningService $bookLearningService,
-        AcademicChatService $chatService,
+        ResearchAssistantService $chatService,
         PdfContentExtractionService $pdfExtractor
     ) {
         $this->bookLearningService = $bookLearningService;

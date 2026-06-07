@@ -11,7 +11,7 @@ use PhpOffice\PhpWord\IOFactory;
 use RuntimeException;
 use ZipArchive;
 
-class AcademicChatService
+class ResearchAssistantService
 {
     use ResponseExtraction;
 

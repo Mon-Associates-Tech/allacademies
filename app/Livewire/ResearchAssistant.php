@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\AcademicChatMessage;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use App\Traits\ChecksTokenAvailability;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -12,7 +12,7 @@ use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class AcademicChat extends Component
+class ResearchAssistant extends Component
 {
     use ChecksTokenAvailability;
     use WithFileUploads;
@@ -91,7 +91,7 @@ class AcademicChat extends Component
 
     protected $chatService;
 
-    public function boot(AcademicChatService $chatService): void
+    public function boot(ResearchAssistantService $chatService): void
     {
         $this->chatService = $chatService;
     }
@@ -420,7 +420,7 @@ class AcademicChat extends Component
         $this->conversationId = null;
         $this->urlConversationId = null;
         $this->conversationTitle = null;
-        $this->redirect(route('academic-chat.index'));
+        $this->redirect(route('research-assistant.index'));
     }
 
     public function loadConversation($conversationId): void
@@ -437,7 +437,7 @@ class AcademicChat extends Component
         $this->loadChatHistory();
 
         // Redirect to update URL with query parameter
-        $this->redirect(route('academic-chat.index', ['conversationId' => $conversationId]));
+        $this->redirect(route('research-assistant.index', ['conversationId' => $conversationId]));
     }
 
     public function deleteConversation($conversationId): void
@@ -464,7 +464,7 @@ class AcademicChat extends Component
         $this->conversationTitle = null;
 
         // Redirect to clean URL
-        $this->redirect(route('academic-chat.index'));
+        $this->redirect(route('research-assistant.index'));
     }
 
     public function toggleHistory(): void
@@ -537,6 +537,6 @@ class AcademicChat extends Component
 
     public function render()
     {
-        return view('livewire.academic-chat');
+        return view('livewire.research-assistant');
     }
 }

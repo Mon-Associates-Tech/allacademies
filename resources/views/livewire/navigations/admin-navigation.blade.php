@@ -394,7 +394,7 @@
             <li>
                 <a :class="sidebarExpanded ? 'py-2' : ''"
                    class="block pl-3 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                   href="{{ route('academic-chat.index') }}">
+                   href="{{ route('research-assistant.index') }}">
                     <div class="flex items-center">
                         <x-heroicon-o-sparkles class="shrink-0 w-4 h-4 {{ Route::is('academic-chat*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" />
                         <span class="text-sm ml-2 sidebar-text duration-200">Research Assistant</span>

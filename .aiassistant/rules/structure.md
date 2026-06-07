@@ -43,7 +43,7 @@ Real-time interactive components organized by feature:
 
 #### Services (`app/Services/`)
 Business logic layer:
-- **AcademicChatService**: AI chat functionality
+- **ResearchAssistantService**: AI chat functionality
 - **AssessmentService**: Assessment creation and grading
 - **BookBasedLearningService**: Book-related learning features
 - **ChatGPTService**: OpenAI integration

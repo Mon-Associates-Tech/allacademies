@@ -194,7 +194,7 @@ return [
         App\Providers\TelescopeServiceProvider::class,
         \Lab404\Impersonate\ImpersonateServiceProvider::class,
         //        App\Providers\MessageServiceProvider::class,
-        App\Providers\AcademicChatServiceProvider::class,
+        \App\Providers\ResearchAssistantServiceProvider::class,
         \App\Providers\ProctoringServiceProvider::class,
         \App\MockExam\Providers\MockExamServiceProvider::class,
 

@@ -8,276 +8,278 @@
 
         @page {
             size: A4;
-            margin: 20mm 14mm 24mm 14mm;
+            margin: 20mm 18mm 24mm 18mm;
         }
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 10pt;
-            color: #0d1b38;
-            line-height: 1.55;
-            background: #ffffff;
-        }
-
-        /* ─── Decorative Page Frame ─── */
-        .frame-outer {
-            position: fixed;
-            top: 4mm; left: 4mm; right: 4mm; bottom: 4mm;
-            border: 2px solid #b91c1c;
-        }
-        .frame-inner {
-            position: fixed;
-            top: 6.5mm; left: 6.5mm; right: 6.5mm; bottom: 6.5mm;
-            border: 0.5px solid rgba(185,28,28,0.4);
+            color: #111;
+            line-height: 1.6;
+            background: #fff;
+            padding: 0 20px;
         }
 
         /* ─── Fixed Footer ─── */
         .doc-footer {
             position: fixed;
-            bottom: -20mm;
-            left: 0; right: 0;
-            border-top: 1.5px solid #0d1b38;
-            padding: 2px 0 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #999;
+            padding: 4px 20px 6px;
         }
         .doc-footer table { width: 100%; border-collapse: collapse; }
         .doc-footer td {
-            font-size: 7pt;
-            color: #444;
+            font-size: 7.5pt;
+            color: #666;
             padding: 0 2px;
         }
         .footer-center {
             text-align: center;
             font-weight: bold;
-            color: #b91c1c;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
+            letter-spacing: 0.05em;
         }
         .footer-right { text-align: right; }
 
-        /* ─── TOP BANNER ─── */
+        /* ─── Top Banner ─── */
+        .top-banner, .banner-rule, .confidential-bar {
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
         .top-banner {
-            background: #0d1b38;
-            padding: 10px 18px 9px;
+            background: #111;
+            padding: 12px 20px 10px;
         }
         .banner-title {
-            color: #ffffff;
-            font-size: 15pt;
+            color: #fff;
+            font-size: 14pt;
             font-weight: bold;
-            letter-spacing: 0.07em;
+            letter-spacing: 0.05em;
             font-family: 'DejaVu Serif', Georgia, serif;
             text-transform: uppercase;
         }
-        .banner-scheme {
-            color: #c9a227;
-            font-size: 9pt;
-            letter-spacing: 0.12em;
+        .banner-sub {
+            color: #ccc;
+            font-size: 8.5pt;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            margin-top: 3px;
+            margin-top: 4px;
+        }
+        .banner-rule {
+            height: 2px;
+            background: #555;
+            margin-bottom: 0;
         }
 
-        .gold-stripe  { height: 3.5px; background: #c9a227; }
-        .red-stripe   { height: 3px;   background: #b91c1c; }
-
         .confidential-bar {
-            background: #b91c1c;
-            padding: 5px 18px;
+            background: #333;
+            padding: 6px 20px;
             text-align: center;
-            color: #ffffff;
-            font-size: 8.5pt;
+            color: #e5e5e5;
+            font-size: 7.5pt;
             font-weight: bold;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            margin-bottom: 14px;
+            margin-bottom: 20px;
         }
 
-        /* ─── SUBJECT BLOCK ─── */
-        .subject-block { margin-bottom: 20px; }
+        /* ─── Subject Block ─── */
+        .subject-block { margin-bottom: 30px; }
 
-        .subject-header-tbl { width: 100%; border-collapse: collapse; }
+        .subject-header-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #333;
+        }
         .subj-title-td {
-            background: #1a3057;
-            color: #ffffff;
-            padding: 7px 14px;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 8px 14px;
             font-size: 11pt;
             font-weight: bold;
             font-family: 'DejaVu Serif', Georgia, serif;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-left: 5px solid #c9a227;
+            letter-spacing: 0.04em;
+            border-left: 4px solid #888;
         }
         .subj-marks-td {
-            background: #1a3057;
-            color: #c9a227;
-            padding: 7px 14px;
+            background: #1a1a1a;
+            color: #bbb;
+            padding: 8px 14px;
             font-size: 8.5pt;
             text-align: right;
             white-space: nowrap;
         }
 
-        /* ─── SECTION BLOCK ─── */
-        .section-block { margin-bottom: 16px; }
+        /* ─── Section Block ─── */
+        .section-block { margin-bottom: 24px; }
 
         .section-title-tbl {
             width: 100%;
             border-collapse: collapse;
-            border-bottom: 2px solid #0d1b38;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            border-bottom: 1.5px solid #333;
+            margin-bottom: 12px;
         }
         .section-title-tbl td { padding-bottom: 4px; }
         .sec-name {
-            font-size: 10.5pt;
+            font-size: 10pt;
             font-weight: bold;
-            color: #0d1b38;
+            color: #111;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
         .sec-total {
             text-align: right;
-            font-size: 8.5pt;
-            color: #64748b;
+            font-size: 8pt;
+            color: #777;
             white-space: nowrap;
         }
 
-        /* ─── MCQ / TF ANSWER GRID ─── */
-        .answer-grid {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 10px;
+        /* ─── Vertical Answer List (No Borders, Spacing Only) ─── */
+        .obj-answers {
+            margin-bottom: 24px;
         }
-        .answer-grid th {
-            background: #f1f5f9;
-            border: 1px solid #c8d4e0;
-            padding: 4px 6px;
-            text-align: center;
-            font-size: 8pt;
+
+        .obj-item {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 6px; /* Visual separation via spacing only */
+            font-size: 9.5pt;
+        }
+        .obj-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .obj-q {
+            width: 40px;
             font-weight: bold;
-            color: #374151;
-            letter-spacing: 0.04em;
-            white-space: nowrap;
+            color: #333;
+            flex-shrink: 0;
         }
-        .answer-grid td {
-            border: 1px solid #c8d4e0;
-            padding: 5px 6px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        .ans-mcq {
-            font-size: 13pt;
+        .obj-val {
+            flex: 1;
             font-weight: bold;
-            color: #047857;
             font-family: 'DejaVu Serif', Georgia, serif;
         }
-        .ans-true  { font-size: 9.5pt; font-weight: bold; color: #047857; }
-        .ans-false { font-size: 9.5pt; font-weight: bold; color: #b91c1c; }
-        .marks-cell {
-            font-size: 7pt;
-            color: #9ca3af;
+        .obj-mark {
+            text-align: right;
+            color: #888;
             font-style: italic;
+            font-size: 7.5pt;
+            flex-shrink: 0;
+            padding-left: 10px;
+            white-space: nowrap;
         }
-        .ans-empty { color: #d1d5db; }
 
-        /* ─── ESSAY ANSWERS ─── */
+        /* Answer Type Styles */
+        .ans-mcq   { font-size: 10pt; color: #111; }
+        .ans-true  { font-size: 9pt;  color: #111; }
+        .ans-false { font-size: 9pt;  color: #444; font-style: italic; }
+        .ans-empty { color: #bbb; }
+
+        /* ─── Essay Answers ─── */
         .essay-item {
-            border: 1px solid #e2e8f0;
-            border-left: 5px solid #1a3057;
-            padding: 9px 12px;
-            margin-bottom: 10px;
-            background: #fafcff;
+            border: 1px solid #ccc;
+            border-left: 4px solid #444;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            background: #fafafa;
         }
-        .essay-header-tbl { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        .essay-header-tbl { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         .essay-qnum {
             font-weight: bold;
-            color: #1a3057;
-            font-size: 10.5pt;
+            color: #111;
+            font-size: 10pt;
             width: 30px;
             vertical-align: top;
         }
         .essay-qtext {
             font-size: 9.5pt;
-            color: #374151;
+            color: #333;
             vertical-align: top;
         }
         .essay-marks {
             text-align: right;
             font-size: 8pt;
-            color: #6b7280;
+            color: #666;
             white-space: nowrap;
             vertical-align: top;
             padding-left: 8px;
         }
 
         .model-lbl {
-            font-size: 7.5pt;
+            font-size: 7pt;
             font-weight: bold;
-            color: #1a3057;
+            color: #444;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin: 6px 0 2px;
-            border-bottom: 0.5px solid #c8d4e0;
+            letter-spacing: 0.09em;
+            margin: 8px 0 3px;
+            border-bottom: 0.5px solid #ccc;
             padding-bottom: 2px;
         }
         .model-text {
             font-size: 9.5pt;
-            color: #111827;
+            color: #111;
             line-height: 1.6;
         }
         .model-empty {
             font-size: 9pt;
-            color: #9ca3af;
+            color: #aaa;
             font-style: italic;
         }
 
         .kw-lbl {
-            font-size: 7.5pt;
+            font-size: 7pt;
             font-weight: bold;
-            color: #0e7490;
+            color: #555;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
-            margin: 6px 0 2px;
+            letter-spacing: 0.08em;
+            margin: 8px 0 3px;
         }
         .kw-text {
             font-size: 9pt;
-            color: #0e7490;
+            color: #444;
             font-style: italic;
         }
 
-        /* ─── UTILITIES ─── */
+        /* ─── Utilities ─── */
         .page-break { page-break-before: always; }
-        .section-sep { border: none; border-top: 1px solid #e2e8f0; margin: 14px 0; }
+        .section-sep {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
 
-{{-- ── Decorative page frame ── --}}
-<div class="frame-outer"></div>
-<div class="frame-inner"></div>
-
-{{-- ── Fixed Footer ── --}}
+{{-- Fixed Footer --}}
 <div class="doc-footer">
     <table>
         <tr>
             <td style="width:33%;">{{ $mockExam->title }}</td>
-            <td class="footer-center" style="width:34%;">⚠ CONFIDENTIAL – DO NOT DISTRIBUTE</td>
+            <td class="footer-center" style="width:34%;">Marking Scheme — Confidential</td>
             <td class="footer-right" style="width:33%;">Page <span class="pagenum"></span> &nbsp;·&nbsp; {{ now()->format('d M Y') }}</td>
         </tr>
     </table>
 </div>
 
-{{-- ── TOP BANNER ── --}}
+{{-- Top Banner --}}
 <div class="top-banner">
     <div class="banner-title">{{ $mockExam->title }}</div>
-    <div class="banner-scheme">Answer Key / Marking Scheme</div>
+    <div class="banner-sub">Answer Key / Marking Scheme</div>
 </div>
-<div class="gold-stripe"></div>
-<div class="red-stripe"></div>
+<div class="banner-rule"></div>
 <div class="confidential-bar">
     ⚠ &nbsp; Confidential &nbsp;–&nbsp; Instructor Use Only &nbsp;–&nbsp; Do Not Distribute &nbsp; ⚠
 </div>
 
-{{-- ── SUBJECT EXAMS ── --}}
+{{-- Subject Exams --}}
 @foreach($mockExam->subjectExams as $seIdx => $se)
-    @if($seIdx > 0) <div class="page-break"></div> @endif
+    @if($seIdx > 0)<div class="page-break"></div>@endif
 
     <div class="subject-block">
         <table class="subject-header-tbl">
@@ -289,10 +291,9 @@
 
         @foreach($se->sections as $section)
             @php
-                $allQs    = $section->questions;
-                $objQs    = $allQs->filter(fn($q) => $q->isMultipleChoice() || $q->isTrueFalse())->values();
-                $essayQs  = $allQs->filter(fn($q) => $q->isEssay())->values();
-                $chunkSz  = 10;
+                $allQs   = $section->questions;
+                $objQs   = $allQs->filter(fn($q) => $q->isMultipleChoice() || $q->isTrueFalse())->values();
+                $essayQs = $allQs->filter(fn($q) => $q->isEssay())->values();
             @endphp
 
             <div class="section-block">
@@ -303,63 +304,40 @@
                     </tr>
                 </table>
 
-                {{-- ── Objective answer grid ── --}}
+                {{-- Objective answers (Vertical List, No Borders) --}}
                 @if($objQs->isNotEmpty())
-                    @php $startNum = 1; @endphp
-                    @foreach($objQs->chunk($chunkSz) as $chunk)
-                        <table class="answer-grid">
-                            <thead>
-                                <tr>
-                                    @foreach($chunk as $idx => $q)
-                                        <th>Q{{ $startNum + $idx }}</th>
-                                    @endforeach
-                                    @for($p = $chunk->count(); $p < $chunkSz; $p++)
-                                        <th style="background:transparent;border-color:transparent;"></th>
-                                    @endfor
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{-- Answer row --}}
-                                <tr>
-                                    @foreach($chunk as $q)
-                                        <td>
-                                            @if($q->isMultipleChoice())
-                                                <span class="ans-mcq">{{ strtoupper($q->correct_answer ?? '—') }}</span>
-                                            @else
-                                                @php
-                                                    $raw      = strtolower(trim((string)($q->correct_answer ?? '')));
-                                                    $isTrue   = in_array($raw, ['true','1','yes','t'], true);
-                                                @endphp
-                                                @if($raw === '')
-                                                    <span class="ans-empty">—</span>
-                                                @elseif($isTrue)
-                                                    <span class="ans-true">True</span>
-                                                @else
-                                                    <span class="ans-false">False</span>
-                                                @endif
-                                            @endif
-                                        </td>
-                                    @endforeach
-                                    @for($p = $chunk->count(); $p < $chunkSz; $p++)
-                                        <td style="border-color:transparent;"></td>
-                                    @endfor
-                                </tr>
-                                {{-- Marks row --}}
-                                <tr>
-                                    @foreach($chunk as $q)
-                                        <td class="marks-cell">{{ $q->marks }}mk</td>
-                                    @endforeach
-                                    @for($p = $chunk->count(); $p < $chunkSz; $p++)
-                                        <td style="border-color:transparent;"></td>
-                                    @endfor
-                                </tr>
-                            </tbody>
-                        </table>
-                        @php $startNum += $chunk->count(); @endphp
-                    @endforeach
+                    <div class="obj-answers">
+                        @foreach($objQs as $idx => $q)
+                            @php
+                                $qNum = $idx + 1;
+                                if ($q->isMultipleChoice()) {
+                                    $answer = strtoupper($q->correct_answer ?? '—');
+                                    $ansClass = 'ans-mcq';
+                                } else {
+                                    $raw = strtolower(trim((string)($q->correct_answer ?? '')));
+                                    $isTrue = in_array($raw, ['true','1','yes','t'], true);
+                                    if ($raw === '') {
+                                        $answer = '—';
+                                        $ansClass = 'ans-empty';
+                                    } elseif ($isTrue) {
+                                        $answer = 'True';
+                                        $ansClass = 'ans-true';
+                                    } else {
+                                        $answer = 'False';
+                                        $ansClass = 'ans-false';
+                                    }
+                                }
+                            @endphp
+                            <div class="obj-item">
+                                <span class="obj-q">{{ $qNum }}.</span>
+                                <span class="obj-val {{ $ansClass }}">{{ $answer }}</span>
+                                <span class="obj-mark">({{ $q->marks }} mk)</span>
+                            </div>
+                        @endforeach
+                    </div>
                 @endif
 
-                {{-- ── Essay answers ── --}}
+                {{-- Essay answers --}}
                 @foreach($essayQs as $eIdx => $question)
                     <div class="essay-item">
                         <table class="essay-header-tbl">
@@ -385,7 +363,7 @@
                 @endforeach
             </div>
 
-            @if(!$loop->last) <hr class="section-sep"> @endif
+            @if(!$loop->last)<hr class="section-sep">@endif
         @endforeach
     </div>
 @endforeach

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class AcademicChatController extends Controller
+class ResearchAssistantController extends Controller
 {
-    protected AcademicChatService $chatService;
+    protected ResearchAssistantService $chatService;
 
-    public function __construct(AcademicChatService $chatService)
+    public function __construct(ResearchAssistantService $chatService)
     {
         $this->chatService = $chatService;
     }
@@ -20,7 +20,7 @@ class AcademicChatController extends Controller
      */
     public function index()
     {
-        return view('chats.gpt-chat');
+        return view('research-assistant.index');
     }
 
     /**
