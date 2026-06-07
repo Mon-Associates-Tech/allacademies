@@ -82,9 +82,9 @@ class ResearchAssistant extends Component
 
     public $conversationHistory = [];
 
-    public $canSendMessage = true;
+    public $hasAvailableTokens = true;
 
-    public $tokenWarningMessage;
+    public $tokenMessage;
 
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
@@ -99,8 +99,8 @@ class ResearchAssistant extends Component
     public function mount(?string $conversationId = null): void
     {
         $result = $this->checkTokenAvailability();
-        $this->canSendMessage = $result['available'];
-        $this->tokenWarningMessage = $result['message'];
+        $this->hasAvailableTokens = $result['available'];
+        $this->tokenMessage = $result['message'];
 
         $this->availableSubjects = $this->chatService->getAvailableSubjects();
 
@@ -355,7 +355,7 @@ class ResearchAssistant extends Component
     #[Computed]
     public function messageInputDisabled(): bool
     {
-        return ! $this->canSendMessage();
+        return !$this->hasAvailableTokens;
     }
 
     protected function getParameters(): array
