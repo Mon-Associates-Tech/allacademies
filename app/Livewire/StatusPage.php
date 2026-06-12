@@ -150,9 +150,15 @@ class StatusPage extends Component
 
     public function render()
     {
-        return view('livewire.status-page', [
-            'hero'            => $this->getHeroData(),
-            'processedChecks' => $this->getProcessedChecks(),
+        return view('components.layouts.status', [
+            'hero'             => $this->getHeroData(),
+            'processedChecks'  => $this->getProcessedChecks(),
+            'overallStatus'    => $this->overallStatus,
+            'checks'           => $this->checks,
+            'lastUpdated'      => $this->lastUpdated,
+            'operationalCount' => $this->operationalCount,
+            'totalCount'       => $this->totalCount,
+            'avgLatency'       => $this->avgLatency,
         ]);
     }
 }

@@ -62,6 +62,11 @@ class Kernel extends ConsoleKernel
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
 
+         $schedule->call(fn() => Cache::put('scheduler:heartbeat', now(), 300))
+         ->everyMinute()
+         ->name('scheduler:heartbeat')
+         ->withoutOverlapping();
+
     }
 
     /**
