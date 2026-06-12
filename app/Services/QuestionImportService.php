@@ -837,7 +837,7 @@ switch (strtolower($questionType)) {
                         'question_data' => $questionData,
                         'topic_id' => $topic->id,
                     ]);
-                    continue 2; // Continue to next question
+                    continue ; // Continue to next question
                 }
             }
 
