@@ -5,6 +5,8 @@ namespace App\Console;
 use App\Jobs\ResetMonthlySubscriptionCycles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -62,10 +64,23 @@ class Kernel extends ConsoleKernel
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
 
-         $schedule->call(fn() => Cache::put('scheduler:heartbeat', now(), 300))
-         ->everyMinute()
-         ->name('scheduler:heartbeat')
-         ->withoutOverlapping();
+        
+
+$schedule->call(function () {
+    try {
+        $time = now()->toDateTimeString();
+        $store = config('cache.default'); // Explicitly get the default store
+        
+        // 1. Write to the explicit store
+        Cache::store($store)->put('scheduler:heartbeat', $time, 300);
+        
+        // 2. Immediately try to read it back to verify
+        $verify = Cache::store($store)->get('scheduler:heartbeat');
+        
+    } catch (\Exception $e) {
+        Log::error('Scheduler Heartbeat FAILED', ['error' => $e->getMessage()]);
+    }
+})->everyMinute()->name('scheduler:heartbeat')->withoutOverlapping();
 
     }
 
