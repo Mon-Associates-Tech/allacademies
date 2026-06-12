@@ -33,7 +33,7 @@ window.fullscreenGate = {
                 this.hideInstructionPanel();
             } else {
                 this.showExamContentOnly();
-            } 
+            }
         });
 
         // Initialize fullscreen gate state
@@ -50,11 +50,11 @@ window.fullscreenGate = {
 
         try {
             const elem = document.documentElement;
-            const requestFullscreen = elem.requestFullscreen 
-                || elem.webkitRequestFullscreen 
-                || elem.mozRequestFullScreen 
+            const requestFullscreen = elem.requestFullscreen
+                || elem.webkitRequestFullscreen
+                || elem.mozRequestFullScreen
                 || elem.msRequestFullscreen;
-            
+
             if (!requestFullscreen) {
                 console.warn('Fullscreen API not available');
                 this.showExamContentOnly();
@@ -341,16 +341,15 @@ if (document.readyState === 'loading') {
     }
 </script>
 
-@if($proctoringEnabled ?? false)
-    @push('exam-scripts')
-        <script src="{{ asset('js/exam-proctor.js') }}"></script>
-    @endpush
-@endif
+    @if($proctoringEnabled ?? false)
+        @push('exam-scripts')
+            @assets('js/exam-proctor.js')
+        @endpush
+    @endif
 
-@push('exam-scripts')
-    <script src="{{ asset('js/exam-sync.js') }}"></script>
-    <script src="{{ asset('js/exam-timer.js') }}"></script>
-@endpush
+    @push('exam-scripts')
+        @vite(['resources/js/exam-sync.js', 'resources/js/exam-timer.js'])
+    @endpush
 
 @push('exam-scripts')
     <script>
@@ -409,10 +408,74 @@ if (document.readyState === 'loading') {
                             window.examHeartbeat.defaultWarningHandler(warning);
                         },
                         onTerminated: function(data) {
-                            window.examHeartbeat.defaultTerminatedHandler(data);
+                            window.hasUnsavedChanges = false;
+                            if (document.getElementById('terminated-modal')) return;
+
+                            const modal = document.createElement('div');
+                            modal.id = 'terminated-modal';
+                            modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.8);';
+                            modal.innerHTML = `
+        <div style="background:#fff;border-radius:2px;width:100%;max-width:28rem;padding:1.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+            <div style="width:4rem;height:4rem;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#fee2e2;">
+                <svg style="width:2rem;height:2rem;color:#dc2626;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+            </div>
+            <h3 style="font-size:1.125rem;font-weight:700;color:#0f172a;margin:0 0 .5rem;">Session Terminated</h3>
+            <p style="color:#475569;margin:0 0 .5rem;">Your exam session has been terminated by the administrator.</p>
+            <p style="font-size:.875rem;color:#64748b;margin:0 0 1rem;">${data.reason || data.message || ''}</p>
+            <p style="font-size:.875rem;color:#94a3b8;">Redirecting in <span id="term-countdown">3</span>s&hellip;</p>
+        </div>
+    `;
+                            document.body.appendChild(modal);
+
+                            let s = 3;
+                            const iv = setInterval(() => {
+                                s--;
+                                const el = document.getElementById('term-countdown');
+                                if (el) el.textContent = s;
+                                if (s <= 0) {
+                                    clearInterval(iv);
+                                    window.location.href = "{{ route('examination-hub.take.completed', $exam) }}";
+                                }
+                            }, 1000);
                         },
-                        onMessage: function(message) {
-                            window.examHeartbeat.defaultMessageHandler(message);
+                        onMessage: function(messageData) {
+                            // Extract the actual text — heartbeat sends an object, not a raw string
+                            const text = (messageData && typeof messageData === 'object')
+                                ? (messageData.message || '')
+                                : String(messageData || '');
+                            if (!text) return;
+
+                            const existing = document.getElementById('admin-msg-toast');
+                            if (existing) existing.remove();
+
+                            const toast = document.createElement('div');
+                            toast.id = 'admin-msg-toast';
+                            toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;max-width:22rem;border-radius:2px;box-shadow:0 8px 32px rgba(0,0,0,.2);';
+                            toast.innerHTML = `
+        <div style="background:#1d4ed8;color:#fff;padding:1rem;">
+            <div style="display:flex;align-items:flex-start;gap:.75rem;">
+                <svg style="width:1.25rem;height:1.25rem;flex-shrink:0;margin-top:.1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/>
+                </svg>
+                <div style="flex:1;min-width:0;">
+                    <p style="font-weight:600;font-size:.875rem;margin:0 0 .25rem;">Message from Examiner</p>
+                    <p style="font-size:.875rem;opacity:.9;margin:0;word-break:break-word;">${text}</p>
+                </div>
+                <button onclick="document.getElementById('admin-msg-toast')?.remove();"
+                        style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:0;margin-left:.5rem;">
+                    <svg style="width:1rem;height:1rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast?.remove(), 30000); // stays visible 30 s
                         },
                         onForceSubmit: function(data) {
                             const modal = document.createElement('div');
@@ -436,7 +499,7 @@ if (document.readyState === 'loading') {
                             }, 3000);
                         },
                         onTimeExtended: function(additionalMinutes) {
-                            const toast = document.createElement('div'); 
+                            const toast = document.createElement('div');
                             toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-green-600 text-white rounded-lg shadow-lg';
                             toast.innerHTML = `
                                 <div class="flex items-start gap-3">

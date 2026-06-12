@@ -59,6 +59,15 @@ class HeartbeatController extends Controller
             ]);
         }
 
+        // Submission already completed by admin force-submit or other server action
+        if ($submission->submitted_at) {
+            return response()->json([
+                'status'   => 'force_submitted',
+                'message'  => $submission->auto_submit_reason ?? 'Your exam has been submitted by the administrator.',
+                'redirect' => route('examination-hub.take.completed', $exam),
+            ]);
+        }
+
         // Process heartbeat data
         $data = $request->validate([
             'is_focused' => ['nullable', 'boolean'],
@@ -104,7 +113,7 @@ class HeartbeatController extends Controller
         if ($undeliveredMessages->isNotEmpty()) {
             // Get the most recent message to display
             $latestMessage = $undeliveredMessages->last();
-            
+
             $response['admin_message'] = [
                 'message' => $latestMessage->message,
                 'type' => $latestMessage->message_type,

@@ -247,7 +247,12 @@ $wire.on('examAutoSubmitted', (payload) => {
 {{-- ═══════════════════════════════════════════════════════════
      STATE 3 · ACTIVE EXAMINATION VIEW
 ═══════════════════════════════════════════════════════════ --}}
-<div class="flex flex-col h-screen" style="font-family: 'system-ui', -apple-system, sans-serif;">
+            <div class="flex flex-col h-screen" style="font-family: 'system-ui', -apple-system, sans-serif;"
+                 x-data="{
+         fontSize: parseInt(localStorage.getItem('exam_font_size') || 16),
+         increase() { if (this.fontSize < 22) { this.fontSize++; localStorage.setItem('exam_font_size', this.fontSize); } },
+         decrease() { if (this.fontSize > 13) { this.fontSize--; localStorage.setItem('exam_font_size', this.fontSize); } }
+     }">
 
     {{-- ── TOP HEADER BAR ── --}}
     <div class="flex-shrink-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800"
@@ -281,7 +286,18 @@ $wire.on('examAutoSubmitted', (payload) => {
                                 style="width: {{ $this->questions->count() > 0 ? ($this->getAnsweredCount() / $this->questions->count()) * 100 : 0 }}%; background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
                         </div>
                     </div>
-                
+
+                    {{-- Font size controls --}}
+                    <div class="hidden sm:flex items-center border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                        <button @click="decrease()" title="Decrease font size"
+                                class="px-2 py-1.5 font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors leading-none"
+                                style="font-size: 11px;">A</button>
+                        <span class="w-px h-4 bg-slate-200 dark:bg-slate-700"></span>
+                        <button @click="increase()" title="Increase font size"
+                                class="px-2 py-1.5 font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors leading-none"
+                                style="font-size: 15px;">A</button>
+                    </div>
+
                     {{-- Section info toggle --}}
                     <button wire:click="toggleSectionInfo"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
@@ -295,7 +311,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                     <x-snippets.theme-toggle />
                 </div>
             </div>
-            
+
             {{-- Mobile: two-row layout --}}
             <div class="sm:hidden space-y-2">
                 {{-- Row 1: Title & Timer --}}
@@ -315,7 +331,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                     {{-- TIMER (Mobile) --}}
                     <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" :isMobile="true" />
                 </div>
-                
+
                 {{-- Row 2: Actions --}}
                 <div class="flex items-center justify-end gap-2">
                     <button wire:click="toggleSectionInfo"
@@ -331,7 +347,7 @@ $wire.on('examAutoSubmitted', (payload) => {
         </div>
     </div>
 
-{{-- ... [Keep the rest of STATE 3 (Question Card, Navigator, Bottom Nav) exactly as it was] ... --}}
+
 
         {{-- ── SCROLLABLE CONTENT AREA ── --}}
         <div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950"
@@ -385,7 +401,8 @@ $wire.on('examAutoSubmitted', (payload) => {
                     {{-- Question body --}}
                     <div class="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5">
                         {{-- Question text --}}
-                        <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 lh-base leading-base text-[1rem] sm:text-[1.05rem] font-serif"
+                        <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 font-serif"
+                             :style="`font-size: ${fontSize}px; line-height: 1.75;`"
                             wire:key="question-text-{{ $question->id }}">
                             <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none"/>
                         </div>
@@ -449,6 +466,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                                 <textarea
                                     wire:model.live.debounce.500ms="responses.{{ $question->id }}"
                                     rows="10"
+                                    :style="`font-size: ${fontSize}px`"
                                     class="w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
                                     placeholder="Type your answer here…"
                                 ></textarea>

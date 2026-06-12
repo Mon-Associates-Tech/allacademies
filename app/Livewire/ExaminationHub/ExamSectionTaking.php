@@ -54,11 +54,20 @@ class ExamSectionTaking extends Component
         $sectionKey = (string) $section->id;
 
         if ($section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
-            $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-            $endsAt = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
-            $this->timeRemaining = max(0, now()->diffInSeconds($endsAt, false));
+            $startedAt      = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
+            $endsAt         = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
+            $sectionSeconds = max(0, now()->diffInSeconds($endsAt, false));
+
+            // Exam duration is the hard ceiling — cap the displayed timer to whatever is left on the exam clock
+            if ($exam->duration_in_minutes && $submission->started_at) {
+                $examEndsAt  = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                $examSeconds = max(0, now()->diffInSeconds($examEndsAt, false));
+                $sectionSeconds = min($sectionSeconds, $examSeconds);
+            }
+
+            $this->timeRemaining = $sectionSeconds;
         } elseif ($exam->duration_in_minutes && $submission->started_at) {
-            $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+            $examEndsAt          = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
             $this->timeRemaining = max(0, now()->diffInSeconds($examEndsAt, false));
         }
     }
@@ -168,6 +177,16 @@ class ExamSectionTaking extends Component
             }
         } else {
             $sectionStartTimes = $submission->section_start_times ?? [];
+
+            // Exam-level hard ceiling applies even in multi-section exams
+            if ($exam->duration_in_minutes && $submission->started_at) {
+                $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    $this->performAutoSubmit($submission, 'Exam duration exceeded (server-side auto-submit)', $exam);
+                    return;
+                }
+            }
+
             if ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
                 $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
                 $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
@@ -229,6 +248,15 @@ class ExamSectionTaking extends Component
                 return;
             }
         } elseif ($this->section->time_limit_minutes) {
+            // Exam-level ceiling check first
+            if ($exam->duration_in_minutes && $submission->started_at) {
+                $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    $this->performAutoSubmit($submission, 'Exam duration exceeded (client timer, server-verified)', $exam);
+                    return;
+                }
+            }
+
             $sectionStartTimes = $submission->section_start_times ?? [];
             if (isset($sectionStartTimes[$sectionKey])) {
                 $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
@@ -338,11 +366,22 @@ class ExamSectionTaking extends Component
                 }
             }
         } elseif ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
-            $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-            $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
-            if (now()->greaterThanOrEqualTo($endsAt)) {
-                $this->addError('general', 'Section time limit has expired.');
+        } elseif ($exam->duration_in_minutes && $submission->started_at) {
+            // Multi-section: always enforce exam-level ceiling
+            $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+            if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                $this->addError('general', 'Exam time limit has expired.');
                 return false;
+            }
+
+            // Then check section-specific limit if set
+            if ($this->section->time_limit_minutes && isset($sectionStartTimes[(string) $this->sectionId])) {
+                $startedAt = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[(string) $this->sectionId]);
+                $endsAt    = $startedAt->copy()->addMinutes((int) $this->section->time_limit_minutes);
+                if (now()->greaterThanOrEqualTo($endsAt)) {
+                    $this->addError('general', 'Section time limit has expired.');
+                    return false;
+                }
             }
         }
 

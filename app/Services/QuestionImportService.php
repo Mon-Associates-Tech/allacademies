@@ -29,7 +29,7 @@ class QuestionImportService
     ];
     
     public function __construct(
-        private AcademicChatService $academicChatService
+        private ResearchAssistantService $academicChatService
     ) {}
 
     /**

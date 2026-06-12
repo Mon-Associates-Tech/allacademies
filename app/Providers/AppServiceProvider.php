@@ -63,7 +63,7 @@ class AppServiceProvider extends ServiceProvider
         
         // Register QuestionImportService
         $this->app->singleton(QuestionImportService::class, function ($app) {
-            return new QuestionImportService($app->make(\App\Services\AcademicChatService::class));
+            return new QuestionImportService($app->make(\App\Services\ResearchAssistantService::class));
         });
     }
 

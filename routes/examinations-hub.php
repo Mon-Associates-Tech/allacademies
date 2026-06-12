@@ -11,7 +11,6 @@ use App\ExaminationHub\Controllers\ParticipantResultsController;
 use App\ExaminationHub\Controllers\PerformanceReportController;
 use App\ExaminationHub\Controllers\ProctoringController;
 use App\ExaminationHub\Controllers\ParticipantPerformanceReportController;
-use App\ExaminationHub\Controllers\StudentPerformanceController;
 use App\ExaminationHub\Controllers\SubmissionController;
 use App\ExaminationHub\Controllers\ExamSettingsController;
 use App\Http\Middleware\EnsureExamSession;
@@ -24,6 +23,8 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/create', [ExamCreationController::class, 'create'])->name('create');
     Route::post('/create/preview', [ExamCreationController::class, 'preview'])->name('create.preview');
     Route::post('/create/store', [ExamCreationController::class, 'store'])->name('create.store');
+    Route::post('/quick-save', [ExamCreationController::class, 'quickSave'])
+        ->name('create.quick-save');
     Route::get('/subscriptions', [DashboardController::class, 'subscriptions'])->name('subscriptions');
     Route::get('/admin', [DashboardController::class, 'admin'])->name('admin');
     Route::get('/exams/{exam}', [DashboardController::class, 'show'])->name('exams.show');
@@ -40,7 +41,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
     Route::get('/exams/{exam}/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
-    
+
     // Add route for grading submissions
     Route::get('/exams/{exam}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
 
@@ -80,7 +81,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
         Route::post('/force-submit/{submission}', [LiveMonitoringController::class, 'forceSubmit'])->name('force-submit');
         Route::post('/extend-time/{submission}', [LiveMonitoringController::class, 'extendTime'])->name('extend-time');
         Route::post('/clear-warning/{submission}', [LiveMonitoringController::class, 'clearWarning'])->name('clear-warning');
-        
+
         // Audit: View message history
         Route::get('/messages/{submission}', [LiveMonitoringController::class, 'getMessageHistory'])->name('messages.history');
     });
