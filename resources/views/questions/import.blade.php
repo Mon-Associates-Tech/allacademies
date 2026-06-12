@@ -13,6 +13,58 @@
 
     <div class="container mx-auto px-4 py-8">
         <div class="max-w-3xl mx-auto">
+
+            {{-- ── Flash: import success ── --}}
+            @if(session('import_success'))
+                <div class="mb-6 rounded-lg border border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/30 p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm text-green-800 dark:text-green-200">
+                            {!! session('import_success') !!}
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Flash: top-level import error ── --}}
+            @if(session('import_error'))
+                <div class="mb-6 rounded-lg border border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/30 p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm text-red-800 dark:text-red-200">
+                            {{ session('import_error') }}
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Per-row import errors ── --}}
+            @if(session('import_row_errors') && count(session('import_row_errors')) > 0)
+                <div class="mb-6 rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-700 dark:bg-orange-900/30 p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-orange-800 dark:text-orange-200 mb-2">
+                                {{ count(session('import_row_errors')) }} question(s) could not be imported:
+                            </p>
+                            <ul class="space-y-1">
+                                @foreach(session('import_row_errors') as $rowError)
+                                    <li class="text-sm text-orange-700 dark:text-orange-300">
+                                        <span class="font-medium">Row {{ $rowError['row'] ?? '?' }}:</span>
+                                        {{ $rowError['message'] ?? 'Unknown error' }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-semibold text-gray-800 dark:text-white">

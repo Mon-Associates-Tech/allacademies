@@ -148,61 +148,100 @@ class QuestionImportService
                         'modified_by' => $userId,
                     ];
 
-                    
-switch (strtolower($questionType)) {
-    case 'multiple_choice':
-    case 'mcq':
-    case 'multiple choice':
-        $commonData['option_a'] = $previewItem['option_a'] ?? '';
-        $commonData['option_b'] = $previewItem['option_b'] ?? '';
-        $commonData['option_c'] = $previewItem['option_c'] ?? '';
-        $commonData['option_d'] = $previewItem['option_d'] ?? '';
-        $commonData['option_e'] = $previewItem['option_e'] ?? '';
-        $commonData['answer'] = $previewItem['answer'] ?? '';
-        
-        // Validate that multiple choice question has meaningful content
-        if (empty(trim($questionText)) ||
-            (empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b'])))) {
-            continue 2; // <-- FIX 1: Skip to next foreach iteration
-        }
-        // ... (rest of multiple choice logic)
-        break;
-        
-    case 'true_false':
-    case 'true/false':
-    case 'tf':
-        // ... (answer normalization logic)
-        
-        // Validate that true/false question has meaningful content
-        if (empty(trim($questionText))) {
-            continue 2; // <-- FIX 2: Skip to next foreach iteration
-        }
-        // ... (rest of true/false logic)
-        break;
-        
-    case 'essay':
-    case 'short_answer':
-    case 'short answer':
-    case 'written':
-        $commonData['answer'] = $previewItem['answer'] ?? '';
-        
-        // Validate that essay question has meaningful content
-        if (empty(trim($questionText))) {
-            continue 2; // <-- FIX 3: Skip to next foreach iteration
-        }
-        // ... (rest of essay logic)
-        break;
-        
-    default:
-        // For unknown question types, skip them
-        continue 2; // <-- FIX 4: Skip to next foreach iteration
-}
+                    switch (strtolower($questionType)) {
+                        case 'multiple_choice':
+                        case 'mcq':
+                        case 'multiple choice':
+                            $commonData['option_a'] = $previewItem['option_a'] ?? '';
+                            $commonData['option_b'] = $previewItem['option_b'] ?? '';
+                            $commonData['option_c'] = $previewItem['option_c'] ?? '';
+                            $commonData['option_d'] = $previewItem['option_d'] ?? '';
+                            $commonData['option_e'] = $previewItem['option_e'] ?? '';
+                            $commonData['answer']   = $previewItem['answer'] ?? '';
+
+                            if (empty(trim($questionText)) || empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b']))) {
+                                $importResults['errors'][] = [
+                                    'row'     => $previewItem['row_number'] ?? 'unknown',
+                                    'message' => 'Multiple choice question requires at least options A and B.',
+                                ];
+                                continue 2;
+                            }
+
+                            $question = MultipleChoiceQuestion::create($commonData);
+                            $importResults['multiple_choice'][] = $question->id;
+                            $this->importedCount['multiple_choice']++;
+                            break;
+
+                        case 'true_false':
+                        case 'true/false':
+                        case 'tf':
+                            $answer = $previewItem['answer'] ?? '';
+                            if (is_bool($answer)) {
+                                $commonData['answer'] = $answer;
+                            } else {
+                                $normalised = strtolower(trim((string) $answer));
+                                if (in_array($normalised, ['true', '1', 'yes'], true)) {
+                                    $commonData['answer'] = true;
+                                } elseif (in_array($normalised, ['false', '0', 'no'], true)) {
+                                    $commonData['answer'] = false;
+                                } else {
+                                    $importResults['errors'][] = [
+                                        'row'     => $previewItem['row_number'] ?? 'unknown',
+                                        'message' => 'True/False answer must be "true", "false", "1", "0", "yes", or "no". Got: "' . $answer . '"',
+                                    ];
+                                    continue 2;
+                                }
+                            }
+
+                            if (empty(trim($questionText))) {
+                                $importResults['errors'][] = [
+                                    'row'     => $previewItem['row_number'] ?? 'unknown',
+                                    'message' => 'Question text is required.',
+                                ];
+                                continue 2;
+                            }
+
+                            $question = TrueOrFalseQuestion::create($commonData);
+                            $importResults['true_false'][] = $question->id;
+                            $this->importedCount['true_false']++;
+                            break;
+
+                        case 'essay':
+                        case 'short_answer':
+                        case 'short answer':
+                        case 'written':
+                            $commonData['answer'] = $previewItem['answer'] ?? '';
+
+                            if (empty(trim($questionText))) {
+                                $importResults['errors'][] = [
+                                    'row'     => $previewItem['row_number'] ?? 'unknown',
+                                    'message' => 'Question text is required.',
+                                ];
+                                continue 2;
+                            }
+
+                            $question = EssayQuestion::create($commonData);
+                            $importResults['essay'][] = $question->id;
+                            $this->importedCount['essay']++;
+                            break;
+
+                        default:
+                            $importResults['errors'][] = [
+                                'row'     => $previewItem['row_number'] ?? 'unknown',
+                                'message' => "Unknown question type \"{$questionType}\". Supported types: multiple_choice, true_false, essay.",
+                            ];
+                            continue 2;
+                    }
                 } catch (\Exception $e) {
                     Log::error('Error creating question from preview data', [
                         'error' => $e->getMessage(),
                         'preview_item' => $previewItem,
                         'topic_id' => $effectiveTopicId,
                     ]);
+                    $importResults['errors'][] = [
+                        'row'     => $previewItem['row_number'] ?? 'unknown',
+                        'message' => 'Failed to save question: ' . $e->getMessage(),
+                    ];
                     continue; // Continue to next question
                 }
             }
@@ -542,7 +581,7 @@ switch (strtolower($questionType)) {
             }
 
             // Use AI to parse the content and extract questions
-            return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, true); // Save to DB
+            return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, true); // Save to DB
         } catch (\Exception $e) {
             Log::error('Error importing questions from Word', [
                 'error' => $e->getMessage(),
@@ -576,7 +615,7 @@ switch (strtolower($questionType)) {
             }
 
             // Use AI to parse the content and extract questions
-            return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, true); // Save to DB
+            return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, true); // Save to DB
         } catch (\Exception $e) {
             Log::error('Error importing questions from PDF', [
                 'error' => $e->getMessage(),
@@ -591,7 +630,7 @@ switch (strtolower($questionType)) {
      */
     private function previewQuestionsFromText(string $text, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
-        return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, false); // Don't save to DB
+        return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, false); // Don't save to DB
     }
 
     /**
