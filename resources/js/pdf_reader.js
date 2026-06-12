@@ -1524,6 +1524,7 @@ async saveProgress() {
 
     async loadAnnotations() {
         if (!this.config.bookId || !this.config.enableAnnotations) return;
+        if (this.config.bookType === 'user_book') return;
 
         try {
             const response = await fetch(`/books/${this.config.bookId}/annotations`, {
