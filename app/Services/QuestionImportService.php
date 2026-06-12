@@ -251,7 +251,7 @@ class QuestionImportService
 
                         default:
                             // For unknown question types, skip them
-                            continue; // Continue the foreach loop
+                            continue 2; // Continue the foreach loop
                     }
                 } catch (\Exception $e) {
                     Log::error('Error creating question from preview data', [
