@@ -1349,26 +1349,31 @@ container.innerHTML = `
         }, 5000);
     }
 
-    async saveProgress() {
-        if (!this.config.bookId || this.isDestroyed) return;
+async saveProgress() {
+    if (!this.config.bookId || this.isDestroyed) return;
 
-        try {
-            await fetch('/books/update-progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify({
-                    book_id: this.config.bookId,
-                    current_page: this.currentPage,
-                    total_pages: this.totalPages
-                })
-            });
-        } catch (error) {
-            console.warn('Failed to save reading progress:', error);
-        }
+    // user-books route binds to UserBook, not Book — the /books/update-progress
+    // endpoint expects a Book model instance, so bail out entirely here.
+    if (this.config.bookType === 'user_book') return;
+
+    try {
+        await fetch('/books/update-progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                       ?.getAttribute('content')
+            },
+            body: JSON.stringify({
+                book_id:      this.config.bookId,
+                current_page: this.currentPage,
+                total_pages:  this.totalPages
+            })
+        });
+    } catch (error) {
+        console.warn('Failed to save reading progress:', error);
     }
+}
 
 
     updateNavigationButtons() {

@@ -99,6 +99,7 @@ class UserBookPDFReader extends Component
                         'maxZoom' => $this->maxZoom,
                         'minZoom' => $this->minZoom,
                         'zoomStep' => $this->zoomStep,
+                        'bookType' => 'user_book',
                     ],
                 ];
 
