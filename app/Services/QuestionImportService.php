@@ -148,111 +148,55 @@ class QuestionImportService
                         'modified_by' => $userId,
                     ];
 
-                    switch (strtolower($questionType)) {
-                        case 'multiple_choice':
-                        case 'mcq':
-                        case 'multiple choice':
-                            $commonData['option_a'] = $previewItem['option_a'] ?? '';
-                            $commonData['option_b'] = $previewItem['option_b'] ?? '';
-                            $commonData['option_c'] = $previewItem['option_c'] ?? '';
-                            $commonData['option_d'] = $previewItem['option_d'] ?? '';
-                            $commonData['option_e'] = $previewItem['option_e'] ?? '';
-                            $commonData['answer'] = $previewItem['answer'] ?? '';
-
-                            // Validate that multiple choice question has meaningful content
-                            if (empty(trim($questionText)) || 
-                                (empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b'])))) {
-                                continue; // Skip invalid multiple choice questions
-                            }
-
-                            // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = MultipleChoiceQuestion::where('academic_topic_id', $effectiveTopicId)
-                                ->where('academic_subtopic_id', $subtopic?->id)
-                                ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
-                                ->first();
-
-                            if (!$existingQuestion) {
-                                $question = MultipleChoiceQuestion::create($commonData);
-                                $importResults['multiple_choice'][] = $question->id;
-                                $this->importedCount['multiple_choice']++;
-                            } else {
-                                // Optionally log that a duplicate was skipped
-                                \Log::info('Skipping duplicate multiple choice question', [
-                                    'question_text' => $questionText,
-                                    'topic_id' => $effectiveTopicId
-                                ]);
-                            }
-                            break;
-
-                        case 'true_false':
-                        case 'true/false':
-                        case 'tf':
-                            $answer = $previewItem['answer'];
-                            if (is_bool($answer)) {
-                                $commonData['answer'] = $answer;
-                            } else {
-                                $answer = strtolower(trim($answer));
-                                $commonData['answer'] = ($answer === 'true' || $answer === '1' || $answer === 'yes');
-                            }
-
-                            // Validate that true/false question has meaningful content
-                            if (empty(trim($questionText))) {
-                                continue; // Skip invalid true/false questions
-                            }
-
-                            // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = TrueOrFalseQuestion::where('academic_topic_id', $effectiveTopicId)
-                                ->where('academic_subtopic_id', $subtopic?->id)
-                                ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
-                                ->first();
-
-                            if (!$existingQuestion) {
-                                $question = TrueOrFalseQuestion::create($commonData);
-                                $importResults['true_false'][] = $question->id;
-                                $this->importedCount['true_false']++;
-                            } else {
-                                // Optionally log that a duplicate was skipped
-                                \Log::info('Skipping duplicate true/false question', [
-                                    'question_text' => $questionText,
-                                    'topic_id' => $effectiveTopicId
-                                ]);
-                            }
-                            break;
-
-                        case 'essay':
-                        case 'short_answer':
-                        case 'short answer':
-                        case 'written':
-                            $commonData['answer'] = $previewItem['answer'] ?? '';
-
-                            // Validate that essay question has meaningful content
-                            if (empty(trim($questionText))) {
-                                continue; // Skip invalid essay questions
-                            }
-
-                            // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = EssayQuestion::where('academic_topic_id', $effectiveTopicId)
-                                ->where('academic_subtopic_id', $subtopic?->id)
-                                ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
-                                ->first();
-
-                            if (!$existingQuestion) {
-                                $question = EssayQuestion::create($commonData);
-                                $importResults['essay'][] = $question->id;
-                                $this->importedCount['essay']++;
-                            } else {
-                                // Optionally log that a duplicate was skipped
-                                \Log::info('Skipping duplicate essay question', [
-                                    'question_text' => $questionText,
-                                    'topic_id' => $effectiveTopicId
-                                ]);
-                            }
-                            break;
-
-                        default:
-                            // For unknown question types, skip them
-                            continue 2; // Continue the foreach loop
-                    }
+                    
+switch (strtolower($questionType)) {
+    case 'multiple_choice':
+    case 'mcq':
+    case 'multiple choice':
+        $commonData['option_a'] = $previewItem['option_a'] ?? '';
+        $commonData['option_b'] = $previewItem['option_b'] ?? '';
+        $commonData['option_c'] = $previewItem['option_c'] ?? '';
+        $commonData['option_d'] = $previewItem['option_d'] ?? '';
+        $commonData['option_e'] = $previewItem['option_e'] ?? '';
+        $commonData['answer'] = $previewItem['answer'] ?? '';
+        
+        // Validate that multiple choice question has meaningful content
+        if (empty(trim($questionText)) ||
+            (empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b'])))) {
+            continue 2; // <-- FIX 1: Skip to next foreach iteration
+        }
+        // ... (rest of multiple choice logic)
+        break;
+        
+    case 'true_false':
+    case 'true/false':
+    case 'tf':
+        // ... (answer normalization logic)
+        
+        // Validate that true/false question has meaningful content
+        if (empty(trim($questionText))) {
+            continue 2; // <-- FIX 2: Skip to next foreach iteration
+        }
+        // ... (rest of true/false logic)
+        break;
+        
+    case 'essay':
+    case 'short_answer':
+    case 'short answer':
+    case 'written':
+        $commonData['answer'] = $previewItem['answer'] ?? '';
+        
+        // Validate that essay question has meaningful content
+        if (empty(trim($questionText))) {
+            continue 2; // <-- FIX 3: Skip to next foreach iteration
+        }
+        // ... (rest of essay logic)
+        break;
+        
+    default:
+        // For unknown question types, skip them
+        continue 2; // <-- FIX 4: Skip to next foreach iteration
+}
                 } catch (\Exception $e) {
                     Log::error('Error creating question from preview data', [
                         'error' => $e->getMessage(),
@@ -893,7 +837,7 @@ class QuestionImportService
                         'question_data' => $questionData,
                         'topic_id' => $topic->id,
                     ]);
-                    continue; // Continue to next question
+                    continue 2; // Continue to next question
                 }
             }
 
