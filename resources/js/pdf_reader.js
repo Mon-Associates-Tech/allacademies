@@ -20,6 +20,8 @@ export class PDFReader {
             ...config
         };
 
+         this.bookType = config?.bookType || 'book';
+
         this.pdfDocument = null;
         this.currentPage = this.config.initialPage;
         this.totalPages = 0;
@@ -1354,7 +1356,7 @@ async saveProgress() {
 
     // user-books route binds to UserBook, not Book — the /books/update-progress
     // endpoint expects a Book model instance, so bail out entirely here.
-    if (this.config.bookType === 'user_book') return;
+    if (this.bookType === 'user_book') return;
 
     try {
         await fetch('/books/update-progress', {
@@ -1630,7 +1632,7 @@ async saveProgress() {
     async saveAnnotation(pageNumber, x_pct, y_pct, width_pct, height_pct) {
         try {
 
-  if (!this.config.bookId || this.isDestroyed || this.config.bookType === 'user_book') {
+   if (this.bookType === 'user_book' || !this.config.bookId || this.isDestroyed) {
             return;
         }
 

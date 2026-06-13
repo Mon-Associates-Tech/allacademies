@@ -20,7 +20,7 @@ export class PDFReaderWrapper {
                 initialPage: payload.currentPage || 1,
                 bookId: payload.bookId,
                 book: payload.book,
-                ...payload, // Spread any additional config options
+                ...payload.config, // Spread any additional config options
                 onPageChange: this.handlePageChange.bind(this),
                 onProgressUpdate: this.handleProgressUpdate.bind(this),
                 onError: this.handleError.bind(this),
