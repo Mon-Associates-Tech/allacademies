@@ -85,6 +85,8 @@ export class PDFReader {
             throw new Error('Container element not found');
         }
 
+        const bookTitle = this.config.book?.title || 'Unknown Book';
+
 container.innerHTML = `
     <div class="pdf-reader bg-gray-900 text-white rounded-lg shadow-lg flex flex-col h-full">
         <!-- Toolbar -->
