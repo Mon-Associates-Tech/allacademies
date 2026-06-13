@@ -1630,7 +1630,9 @@ async saveProgress() {
     async saveAnnotation(pageNumber, x_pct, y_pct, width_pct, height_pct) {
         try {
 
-             if ((!this.config.bookId || this.isDestroyed) && this.config.bookType === 'user_book') return;
+  if (!this.config.bookId || this.isDestroyed || this.config.bookType === 'user_book') {
+            return;
+        }
 
             const response = await fetch(`/books/${this.config.bookId}/annotations`, {
                 method: 'POST',
