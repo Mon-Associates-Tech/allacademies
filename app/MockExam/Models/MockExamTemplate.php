@@ -27,6 +27,7 @@ class MockExamTemplate extends Model
         'topic_ids',
         'subtopic_ids',
         'sections_config',
+        'front_page_config',
     ];
 
     protected function casts(): array
@@ -37,6 +38,7 @@ class MockExamTemplate extends Model
             'subtopic_ids'             => 'array',
             'sections_config'          => 'array',
             'default_duration_minutes' => 'integer',
+            'front_page_config'       => 'array',
         ];
     }
 

@@ -27,7 +27,6 @@ class MockExamTemplateController extends Controller
     {
         return view('mock-exam.templates.create', [
             'template' => null,
-            'hierarchyTree'       => MockExamController::hierarchyTree(),
         ]);
     }
 
@@ -41,7 +40,6 @@ class MockExamTemplateController extends Controller
 
         return view('mock-exam.templates.create', [
             'template' => $template,
-            'hierarchyTree'       => MockExamController::hierarchyTree(),
         ]);
     }
 
