@@ -1,4 +1,3 @@
-
 import { PDFReader } from './pdf_reader.js';
 
 export class PDFReaderWrapper {
@@ -19,7 +18,7 @@ export class PDFReaderWrapper {
                 pdfUrl: payload.pdfUrl,
                 initialPage: payload.currentPage || 1,
                 bookId: payload.bookId,
-                book: payload.book || {},
+                book: payload.book || {title: 'Unknown Book'},
                 ...payload.config, // Spread any additional config options
                 onPageChange: this.handlePageChange.bind(this),
                 onProgressUpdate: this.handleProgressUpdate.bind(this),

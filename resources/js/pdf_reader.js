@@ -92,8 +92,8 @@ container.innerHTML = `
         <!-- Toolbar -->
         <div class="pdf-toolbar flex flex-wrap items-center justify-between bg-gray-800 p-2 rounded-t-lg gap-2">
             <div class="flex items-center space-x-1 sm:space-x-2">
-                <span class="block sm:hidden truncate max-w-[80px] text-xs" title="${this.config.book.title}">${this.config.book.title.substring(0, 10)}${this.config.book.title.length > 10 ? '...' : ''}</span>
-                <span class="hidden sm:block truncate max-w-[150px]" title="${this.config.book.title}">${this.config.book.title.substring(0, 20)}${this.config.book.title.length > 20 ? '...' : ''}</span>
+                <span class="block sm:hidden truncate max-w-[80px] text-xs" title="${bookTitle}">${bookTitle.substring(0, 10)}${bookTitle.length > 10 ? '...' : ''}</span>
+                <span class="hidden sm:block truncate max-w-[150px]" title="${bookTitle}">${bookTitle.substring(0, 20)}${bookTitle.length > 20 ? '...' : ''}</span>
 
                 ${this.config.showTableOfContents ? `
                 <button id="toggle-toc" class="px-2 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors" title="Table of Contents">
