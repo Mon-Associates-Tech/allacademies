@@ -156,26 +156,24 @@
                              ║  RICH TEXT BLOCK     ║
                              ╚══════════════════════╝ --}}
                         @elseif ($block['type'] === 'richtext')
-                            {{--
-                                wire:ignore prevents Livewire from wiping the editor's DOM on
-                                subsequent re-renders. The @script bridge below listens for
-                                editor changes and calls updateBlockContent() to keep the
-                                Livewire property in sync.
-                            --}}
-                            <div wire:ignore
-                                 data-richtext-block="{{ $index }}"
-                                 x-data="richTextBridge({{ $index }})">
-                                <x-form.rich-editor
-                                    :name="'front_page_block_' . $index . '_content'"
-                                    :value="$block['content'] ?? ''"
-                                />
+                            <div wire:ignore>
+                                <div data-richtext-block="{{ $index }}"
+                                     x-data="richTextBridge({{ $index }})">
+                                    <x-form.rich-editor
+                                        :name="'front_page_block_' . $index . '_content'"
+                                        :value="$block['content'] ?? ''"
+                                    />
+                                </div>
                             </div>
 
                         {{-- ╔══════════════════════╗
                              ║  IMAGE BLOCK         ║
                              ╚══════════════════════╝ --}}
                         @elseif ($block['type'] === 'image')
-                            <div x-data="{ sourceType: @js($block['source_type'] ?? 'url') }" class="space-y-4">
+                            @php
+                                $sourceType = $block['source_type'] ?? 'url';
+                            @endphp
+                            <div x-data="{ sourceType: '{{ $sourceType }}' }" class="space-y-4">
 
                                 {{-- Source toggle --}}
                                 <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 w-fit"
@@ -477,44 +475,34 @@
     </div>
 
 </div>
+</section>
 
+@assets
 <script>
-/**
- * imageUpload — owns the file-upload lifecycle for a single image block.
- *
- * Uses this.$wire (Alpine magic property) rather than a $wire variable
- * captured from the @script closure. Alpine's magic always returns the
- * live Livewire proxy so it never gets hit by JSON.stringify during
- * Alpine's scope-serialisation pass, which was the cause of the
- * "Public method [toJSON] not found" error.
- */
 Alpine.data('imageUpload', (index) => ({
-    uploading:   false,
+    uploading: false,
     uploadError: null,
 
     upload(file) {
         if (!file) return;
-        this.uploading   = true;
+        this.uploading = true;
         this.uploadError = null;
 
         this.$wire.upload(
             'pendingImage',
             file,
-            // success — file is now a TemporaryUploadedFile on the server
             () => {
                 this.$wire.call('uploadBlockImage', index)
                     .then(() => { this.uploading = false; })
                     .catch(() => {
                         this.uploadError = 'Could not save the image. Please try again.';
-                        this.uploading   = false;
+                        this.uploading = false;
                     });
             },
-            // error
             () => {
                 this.uploadError = 'Upload failed. Max file size is 3 MB.';
-                this.uploading   = false;
+                this.uploading = false;
             },
-            // progress (unused)
             () => {}
         );
     },
@@ -523,31 +511,28 @@ Alpine.data('imageUpload', (index) => ({
 Alpine.data('richTextBridge', (index) => ({
     init() {
         this.$nextTick(() => {
-            const el    = this.$el;
-            const $wire = this.$wire; // Alpine magic — always the live proxy
+            const el = this.$el;
+            if (!el) return;
+            
+            const $wire = this.$wire;
 
             const push = (html) => {
                 $wire.call('updateBlockContent', index, html);
             };
 
-            // ── Strategy 1: hidden textarea ──────────────────────────────
             const textarea = el.querySelector('textarea');
             if (textarea) {
-                // MutationObserver handles editors that set textarea.value
-                // programmatically without firing an input event.
                 const obs = new MutationObserver(() => push(textarea.value));
                 obs.observe(textarea, { attributes: true, childList: false, characterData: true });
                 textarea.addEventListener('input',  () => push(textarea.value));
                 textarea.addEventListener('change', () => push(textarea.value));
             }
 
-            // ── Strategy 2: custom events (TipTap / Quill / ProseMirror) ─
             el.addEventListener('input',         (e) => { if (e.target.closest('[contenteditable]')) push(e.target.innerHTML); });
             el.addEventListener('editor:update', (e) => push(e.detail?.html ?? e.detail?.content ?? ''));
             el.addEventListener('tiptap:change', (e) => push(e.detail?.html ?? ''));
             el.addEventListener('quill:change',  (e) => push(e.detail?.html ?? ''));
 
-            // ── Strategy 3: contenteditable blur ─────────────────────────
             const editable = el.querySelector('[contenteditable]');
             if (editable) {
                 editable.addEventListener('blur', () => push(editable.innerHTML));
@@ -556,4 +541,4 @@ Alpine.data('richTextBridge', (index) => ({
     },
 }));
 </script>
-</section>
+@endassets
