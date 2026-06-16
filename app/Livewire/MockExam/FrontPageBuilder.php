@@ -152,14 +152,17 @@ class FrontPageBuilder extends Component
         $this->redirect($redirect, navigate: false);
     }
 
+    /** 
+     * The hierarchy tree passed to the component externally 
+     * @var mixed 
+     */
+    public $hierarchyTree;
+
     // ── Render ────────────────────────────────────────────────────────────────
 
     public function render(): \Illuminate\View\View
     {
-        $hierarchyTree = \App\MockExam\Models\MockExam::hierarchyTree();
-        
-        return view('livewire.mock-exam.front-page-builder',
-        ['hierarchyTree' => $hierarchyTree]
-        );
+        // The hierarchyTree is passed from the parent view, so we don't need to load it here
+        return view('livewire.mock-exam.front-page-builder');
     }
 }
