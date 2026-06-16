@@ -25,35 +25,10 @@ class MockExamTemplateController extends Controller
      */
     public function create(): View
     {
-        \Log::info('MockExamTemplateController.create method called');
-        
-        try {
-            $hierarchyTree = MockExamController::hierarchyTree();
-            \Log::info('Hierarchy tree loaded successfully', ['count' => count($hierarchyTree)]);
-        } catch (\Exception $e) {
-            \Log::error('Error loading hierarchy tree for mock exam template creation', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $hierarchyTree = [];
-        }
-        
-        \Log::info('About to return view for mock exam template creation');
-        
-        try {
-            $result = view('mock-exam.templates.create', [
-                'template' => null,
-                'hierarchyTree' => $hierarchyTree,
-            ]);
-            \Log::info('View created successfully, about to return');
-            return $result;
-        } catch (\Exception $e) {
-            \Log::error('Error creating view for mock exam template creation', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+        return view('mock-exam.templates.create', [
+            'template' => null,
+            'hierarchyTree' => MockExamController::hierarchyTree(),
+        ]);
     }
 
     /**
@@ -120,18 +95,18 @@ class MockExamTemplateController extends Controller
         $payload = $this->validateTemplatePayload($request);
 
         MockExamTemplate::create([
-            'user_id'                  => auth()->id(),
-            'academic_group_id'        => $payload['academic_group_id'] ?? null,
-            'academic_level_id'        => $payload['academic_level_id'] ?? null,
-            'academic_subject_id'      => $payload['academic_subject_id'],
-            'name'                     => $payload['name'],
-            'description'              => $payload['description'] ?? null,
-            'is_active'                => (bool) ($payload['is_active'] ?? true),
+            'user_id' => auth()->id(),
+            'academic_group_id' => $payload['academic_group_id'] ?? null,
+            'academic_level_id' => $payload['academic_level_id'] ?? null,
+            'academic_subject_id' => $payload['academic_subject_id'],
+            'name' => $payload['name'],
+            'description' => $payload['description'] ?? null,
+            'is_active' => (bool) ($payload['is_active'] ?? true),
             'default_duration_minutes' => $payload['default_duration_minutes'] ?? null,
-            'topic_ids'                => $payload['topic_ids'] ?? [],
-            'subtopic_ids'             => $payload['subtopic_ids'] ?? [],
-            'sections_config'          => $payload['sections_config'],
-            'front_page_config'        => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
+            'topic_ids' => $payload['topic_ids'] ?? [],
+            'subtopic_ids' => $payload['subtopic_ids'] ?? [],
+            'sections_config' => $payload['sections_config'],
+            'front_page_config' => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
         ]);
 
         // Session data has been consumed — clear it.

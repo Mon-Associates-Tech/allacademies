@@ -1,23 +1,40 @@
+@props(['name', 'value' => null, 'label' => null, 'height' => 400, 'info' => null, 'required' => false])
+
 @once
     @push('head')
         <script src="{{ asset('js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script>
     @endpush
 @endonce
 
-@props(['name', 'value' => null, 'label' => null, 'height' => 400, 'info' => null, 'required' => false])
-
 @php
-    $mark = old($name, $value);
-    $editorId = 'rich-editor-' . str_replace(['[', ']', '.'], ['_', '_', '_'], $name) . '_' . uniqid();
+    // 1. Safely extract the raw value
+ // Fallback extraction in case @props fails to register
+$name = $name ?? $attributes->get('name', 'content');
+$value = $value ?? $attributes->get('value', null);
 
-    if (is_array($mark)) {
-        $mark = \App\Support\Mark::fromArray($mark);
+    // 2. Handle the Mark object if it exists
+    if (is_array($value)) {
+        $mark = \App\Support\Mark::fromArray($value);
+    } elseif ($value instanceof \App\Support\Mark) {
+        $mark = $value;
+    } else {
+        $mark = null;
     }
 
-    $down = $mark instanceof \App\Support\Mark ? ($mark->down ?? '') : (string) $mark;
-    $up = $mark instanceof \App\Support\Mark ? ($mark->up ?? '') : '';
+    // 3. FORCE string conversion to prevent @js() from choking on objects/components
+    if ($mark instanceof \App\Support\Mark) {
+        $down = (string) ($mark->down ?? '');
+        $up   = (string) ($mark->up ?? '');
+    } else {
+        $down = is_string($value) ? $value : (is_object($value) && method_exists($value, '__toString') ? (string) $value : '');
+        $up   = '';
+    }
+
+    // 4. Generate Editor ID
+    $editorId = 'rich-editor-' . str_replace(['[', ']', '.'], ['_', '_', '_'], $name) . '_' . uniqid();
 @endphp
 
+<section>
 <div class="space-y-1"
      x-data="{
         preview: false,
@@ -27,10 +44,25 @@
         editorId: '{{ $editorId }}',
         initialized: false,
 
+        init() {
+            this.initEditor();
+            this.updatePreview();
+            
+            // Watch for external changes to down property
+            this.$watch('down', (newVal) => {
+                if (this.editor && this.initialized) {
+                    const current = this.editor.getContent({ format: 'markdown' });
+                    if (current !== newVal) {
+                        this.editor.setContent(newVal || '');
+                    }
+                }
+                this.updatePreview();
+            });
+        },
+
         initEditor() {
             if (this.initialized || this.editor) return;
 
-            // Wait for DOM to be ready
             this.$nextTick(() => {
                 const editorElement = document.getElementById(this.editorId);
                 if (!editorElement) {
@@ -56,7 +88,6 @@
 
                         editor.on('init', () => {
                             this.initialized = true;
-                            // Set initial content
                             editor.setContent(this.down || '');
                         });
 
@@ -65,7 +96,6 @@
                             this.updatePreview();
                         });
 
-                        // Convert plain URLs to markdown image syntax when pasting
                         editor.on('paste', (e) => {
                             setTimeout(() => {
                                 let content = editor.getContent();
@@ -104,7 +134,6 @@
             }
         },
 
-        // Convert plain image URLs to markdown image syntax
         convertUrlsToMarkdown(content) {
             const imageUrlRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg))/gi;
             return content.replace(imageUrlRegex, (match) => {
@@ -119,7 +148,6 @@
             let markdownContent = this.down;
             let htmlContent = marked.parse(markdownContent);
 
-            // Handle image styling
             htmlContent = htmlContent.replace(
                 /<img([^>]+)>/gi,
                 function(match, attributes) {
@@ -134,7 +162,6 @@
 
             this.up = htmlContent;
 
-            // Render LaTeX after updating HTML content
             this.$nextTick(() => {
                 this.renderMath();
             });
@@ -163,7 +190,6 @@
             }
         },
 
-        // Livewire hook to sync with wire:model
         syncWithLivewire() {
             if (this.editor && this.initialized) {
                 const currentContent = this.editor.getContent({format: 'markdown'});
@@ -174,18 +200,7 @@
             }
         }
      }"
-     x-init="
-        initEditor();
-        updatePreview();
-        // Watch for external changes to down property
-        $watch('down', () => {
-            if (editor && initialized && editor.getContent({format: 'markdown'}) !== down) {
-                editor.setContent(down || '');
-            }
-            updatePreview();
-        });
-     "
-     x-effect="updatePreview()"
+     x-init="init()"
      wire:ignore
      :data-editor-id="editorId">
 
@@ -194,8 +209,9 @@
             <span class="text-red-500">*</span>
         @endif
     </label>
+    
     @if(!empty($info))
-        <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{$info}}</p>
+        <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{ $info }}</p>
     @endif
 
     <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
@@ -281,3 +297,4 @@
         color: #9ca3af;
     }
 </style>
+</section>

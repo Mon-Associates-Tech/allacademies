@@ -4,6 +4,7 @@ namespace App\MockExam\Services;
 
 use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSubjectExam;
+use App\MockExam\Models\MockExamTemplate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -18,6 +19,7 @@ class MockExamPdfService
         $mockExam->load([
             'subjectExams.academicSubject',
             'subjectExams.sections.questions',
+            'subjectExams.template', // Load template relationship
             'user',
         ]);
 
@@ -44,6 +46,7 @@ class MockExamPdfService
         $mockExam->load([
             'subjectExams.academicSubject',
             'subjectExams.sections.questions',
+            'subjectExams.template', // Load template relationship
             'user',
         ]);
 
@@ -90,6 +93,7 @@ class MockExamPdfService
             'academicLevel',
             'academicGroup',
             'sections.questions',
+            'template', // Load template relationship
         ]);
 
         $pdf = Pdf::loadView('mock-exam.pdf.subject-exam', [
@@ -118,6 +122,7 @@ class MockExamPdfService
             'academicLevel',
             'academicGroup',
             'sections.questions',
+            'template', // Load template relationship
         ]);
 
         $pdf = Pdf::loadView('mock-exam.pdf.subject-exam', [
@@ -146,4 +151,5 @@ class MockExamPdfService
         $subjectName = Str::slug($subjectExam->academicSubject?->name ?? 'subject');
         return "{$mockExamTitle}-{$subjectName}.pdf";
     }
+    
 }

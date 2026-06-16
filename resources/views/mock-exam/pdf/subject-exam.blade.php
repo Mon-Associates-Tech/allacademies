@@ -212,9 +212,157 @@
         .page-break {
             page-break-before: always;
         }
+        
+        /* ─── Front Page Styles ─── */
+        .front-page {
+            page-break-after: always;
+            text-align: center;
+            padding: 40mm 25mm 30mm 25mm;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        .fp-title {
+            font-size: {{ ($fontSize ?? 11) + 8 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #111;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .fp-subtitle {
+            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
+            font-style: italic;
+            color: #666;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
+        .fp-divider {
+            width: 100%;
+            height: 1px;
+            background: #ccc;
+            margin: 30px 0;
+            position: relative;
+        }
+        .fp-divider::before {
+            content: "";
+            position: absolute;
+            top: -0.5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #aaa;
+        }
+        .fp-content {
+            margin: 25px 0;
+            text-align: left;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            line-height: 1.7;
+        }
+        .fp-image {
+            max-width: 100%;
+            margin: 20px auto;
+            display: block;
+        }
+        .fp-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .fp-info-table th {
+            font-weight: bold;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+        .fp-info-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
+    {{-- Front Page if subject exam has template with front page config --}}
+    @if($subjectExam->template && !empty($subjectExam->template->front_page_config['blocks']))
+        <div class="front-page">
+            @foreach($subjectExam->template->front_page_config['blocks'] ?? [] as $block)
+                @switch($block['type'])
+                    @case('heading')
+                        <div class="fp-title" style="
+                            font-size: {{ ($fontSize ?? 11) + ($block['level'] == 'h1' ? 8 : ($block['level'] == 'h2' ? 5 : 2)) }}pt;
+                            @if($block['level'] == 'h1') text-transform: uppercase; letter-spacing: 0.05em; @endif
+                        ">
+                            {!! $block['content'] !!}
+                        </div>
+                        @break
+                    @case('richtext')
+                        <div class="fp-content">
+                            {!! $block['content'] !!}
+                        </div>
+                        @break
+                    @case('image')
+                        @if($block['source_type'] == 'url')
+                            <img src="{{ $block['src'] }}" class="fp-image" style="width: {{ $block['width'] ?? 100 }}px;" alt="{{ $block['alt'] ?? '' }}">
+                        @elseif($block['source_type'] == 'upload')
+                            <img src="{{ Storage::disk('public')->url($block['src']) }}" class="fp-image" style="width: {{ $block['width'] ?? 100 }}px;" alt="{{ $block['alt'] ?? '' }}">
+                        @endif
+                        @break
+                    @case('divider')
+                        <div class="fp-divider"></div>
+                        @break
+                    @case('info_table')
+                        <table class="fp-info-table">
+                            <thead>
+                                <tr>
+                                    @foreach($block['fields'] as $field)
+                                        <th>{{ $field }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    @foreach($block['fields'] as $field)
+                                        <td>
+                                            @switch($field)
+                                                @case('School Name')
+                                                    {{ $subjectExam->mockExam->team?->name ?? 'N/A' }}
+                                                    @break
+                                                @case('Exam Title')
+                                                    {{ $subjectExam->mockExam->title }}
+                                                    @break
+                                                @case('Date')
+                                                    {{ $subjectExam->mockExam->starts_at ? $subjectExam->mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}
+                                                    @break
+                                                @case('Time')
+                                                    {{ $subjectExam->mockExam->starts_at ? $subjectExam->mockExam->starts_at->format('h:i A') : 'N/A' }}
+                                                    @break
+                                                @case('Duration')
+                                                    {{ $subjectExam->duration_in_minutes ? 
+                                                        ($subjectExam->duration_in_minutes >= 60 ? 
+                                                            floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '') : 
+                                                            $subjectExam->duration_in_minutes . ' mins') 
+                                                        : 'N/A' }}
+                                                    @break
+                                                @case('Subject')
+                                                    {{ $subjectExam->academicSubject?->name ?? 'N/A' }}
+                                                    @break
+                                                @case('Total Marks')
+                                                    {{ number_format($subjectExam->getTotalMarks(), 0) }}
+                                                    @break
+                                                @default
+                                                    N/A
+                                            @endswitch
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            </tbody>
+                        </table>
+                        @break
+                @endswitch
+            @endforeach
+        </div>
+    @endif
+    
     <div class="exam-container">
         {{-- Header --}}
         <div class="header-section">

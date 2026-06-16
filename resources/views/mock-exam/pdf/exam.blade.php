@@ -52,7 +52,7 @@
             font-size: {{ ($fontSize ?? 11) + 2 }}pt;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             color: #111;
             margin-bottom: 2px;
         }
@@ -270,9 +270,176 @@
 
         /* ─── Page Break ─── */
         .pg-break { page-break-before: always; }
+        
+        /* ─── Front Page Styles ─── */
+        .front-page {
+            page-break-after: always;
+            text-align: center;
+            padding: 40mm 25mm 30mm 25mm;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        .fp-title {
+            font-size: {{ ($fontSize ?? 11) + 8 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #111;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .fp-subtitle {
+            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
+            font-style: italic;
+            color: #666;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
+        .fp-divider {
+            width: 100%;
+            height: 1px;
+            background: #ccc;
+            margin: 30px 0;
+            position: relative;
+        }
+        .fp-divider::before {
+            content: "";
+            position: absolute;
+            top: -0.5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #aaa;
+        }
+        .fp-content {
+            margin: 25px 0;
+            text-align: left;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            line-height: 1.7;
+        }
+        .fp-image {
+            max-width: 100%;
+            margin: 20px auto;
+            display: block;
+        }
+        .fp-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .fp-info-table th {
+            font-weight: bold;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+        .fp-info-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
+
+{{-- Front Page if any subject exam has template with front page config --}}
+@php
+    $hasFrontPage = false;
+    $frontPageConfig = null;
+    
+    foreach($mockExam->subjectExams as $se) {
+        if($se->template && !empty($se->template->front_page_config['blocks'])) {
+            $hasFrontPage = true;
+            $frontPageConfig = $se->template->front_page_config;
+            break;
+        }
+    }
+@endphp
+
+@if($hasFrontPage)
+    <div class="front-page">
+        @foreach($frontPageConfig['blocks'] ?? [] as $block)
+            @switch($block['type'])
+                @case('heading')
+                    <div class="fp-title" style="
+                        font-size: {{ ($fontSize ?? 11) + ($block['level'] == 'h1' ? 8 : ($block['level'] == 'h2' ? 5 : 2)) }}pt;
+                        @if($block['level'] == 'h1') text-transform: uppercase; letter-spacing: 0.05em; @endif
+                    ">
+                        {!! $block['content'] !!}
+                    </div>
+                    @break
+                @case('richtext')
+                    <div class="fp-content">
+                        {!! $block['content'] !!}
+                    </div>
+                    @break
+                @case('image')
+                    @if($block['source_type'] == 'url')
+                        <img src="{{ $block['src'] }}" class="fp-image" style="width: {{ $block['width'] ?? 100 }}px;" alt="{{ $block['alt'] ?? '' }}">
+                    @elseif($block['source_type'] == 'upload')
+                        <img src="{{ Storage::disk('public')->url($block['src']) }}" class="fp-image" style="width: {{ $block['width'] ?? 100 }}px;" alt="{{ $block['alt'] ?? '' }}">
+                    @endif
+                    @break
+                @case('divider')
+                    <div class="fp-divider"></div>
+                    @break
+                @case('info_table')
+                    <table class="fp-info-table">
+                        <thead>
+                            <tr>
+                                @foreach($block['fields'] as $field)
+                                    <th>{{ $field }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                @foreach($block['fields'] as $field)
+                                    <td>
+                                        @switch($field)
+                                            @case('School Name')
+                                                {{ $mockExam->team?->name ?? 'N/A' }}
+                                                @break
+                                            @case('Exam Title')
+                                                {{ $mockExam->title }}
+                                                @break
+                                            @case('Date')
+                                                {{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}
+                                                @break
+                                            @case('Time')
+                                                {{ $mockExam->starts_at ? $mockExam->starts_at->format('h:i A') : 'N/A' }}
+                                                @break
+                                            @case('Duration')
+                                                @php
+                                                    $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
+                                                    echo $totalDuration > 0 ? 
+                                                        ($totalDuration >= 60 ? 
+                                                            floor($totalDuration / 60) . 'hr' . ($totalDuration % 60 > 0 ? ' ' . ($totalDuration % 60) . 'min' : '') : 
+                                                            $totalDuration . ' mins') 
+                                                        : 'N/A';
+                                                @endphp
+                                                @break
+                                            @case('Subject Count')
+                                                {{ $mockExam->subjectExams->count() }}
+                                                @break
+                                            @case('Total Marks')
+                                                @php
+                                                    $totalMarks = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
+                                                    echo $totalMarks > 0 ? number_format($totalMarks, 0) : 'N/A';
+                                                @endphp
+                                                @break
+                                            @default
+                                                N/A
+                                        @endswitch
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </tbody>
+                    </table>
+                    @break
+            @endswitch
+        @endforeach
+    </div>
+@endif
 
 {{-- Fixed Footer --}}
 <div class="pg-footer">
