@@ -477,5 +477,6 @@ include_once 'examinations-hub.php';
 
 // Debug Routes (testing and monitoring - development only)
 include_once 'debug.php';
+include_once 'config.php';
 
 include_once 'mock-exams.php';
