@@ -4,8 +4,75 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c65148d3af1b316d636a9efb1ba0cfdf",
+    "content-hash": "75bccb93e2b8142c17738b3fb21692bb",
     "packages": [
+        {
+            "name": "akaunting/laravel-firewall",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/akaunting/laravel-firewall.git",
+                "reference": "23969362085316ef4e67bd871c89f6fed736fdf7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/akaunting/laravel-firewall/zipball/23969362085316ef4e67bd871c89f6fed736fdf7",
+                "reference": "23969362085316ef4e67bd871c89f6fed736fdf7",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.8",
+                "jenssegers/agent": "2.6.*",
+                "laravel/framework": "^10.0|^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.1.4|^10.0|^11.0",
+                "phpunit/phpunit": "^10.0|^11.0|^12.5.12"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Akaunting\\Firewall\\Provider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Akaunting\\Firewall\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Denis Duliçi",
+                    "email": "info@akaunting.com",
+                    "homepage": "https://akaunting.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Web Application Firewall (WAF) package for Laravel",
+            "keywords": [
+                "blacklist",
+                "firewall",
+                "laravel",
+                "lfi",
+                "rfi",
+                "security",
+                "sqli",
+                "waf",
+                "xss"
+            ],
+            "support": {
+                "issues": "https://github.com/akaunting/laravel-firewall/issues",
+                "source": "https://github.com/akaunting/laravel-firewall/tree/3.0.0"
+            },
+            "time": "2026-05-16T16:07:09+00:00"
+        },
         {
             "name": "aws/aws-crt-php",
             "version": "v1.2.7",

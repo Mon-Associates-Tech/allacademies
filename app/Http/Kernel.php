@@ -28,6 +28,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrackUserLoginActivity::class,
         // \App\Http\Middleware\ValidateLicense::class,
+        \Akaunting\Firewall\Middleware\Ip::class,
 
     ];
 
