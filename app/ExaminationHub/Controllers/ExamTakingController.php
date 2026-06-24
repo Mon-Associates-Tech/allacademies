@@ -100,7 +100,37 @@ class ExamTakingController extends Controller
             'exam_authenticated_at' => now()->toIso8601String(),
         ]);
 
-        return redirect()->route('examination-hub.take.start', $exam);
+        return redirect()->route('examination-hub.take.preview', $exam);
+    }
+
+    public function preview(GeneralExam $exam): View|RedirectResponse
+    {
+        $submission = $this->resolveSessionSubmission($exam);
+
+        if (! $submission) {
+            return redirect()->route('examination-hub.take.join')
+                ->withErrors(['error' => 'Invalid session. Please join again.']);
+        }
+
+        if ($submission->submitted_at) {
+            return redirect()->route('examination-hub.take.completed', $exam);
+        }
+
+        // Load exam with required relationships
+        $exam->load([
+            'sections' => fn ($q) => $q->orderBy('order')->withCount('questions'),
+            'academicSubject' => fn ($q) => $q->with('academicLevel'),
+        ]);
+
+        $participantData = session('exam_participant_data', []);
+
+        return view('examination-hub.take.preview', [
+            'exam'              => $exam,
+            'submission'        => $submission,
+            'candidateName'     => $participantData['name'] ?? $submission->participant_name,
+            'candidateEmail'    => $participantData['email'] ?? $submission->participant_email,
+            'proctoringEnabled' => (bool) $exam->proctoring_enabled,
+        ]);
     }
 
     public function start(GeneralExam $exam): View|RedirectResponse

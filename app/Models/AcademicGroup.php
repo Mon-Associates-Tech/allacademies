@@ -100,4 +100,32 @@ class AcademicGroup extends Model
             $q->where('school_id', $user->school_id)->where('is_active', true);
         });
     }
+
+    public static function hierarchyTree(): array
+    {
+        return self::query()
+            ->with(['academicLevels.academicSubjects.topics.subtopics'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn($group) => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'levels' => $group->academicLevels->map(fn($level) => [
+                    'id' => $level->id,
+                    'name' => $level->name,
+                    'subjects' => $level->academicSubjects->map(fn($subject) => [
+                        'id' => $subject->id,
+                        'name' => $subject->name,
+                        'topics' => $subject->topics->map(fn($topic) => [
+                            'id' => $topic->id,
+                            'name' => $topic->name,
+                            'subtopics' => $topic->subtopics->map(fn($subtopic) => [
+                                'id' => $subtopic->id,
+                                'name' => $subtopic->name,
+                            ])->values()->all(),
+                        ])->values()->all(),
+                    ])->values()->all(),
+                ])->values()->all(),
+            ])->values()->all();
+    }
 }

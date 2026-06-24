@@ -43,38 +43,11 @@ class ExamCreationController extends Controller
 
         return view('examination-hub.exams.create', [
             'formData' => $formData,
-            'hierarchyTree' => $this->hierarchyTree(),
+            'hierarchyTree' => AcademicGroup::hierarchyTree(),
             'editingExam' => null,
         ]);
     }
 
-    private function hierarchyTree(): array
-    {
-        return AcademicGroup::query()
-            ->with(['academicLevels.academicSubjects.topics.subtopics'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn($group) => [
-                'id' => $group->id,
-                'name' => $group->name,
-                'levels' => $group->academicLevels->map(fn($level) => [
-                    'id' => $level->id,
-                    'name' => $level->name,
-                    'subjects' => $level->academicSubjects->map(fn($subject) => [
-                        'id' => $subject->id,
-                        'name' => $subject->name,
-                        'topics' => $subject->topics->map(fn($topic) => [
-                            'id' => $topic->id,
-                            'name' => $topic->name,
-                            'subtopics' => $topic->subtopics->map(fn($subtopic) => [
-                                'id' => $subtopic->id,
-                                'name' => $subtopic->name,
-                            ])->values()->all(),
-                        ])->values()->all(),
-                    ])->values()->all(),
-                ])->values()->all(),
-            ])->values()->all();
-    }
 
     public function edit(GeneralExam $exam): View
     {
@@ -126,7 +99,7 @@ class ExamCreationController extends Controller
 
         return view('examination-hub.exams.create', [
             'formData' => $formData,
-            'hierarchyTree' => $this->hierarchyTree(),
+            'hierarchyTree' => AcademicGroup::hierarchyTree(),
             'editingExam' => $exam,
         ]);
     }

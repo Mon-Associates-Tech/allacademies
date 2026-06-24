@@ -281,10 +281,10 @@
 
                         <li class="mb-0.5" title="General Exams Dashboard">
                             <a :class="sidebarExpanded ? 'py-2' : 'py-2'"
-                               class="block pl-3 rounded-lg transition {{ Route::is('examinations-hub.dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                               class="block pl-3 rounded-lg transition {{ Route::is('examination-hub.dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                                href="{{ route('examination-hub.dashboard') }}">
                                 <div class="flex items-center">
-                                    <svg class="shrink-0 fill-current {{ Route::is('examinations-hub.dashboard') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                    <svg class="shrink-0 fill-current {{ Route::is('examination-hub.dashboard') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                                         <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
                                     </svg>
                                     <span class="text-sm ml-2 sidebar-text duration-200">Exams Dashboard</span>

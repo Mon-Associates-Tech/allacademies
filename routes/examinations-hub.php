@@ -103,6 +103,7 @@ Route::prefix('examinations')->name('examination-hub.take.')->group(function () 
     Route::post('/authenticate', [ExamTakingController::class, 'authenticate'])->name('authenticate');
 
     Route::middleware([EnsureExamSession::class, ValidateExamSession::class])->group(function () {
+        Route::get('/{exam}/preview', [ExamTakingController::class, 'preview'])->name('preview');
         Route::get('/{exam}/start', [ExamTakingController::class, 'start'])->name('start');
         Route::get('/{exam}/section/{sectionIndex}', [ExamTakingController::class, 'section'])->name('section');
         Route::get('/{exam}/review', [ExamTakingController::class, 'review'])->name('review');

@@ -36,6 +36,9 @@
                                 Randomized
                             </span>
                         @endif
+                        <span class="text-xs">
+                            {{ $exam->starts_at ? 'Starts: '.$exam->starts_at->format('M d, Y \a\t h:i A') : 'No start date set' }}
+                        </span>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
@@ -357,19 +360,19 @@
                                 <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Participant Mode:</label>
                                 <div class="flex gap-2">
                                     <label class="inline-flex items-center">
-                                        <input type="radio" name="participant_mode" value="general" 
+                                        <input type="radio" name="participant_mode" value="general"
                                                {{ $exam->participant_mode === 'general' ? 'checked' : '' }}
                                                class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
                                         <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">General</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input type="radio" name="participant_mode" value="configured" 
+                                        <input type="radio" name="participant_mode" value="configured"
                                                {{ $exam->participant_mode === 'configured' ? 'checked' : '' }}
                                                class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
                                         <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Configured</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input type="radio" name="participant_mode" value="both" 
+                                        <input type="radio" name="participant_mode" value="both"
                                                {{ $exam->participant_mode === 'both' ? 'checked' : '' }}
                                                class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
                                         <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Both</span>

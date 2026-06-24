@@ -108,7 +108,7 @@ class GeneralExam extends Model
     public static function generateUniqueAccessCode(): string
     {
         do {
-            $code = strtoupper(Str::random(6));
+            $code = strtoupper(Str::random(config('exam-branding.access_code_length', 6)));
         } while (self::where('access_code', $code)->exists());
 
         return $code;
