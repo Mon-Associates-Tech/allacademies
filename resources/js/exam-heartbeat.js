@@ -107,6 +107,19 @@ class ExamHeartbeat {
                 }),
             });
 
+            // Validate HTTP response
+            if (!response.ok) {
+                console.error('Heartbeat HTTP error:', response.status, response.statusText);
+                return;
+            }
+
+            // Validate content type before parsing JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('Heartbeat: Invalid response type:', contentType);
+                return;
+            }
+
             const data = await response.json();
 
             // Handle responses
@@ -119,7 +132,7 @@ class ExamHeartbeat {
                 this.onMessage(data.admin_message);
             }
         } catch (error) {
-            console.error('Heartbeat failed:', error);
+            console.error('Heartbeat failed:', error.message);
         }
     }
 

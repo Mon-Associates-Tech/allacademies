@@ -7,7 +7,7 @@ use App\Models\AcademicSubject;
 use App\Models\Book;
 use App\Models\BookReadingProgress;
 use App\Models\QuizSession;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use App\Services\BookBasedLearningService;
 use App\Services\PdfContentExtractionService;
 use App\Support\GradingSystemResolver;
@@ -99,7 +99,7 @@ class BookQuizInterface extends Component
     protected $pdfExtractor;
 
     public function boot(
-        AcademicChatService $chatService,
+        ResearchAssistantService $chatService,
         BookBasedLearningService $bookLearningService,
         PdfContentExtractionService $pdfExtractor
     ) {

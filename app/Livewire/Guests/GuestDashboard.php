@@ -126,7 +126,7 @@ class GuestDashboard extends Component
                 'title' => 'AI Research Assistant',
                 'description' => 'Get help with your studies using AI',
                 'icon' => 'chat',
-                'route' => 'academic-chat.index',
+                'route' => 'research-assistant.index',
                 'color' => 'purple',
             ],
             [

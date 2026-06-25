@@ -99,6 +99,7 @@ class UserBookPDFReader extends Component
                         'maxZoom' => $this->maxZoom,
                         'minZoom' => $this->minZoom,
                         'zoomStep' => $this->zoomStep,
+                        'bookType' => 'user_book',
                     ],
                 ];
 
@@ -139,27 +140,26 @@ class UserBookPDFReader extends Component
     }
 
     #[On('updatePageProgress')]
-    public function handlePageProgress($data): void
+    public function handlePageProgress(int $currentPage = 0, int $totalPages = 0): void
     {
-        $currentPage = $data['currentPage'] ?? $data[0] ?? null;
-        $totalPages = $data['totalPages'] ?? $data[1] ?? null;
-
-        if ($currentPage && $totalPages) {
-            $this->currentPage = (int) $currentPage;
-            $this->totalPages = (int) $totalPages;
+        // Livewire 3: payload keys are injected as individual named arguments.
+        // JS must dispatch as: $dispatch('updatePageProgress', { currentPage: N, totalPages: N })
+        if ($currentPage > 0 && $totalPages > 0) {
+            $this->currentPage = $currentPage;
+            $this->totalPages = $totalPages;
         }
     }
 
     #[On('updateReaderState')]
-    public function handleReaderStateUpdate($data): void
+    public function handleReaderStateUpdate($scale = null, bool $isFullscreen = false): void
     {
-        if (isset($data['scale'])) {
-            $this->scale = max($this->minZoom, min($this->maxZoom, (float) $data['scale']));
+        // Livewire 3: payload keys are injected as individual named arguments.
+        // JS must dispatch as: $dispatch('updateReaderState', { scale: N, isFullscreen: bool })
+        if ($scale !== null) {
+            $this->scale = max($this->minZoom, min($this->maxZoom, (float) $scale));
         }
 
-        if (isset($data['isFullscreen'])) {
-            $this->isFullscreen = (bool) $data['isFullscreen'];
-        }
+        $this->isFullscreen = $isFullscreen;
     }
 
     public function goToPage(int $pageNumber): void

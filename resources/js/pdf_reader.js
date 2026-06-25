@@ -20,6 +20,8 @@ export class PDFReader {
             ...config
         };
 
+         this.bookType = config?.bookType || 'book';
+
         this.pdfDocument = null;
         this.currentPage = this.config.initialPage;
         this.totalPages = 0;
@@ -83,13 +85,15 @@ export class PDFReader {
             throw new Error('Container element not found');
         }
 
+        const bookTitle = this.config.book?.title || 'Unknown Book';
+
 container.innerHTML = `
     <div class="pdf-reader bg-gray-900 text-white rounded-lg shadow-lg flex flex-col h-full">
         <!-- Toolbar -->
         <div class="pdf-toolbar flex flex-wrap items-center justify-between bg-gray-800 p-2 rounded-t-lg gap-2">
             <div class="flex items-center space-x-1 sm:space-x-2">
-                <span class="block sm:hidden truncate max-w-[80px] text-xs" title="${this.config.book.title}">${this.config.book.title.substring(0, 10)}${this.config.book.title.length > 10 ? '...' : ''}</span>
-                <span class="hidden sm:block truncate max-w-[150px]" title="${this.config.book.title}">${this.config.book.title.substring(0, 20)}${this.config.book.title.length > 20 ? '...' : ''}</span>
+                <span class="block sm:hidden truncate max-w-[80px] text-xs" title="${bookTitle}">${bookTitle.substring(0, 10)}${bookTitle.length > 10 ? '...' : ''}</span>
+                <span class="hidden sm:block truncate max-w-[150px]" title="${bookTitle}">${bookTitle.substring(0, 20)}${bookTitle.length > 20 ? '...' : ''}</span>
 
                 ${this.config.showTableOfContents ? `
                 <button id="toggle-toc" class="px-2 py-1 bg-purple-600 rounded-md hover:bg-purple-700 transition-colors" title="Table of Contents">
@@ -1349,26 +1353,31 @@ container.innerHTML = `
         }, 5000);
     }
 
-    async saveProgress() {
-        if (!this.config.bookId || this.isDestroyed) return;
+async saveProgress() {
+    if (!this.config.bookId || this.isDestroyed) return;
 
-        try {
-            await fetch('/books/update-progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify({
-                    book_id: this.config.bookId,
-                    current_page: this.currentPage,
-                    total_pages: this.totalPages
-                })
-            });
-        } catch (error) {
-            console.warn('Failed to save reading progress:', error);
-        }
+    // user-books route binds to UserBook, not Book — the /books/update-progress
+    // endpoint expects a Book model instance, so bail out entirely here.
+    if (this.bookType === 'user_book') return;
+
+    try {
+        await fetch('/books/update-progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                       ?.getAttribute('content')
+            },
+            body: JSON.stringify({
+                book_id:      this.config.bookId,
+                current_page: this.currentPage,
+                total_pages:  this.totalPages
+            })
+        });
+    } catch (error) {
+        console.warn('Failed to save reading progress:', error);
     }
+}
 
 
     updateNavigationButtons() {
@@ -1519,6 +1528,7 @@ container.innerHTML = `
 
     async loadAnnotations() {
         if (!this.config.bookId || !this.config.enableAnnotations) return;
+        if (this.config.bookType === 'user_book') return;
 
         try {
             const response = await fetch(`/books/${this.config.bookId}/annotations`, {
@@ -1623,6 +1633,11 @@ container.innerHTML = `
 
     async saveAnnotation(pageNumber, x_pct, y_pct, width_pct, height_pct) {
         try {
+
+   if (this.bookType === 'user_book' || !this.config.bookId || this.isDestroyed) {
+            return;
+        }
+
             const response = await fetch(`/books/${this.config.bookId}/annotations`, {
                 method: 'POST',
                 headers: {

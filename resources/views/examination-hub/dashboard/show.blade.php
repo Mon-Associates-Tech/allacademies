@@ -36,6 +36,9 @@
                                 Randomized
                             </span>
                         @endif
+                        <span class="text-xs">
+                            {{ $exam->starts_at ? 'Starts: '.$exam->starts_at->format('M d, Y \a\t h:i A') : 'No start date set' }}
+                        </span>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
@@ -357,19 +360,19 @@
                                 <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Participant Mode:</label>
                                 <div class="flex gap-2">
                                     <label class="inline-flex items-center">
-                                        <input type="radio" name="participant_mode" value="general" 
+                                        <input type="radio" name="participant_mode" value="general"
                                                {{ $exam->participant_mode === 'general' ? 'checked' : '' }}
                                                class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
                                         <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">General</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input type="radio" name="participant_mode" value="configured" 
+                                        <input type="radio" name="participant_mode" value="configured"
                                                {{ $exam->participant_mode === 'configured' ? 'checked' : '' }}
                                                class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
                                         <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Configured</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input type="radio" name="participant_mode" value="both" 
+                                        <input type="radio" name="participant_mode" value="both"
                                                {{ $exam->participant_mode === 'both' ? 'checked' : '' }}
                                                class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
                                         <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Both</span>
@@ -601,11 +604,19 @@
                     <div class="p-5">
                         <form action="{{ route('examination-hub.participants.configured.store', $exam) }}" method="POST" class="space-y-3">
                             @csrf
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Full Name</label>
-                                <input name="name" placeholder="e.g. John Mensah" required
-                                       class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                                       style="border-radius: 2px;">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">First Name</label>
+                                    <input name="first_name" placeholder="e.g. John" required
+                                           class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                           style="border-radius: 2px;">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Last Name</label>
+                                    <input name="last_name" placeholder="e.g. Mensah" required
+                                           class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                           style="border-radius: 2px;">
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Email Address</label>
@@ -639,7 +650,7 @@
                         <div class="flex items-center gap-2 px-3 py-2 mb-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
                              style="border-radius: 2px;">
                             <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">CSV format: <span class="text-slate-700 dark:text-slate-300">name, email, unique_code</span></p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">CSV format: <span class="text-slate-700 dark:text-slate-300">(first_name, last_name) or name, email, unique_code</span></p>
                         </div>
                         <form action="{{ route('examination-hub.participants.configured.import', $exam) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                             @csrf
@@ -690,7 +701,12 @@
                         <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
                             @foreach($configuredParticipants as $participant)
                                 <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
-                                    <td class="px-6 py-3.5 font-medium text-slate-800 dark:text-slate-200">{{ $participant->name }}</td>
+                                    <td class="px-6 py-3.5 inline-flex font-medium text-slate-800 dark:text-slate-200">
+                                        <span>
+                                               <x-avatar text-size="text-xs" class="w-7 h-7 mr-3" :name="$participant->name" :email="$participant->email" />
+                                        </span>
+                                            <span class="my-auto">{{ $participant->name }}</span>
+                                    </td>
                                     <td class="px-6 py-3.5 text-slate-600 dark:text-slate-400">{{ $participant->email }}</td>
                                     <td class="px-6 py-3.5">
                                         @if($participant->unique_code)
@@ -734,6 +750,15 @@
                                                     @endif
                                                 </button>
                                             </form>
+                                            
+                                            {{-- Edit --}}
+                                            <a href="{{ route('examination-hub.participants.configured.edit-form', [$exam, $participant]) }}"
+                                               class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                                               style="border-radius: 2px;"
+                                               title="Edit participant">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                Edit
+                                            </a>
 
                                             {{-- Delete --}}
                                             <form method="POST" action="{{ route('examination-hub.participants.configured.destroy', [$exam, $participant]) }}"

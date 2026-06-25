@@ -5,6 +5,7 @@ namespace App\ExaminationHub\Controllers;
 use App\ExaminationHub\Contracts\ExamParticipantAccessServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
+use App\ExaminationHub\Models\GeneralExamParticipant;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use App\Services\GeneralExam\GeneralExamService;
@@ -45,10 +46,13 @@ class ParticipantController extends Controller
         $this->ensureOwnerAccess($exam);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:128'],
+            'last_name' => ['required', 'string', 'max:128'],
             'email' => ['required', 'email', 'max:255'],
             'unique_code' => ['nullable', 'string', 'max:100'],
         ]);
+
+        $data['name'] = "{$data['first_name']} {$data['last_name']}";
 
         $this->accessService->registerConfiguredParticipant($exam, $data);
 
@@ -111,6 +115,18 @@ class ParticipantController extends Controller
         return view('examination-hub.join', ['exam' => $exam, 'code' => $exam->access_code]);
     }
 
+    public function edit(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): View
+    {
+        $this->ensureOwnerAccess($exam);
+
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+
+        return view('examination-hub.participant.edit', [
+            'exam' => $exam,
+            'participant' => $participant,
+        ]);
+    }
+
     public function attemptJoin(Request $request, string $code): RedirectResponse
     {
         $exam = GeneralExam::findByAccessCode($code);
@@ -139,12 +155,50 @@ class ParticipantController extends Controller
             return back()->withErrors(['join' => $access['message'] ?? 'You are not eligible to join this exam.'])->withInput();
         }
 
-        $participant = $this->accessService->createOrReuseParticipant($data['name'], $data['email']);
-        $submission = $this->generalExamService->getOrCreateSubmission($exam, \App\ExaminationHub\Models\GeneralExamParticipant::class, $participant->id, [
+        if (($access['mode'] ?? null) === 'configured' && isset($access['configured_participant'])) {
+            $participantType = GeneralExamConfiguredParticipant::class;
+            $participantId = $access['configured_participant']->id;
+        } else {
+            $participant = $this->accessService->createOrReuseParticipant($data['name'], $data['email']);
+            $participantType = GeneralExamParticipant::class;
+            $participantId = $participant->id;
+        }
+
+        $submission = $this->generalExamService->getOrCreateSubmission($exam, $participantType, $participantId, [
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
 
         return redirect()->route('general-exams.take', $submission);
+    }
+
+    public function editForm(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): View
+    {
+        $this->ensureOwnerAccess($exam);
+
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+
+        return view('examination-hub.participant.edit', [
+            'exam' => $exam,
+            'participant' => $participant,
+        ]);
+    }
+
+    public function update(Request $request, GeneralExam $exam, GeneralExamConfiguredParticipant $participant): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+    
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+    
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'unique_code' => ['nullable', 'string', 'max:100'],
+        ]);
+    
+        $participant->update($data);
+    
+        return back()->with('success', 'Participant details updated.')
+                     ->with('participant_name', $participant->name);
     }
 }

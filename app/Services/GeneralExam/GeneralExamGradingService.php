@@ -6,13 +6,13 @@ use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Models\User;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use Illuminate\Support\Facades\Log;
 
 class GeneralExamGradingService
 {
     public function __construct(
-        protected AcademicChatService $chatService
+        protected ResearchAssistantService $chatService
     ) {}
 
     /**

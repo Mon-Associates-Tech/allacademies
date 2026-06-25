@@ -74,7 +74,13 @@ trait BelongsToSchoolEnhanced
         }
 
         // Don't apply if model doesn't have school_id column
-        if (!Schema::hasColumn((new static)->getTable(), 'school_id')) {
+        try {
+            $instance = new static;
+            if (!in_array('school_id', $instance->getFillable()) && 
+                !property_exists($instance, 'school_id')) {
+                return false;
+            }
+        } catch (\Exception $e) {
             return false;
         }
 

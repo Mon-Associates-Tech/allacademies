@@ -32,7 +32,7 @@ document.addEventListener('alpine:init', () => {
                     if (this.remaining > 0) {
                         this.remaining--;
                         this.updateDisplay();
-                        
+
                         // Update styles based on remaining time
                         if (this.remaining <= 60) { // 1 minute
                             this.timerTextClass = 'text-red-600 dark:text-red-400 font-bold';
@@ -51,7 +51,7 @@ document.addEventListener('alpine:init', () => {
 
                             // Ask the Livewire component to perform the authoritative
                             // server-side auto-submit and dispatch examAutoSubmitted.
-                            const wireEl = document.querySelector('[wire\\:id]');
+                            const wireEl = document.querySelector('[wire:id]');
                             if (wireEl) {
                                 const wire = Livewire.find(wireEl.getAttribute('wire:id'));
                                 if (wire) {

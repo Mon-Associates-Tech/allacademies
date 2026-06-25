@@ -258,8 +258,8 @@
             >Group Chat</x-app.nav-item>
 
             <x-app.nav-item
-                href="{{ route('academic-chat.index') }}"
-                :active="Route::is('academic-chat*')"
+                href="{{ route('research-assistant.index') }}"
+                :active="Route::is('research-assistant*')"
                 icon="heroicon-o-sparkles"
             >Research Assistant</x-app.nav-item>
 

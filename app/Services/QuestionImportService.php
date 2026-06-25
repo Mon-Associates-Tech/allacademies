@@ -29,7 +29,7 @@ class QuestionImportService
     ];
     
     public function __construct(
-        private AcademicChatService $academicChatService
+        private ResearchAssistantService $academicChatService
     ) {}
 
     /**
@@ -157,66 +157,53 @@ class QuestionImportService
                             $commonData['option_c'] = $previewItem['option_c'] ?? '';
                             $commonData['option_d'] = $previewItem['option_d'] ?? '';
                             $commonData['option_e'] = $previewItem['option_e'] ?? '';
-                            $commonData['answer'] = $previewItem['answer'] ?? '';
+                            $commonData['answer']   = $previewItem['answer'] ?? '';
 
-                            // Validate that multiple choice question has meaningful content
-                            if (empty(trim($questionText)) || 
-                                (empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b'])))) {
-                                continue; // Skip invalid multiple choice questions
+                            if (empty(trim($questionText)) || empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b']))) {
+                                $importResults['errors'][] = [
+                                    'row'     => $previewItem['row_number'] ?? 'unknown',
+                                    'message' => 'Multiple choice question requires at least options A and B.',
+                                ];
+                                continue 2;
                             }
 
-                            // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = MultipleChoiceQuestion::where('academic_topic_id', $effectiveTopicId)
-                                ->where('academic_subtopic_id', $subtopic?->id)
-                                ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
-                                ->first();
-
-                            if (!$existingQuestion) {
-                                $question = MultipleChoiceQuestion::create($commonData);
-                                $importResults['multiple_choice'][] = $question->id;
-                                $this->importedCount['multiple_choice']++;
-                            } else {
-                                // Optionally log that a duplicate was skipped
-                                \Log::info('Skipping duplicate multiple choice question', [
-                                    'question_text' => $questionText,
-                                    'topic_id' => $effectiveTopicId
-                                ]);
-                            }
+                            $question = MultipleChoiceQuestion::create($commonData);
+                            $importResults['multiple_choice'][] = $question->id;
+                            $this->importedCount['multiple_choice']++;
                             break;
 
                         case 'true_false':
                         case 'true/false':
                         case 'tf':
-                            $answer = $previewItem['answer'];
+                            $answer = $previewItem['answer'] ?? '';
                             if (is_bool($answer)) {
                                 $commonData['answer'] = $answer;
                             } else {
-                                $answer = strtolower(trim($answer));
-                                $commonData['answer'] = ($answer === 'true' || $answer === '1' || $answer === 'yes');
+                                $normalised = strtolower(trim((string) $answer));
+                                if (in_array($normalised, ['true', '1', 'yes'], true)) {
+                                    $commonData['answer'] = true;
+                                } elseif (in_array($normalised, ['false', '0', 'no'], true)) {
+                                    $commonData['answer'] = false;
+                                } else {
+                                    $importResults['errors'][] = [
+                                        'row'     => $previewItem['row_number'] ?? 'unknown',
+                                        'message' => 'True/False answer must be "true", "false", "1", "0", "yes", or "no". Got: "' . $answer . '"',
+                                    ];
+                                    continue 2;
+                                }
                             }
 
-                            // Validate that true/false question has meaningful content
                             if (empty(trim($questionText))) {
-                                continue; // Skip invalid true/false questions
+                                $importResults['errors'][] = [
+                                    'row'     => $previewItem['row_number'] ?? 'unknown',
+                                    'message' => 'Question text is required.',
+                                ];
+                                continue 2;
                             }
 
-                            // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = TrueOrFalseQuestion::where('academic_topic_id', $effectiveTopicId)
-                                ->where('academic_subtopic_id', $subtopic?->id)
-                                ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
-                                ->first();
-
-                            if (!$existingQuestion) {
-                                $question = TrueOrFalseQuestion::create($commonData);
-                                $importResults['true_false'][] = $question->id;
-                                $this->importedCount['true_false']++;
-                            } else {
-                                // Optionally log that a duplicate was skipped
-                                \Log::info('Skipping duplicate true/false question', [
-                                    'question_text' => $questionText,
-                                    'topic_id' => $effectiveTopicId
-                                ]);
-                            }
+                            $question = TrueOrFalseQuestion::create($commonData);
+                            $importResults['true_false'][] = $question->id;
+                            $this->importedCount['true_false']++;
                             break;
 
                         case 'essay':
@@ -225,33 +212,25 @@ class QuestionImportService
                         case 'written':
                             $commonData['answer'] = $previewItem['answer'] ?? '';
 
-                            // Validate that essay question has meaningful content
                             if (empty(trim($questionText))) {
-                                continue; // Skip invalid essay questions
+                                $importResults['errors'][] = [
+                                    'row'     => $previewItem['row_number'] ?? 'unknown',
+                                    'message' => 'Question text is required.',
+                                ];
+                                continue 2;
                             }
 
-                            // Check if a similar question already exists to prevent duplicates
-                            $existingQuestion = EssayQuestion::where('academic_topic_id', $effectiveTopicId)
-                                ->where('academic_subtopic_id', $subtopic?->id)
-                                ->whereRaw('JSON_UNQUOTE(JSON_EXTRACT(question, "$.up")) = ?', [$questionText])
-                                ->first();
-
-                            if (!$existingQuestion) {
-                                $question = EssayQuestion::create($commonData);
-                                $importResults['essay'][] = $question->id;
-                                $this->importedCount['essay']++;
-                            } else {
-                                // Optionally log that a duplicate was skipped
-                                \Log::info('Skipping duplicate essay question', [
-                                    'question_text' => $questionText,
-                                    'topic_id' => $effectiveTopicId
-                                ]);
-                            }
+                            $question = EssayQuestion::create($commonData);
+                            $importResults['essay'][] = $question->id;
+                            $this->importedCount['essay']++;
                             break;
 
                         default:
-                            // For unknown question types, skip them
-                            continue; // Continue the foreach loop
+                            $importResults['errors'][] = [
+                                'row'     => $previewItem['row_number'] ?? 'unknown',
+                                'message' => "Unknown question type \"{$questionType}\". Supported types: multiple_choice, true_false, essay.",
+                            ];
+                            continue 2;
                     }
                 } catch (\Exception $e) {
                     Log::error('Error creating question from preview data', [
@@ -259,6 +238,10 @@ class QuestionImportService
                         'preview_item' => $previewItem,
                         'topic_id' => $effectiveTopicId,
                     ]);
+                    $importResults['errors'][] = [
+                        'row'     => $previewItem['row_number'] ?? 'unknown',
+                        'message' => 'Failed to save question: ' . $e->getMessage(),
+                    ];
                     continue; // Continue to next question
                 }
             }
@@ -598,7 +581,7 @@ class QuestionImportService
             }
 
             // Use AI to parse the content and extract questions
-            return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, true); // Save to DB
+            return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, true); // Save to DB
         } catch (\Exception $e) {
             Log::error('Error importing questions from Word', [
                 'error' => $e->getMessage(),
@@ -632,7 +615,7 @@ class QuestionImportService
             }
 
             // Use AI to parse the content and extract questions
-            return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, true); // Save to DB
+            return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, true); // Save to DB
         } catch (\Exception $e) {
             Log::error('Error importing questions from PDF', [
                 'error' => $e->getMessage(),
@@ -647,7 +630,7 @@ class QuestionImportService
      */
     private function previewQuestionsFromText(string $text, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
-        return $this->parseQuestionsFromText($text, $topic, $subtopic, $userId, false); // Don't save to DB
+        return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, false); // Don't save to DB
     }
 
     /**
@@ -893,7 +876,7 @@ class QuestionImportService
                         'question_data' => $questionData,
                         'topic_id' => $topic->id,
                     ]);
-                    continue; // Continue to next question
+                    continue ; // Continue to next question
                 }
             }
 

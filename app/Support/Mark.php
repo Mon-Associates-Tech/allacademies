@@ -27,20 +27,22 @@
             return new static($array['up'] ?? null, $array['down'] ?? null);
         }
 
-        public static function fromString(?string $string)
-        {
-            if (is_null($string) || $string === '') {
-                return new static(null, null);
-            }
-            
-            $decoded = json_decode($string, true);
-            
-            if (is_null($decoded)) {
-                return new static(null, null);
-            }
-            
-            return static::fromArray($decoded);
-        }
+public static function fromString(?string $string)
+{
+    if (is_null($string) || $string === '') {
+        return new static(null, null);
+    }
+    
+    $decoded = json_decode($string, true);
+    
+    // Reject non-array, non-null values
+    if (!is_array($decoded)) {
+        return new static(null, null);
+    }
+    
+    return static::fromArray($decoded);
+}
+
 
         public function toArray(): array
         {
@@ -82,8 +84,8 @@
                         throw new \InvalidArgumentException('Expected an instanceof of App\Support\Mark');
                     }
 
-                    return $value->toString();
-                }
-            };
-        }
+                return $value->toString();
+            }
+        };
     }
+}

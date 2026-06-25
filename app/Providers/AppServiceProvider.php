@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Channels\SmsChannel;
+use App\Contracts\SmsProvider;
 use App\Models\AcademicFeeStructure;
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
@@ -14,7 +15,7 @@ use App\Models\UserBook;
 use App\Observers\AcademicFeeStructureObserver;
 use App\Observers\SchoolPaymentObserver;
 use App\Observers\SchoolPaymentStructureObserver;
-use App\Services\ErrorNotificationService;
+// ...existing code...
 use App\Services\Sms\NullSmsProvider;
 use App\Services\QuestionImportService;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -34,9 +35,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton(ErrorNotificationService::class, function ($app) {
-            return new ErrorNotificationService;
-        });
+        // Previously registered an ErrorNotificationService for custom error emails.
+        // This was removed to restore Laravel's default exception handling behavior.
 
         // Register SMS Provider - defaults to NullSmsProvider
         // Replace with actual provider (Twilio, Nexmo, etc.) when configured
@@ -60,10 +60,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\ExaminationHub\Contracts\ExamCreationServiceInterface::class, \App\ExaminationHub\Services\ExamCreationService::class);
         $this->app->bind(\App\ExaminationHub\Contracts\ExamParticipantAccessServiceInterface::class, \App\ExaminationHub\Services\ExamParticipantAccessService::class);
         $this->app->bind(\App\ExaminationHub\Contracts\ExamSubmissionExportServiceInterface::class, \App\ExaminationHub\Services\ExamSubmissionExportService::class);
-        
+
         // Register QuestionImportService
         $this->app->singleton(QuestionImportService::class, function ($app) {
-            return new QuestionImportService($app->make(\App\Services\AcademicChatService::class));
+            return new QuestionImportService($app->make(\App\Services\ResearchAssistantService::class));
         });
     }
 
@@ -82,7 +82,7 @@ class AppServiceProvider extends ServiceProvider
         AcademicFeeStructure::observe(AcademicFeeStructureObserver::class);
         SchoolPayment::observe(SchoolPaymentObserver::class);
         SchoolPaymentStructure::observe(SchoolPaymentStructureObserver::class);
-        
+
         // Register question observers
         TrueOrFalseQuestion::observe(TrueOrFalseQuestionObserver::class);
         MultipleChoiceQuestion::observe(MultipleChoiceQuestionObserver::class);
@@ -152,6 +152,11 @@ class AppServiceProvider extends ServiceProvider
             'librarian' => \App\Models\Librarian::class,
             'accountant' => \App\Models\Accountant::class,
             'parent' => \App\Models\StudentParent::class,
+            'mock_exam' => \App\MockExam\Models\MockExam::class,
+            'mock_exam_subject_exam' => \App\MockExam\Models\MockExamSubjectExam::class,
+            'mock_exam_participant' => \App\MockExam\Models\MockExamParticipant::class,
+            'mock_exam_submission' => \App\MockExam\Models\MockExamSubmission::class,
+            'grade_scale' => \App\MockExam\Models\GradeScale::class,
         ]);
     }
 }

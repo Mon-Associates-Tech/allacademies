@@ -6,7 +6,7 @@ use App\Models\Lms\Course;
 use App\Models\Lms\CourseChapter;
 use App\Models\Lms\CourseContent;
 use App\Models\Lms\CourseSection;
-use App\Services\AcademicChatService;
+use App\Services\ResearchAssistantService;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -448,7 +448,7 @@ class CourseBuilder extends Component
         $this->quizGenerationError = '';
     }
 
-    public function generateQuizQuestions(AcademicChatService $chatService): void
+    public function generateQuizQuestions(ResearchAssistantService $chatService): void
     {
         $this->quizGenerationError = '';
 

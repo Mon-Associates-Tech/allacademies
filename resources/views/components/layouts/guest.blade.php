@@ -1,23 +1,157 @@
-@props(['pageName' => ''])
+@props([
+    {{-- ── Page identity ───────────────────────────────────────────────────────── --}}
+    'pageName'      => '',           // Appended to the site name: "AppName — PageName"
+    'title'         => null,         // Full custom <title> override (bypasses pageName)
+    'description'   => null,         // Meta description (falls back to config/seo.php)
+    'keywords'      => null,         // Meta keywords (optional; low SEO weight but harmless)
+    'canonical'     => null,         // Canonical URL (defaults to current URL)
 
-    <!DOCTYPE html>
+    {{-- ── Indexing ─────────────────────────────────────────────────────────────── --}}
+    'robots'        => 'index, follow',
+    'noindex'       => false,         // Convenience flag; sets robots to "noindex, nofollow"
+
+    {{-- ── Open Graph ─────────────────────────────────────────────────────────── --}}
+    'ogType'        => 'website',     // website | article | product | profile …
+    'ogTitle'       => null,          // Defaults to $resolvedTitle
+    'ogDescription' => null,          // Defaults to $description
+    'ogImage'       => null,          // Absolute URL or asset path; falls back to config
+
+    {{-- ── Twitter Card ───────────────────────────────────────────────────────── --}}
+    'twitterCard'   => 'summary_large_image',
+    'twitterTitle'  => null,          // Defaults to $resolvedTitle
+    'twitterDescription' => null,     // Defaults to $description
+
+    {{-- ── Structured data (JSON-LD) ─────────────────────────────────────────── --}}
+    // Pages can push custom schema markup into @stack('schema').
+    // The layout always emits a baseline WebSite schema.
+])
+
+@php
+    // ── Resolve title ──────────────────────────────────────────────────────────
+    $siteName      = config('app.name');
+    $resolvedTitle = $title
+        ?? ($siteName . ($pageName ? ' — ' . $pageName : ''));
+
+    // ── Resolve description ───────────────────────────────────────────────────
+    $resolvedDescription = $description
+        ?? config('seo.description', $siteName . ' — ' . config('seo.tagline', ''));
+
+    // ── Resolve canonical ─────────────────────────────────────────────────────
+    // Strip query strings from the canonical URL to avoid duplicate-content
+    // penalties when the same page is reached with tracking parameters.
+    $resolvedCanonical = $canonical
+        ?? url()->current();
+
+    // ── Resolve robots ────────────────────────────────────────────────────────
+    $effectiveRobots = $noindex ? 'noindex, nofollow' : $robots;
+
+    // ── Resolve OG image ──────────────────────────────────────────────────────
+    $ogImageRaw        = $ogImage ?? config('seo.og_image');
+    $resolvedOgImage   = $ogImageRaw
+        ? (Str::startsWith($ogImageRaw, ['http://', 'https://']) ? $ogImageRaw : asset($ogImageRaw))
+        : null;
+
+    // ── Resolve OG / Twitter overrides ───────────────────────────────────────
+    $resolvedOgTitle          = $ogTitle          ?? $resolvedTitle;
+    $resolvedOgDescription    = $ogDescription    ?? $resolvedDescription;
+    $resolvedTwitterTitle     = $twitterTitle     ?? $resolvedTitle;
+    $resolvedTwitterDescription = $twitterDescription ?? $resolvedDescription;
+
+    $twitterHandle = config('seo.twitter.handle', ''); // e.g. "@yourhandle"
+    $locale        = config('seo.locale', 'en_US');
+    $siteUrl       = config('app.url');
+@endphp
+
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" :class="{ 'dark': $store.darkMode.on }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name') }}{{ $pageName ? ' - ' . $pageName : '' }}</title>
+    {{-- ── Title ──────────────────────────────────────────────────────────────── --}}
+    <title>{{ $resolvedTitle }}</title>
 
-    <!-- Favicons -->
+    {{-- ── Core SEO ─────────────────────────────────────────────────────────── --}}
+    @if($resolvedDescription)
+    <meta name="description" content="{{ Str::limit($resolvedDescription, 160) }}">
+    @endif
+    @if($keywords ?? config('seo.keywords'))
+    <meta name="keywords" content="{{ $keywords ?? config('seo.keywords') }}">
+    @endif
+    <meta name="robots" content="{{ $effectiveRobots }}">
+    <link rel="canonical" href="{{ $resolvedCanonical }}">
+
+    {{-- ── Open Graph ─────────────────────────────────────────────────────────── --}}
+    <meta property="og:type"        content="{{ $ogType }}">
+    <meta property="og:site_name"   content="{{ $siteName }}">
+    <meta property="og:locale"      content="{{ $locale }}">
+    <meta property="og:url"         content="{{ $resolvedCanonical }}">
+    <meta property="og:title"       content="{{ Str::limit($resolvedOgTitle, 70) }}">
+    @if($resolvedOgDescription)
+    <meta property="og:description" content="{{ Str::limit($resolvedOgDescription, 200) }}">
+    @endif
+    @if($resolvedOgImage)
+    <meta property="og:image"       content="{{ $resolvedOgImage }}">
+    <meta property="og:image:width"  content="{{ config('seo.og_image_width',  1200) }}">
+    <meta property="og:image:height" content="{{ config('seo.og_image_height',  630) }}">
+    <meta property="og:image:alt"    content="{{ $resolvedOgTitle }}">
+    @endif
+
+    {{-- ── Twitter Card ───────────────────────────────────────────────────────── --}}
+    <meta name="twitter:card"        content="{{ $twitterCard }}">
+    @if($twitterHandle)
+    <meta name="twitter:site"        content="{{ $twitterHandle }}">
+    @endif
+    <meta name="twitter:title"       content="{{ Str::limit($resolvedTwitterTitle, 70) }}">
+    @if($resolvedTwitterDescription)
+    <meta name="twitter:description" content="{{ Str::limit($resolvedTwitterDescription, 200) }}">
+    @endif
+    @if($resolvedOgImage)
+    <meta name="twitter:image"       content="{{ $resolvedOgImage }}">
+    <meta name="twitter:image:alt"   content="{{ $resolvedTwitterTitle }}">
+    @endif
+
+    {{-- ── Theme color (mobile browser chrome) ───────────────────────────────── --}}
+    <meta name="theme-color" content="{{ config('seo.theme_color', '#3B82F6') }}"
+          media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="{{ config('seo.theme_color_dark', '#1e293b') }}"
+          media="(prefers-color-scheme: dark)">
+
+    {{-- ── Favicons & Web App Manifest ───────────────────────────────────────── --}}
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
 
-    <!-- Fonts -->
+    {{-- ── JSON-LD: Baseline WebSite schema ─────────────────────────────────── --}}
+    {{-- Pages that need a richer schema (Article, FAQPage, etc.) should push    --}}
+    {{-- their own <script type="application/ld+json"> into @stack('schema').    --}}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "{{ $siteName }}",
+        "url": "{{ $siteUrl }}",
+        "description": "{{ $resolvedDescription }}",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "{{ $siteUrl }}/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    @stack('schema')
+
+    {{-- ── DNS prefetch for third-party origins ─────────────────────────────── --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+
+    {{-- ── Fonts ──────────────────────────────────────────────────────────────── --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Scripts & Styles -->

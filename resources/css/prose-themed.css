@@ -1,0 +1,72 @@
+/*
+ * prose-themed
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Drop-in replacement for the long list of  prose-*:  and  dark:prose-*:
+ * modifier classes.  Usage:
+ *
+ *   <div class="prose max-w-none prose-themed">…</div>
+ *
+ * Add this file to your CSS bundle, e.g. at the top of resources/css/app.css:
+ *   @import './prose-themed.css';
+ *
+ * HOW IT WORKS
+ * ─────────────
+ * The @tailwindcss/typography plugin drives all prose colours through CSS
+ * custom properties (--tw-prose-body, --tw-prose-headings, …).  Setting
+ * those variables directly is far more reliable than stacking
+ * dark: + prose-*: modifiers inside @apply, which breaks silently in many
+ * Tailwind / Typography version combinations.
+ *
+ * Properties that have no CSS-variable equivalent in the plugin
+ * (code padding, rounded corners, shadow, link underline) are handled
+ * with @apply using simple, single-variant classes that work without issue.
+ */
+
+@layer components {
+
+  /* ── Light mode ─────────────────────────────────────────────────────────── */
+  .prose-themed {
+
+    /* Colour tokens — map directly to the plugin's CSS variables */
+    --tw-prose-body:           theme('colors.gray.900');
+    --tw-prose-headings:       theme('colors.gray.900');
+    --tw-prose-bold:           theme('colors.gray.900');
+    --tw-prose-links:          theme('colors.blue.600');
+    --tw-prose-code:           theme('colors.gray.900');
+    --tw-prose-pre-code:       theme('colors.gray.100');
+    --tw-prose-pre-bg:         theme('colors.gray.800');
+    --tw-prose-quotes:         theme('colors.gray.800');
+    --tw-prose-quote-borders:  theme('colors.gray.300');
+
+    /*
+     * Non-colour modifiers — no CSS variable exists for these in the plugin,
+     * so @apply is used.  These are simple, variant-free classes and are
+     * safe to use with @apply.
+     */
+    @apply
+      prose-code:bg-gray-100
+      prose-code:px-1.5
+      prose-code:py-0.5
+      prose-code:rounded
+      prose-pre:shadow-inner
+      prose-a:no-underline
+      hover:prose-a:underline;
+  }
+
+  /* ── Dark mode — same property names, different values ──────────────────── */
+  .dark .prose-themed {
+
+    --tw-prose-body:           theme('colors.gray.100');
+    --tw-prose-headings:       theme('colors.gray.100');
+    --tw-prose-bold:           theme('colors.gray.100');
+    --tw-prose-links:          theme('colors.blue.400');
+    --tw-prose-code:           theme('colors.gray.100');
+    --tw-prose-pre-code:       theme('colors.gray.100');
+    --tw-prose-pre-bg:         theme('colors.gray.900');
+    --tw-prose-quotes:         theme('colors.gray.200');
+    --tw-prose-quote-borders:  theme('colors.gray.600');
+
+    /* Inline code background has no CSS variable — apply directly */
+    @apply prose-code:bg-gray-800;
+  }
+}
