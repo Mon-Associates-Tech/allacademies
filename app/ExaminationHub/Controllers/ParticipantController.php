@@ -5,6 +5,7 @@ namespace App\ExaminationHub\Controllers;
 use App\ExaminationHub\Contracts\ExamParticipantAccessServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
+use App\ExaminationHub\Models\GeneralExamParticipant;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use App\Services\GeneralExam\GeneralExamService;
@@ -45,10 +46,13 @@ class ParticipantController extends Controller
         $this->ensureOwnerAccess($exam);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:128'],
+            'last_name' => ['required', 'string', 'max:128'],
             'email' => ['required', 'email', 'max:255'],
             'unique_code' => ['nullable', 'string', 'max:100'],
         ]);
+
+        $data['name'] = "{$data['first_name']} {$data['last_name']}";
 
         $this->accessService->registerConfiguredParticipant($exam, $data);
 
@@ -139,8 +143,16 @@ class ParticipantController extends Controller
             return back()->withErrors(['join' => $access['message'] ?? 'You are not eligible to join this exam.'])->withInput();
         }
 
-        $participant = $this->accessService->createOrReuseParticipant($data['name'], $data['email']);
-        $submission = $this->generalExamService->getOrCreateSubmission($exam, \App\ExaminationHub\Models\GeneralExamParticipant::class, $participant->id, [
+        if (($access['mode'] ?? null) === 'configured' && isset($access['configured_participant'])) {
+            $participantType = GeneralExamConfiguredParticipant::class;
+            $participantId = $access['configured_participant']->id;
+        } else {
+            $participant = $this->accessService->createOrReuseParticipant($data['name'], $data['email']);
+            $participantType = GeneralExamParticipant::class;
+            $participantId = $participant->id;
+        }
+
+        $submission = $this->generalExamService->getOrCreateSubmission($exam, $participantType, $participantId, [
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

@@ -4,6 +4,7 @@ namespace App\ExaminationHub\Controllers;
 
 use App\ExaminationHub\Models\ExamParticipantHeartbeat;
 use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\ExaminationHub\Services\ExamGradingService;
 use App\ExaminationHub\Services\ExamParticipantAccessService;
@@ -34,6 +35,15 @@ class ExamTakingController extends Controller
 
     public function authenticate(Request $request): RedirectResponse
     {
+        session()->forget([
+            'exam_submission_id',
+            'exam_participant_data',
+            'exam_heartbeat_token',
+            'exam_ip_address',
+            'exam_user_agent_hash',
+            'exam_authenticated_at',
+        ]);
+
         // Rate limiting: 5 attempts per 5 minutes per IP
         $key = 'exam_auth:' . $request->ip();
         
@@ -123,12 +133,13 @@ class ExamTakingController extends Controller
         ]);
 
         $participantData = session('exam_participant_data', []);
+        $configuredParticipant = $this->resolveConfiguredParticipant($submission);
 
         return view('examination-hub.take.preview', [
             'exam'              => $exam,
             'submission'        => $submission,
-            'candidateName'     => $participantData['name'] ?? $submission->participant_name,
-            'candidateEmail'    => $participantData['email'] ?? $submission->participant_email,
+            'candidateName'     => $configuredParticipant?->name ?? $submission->participant_name ?? $participantData['name'] ?? 'Anonymous',
+            'candidateEmail'    => $configuredParticipant?->email ?? $submission->participant_email ?? $participantData['email'] ?? null,
             'proctoringEnabled' => (bool) $exam->proctoring_enabled,
         ]);
     }
@@ -574,9 +585,13 @@ class ExamTakingController extends Controller
             $cp = $access['configured_participant'];
             $type = 'configured';
             $pid = $cp->id;
+            $participantName = $cp->name;
+            $participantEmail = $cp->email;
         } else {
             $type = 'general';
             $pid = ! empty($data['email']) ? abs(crc32($data['email'])) : null;
+            $participantName = $data['name'] ?? 'Anonymous';
+            $participantEmail = $data['email'] ?? null;
         }
 
         // First, check if there's an existing submission that hasn't been started yet
@@ -609,14 +624,26 @@ class ExamTakingController extends Controller
                 'submitted_at' => null,
             ],
             [
-                'participant_name' => $data['name'] ?? 'Anonymous',
-                'participant_email' => $data['email'] ?? null,
+                'participant_name' => $participantName,
+                'participant_email' => $participantEmail,
                 'started_at' => now(),
                 'responses' => [],
                 'score' => 0,
                 'status' => GeneralExamSubmission::STATUS_NOT_STARTED,
             ]
         );
+    }
+
+    private function resolveConfiguredParticipant(GeneralExamSubmission $submission): ?GeneralExamConfiguredParticipant
+    {
+        if (! in_array($submission->participant_type, ['configured', GeneralExamConfiguredParticipant::class], true)) {
+            return null;
+        }
+
+        return GeneralExamConfiguredParticipant::query()
+            ->whereKey($submission->participant_id)
+            ->where('general_exam_id', $submission->general_exam_id)
+            ->first();
     }
 
     private function resolveQuestionOrder(GeneralExam $exam, $section, GeneralExamSubmission $submission): \Illuminate\Support\Collection

@@ -43,18 +43,22 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
 
         $header = array_map(fn (string $col) => strtolower(trim($col)), $rawHeader);
 
+        $firstNameIndex = array_search('first_name', $header, true);
+        $lastNameIndex = array_search('last_name', $header, true);
         $nameIndex = array_search('name', $header, true);
         $emailIndex = array_search('email', $header, true);
         $codeIndex = array_search('unique_code', $header, true);
 
-        if ($nameIndex === false || $emailIndex === false) {
+        // Validate required columns
+        $hasNameSource = $firstNameIndex !== false && $lastNameIndex !== false || $nameIndex !== false;
+        if (! $hasNameSource || $emailIndex === false) {
             fclose($handle);
             $missing = implode(', ', array_filter([
-                $nameIndex === false ? 'name' : null,
+                ! $hasNameSource ? '(first_name + last_name) or name' : null,
                 $emailIndex === false ? 'email' : null,
             ]));
 
-            return ['success' => false, 'imported' => 0, 'errors' => ["Missing required column(s): {$missing}. Expected header: name, email, unique_code"]];
+            return ['success' => false, 'imported' => 0, 'errors' => ["Missing required column(s): {$missing}. Expected header: (first_name, last_name) or name, email, unique_code"]];
         }
 
         $imported = 0;
@@ -63,12 +67,24 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
 
         while (($row = fgetcsv($handle)) !== false) {
             $rowNumber++;
-            $name = trim((string) ($row[$nameIndex] ?? ''));
+
+            // Determine name from first_name + last_name or name field
+            $name = '';
+            if ($firstNameIndex !== false && $lastNameIndex !== false) {
+                $firstName = trim((string) ($row[$firstNameIndex] ?? ''));
+                $lastName = trim((string) ($row[$lastNameIndex] ?? ''));
+                $name = trim("{$firstName} {$lastName}");
+            }
+
+            if ($name === '' && $nameIndex !== false) {
+                $name = trim((string) ($row[$nameIndex] ?? ''));
+            }
+
             $email = strtolower(trim((string) ($row[$emailIndex] ?? '')));
             $uniqueCode = $codeIndex !== false ? trim((string) ($row[$codeIndex] ?? '')) : '';
 
             if ($name === '') {
-                $errors[] = "Row {$rowNumber}: name is required.";
+                $errors[] = "Row {$rowNumber}: name is required (provide either first_name + last_name or name column).";
 
                 continue;
             }
@@ -103,33 +119,50 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
 
         $configured = null;
         if ($exam->participant_mode === 'configured' || $exam->participant_mode === 'both') {
+            $hasEmailForMatch = $email !== '';
+            $hasCodeForMatch = $uniqueCode !== null && $uniqueCode !== '';
+
             $query = $exam->configuredParticipants()->where('is_active', true);
+            $canLookupConfigured = false;
 
             if (($exam->configured_match_mode ?? 'any') === 'both') {
-                $query->where('email', $email)->where('unique_code', $uniqueCode);
+                // Both mode: require both email AND unique_code
+                if ($hasEmailForMatch && $hasCodeForMatch) {
+                    $query->where('email', $email)->where('unique_code', $uniqueCode);
+                    $canLookupConfigured = true;
+                }
             } else {
-                $query->where(function ($q) use ($email, $uniqueCode) {
-                    if ($email !== '') {
-                        $q->where('email', $email);
+                // Any mode allows either identifier, but every provided identifier
+                // must still belong to the same configured participant.
+                if ($hasEmailForMatch || $hasCodeForMatch) {
+                    if ($hasEmailForMatch) {
+                        $query->where('email', $email);
                     }
-                    if ($uniqueCode !== null && $uniqueCode !== '') {
-                        $q->orWhere('unique_code', $uniqueCode);
+                    if ($hasCodeForMatch) {
+                        $query->where('unique_code', $uniqueCode);
                     }
-                });
+                    $canLookupConfigured = true;
+                }
             }
 
-            $configured = $query->first();
+            if ($canLookupConfigured) {
+                $configured = $query->first();
+            }
         }
 
-        if ($exam->participant_mode === 'configured' && ! $configured) {
-            return ['allowed' => false, 'mode' => 'configured', 'message' => 'You are not on the configured participant list for this examination.'];
+        if ($exam->participant_mode === 'configured') {
+            if (! $configured) {
+                return ['allowed' => false, 'mode' => 'configured', 'message' => 'You are not on the configured participant list for this examination.'];
+            }
+
+            return ['allowed' => true, 'mode' => 'configured', 'configured_participant' => $configured];
         }
 
         if ($exam->participant_mode === 'both') {
             return ['allowed' => true, 'mode' => $configured ? 'configured' : 'general', 'configured_participant' => $configured];
         }
 
-        return ['allowed' => true, 'mode' => 'configured', 'configured_participant' => $configured];
+        return ['allowed' => false, 'message' => 'Unknown participant mode.'];
     }
 
     public function createOrReuseParticipant(string $name, string $email): GeneralExamParticipant
