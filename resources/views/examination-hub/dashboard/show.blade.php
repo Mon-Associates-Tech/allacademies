@@ -750,6 +750,15 @@
                                                     @endif
                                                 </button>
                                             </form>
+                                            
+                                            {{-- Edit --}}
+                                            <a href="{{ route('examination-hub.participants.configured.edit-form', [$exam, $participant]) }}"
+                                               class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                                               style="border-radius: 2px;"
+                                               title="Edit participant">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                Edit
+                                            </a>
 
                                             {{-- Delete --}}
                                             <form method="POST" action="{{ route('examination-hub.participants.configured.destroy', [$exam, $participant]) }}"

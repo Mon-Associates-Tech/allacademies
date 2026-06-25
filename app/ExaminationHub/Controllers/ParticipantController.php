@@ -115,6 +115,18 @@ class ParticipantController extends Controller
         return view('examination-hub.join', ['exam' => $exam, 'code' => $exam->access_code]);
     }
 
+    public function edit(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): View
+    {
+        $this->ensureOwnerAccess($exam);
+
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+
+        return view('examination-hub.participant.edit', [
+            'exam' => $exam,
+            'participant' => $participant,
+        ]);
+    }
+
     public function attemptJoin(Request $request, string $code): RedirectResponse
     {
         $exam = GeneralExam::findByAccessCode($code);
@@ -158,5 +170,35 @@ class ParticipantController extends Controller
         ]);
 
         return redirect()->route('general-exams.take', $submission);
+    }
+
+    public function editForm(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): View
+    {
+        $this->ensureOwnerAccess($exam);
+
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+
+        return view('examination-hub.participant.edit', [
+            'exam' => $exam,
+            'participant' => $participant,
+        ]);
+    }
+
+    public function update(Request $request, GeneralExam $exam, GeneralExamConfiguredParticipant $participant): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+    
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+    
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'unique_code' => ['nullable', 'string', 'max:100'],
+        ]);
+    
+        $participant->update($data);
+    
+        return back()->with('success', 'Participant details updated.')
+                     ->with('participant_name', $participant->name);
     }
 }

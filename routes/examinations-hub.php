@@ -45,6 +45,15 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     // Add route for grading submissions
     Route::get('/exams/{exam}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
 
+    // Add route for editing participants
+    Route::get('/exams/{exam}/participants/{participant}/edit', [ParticipantController::class, 'edit'])->name('participants.configured.edit');
+
+    // Add route for updating participants
+    Route::patch('/exams/{exam}/participants/{participant}', [ParticipantController::class, 'update'])->name('participants.configured.update');
+
+    // Add route for showing edit form
+    Route::get('/exams/{exam}/participants/{participant}/edit-form', [ParticipantController::class, 'editForm'])->name('participants.configured.edit-form');
+
     Route::get('/performance', [ParticipantPerformanceReportController::class, 'index'])->name('performance.index');
     Route::get('/performance/{participantType}/{participantId}', [ParticipantPerformanceReportController::class, 'show'])->name('performance.show');
     Route::get('/performance/{participantType}/{participantId}/export', [ParticipantPerformanceReportController::class, 'export'])->name('performance.export');
