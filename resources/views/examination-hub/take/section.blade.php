@@ -203,79 +203,121 @@ if (document.readyState === 'loading') {
 }
 </script>
 
-<div x-data="{ showSectionInfo: true }" class="w-full h-full">
-    <!-- SECTION INFO OVERLAY -->
-    <template x-if="showSectionInfo">
-        <div id="fullscreen-instruction-panel" class="fixed inset-0 z-[100] bg-white dark:bg-slate-900 overflow-y-auto">
-            <div class="max-w-4xl mx-auto px-6 py-8">
-                <!-- Header with logo -->
-                <div class="flex items-start justify-between mb-8">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ $exam->title }}</h1>
-                            <p class="text-slate-600 dark:text-slate-400 text-sm">{{ $sectionTitle }}</p>
-                        </div>
+@php $isSingleSection = $exam->sections->count() === 1; @endphp
+
+<div class="w-full h-full">
+    {{-- ══════════════════════════════════════════════════════════
+         FULLSCREEN / RULES PANEL
+         Shown only for multi-section exams. For single-section
+         exams this is skipped — the rules are integrated into
+         the section info card inside the Livewire component.
+    ══════════════════════════════════════════════════════════ --}}
+    @if(!$isSingleSection)
+    <div id="fullscreen-instruction-panel"
+         class="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-950 flex items-center justify-center px-4 py-8 overflow-y-auto">
+
+        <div class="w-full max-w-lg overflow-hidden"
+             style="border-radius: 2px;
+                    background: var(--tw-bg-opacity, #ffffff);
+                    box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 20px 60px -10px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.08);"
+             class="bg-white dark:bg-slate-900">
+
+            {{-- Accent bar --}}
+            <div class="h-1 w-full" style="background: linear-gradient(90deg, #b45309, #d97706, #fbbf24);"></div>
+
+            {{-- Dark header --}}
+            <div class="px-8 py-6 bg-slate-800 dark:bg-slate-900 border-b border-slate-700 dark:border-slate-800">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium tracking-widest uppercase text-amber-400 mb-1"
+                           style="font-family: 'system-ui', sans-serif; letter-spacing: 0.15em;">Online Examination</p>
+                        <h1 class="text-xl font-bold text-white leading-snug"
+                            style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                            {{ $exam->title }}
+                        </h1>
+                        <p class="text-slate-400 text-sm mt-0.5"
+                           style="font-family: 'system-ui', sans-serif;">
+                            Section {{ $sectionIndex + 1 }} — {{ $sectionTitle }}
+                        </p>
                     </div>
-                    <button @click="Livewire.dispatch('close-exam')"
-                            class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <button onclick="Livewire.dispatch('close-exam')"
+                            class="mt-1 flex-shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 transition-colors"
+                            style="border-radius: 2px;"
+                            title="Exit examination">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
+            </div>
 
-                <!-- Section Info Content -->
-                <div class="space-y-6">
-                    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-5">
-                        <div class="flex items-start gap-3">
-                            <div class="flex-shrink-0">
-                                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-amber-800 dark:text-amber-200">Important Instructions</h3>
-                                <ul class="mt-2 space-y-2 text-amber-700 dark:text-amber-300 text-sm list-disc pl-5">
-                                    <li>This exam requires full screen mode for integrity</li>
-                                    <li>You must remain in full screen throughout the exam</li>
-                                    <li>Exiting full screen will be recorded as a violation</li>
-                                    <li>Ensure you have a stable internet connection</li>
-                                    <li>Complete all questions before the time expires</li>
-                                </ul>
-                            </div>
-                        </div>
+            {{-- Body --}}
+            <div class="px-8 py-7 space-y-5 bg-white dark:bg-slate-900"
+                 style="font-family: 'system-ui', sans-serif;">
+
+                {{-- Fullscreen notice --}}
+                <div style="border-left: 3px solid #d97706; padding-left: 1rem; padding-top: 0.75rem; padding-bottom: 0.75rem;">
+                    <h3 class="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-2"
+                        style="font-size: 10px; letter-spacing: 0.12em;">Before You Begin</h3>
+                    <ul class="space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
+                            </svg>
+                            <span>This examination must be taken in <strong class="text-slate-800 dark:text-slate-200">full screen</strong> mode.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Exiting full screen will be logged as a <strong class="text-slate-800 dark:text-slate-200">violation</strong>.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+                            </svg>
+                            <span>Ensure you have a <strong class="text-slate-800 dark:text-slate-200">stable internet connection</strong> before proceeding.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Complete all questions before the <strong class="text-slate-800 dark:text-slate-200">time expires</strong>.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- Stats --}}
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                        <p class="text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Questions</p>
+                        <p class="text-xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.03em;">{{ $questions->count() }}</p>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                            <div class="text-slate-500 dark:text-slate-400 text-sm">Questions</div>
-                            <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ $questions->count() }}</div>
-                        </div>
-                        <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                            <div class="text-slate-500 dark:text-slate-400 text-sm">Time Limit</div>
-                            <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                                @if($sectionTimeLimit)
-                                    {{ gmdate('H:i:s', $sectionTimeLimit) }}
-                                @else
-                                    No Limit
-                                @endif
-                            </div>
-                        </div>
-                        <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                            <div class="text-slate-500 dark:text-slate-400 text-sm">Total Marks</div>
-                            <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ $totalMarks }}</div>
-                        </div>
+                    <div class="px-4 py-3 {{ $sectionTimeLimit ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-slate-50 dark:bg-slate-800/60' }} border border-slate-200 dark:border-slate-700" style="border-radius: 2px; {{ $sectionTimeLimit ? 'border-color: rgba(180,83,9,0.2);' : '' }}">
+                        <p class="{{ $sectionTimeLimit ? 'text-amber-700 dark:text-amber-500' : 'text-slate-500 dark:text-slate-400' }} uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Time Limit</p>
+                        <p class="text-xl font-bold {{ $sectionTimeLimit ? 'text-amber-800 dark:text-amber-400' : 'text-slate-900 dark:text-white' }}" style="letter-spacing: -0.03em;">
+                            @if($sectionTimeLimit)
+                                {{ gmdate('H:i', $sectionTimeLimit) }}
+                            @else
+                                —
+                            @endif
+                        </p>
                     </div>
+                    <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                        <p class="text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Marks</p>
+                        <p class="text-xl font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.03em;">{{ $totalMarks }}</p>
+                    </div>
+                </div>
 
-                    <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                        <button
-                            @click="fullscreenGate.request(); setTimeout(() => {
-                                $wire.call('startSection');
+                {{-- Actions --}}
+                <div class="pt-1 flex items-center gap-3">
+                    <button
+                        id="enter-fullscreen-btn"
+                        onclick="
+                            fullscreenGate.request();
+                            setTimeout(() => {
+                                const wire = document.querySelector('[wire\\:id]')?.__livewire;
+                                if (wire) wire.call('startSection');
                                 setTimeout(() => {
                                     if (fullscreenGate.isActive) {
                                         fullscreenGate.hideInstructionPanel();
@@ -284,28 +326,36 @@ if (document.readyState === 'loading') {
                                     }
                                 }, 100);
                             }, 200);"
-                            class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg">
-                            <div class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" />
-                                </svg>
-                                Enter Fullscreen & Start Exam
-                            </div>
-                        </button>
+                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-white transition-all duration-200"
+                        style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706); box-shadow: 0 2px 12px rgba(180,83,9,0.35);">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
+                        </svg>
+                        Enter Fullscreen &amp; Begin
+                    </button>
 
-                        <button
-                            @click="Livewire.dispatch('close-exam')"
-                            class="px-6 py-4 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            Cancel
-                        </button>
-                    </div>
+                    <button
+                        onclick="Livewire.dispatch('close-exam')"
+                        class="px-5 py-3.5 text-sm font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        style="border-radius: 2px;">
+                        Cancel
+                    </button>
                 </div>
-            </div>
-        </div>
-    </template>
 
-    <!-- EXAM CONTENT AREA - Initially hidden until section starts -->
-    <div id="exam-content-area" class="h-full" style="display: none;" role="main" aria-label="Exam content">
+            </div>{{-- /body --}}
+        </div>{{-- /card --}}
+    </div>{{-- /fullscreen-instruction-panel --}}
+    @endif
+
+    {{-- ══════════════════════════════════════════════════════════
+         EXAM CONTENT AREA
+         For multi-section exams: hidden until fullscreen is entered.
+         For single-section exams: visible immediately (section info
+         card inside the Livewire component shows combined rules).
+    ══════════════════════════════════════════════════════════ --}}
+    <div id="exam-content-area" class="h-full"
+         style="display: {{ $isSingleSection ? 'block' : 'none' }};"
+         role="main" aria-label="Exam content">
         <nav aria-label="Skip links" class="sr-only">
             <a href="#question-navigation">Skip to question navigation</a>
             <a href="#question-content">Skip to current question</a>
@@ -313,6 +363,7 @@ if (document.readyState === 'loading') {
 
         <div class="h-full flex flex-col">
             @livewire('examination-hub.exam-section-taking', [
+                'isSingleSection' => $isSingleSection,
                 'exam' => $exam,
                 'submission' => $submission,
                 'section' => $section,
@@ -322,8 +373,8 @@ if (document.readyState === 'loading') {
                  'timeRemaining' => $timeRemaining,
             ])
         </div>
-    </div>
-</div>
+    </div>{{-- /exam-content-area --}}
+</div>{{-- /wrapper --}}
 
 <script>
     const proctoringEnabled = @json($proctoringEnabled ?? false);
