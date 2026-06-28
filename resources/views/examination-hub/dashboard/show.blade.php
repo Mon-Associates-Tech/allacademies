@@ -625,7 +625,7 @@
                                        style="border-radius: 2px;">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Unique Code <span class="normal-case text-slate-400">(optional)</span></label>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Index Number / Unique Code <span class="normal-case text-slate-400"></span></label>
                                 <input name="unique_code" placeholder="e.g. STU-2024-001"
                                        class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                                        style="border-radius: 2px;">
@@ -750,7 +750,7 @@
                                                     @endif
                                                 </button>
                                             </form>
-                                            
+
                                             {{-- Edit --}}
                                             <a href="{{ route('examination-hub.participants.configured.edit-form', [$exam, $participant]) }}"
                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"

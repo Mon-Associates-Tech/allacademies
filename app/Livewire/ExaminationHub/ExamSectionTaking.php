@@ -33,6 +33,8 @@ class ExamSectionTaking extends Component
 
     public string|int|null $start_time = '';
 
+    public bool $isSingleSection = false;
+
     public function mount(GeneralExam $exam, GeneralExamSubmission $submission, $section, int $sectionIndex, $questions): void
     {
         $this->examId = $exam->id;

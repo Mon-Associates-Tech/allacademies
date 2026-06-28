@@ -79,7 +79,6 @@ class HeartbeatController extends Controller
         $heartbeat = $this->monitoringService->processHeartbeat($heartbeat->session_token, $data);
 
         // Compute questions_answered from submission ground truth
-        $submission->refresh();
         $answeredCount = count(array_filter(
             $submission->responses ?? [],
             fn ($r) => ! empty($r['response'] ?? $r)
@@ -91,10 +90,23 @@ class HeartbeatController extends Controller
 
         // Build response
         $response = [
-            'status' => 'ok',
+            'status'       => 'ok',
             'session_token' => $heartbeat->session_token,
-            'server_time' => now()->toIso8601String(),
+            'server_time'  => now()->toIso8601String(),
         ];
+
+        // ── Authoritative time information ────────────────────────────────────
+        // The client timer re-syncs from these values on every heartbeat so that
+        // admin-granted extensions are reflected without needing a page reload.
+        // getRemainingTime() already incorporates extra_time_minutes.
+        $submission->refresh(); // ensure extra_time_minutes is current
+        $remainingSeconds = $submission->getRemainingTime();
+
+        if ($remainingSeconds !== null) {
+            $response['remaining_seconds']     = $remainingSeconds;
+            $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+            $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+        }
 
         // Include warning if present
         if ($heartbeat->has_warning) {

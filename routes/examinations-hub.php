@@ -23,8 +23,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/create', [ExamCreationController::class, 'create'])->name('create');
     Route::post('/create/preview', [ExamCreationController::class, 'preview'])->name('create.preview');
     Route::post('/create/store', [ExamCreationController::class, 'store'])->name('create.store');
-    Route::post('/quick-save', [ExamCreationController::class, 'quickSave'])
-        ->name('create.quick-save');
+    Route::post('/quick-save', [ExamCreationController::class, 'quickSave'])->name('create.quick-save');
     Route::get('/subscriptions', [DashboardController::class, 'subscriptions'])->name('subscriptions');
     Route::get('/admin', [DashboardController::class, 'admin'])->name('admin');
     Route::get('/exams/{exam}', [DashboardController::class, 'show'])->name('exams.show');
@@ -41,17 +40,10 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/export', [SubmissionController::class, 'export'])->name('submissions.export');
     Route::get('/exams/{exam}/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
-
-    // Add route for grading submissions
     Route::get('/exams/{exam}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
 
-    // Add route for editing participants
     Route::get('/exams/{exam}/participants/{participant}/edit', [ParticipantController::class, 'edit'])->name('participants.configured.edit');
-
-    // Add route for updating participants
     Route::patch('/exams/{exam}/participants/{participant}', [ParticipantController::class, 'update'])->name('participants.configured.update');
-
-    // Add route for showing edit form
     Route::get('/exams/{exam}/participants/{participant}/edit-form', [ParticipantController::class, 'editForm'])->name('participants.configured.edit-form');
 
     Route::get('/performance', [ParticipantPerformanceReportController::class, 'index'])->name('performance.index');
@@ -78,20 +70,31 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
         Route::get('/', [LiveMonitoringController::class, 'index'])->name('index');
         Route::get('/participant/{submission}', [LiveMonitoringController::class, 'show'])->name('show');
 
-        // API endpoints
+        // Polling API
         Route::get('/api/participants', [LiveMonitoringController::class, 'apiParticipants'])->name('api.participants');
         Route::get('/api/participant/{submission}', [LiveMonitoringController::class, 'apiParticipant'])->name('api.participant');
 
-        // Admin actions
+        // Messaging & warnings
         Route::post('/warn/{submission}', [LiveMonitoringController::class, 'warn'])->name('warn');
         Route::post('/message/{submission}', [LiveMonitoringController::class, 'message'])->name('message');
         Route::post('/message-all', [LiveMonitoringController::class, 'messageAll'])->name('message-all');
+
+        // Session control
         Route::post('/terminate/{submission}', [LiveMonitoringController::class, 'terminate'])->name('terminate');
         Route::post('/force-submit/{submission}', [LiveMonitoringController::class, 'forceSubmit'])->name('force-submit');
-        Route::post('/extend-time/{submission}', [LiveMonitoringController::class, 'extendTime'])->name('extend-time');
         Route::post('/clear-warning/{submission}', [LiveMonitoringController::class, 'clearWarning'])->name('clear-warning');
 
-        // Audit: View message history
+        // ── Time Extension ────────────────────────────────────────────────────
+        Route::post('/extend-time/{submission}', [LiveMonitoringController::class, 'extendTime'])->name('extend-time');
+        Route::post('/extend-time-group', [LiveMonitoringController::class, 'extendTimeGroup'])->name('extend-time-group');
+        Route::post('/extend-time-all', [LiveMonitoringController::class, 'extendTimeAll'])->name('extend-time-all');
+
+        // ── Re-admission ──────────────────────────────────────────────────────
+        Route::get('/readmissions', [LiveMonitoringController::class, 'listReadmissions'])->name('readmissions.index');
+        Route::post('/readmit/{submission}', [LiveMonitoringController::class, 'grantReadmission'])->name('readmit');
+        Route::delete('/readmit/grant/{grant}', [LiveMonitoringController::class, 'revokeReadmission'])->name('readmit.revoke');
+
+        // Audit
         Route::get('/messages/{submission}', [LiveMonitoringController::class, 'getMessageHistory'])->name('messages.history');
     });
 
@@ -102,8 +105,6 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
         Route::delete('/grading-system/{gradeScale}', [GradingSystemController::class, 'destroy'])->name('grading-system.destroy');
         Route::post('/grading-system/initialize', [GradingSystemController::class, 'initializeDefault'])->name('grading-system.initialize');
     });
-
-    // Remove the duplicate proctoring event route - keeping the one with throttling in the exam taking section
 });
 
 // ── Exam Taking Routes ────────────────────────────────────────────────────────
@@ -121,12 +122,10 @@ Route::prefix('examinations')->name('examination-hub.take.')->group(function () 
             ->name('save-response');
         Route::post('/{exam}/submit', [ExamTakingController::class, 'submit'])->name('submit');
 
-        // Proctoring event ingestion
         Route::post('/{exam}/proctor/event', [ProctoringController::class, 'storeEvent'])
             ->middleware('throttle:30,1')
             ->name('proctor.event');
 
-        // Heartbeat endpoints
         Route::post('/{exam}/heartbeat', [HeartbeatController::class, 'beat'])
             ->middleware('throttle:10,1')
             ->name('heartbeat');

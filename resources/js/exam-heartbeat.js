@@ -17,11 +17,14 @@ class ExamHeartbeat {
         this.questionsAnswered = 0;
 
         // Callbacks
-        this.onWarning = options.onWarning || this.defaultWarningHandler;
-        this.onTerminated = options.onTerminated || this.defaultTerminatedHandler;
-        this.onMessage = options.onMessage || this.defaultMessageHandler;
+        this.onWarning     = options.onWarning     || this.defaultWarningHandler;
+        this.onTerminated  = options.onTerminated  || this.defaultTerminatedHandler;
+        this.onMessage     = options.onMessage     || this.defaultMessageHandler;
         this.onForceSubmit = options.onForceSubmit || null;
         this.onTimeExtended = options.onTimeExtended || null;
+        // Called on every successful heartbeat response that carries time data.
+        // Receives (remainingSeconds, extraTimeMinutes) so the timer can re-sync.
+        this.onTimeSync    = options.onTimeSync    || this.defaultTimeSyncHandler;
 
         this.init();
     }
@@ -126,10 +129,27 @@ class ExamHeartbeat {
             if (data.status === 'terminated') {
                 this.stop();
                 this.onTerminated(data);
-            } else if (data.warning) {
-                this.onWarning(data.warning);
-            } else if (data.admin_message) {
-                this.onMessage(data.admin_message);
+            } else if (data.status === 'force_submitted') {
+                this.stop();
+                if (this.onForceSubmit) {
+                    this.onForceSubmit(data);
+                } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            } else {
+                if (data.warning) {
+                    this.onWarning(data.warning);
+                }
+                if (data.admin_message) {
+                    this.onMessage(data.admin_message);
+                }
+            }
+
+            // ── Timer re-sync ─────────────────────────────────────────────────
+            // Always apply when the server sends time data, regardless of status.
+            // This is the polling fallback for when Echo is unavailable.
+            if (data.remaining_seconds !== undefined && data.remaining_seconds !== null) {
+                this.onTimeSync(data.remaining_seconds, data.extra_time_minutes ?? 0);
             }
         } catch (error) {
             console.error('Heartbeat failed:', error.message);
@@ -173,8 +193,24 @@ class ExamHeartbeat {
                         this.onMessage(data.message);
                         break;
                     case 'extend_time':
+                        // Real-time path: Echo delivers the extension instantly.
+                        // data.data.additional_minutes = minutes added this time.
+                        // data.data.remaining_seconds  = new server total (preferred).
+                        const addedMinutes     = data.data?.additional_minutes ?? 0;
+                        const newRemaining     = data.data?.remaining_seconds  ?? null;
+
+                        if (newRemaining !== null) {
+                            // Authoritative value — use it directly
+                            this.onTimeSync(newRemaining, data.data?.extra_time_minutes ?? 0);
+                        } else if (addedMinutes > 0) {
+                            // Fallback: tell the timer to add minutes to whatever it has
+                            if (typeof window.examTimerExtend === 'function') {
+                                window.examTimerExtend(addedMinutes);
+                            }
+                        }
+
                         if (this.onTimeExtended) {
-                            this.onTimeExtended(data.data.additional_minutes);
+                            this.onTimeExtended(addedMinutes);
                         }
                         break;
                 }
@@ -285,6 +321,13 @@ class ExamHeartbeat {
 
         // Auto remove after 10 seconds
         setTimeout(() => toast.remove(), 10000);
+    }
+    // Default time-sync handler: delegates to the global exposed by exam-timer.js.
+    // This keeps the heartbeat class decoupled from the timer implementation.
+    defaultTimeSyncHandler(remainingSeconds, extraTimeMinutes) {
+        if (typeof window.examTimerSync === 'function') {
+            window.examTimerSync(remainingSeconds, extraTimeMinutes);
+        }
     }
 }
 

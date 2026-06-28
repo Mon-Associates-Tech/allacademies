@@ -4,8 +4,10 @@ namespace App\ExaminationHub\Controllers;
 
 use App\ExaminationHub\Contracts\ExamCreationServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Services\ExamQuestionPersistenceService;
 use App\ExaminationHub\Services\ExamQuestionPreviewService;
+use App\ExaminationHub\Services\ParticipantGroupService;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicGroup;
@@ -25,7 +27,8 @@ class ExamCreationController extends Controller
     public function __construct(
         private readonly ExamCreationServiceInterface   $creationService,
         private readonly ExamQuestionPreviewService     $previewService,
-        private readonly ExamQuestionPersistenceService $persistenceService
+        private readonly ExamQuestionPersistenceService $persistenceService,
+        private readonly ParticipantGroupService        $groupService
     )
     {
     }
@@ -45,6 +48,7 @@ class ExamCreationController extends Controller
             'formData' => $formData,
             'hierarchyTree' => AcademicGroup::hierarchyTree(),
             'editingExam' => null,
+            'participantGroups' => GeneralExamParticipantGroup::orderBy('name')->get(),
         ]);
     }
 
@@ -101,6 +105,7 @@ class ExamCreationController extends Controller
             'formData' => $formData,
             'hierarchyTree' => AcademicGroup::hierarchyTree(),
             'editingExam' => $exam,
+            'participantGroups' => GeneralExamParticipantGroup::orderBy('name')->get(),
         ]);
     }
 
@@ -204,6 +209,7 @@ class ExamCreationController extends Controller
             'participant_required_fields' => ['required', 'array', 'min:1'],
             'participant_required_fields.*' => ['in:name,email,code'],
             'configured_match_mode' => ['required', 'in:any,both'],
+            'participant_group_id' => ['nullable', 'integer', 'exists:general_exam_participant_groups,id'],
             'academic_group_id' => ['nullable', 'integer', 'exists:academic_groups,id'],
             'academic_level_id' => ['nullable', 'integer', 'exists:academic_levels,id'],
             'academic_subject_id' => ['nullable', 'integer', 'exists:academic_subjects,id'],
@@ -373,6 +379,14 @@ class ExamCreationController extends Controller
             $exam = $this->creationService->updateExam($exam, (int)auth()->id(), $payload);
         } else {
             $exam = $this->creationService->createExam((int)auth()->id(), $payload);
+            
+            // Copy participants from selected group if provided
+            if (!empty($payload['participant_group_id'])) {
+                $group = GeneralExamParticipantGroup::find((int)$payload['participant_group_id']);
+                if ($group) {
+                    $this->groupService->copyGroupMembersToExam($group, $exam->id);
+                }
+            }
         }
 
         // If hardened mode, generate questions now (not during preview)

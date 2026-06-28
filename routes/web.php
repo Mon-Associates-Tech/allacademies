@@ -473,6 +473,7 @@ include_once 'lms.php';
 // General Exams Routes (code-based assignments for teachers and participants)
 include_once 'general-exams.php';
 include_once 'examinations-hub.php';
+include_once 'examination-hub-participant-groups.php';
 
 // Debug Routes (testing and monitoring - development only)
 include_once 'debug.php';
