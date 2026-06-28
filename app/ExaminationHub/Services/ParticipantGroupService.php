@@ -117,8 +117,8 @@ class ParticipantGroupService
         $codeIndex = array_search('unique_code', $header, true);
         $programmeIndex = array_search('programme', $header, true);
 
-        if ($nameIndex === false || $emailIndex === false || $groupIndex === false || $programmeIndex === false) {
-            return ['success' => false, 'imported' => 0, 'errors' => ['Missing required columns: name, email, group, programme']];
+        if ($nameIndex === false || $emailIndex === false || $groupIndex === false) {
+            return ['success' => false, 'imported' => 0, 'errors' => ['Missing required columns: name, email, group']];
         }
 
         $imported = 0;
@@ -142,11 +142,13 @@ class ParticipantGroupService
                 $name = $this->normalizeName((string)($row[$nameIndex] ?? ''));
                 $email = $this->normalizeEmail((string)($row[$emailIndex] ?? ''));
                 $groupName = $this->normalizeString((string)($row[$groupIndex] ?? ''));
-                $programmeName = $this->normalizeString((string)($row[$programmeIndex] ?? ''));
+                $programmeName = $programmeIndex !== false
+                    ? $this->normalizeString((string)($row[$programmeIndex] ?? ''))
+                    : '';
                 $uniqueCode = $codeIndex !== false ? $this->normalizeUniqueCode((string)($row[$codeIndex] ?? '')) : null;
 
-                if ($name === '' || $email === '' || $groupName === '' || $programmeName === '') {
-                    $errors[] = "Row {$rowNumber}: name, email, group and programme are required.";
+                if ($name === '' || $email === '' || $groupName === '') {
+                    $errors[] = "Row {$rowNumber}: name, email and group are required.";
                     continue;
                 }
 
@@ -157,6 +159,7 @@ class ParticipantGroupService
 
                 $groupNameUpper = strtoupper($groupName);
                 $programmeNameUpper = strtoupper($programmeName);
+                $useProgramme = $programmeIndex !== false && $programmeNameUpper !== '';
 
                 // Create or reuse top-level parent group by normalized name.
                 if (!isset($groups[$groupNameUpper])) {
@@ -173,25 +176,28 @@ class ParticipantGroupService
 
                 $parent = $groups[$groupNameUpper];
 
-                // Create or reuse programme under the parent by normalized name.
-                $programmeKey = $parent->id . '||' . $programmeNameUpper;
-                if (!isset($programmes[$programmeKey])) {
-                    $existing = GeneralExamParticipantGroup::where('parent_id', $parent->id)
-                        ->whereRaw('TRIM(UPPER(name)) = ?', [$programmeNameUpper])
-                        ->first();
+                if ($useProgramme) {
+                    // Create or reuse programme under the parent by normalized name.
+                    $programmeKey = $parent->id . '||' . $programmeNameUpper;
+                    if (!isset($programmes[$programmeKey])) {
+                        $existing = GeneralExamParticipantGroup::where('parent_id', $parent->id)
+                            ->whereRaw('TRIM(UPPER(name)) = ?', [$programmeNameUpper])
+                            ->first();
 
-                    $programmes[$programmeKey] = $existing ?: GeneralExamParticipantGroup::create([
-                        'name' => $programmeNameUpper,
-                        'description' => "Imported programme from CSV on " . now()->format('Y-m-d'),
-                        'parent_id' => $parent->id,
-                    ]);
+                        $programmes[$programmeKey] = $existing ?: GeneralExamParticipantGroup::create([
+                            'name' => $programmeNameUpper,
+                            'description' => "Imported programme from CSV on " . now()->format('Y-m-d'),
+                            'parent_id' => $parent->id,
+                        ]);
+                    }
+
+                    $memberGroup = $programmes[$programmeKey];
+                } else {
+                    $memberGroup = $parent;
                 }
 
-                $programme = $programmes[$programmeKey];
-
-                // Create or update member attached to programme (programme id stored in group_id)
                 GeneralExamParticipantGroupMember::updateOrCreate(
-                    ['group_id' => $programme->id, 'email' => $email],
+                    ['group_id' => $memberGroup->id, 'email' => $email],
                     ['name' => strtoupper($name), 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null]
                 );
 
@@ -210,7 +216,7 @@ class ParticipantGroupService
     public function getAllGroups()
     {
         return GeneralExamParticipantGroup::withCount('members')
-            ->with('creator')
+            ->with(['creator', 'parent'])
             ->orderBy('name')
             ->paginate();
     }

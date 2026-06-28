@@ -35,6 +35,7 @@ class GeneralExam extends Model
         'participant_mode',
         'participant_required_fields',
         'configured_match_mode',
+        'participant_group_id',
         'duration_in_minutes',
         'starts_at',
         'ends_at',
@@ -157,6 +158,11 @@ class GeneralExam extends Model
     public function configuredParticipants(): HasMany
     {
         return $this->hasMany(GeneralExamConfiguredParticipant::class);
+    }
+
+    public function participantGroup(): BelongsTo
+    {
+        return $this->belongsTo(GeneralExamParticipantGroup::class, 'participant_group_id');
     }
 
     /**

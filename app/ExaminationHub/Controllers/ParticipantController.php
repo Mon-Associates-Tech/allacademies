@@ -35,8 +35,15 @@ class ParticipantController extends Controller
 
         $group = GeneralExamParticipantGroup::findOrFail($data['participant_group_id']);
         $copied = $this->groupService->copyGroupMembersToExam($group, $exam->id);
+        $exam->update(['participant_group_id' => $group->id]);
 
-        return back()->with('success', "{$copied} participant(s) from \"{$group->name}\" imported successfully.");
+        $source = $group->parent
+            ? 'List: '.$group->parent->name.', Programme: '.$group->name
+            : 'List: '.$group->name;
+
+        return back()
+            ->with('success', "{$copied} participant(s) from \"{$group->name}\" imported successfully.")
+            ->with('configured_participant_source', $source);
     }
 
     public function joinEntry(): View
@@ -110,6 +117,15 @@ class ParticipantController extends Controller
         $status = $participant->is_active ? 'activated' : 'deactivated';
 
         return back()->with('success', "{$participant->name} has been {$status}.");
+    }
+
+    public function destroyAllConfigured(GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $deleted = GeneralExamConfiguredParticipant::where('general_exam_id', $exam->id)->delete();
+
+        return back()->with('success', "{$deleted} configured participant(s) removed from this exam.");
     }
 
     public function destroyConfigured(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): RedirectResponse

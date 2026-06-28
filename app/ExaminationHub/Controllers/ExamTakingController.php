@@ -139,9 +139,18 @@ class ExamTakingController extends Controller
         }
 
         $exam->load([
-            'sections'       => fn ($q) => $q->orderBy('order')->withCount('questions'),
+            'sections'        => fn ($q) => $q->orderBy('order')->withCount('questions'),
             'academicSubject' => fn ($q) => $q->with('academicLevel'),
+            'participantGroup' => fn ($q) => $q->with('parent'),
         ]);
+
+        $programmeCourse = $exam->academicSubject?->name
+            ?? $exam->participantGroup?->name
+            ?? 'Not specified';
+
+        $profession = $exam->academicSubject?->academicLevel?->name
+            ?? $exam->participantGroup?->parent?->name
+            ?? 'Not specified';
 
         $participantData      = session('exam_participant_data', []);
         $configuredParticipant = $this->resolveConfiguredParticipant($submission);
@@ -157,6 +166,8 @@ class ExamTakingController extends Controller
                                    ?? $submission->participant_email
                                    ?? $participantData['email']
                                    ?? null,
+            'programmeCourse'   => $programmeCourse,
+            'profession'        => $profession,
             'proctoringEnabled' => (bool) $exam->proctoring_enabled,
         ]);
     }

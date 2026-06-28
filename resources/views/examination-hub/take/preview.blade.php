@@ -157,14 +157,14 @@
                                 <p class="text-xs font-medium preview-text-slate uppercase mb-1"
                                    style="letter-spacing: 0.05em;">Programme / Course</p>
                                 <p class="text-base font-semibold">
-                                    {{ $exam->academicSubject?->name ?? 'Not specified' }}
+                                    {{ $programmeCourse ?? $exam->academicSubject?->name ?? 'Not specified' }}
                                 </p>
                             </div>
                             <div class="preview-input-group info-card-slate p-4 border">
                                 <p class="text-xs font-medium preview-text-slate uppercase mb-1"
                                    style="letter-spacing: 0.05em;">Profession</p>
                                 <p class="text-base font-semibold">
-                                    {{ $exam->academicSubject?->academicLevel?->name ?? 'Not specified' }}
+                                    {{ $profession ?? $exam->academicSubject?->academicLevel?->name ?? 'Not specified' }}
                                 </p>
                             </div>
                         </div>

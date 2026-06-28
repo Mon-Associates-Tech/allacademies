@@ -119,6 +119,11 @@
                                             <h3 class="text-base font-bold text-slate-900 dark:text-white truncate" style="letter-spacing: -0.01em;">
                                                 {{ $group->name }}
                                             </h3>
+                                            @if($group->parent)
+                                                <p class="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mt-1">
+                                                    Group: {{ $group->parent->name }}
+                                                </p>
+                                            @endif
                                             @if($group->description)
                                                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{{ $group->description }}</p>
                                             @endif

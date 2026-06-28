@@ -290,12 +290,23 @@
                                 style="border-radius: 2px;"
                                 x-on:change="selectedGroupCount = $event.target.selectedOptions[0]?.dataset.members || 0">
                             <option value="">— No group (add participants manually) —</option>
-                            @foreach($participantGroups as $group)
-                                <option value="{{ $group->id }}"
-                                        data-members="{{ $group->members_count ?? $group->members()->count() }}"
-                                        @selected(($seed['participant_group_id'] ?? '') == $group->id)>
-                                    {{ $group->name }} ({{ $group->members_count ?? $group->members()->count() }} participants)
-                                </option>
+                            @php
+                                $parentGroups = $participantGroups->whereNull('parent_id')->keyBy('id');
+                                $programmeGroups = $participantGroups->whereNotNull('parent_id')->sortBy('name');
+                                $groupedProgrammes = $programmeGroups->groupBy('parent_id');
+                            @endphp
+                            @foreach($parentGroups->sortBy('name') as $parentId => $parentGroup)
+                                @if(isset($groupedProgrammes[$parentId]))
+                                    <optgroup label="{{ $parentGroup->name }}">
+                                        @foreach($groupedProgrammes[$parentId] as $group)
+                                            <option value="{{ $group->id }}"
+                                                    data-members="{{ $group->members_count ?? $group->members()->count() }}"
+                                                    @selected(($seed['participant_group_id'] ?? '') == $group->id)>
+                                                {{ $group->name }} ({{ $group->members_count ?? $group->members()->count() }} participants)
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             @endforeach
                         </select>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5" x-show="selectedGroupCount > 0">

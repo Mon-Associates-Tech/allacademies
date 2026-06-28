@@ -47,12 +47,23 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     onchange="updateGroupInfo(this)">
                 <option value="">-- No Group (Add participants manually) --</option>
-                @foreach($participantGroups as $group)
-                    <option value="{{ $group->id }}" 
-                            data-members="{{ $group->members_count ?? 0 }}"
-                            {{ ($formData['participant_group_id'] ?? '') == $group->id ? 'selected' : '' }}>
-                        {{ $group->name }} ({{ $group->members_count ?? 0 }} participants)
-                    </option>
+                @php
+                    $parentGroups = $participantGroups->whereNull('parent_id')->keyBy('id');
+                    $programmeGroups = $participantGroups->whereNotNull('parent_id')->sortBy('name');
+                    $groupedProgrammes = $programmeGroups->groupBy('parent_id');
+                @endphp
+                @foreach($parentGroups->sortBy('name') as $parentId => $parentGroup)
+                    @if(isset($groupedProgrammes[$parentId]))
+                        <optgroup label="{{ $parentGroup->name }}">
+                            @foreach($groupedProgrammes[$parentId] as $group)
+                                <option value="{{ $group->id }}"
+                                        data-members="{{ $group->members_count ?? 0 }}"
+                                        {{ ($formData['participant_group_id'] ?? '') == $group->id ? 'selected' : '' }}>
+                                    {{ $group->name }} ({{ $group->members_count ?? 0 }} participants)
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endif
                 @endforeach
             </select>
             

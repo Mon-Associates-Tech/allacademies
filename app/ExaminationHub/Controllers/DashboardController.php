@@ -35,11 +35,18 @@ class DashboardController extends Controller
     {
         $this->ensureOwnerAccess($exam);
         $exam->loadCount(['sections', 'questions', 'submissions']);
-        $exam->load('sections');
+        $exam->load(['sections', 'participantGroup']);
 
         $configuredParticipants = $exam->configuredParticipants()
             ->orderBy('name')
             ->get();
+
+        $configuredParticipantSource = null;
+        if ($exam->participantGroup) {
+            $configuredParticipantSource = $exam->participantGroup->parent
+                ? 'List: '.$exam->participantGroup->parent->name.', Programme: '.$exam->participantGroup->name
+                : 'List: '.$exam->participantGroup->name;
+        }
 
         return view('examination-hub.dashboard.show', [
             'exam' => $exam,
@@ -47,6 +54,7 @@ class DashboardController extends Controller
             'configuredCount' => $configuredParticipants->count(),
             'configuredParticipants' => $configuredParticipants,
             'participantGroups' => GeneralExamParticipantGroup::withCount('members')->orderBy('name')->get(),
+            'configuredParticipantSource' => $configuredParticipantSource,
         ]);
     }
 

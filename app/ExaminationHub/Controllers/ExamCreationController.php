@@ -83,6 +83,7 @@ class ExamCreationController extends Controller
             'participant_mode' => $exam->participant_mode,
             'participant_required_fields' => $exam->participant_required_fields ?? ['name', 'email'],
             'configured_match_mode' => $exam->configured_match_mode ?? 'any',
+            'participant_group_id' => $exam->participant_group_id,
             'academic_group_id' => $exam->sections->first()?->academic_group_id,
             'academic_level_id' => $exam->sections->first()?->academic_level_id,
             'academic_subject_id' => $exam->academic_subject_id,
@@ -385,6 +386,9 @@ class ExamCreationController extends Controller
                 $group = GeneralExamParticipantGroup::find((int)$payload['participant_group_id']);
                 if ($group) {
                     $this->groupService->copyGroupMembersToExam($group, $exam->id);
+                    $source = $group->parent
+                        ? 'List: '.$group->parent->name.', Programme: '.$group->name
+                        : 'List: '.$group->name;
                 }
             }
         }
@@ -405,7 +409,8 @@ class ExamCreationController extends Controller
 
         return redirect()
             ->route('examination-hub.exams.show', $exam)
-            ->with('success', $examId ? 'Examination updated successfully.' : 'Examination created successfully.');
+            ->with('success', $examId ? 'Examination updated successfully.' : 'Examination created successfully.')
+            ->with('configured_participant_source', $source ?? null);
     }
 
     /**

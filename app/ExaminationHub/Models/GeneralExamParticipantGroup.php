@@ -48,7 +48,7 @@ class GeneralExamParticipantGroup extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(GeneralExamParticipantGroup::class, 'parent_id');
+        return $this->belongsTo(GeneralExamParticipantGroup::class, 'parent_id')->withTrashed();
     }
 
     /**

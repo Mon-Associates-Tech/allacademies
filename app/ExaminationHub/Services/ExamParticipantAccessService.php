@@ -151,6 +151,16 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
         }
 
         if ($exam->participant_mode === 'configured') {
+            if (! $hasEmailForMatch || ! $hasCodeForMatch) {
+                return ['allowed' => false, 'mode' => 'configured', 'message' => 'Configured examinations require both email and unique code.'];
+            }
+
+            $configured = $exam->configuredParticipants()
+                ->where('is_active', true)
+                ->where('email', $email)
+                ->where('unique_code', $uniqueCode)
+                ->first();
+
             if (! $configured) {
                 return ['allowed' => false, 'mode' => 'configured', 'message' => 'You are not on the configured participant list for this examination.'];
             }

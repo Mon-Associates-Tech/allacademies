@@ -687,8 +687,19 @@
                                         class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                                         style="border-radius: 2px;">
                                     <option value="">— Choose a group —</option>
-                                    @foreach($participantGroups as $group)
-                                        <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->members_count }} members)</option>
+                                    @php
+                                        $parentGroups = $participantGroups->whereNull('parent_id')->keyBy('id');
+                                        $programmeGroups = $participantGroups->whereNotNull('parent_id')->sortBy('name');
+                                        $groupedProgrammes = $programmeGroups->groupBy('parent_id');
+                                    @endphp
+                                    @foreach($parentGroups->sortBy('name') as $parentId => $parentGroup)
+                                        @if(isset($groupedProgrammes[$parentId]))
+                                            <optgroup label="{{ $parentGroup->name }}">
+                                                @foreach($groupedProgrammes[$parentId] as $group)
+                                                    <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->members_count }} members)</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -710,16 +721,42 @@
             <div class="bg-white dark:bg-slate-900 overflow-hidden"
                  style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
 
-                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
-                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Configured Participants</h2>
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #fbbf24); border-radius: 1px;"></div>
+                            <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Configured Participants</h2>
+                        </div>
+                        @if(!empty($configuredParticipantSource))
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                Showing configured participants for <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $configuredParticipantSource }}</span>
+                            </p>
+                        @endif
                     </div>
-                    <span class="text-xs px-2 py-1 font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
-                          style="border-radius: 2px;">{{ $configuredCount }} total</span>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-xs px-2 py-1 font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
+                              style="border-radius: 2px;">{{ $configuredCount }} total</span>
+                        <button type="button" id="toggleConfiguredParticipants" class="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                style="border-radius: 2px;">
+                            <span id="toggleConfiguredParticipantsLabel">Hide list</span>
+                        </button>
+                        @if($configuredCount > 0)
+                            <form method="POST" action="{{ route('examination-hub.participants.configured.destroy-all', $exam) }}"
+                                  onsubmit="return confirm('Remove all configured participants from this exam?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900 transition-all"
+                                        style="border-radius: 2px;">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    Remove all
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div id="configuredParticipantsBody" class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
@@ -816,4 +853,21 @@
         @endif
 
     </div>{{-- /container --}}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleButton = document.getElementById('toggleConfiguredParticipants');
+        const label = document.getElementById('toggleConfiguredParticipantsLabel');
+        const body = document.getElementById('configuredParticipantsBody');
+
+        if (!toggleButton || !label || !body) {
+            return;
+        }
+
+        toggleButton.addEventListener('click', function () {
+            const hidden = body.classList.toggle('hidden');
+            label.textContent = hidden ? 'Show list' : 'Hide list';
+        });
+    });
+</script>
 </x-layouts.app>

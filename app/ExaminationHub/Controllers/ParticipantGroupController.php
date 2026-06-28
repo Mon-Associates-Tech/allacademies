@@ -8,6 +8,7 @@ use App\ExaminationHub\Services\ParticipantGroupService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Validation\Rule;
 use Illuminate\View\View;
 
 class ParticipantGroupController extends Controller
@@ -31,7 +32,12 @@ class ParticipantGroupController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:general_exam_participant_groups,name'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('general_exam_participant_groups', 'name')->where(fn ($query) => $query->whereNull('parent_id')),
+            ],
             'description' => ['nullable', 'string'],
         ]);
 
@@ -56,7 +62,14 @@ class ParticipantGroupController extends Controller
     public function update(Request $request, GeneralExamParticipantGroup $group): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:general_exam_participant_groups,name,' . $group->id],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('general_exam_participant_groups', 'name')
+                    ->ignore($group->id)
+                    ->where(fn ($query) => $query->whereNull('parent_id')),
+            ],
             'description' => ['nullable', 'string'],
         ]);
 

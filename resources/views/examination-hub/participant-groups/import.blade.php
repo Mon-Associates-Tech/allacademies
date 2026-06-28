@@ -116,7 +116,7 @@
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">group</span>
-                                <span>Group name (will be created if doesn't exist)</span>
+                                <span>Group name (root group, will be created if missing)</span>
                             </li>
                         </ul>
                     </div>
@@ -127,6 +127,10 @@
                             <li class="flex items-start gap-2">
                                 <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">unique_code</span>
                                 <span>Unique identifier for participant</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">programme</span>
+                                <span>Programme name under the root group (optional)</span>
                             </li>
                         </ul>
                     </div>
