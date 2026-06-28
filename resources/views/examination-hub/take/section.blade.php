@@ -399,7 +399,7 @@ if (document.readyState === 'loading') {
     @endif
 
     @push('exam-scripts')
-        @vite(['resources/js/exam-sync.js', 'resources/js/exam-timer.js'])
+        @vite(['resources/js/exam-heartbeat.js', 'resources/js/exam-sync.js', 'resources/js/exam-timer.js'])
     @endpush
 
 @push('exam-scripts')
@@ -550,26 +550,31 @@ if (document.readyState === 'loading') {
                             }, 3000);
                         },
                         onTimeExtended: function(additionalMinutes) {
-                            const toast = document.createElement('div');
-                            toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-green-600 text-white rounded-lg shadow-lg';
-                            toast.innerHTML = `
-                                <div class="flex items-start gap-3">
-                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            // ── 1. Update the running timer immediately ───────
+                            // window.examTimerExtend is exposed by exam-timer.js
+                            // init(). Calling it adds the minutes to the live
+                            // countdown and re-arms the interval if it already
+                            // expired. Guard in case the timer isn't mounted yet.
+                            if (typeof window.examTimerExtend === 'function') {
+                                window.examTimerExtend(additionalMinutes);
+                            }
+
+                            // ── 2. Show the candidate a notification ──────────
+                            // exam-timer.js showTimeExtendedBanner() is already
+                            // called by extendByMinutes(), so we only need a
+                            // fallback toast here in case the timer isn't mounted.
+                            if (typeof window.examTimerExtend !== 'function') {
+                                const toast = document.createElement('div');
+                                toast.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9999;max-width:22rem;border-radius:2px;padding:1rem;background:#059669;color:#fff;font-size:.875rem;font-weight:600;box-shadow:0 4px 20px rgba(5,150,105,.4);display:flex;align-items:center;gap:.75rem;';
+                                toast.innerHTML = `
+                                    <svg style="width:1.25rem;height:1.25rem;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
-                                    <div>
-                                        <p class="font-semibold">Time Extended</p>
-                                        <p class="text-sm opacity-90">Your exam time has been extended by ${additionalMinutes} minutes.</p>
-                                    </div>
-                                    <button onclick="this.closest('.fixed').remove();" class="ml-auto text-white/70 hover:text-white">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            `;
-                            document.body.appendChild(toast);
-                            setTimeout(() => toast.remove(), 8000);
+                                    <span>+${additionalMinutes} minute${additionalMinutes !== 1 ? 's' : ''} added to your time</span>
+                                `;
+                                document.body.appendChild(toast);
+                                setTimeout(() => toast.remove(), 8000);
+                            }
                         }
                     });
                 }
