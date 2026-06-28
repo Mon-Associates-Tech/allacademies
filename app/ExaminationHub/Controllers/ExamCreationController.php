@@ -48,7 +48,7 @@ class ExamCreationController extends Controller
             'formData' => $formData,
             'hierarchyTree' => AcademicGroup::hierarchyTree(),
             'editingExam' => null,
-            'participantGroups' => GeneralExamParticipantGroup::orderBy('name')->get(),
+            'participantGroups' => GeneralExamParticipantGroup::withCount('members')->orderBy('name')->get(),
         ]);
     }
 
@@ -105,7 +105,7 @@ class ExamCreationController extends Controller
             'formData' => $formData,
             'hierarchyTree' => AcademicGroup::hierarchyTree(),
             'editingExam' => $exam,
-            'participantGroups' => GeneralExamParticipantGroup::orderBy('name')->get(),
+            'participantGroups' => GeneralExamParticipantGroup::withCount('members')->orderBy('name')->get(),
         ]);
     }
 

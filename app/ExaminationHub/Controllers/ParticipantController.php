@@ -6,6 +6,8 @@ use App\ExaminationHub\Contracts\ExamParticipantAccessServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Models\GeneralExamParticipant;
+use App\ExaminationHub\Models\GeneralExamParticipantGroup;
+use App\ExaminationHub\Services\ParticipantGroupService;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use App\Services\GeneralExam\GeneralExamService;
@@ -19,8 +21,23 @@ class ParticipantController extends Controller
 
     public function __construct(
         private readonly ExamParticipantAccessServiceInterface $accessService,
-        private readonly GeneralExamService $generalExamService
+        private readonly GeneralExamService $generalExamService,
+        private readonly ParticipantGroupService $groupService
     ) {}
+
+    public function importGroup(Request $request, GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $data = $request->validate([
+            'participant_group_id' => ['required', 'integer', 'exists:general_exam_participant_groups,id'],
+        ]);
+
+        $group = GeneralExamParticipantGroup::findOrFail($data['participant_group_id']);
+        $copied = $this->groupService->copyGroupMembersToExam($group, $exam->id);
+
+        return back()->with('success', "{$copied} participant(s) from \"{$group->name}\" imported successfully.");
+    }
 
     public function joinEntry(): View
     {

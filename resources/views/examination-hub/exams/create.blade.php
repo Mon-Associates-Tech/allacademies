@@ -252,7 +252,7 @@
         </div>
 
         {{-- ── PARTICIPANT ACCESS CONTROL ── --}}
-        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+        <div class="bg-white dark:bg-slate-900 overflow-hidden" x-data="{ selectedGroupCount: {{ ($seed['participant_group_id'] ?? 0) ? ($participantGroups->find($seed['participant_group_id'] ?? 0)?->members_count ?? 0) : 0 }} }"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                 <div class="w-1 h-5" style="background: linear-gradient(180deg, #065f46, #059669); border-radius: 1px;"></div>
@@ -280,6 +280,32 @@
                             <option value="both" @selected(($seed['configured_match_mode'] ?? '')==='both')>Match email AND code</option>
                         </select>
                     </div>
+
+                    {{-- Participant Group Selector --}}
+                    @if($participantGroups->isNotEmpty())
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Import from Participant Group</label>
+                        <select name="participant_group_id"
+                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                style="border-radius: 2px;"
+                                x-on:change="selectedGroupCount = $event.target.selectedOptions[0]?.dataset.members || 0">
+                            <option value="">— No group (add participants manually) —</option>
+                            @foreach($participantGroups as $group)
+                                <option value="{{ $group->id }}"
+                                        data-members="{{ $group->members_count ?? $group->members()->count() }}"
+                                        @selected(($seed['participant_group_id'] ?? '') == $group->id)>
+                                    {{ $group->name }} ({{ $group->members_count ?? $group->members()->count() }} participants)
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5" x-show="selectedGroupCount > 0">
+                            <span x-text="selectedGroupCount"></span> participants will be added as configured participants when the exam is created.
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5" x-show="!selectedGroupCount">
+                            Selecting a group will copy all its members as configured participants for this exam.
+                        </p>
+                    </div>
+                    @endif
 
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Required Participant Fields</label>

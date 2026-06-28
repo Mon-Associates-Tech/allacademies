@@ -670,6 +670,38 @@
                     </div>
                 </div>
 
+                {{-- ── IMPORT FROM GROUP ── --}}
+                @if($participantGroups->isNotEmpty())
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Import from Group</h2>
+                    </div>
+                    <div class="p-5">
+                        <form action="{{ route('examination-hub.participants.configured.import-group', $exam) }}" method="POST" class="space-y-3">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1" style="font-size: 10px; letter-spacing: 0.1em;">Select Group</label>
+                                <select name="participant_group_id" required
+                                        class="w-full px-3 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                        style="border-radius: 2px;">
+                                    <option value="">— Choose a group —</option>
+                                    @foreach($participantGroups as $group)
+                                        <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->members_count }} members)</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    class="w-full py-2.5 text-sm font-semibold text-white transition-all"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 8px rgba(124,58,237,0.25);">
+                                Import Group Members
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endif
+
             </div>{{-- /right column --}}
         </div>{{-- /grid --}}
 

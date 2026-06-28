@@ -4,6 +4,7 @@ namespace App\ExaminationHub\Controllers;
 
 use App\ExaminationHub\Contracts\ExamDashboardServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +46,7 @@ class DashboardController extends Controller
             'sectionNavigator' => $this->dashboardService->sectionNavigator($exam),
             'configuredCount' => $configuredParticipants->count(),
             'configuredParticipants' => $configuredParticipants,
+            'participantGroups' => GeneralExamParticipantGroup::withCount('members')->orderBy('name')->get(),
         ]);
     }
 
