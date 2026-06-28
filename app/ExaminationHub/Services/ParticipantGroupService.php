@@ -58,6 +58,28 @@ class ParticipantGroupService
         $member->delete();
     }
 
+    private function normalizeString(string $value): string
+    {
+        return preg_replace('/\s+/u', ' ', trim($value));
+    }
+
+    private function normalizeName(string $value): string
+    {
+        return strtoupper($this->normalizeString($value));
+    }
+
+    private function normalizeEmail(string $value): string
+    {
+        return strtolower($this->normalizeString($value));
+    }
+
+    private function normalizeUniqueCode(string $value): ?string
+    {
+        $clean = $this->normalizeString($value);
+
+        return $clean === '' ? null : $clean;
+    }
+
     /**
      * Accept either an uploaded file instance or a filesystem path.
      * Maatwebsite Excel can detect the reader from the UploadedFile's original name.
@@ -117,11 +139,11 @@ class ParticipantGroupService
                     continue;
                 }
 
-                $name = trim((string)($row[$nameIndex] ?? ''));
-                $email = strtolower(trim((string)($row[$emailIndex] ?? '')));
-                $groupName = trim((string)($row[$groupIndex] ?? ''));
-                $programmeName = trim((string)($row[$programmeIndex] ?? ''));
-                $uniqueCode = $codeIndex !== false ? trim((string)($row[$codeIndex] ?? '')) : '';
+                $name = $this->normalizeName((string)($row[$nameIndex] ?? ''));
+                $email = $this->normalizeEmail((string)($row[$emailIndex] ?? ''));
+                $groupName = $this->normalizeString((string)($row[$groupIndex] ?? ''));
+                $programmeName = $this->normalizeString((string)($row[$programmeIndex] ?? ''));
+                $uniqueCode = $codeIndex !== false ? $this->normalizeUniqueCode((string)($row[$codeIndex] ?? '')) : null;
 
                 if ($name === '' || $email === '' || $groupName === '' || $programmeName === '') {
                     $errors[] = "Row {$rowNumber}: name, email, group and programme are required.";
@@ -136,32 +158,33 @@ class ParticipantGroupService
                 $groupNameUpper = strtoupper($groupName);
                 $programmeNameUpper = strtoupper($programmeName);
 
-                // Create or reuse parent group (uppercase)
+                // Create or reuse top-level parent group by normalized name.
                 if (!isset($groups[$groupNameUpper])) {
-                    $groups[$groupNameUpper] = GeneralExamParticipantGroup::firstOrCreate(
-                        ['name' => $groupNameUpper],
-                        ['description' => "Imported from CSV on " . now()->format('Y-m-d')]
-                    );
+                    $existingGroup = GeneralExamParticipantGroup::whereNull('parent_id')
+                        ->whereRaw('TRIM(UPPER(name)) = ?', [$groupNameUpper])
+                        ->first();
+
+                    $groups[$groupNameUpper] = $existingGroup ?: GeneralExamParticipantGroup::create([
+                        'name' => $groupNameUpper,
+                        'description' => "Imported from CSV on " . now()->format('Y-m-d'),
+                        'parent_id' => null,
+                    ]);
                 }
 
                 $parent = $groups[$groupNameUpper];
 
-                // Lookup programme by name under this parent only
+                // Create or reuse programme under the parent by normalized name.
                 $programmeKey = $parent->id . '||' . $programmeNameUpper;
                 if (!isset($programmes[$programmeKey])) {
-                    $existing = GeneralExamParticipantGroup::where('name', $programmeNameUpper)
-                        ->where('parent_id', $parent->id)
+                    $existing = GeneralExamParticipantGroup::where('parent_id', $parent->id)
+                        ->whereRaw('TRIM(UPPER(name)) = ?', [$programmeNameUpper])
                         ->first();
 
-                    if ($existing) {
-                        $programmes[$programmeKey] = $existing;
-                    } else {
-                        $programmes[$programmeKey] = GeneralExamParticipantGroup::create([
-                            'name' => $programmeNameUpper,
-                            'description' => "Imported programme from CSV on " . now()->format('Y-m-d'),
-                            'parent_id' => $parent->id,
-                        ]);
-                    }
+                    $programmes[$programmeKey] = $existing ?: GeneralExamParticipantGroup::create([
+                        'name' => $programmeNameUpper,
+                        'description' => "Imported programme from CSV on " . now()->format('Y-m-d'),
+                        'parent_id' => $parent->id,
+                    ]);
                 }
 
                 $programme = $programmes[$programmeKey];
