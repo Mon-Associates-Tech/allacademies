@@ -82,10 +82,10 @@ class ParticipantGroupController extends Controller
     public function processImport(Request $request): RedirectResponse
     {
         $request->validate([
-            'csv_file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:20480'],
+            'csv_file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls,ods', 'max:20480'],
         ]);
 
-        $result = $this->groupService->importFromCsv($request->file('csv_file')->getRealPath());
+        $result = $this->groupService->importFromCsv($request->file('csv_file'));
 
         if (!$result['success']) {
             return back()->withErrors(['error' => $result['errors'][0] ?? 'Import failed.']);

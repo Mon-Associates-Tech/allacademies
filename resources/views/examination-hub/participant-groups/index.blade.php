@@ -149,9 +149,11 @@
                                            style="background: linear-gradient(135deg, #1d4ed8, #3b82f6); border-radius: 2px;">
                                             View
                                         </a>
-                                        <a href="{{ route('examination-hub.participant-groups.edit', $group) }}"
-                                           class="flex-1 text-center py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700"
-                                           style="border-radius: 2px;">
+                                            <a href="{{ route('examination-hub.participant-groups.edit', $group) }}"
+                                               onclick="window.location.href='{{ route('examination-hub.participant-groups.edit', $group) }}'"
+                                               role="link"
+                                               class="flex-1 text-center py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700"
+                                               style="border-radius: 2px;">
                                             Edit
                                         </a>
                                         <form action="{{ route('examination-hub.participant-groups.destroy', $group) }}"

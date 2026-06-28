@@ -30,9 +30,11 @@
                         {{ $group->members->count() }} {{ Str::plural('participant', $group->members->count()) }}
                     </p>
                 </div>
-                <a href="{{ route('examination-hub.participant-groups.edit', $group) }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white uppercase tracking-wider transition-opacity hover:opacity-90"
-                   style="background: linear-gradient(135deg, #475569, #64748b); border-radius: 2px; letter-spacing: 0.08em;">
+                     <a href="{{ route('examination-hub.participant-groups.edit', $group) }}" 
+                         onclick="window.location.href='{{ route('examination-hub.participant-groups.edit', $group) }}'"
+                         role="link"
+                         class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white uppercase tracking-wider transition-opacity hover:opacity-90"
+                         style="background: linear-gradient(135deg, #475569, #64748b); border-radius: 2px; letter-spacing: 0.08em;">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
@@ -175,7 +177,7 @@
                                             </td>
                                             <td class="px-6 py-3.5 text-right">
                                                 <div class="inline-flex items-center gap-3">
-                                                    <button onclick="editMember({{ $member->id }}, {!! json_encode($member->name) !!}, {!! json_encode($member->email) !!}, {!! json_encode($member->unique_code) !!})"
+                                                    <button onclick='editMember({{ $member->id }}, {!! json_encode($member->name, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}, {!! json_encode($member->email, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}, {!! json_encode($member->unique_code, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!})'
                                                             class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors">
                                                         Edit
                                                     </button>
