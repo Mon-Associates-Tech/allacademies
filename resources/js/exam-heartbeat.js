@@ -1,20 +1,21 @@
 /**
  * Exam Heartbeat System
  * Sends periodic heartbeats to the server to track participant activity.
+ * Dispatches CustomEvents so all timer instances (desktop + mobile) are updated.
  */
 class ExamHeartbeat {
     constructor(options = {}) {
-        this.examId = options.examId;
+        this.examId       = options.examId;
         this.heartbeatUrl = options.heartbeatUrl;
-        this.initUrl = options.initUrl;
+        this.initUrl      = options.initUrl;
         this.acknowledgeUrl = options.acknowledgeUrl;
-        this.interval = options.interval || 15000; // 15 seconds default
+        this.interval     = options.interval || 15000; // 15 seconds default
         this.sessionToken = null;
-        this.intervalId = null;
-        this.isFocused = true;
+        this.intervalId   = null;
+        this.isFocused    = true;
         this.currentQuestionIndex = 0;
-        this.currentSectionIndex = 0;
-        this.questionsAnswered = 0;
+        this.currentSectionIndex  = 0;
+        this.questionsAnswered    = 0;
 
         // Callbacks
         this.onWarning     = options.onWarning     || this.defaultWarningHandler;
@@ -22,18 +23,15 @@ class ExamHeartbeat {
         this.onMessage     = options.onMessage     || this.defaultMessageHandler;
         this.onForceSubmit = options.onForceSubmit || null;
         this.onTimeExtended = options.onTimeExtended || null;
-        // Called on every successful heartbeat response that carries time data.
-        // Receives (remainingSeconds, extraTimeMinutes) so the timer can re-sync.
-        this.onTimeSync    = options.onTimeSync    || this.defaultTimeSyncHandler;
+        // onTimeSync uses CustomEvent dispatch — no window global needed
+        this.onTimeSync    = options.onTimeSync    || this.defaultTimeSyncHandler.bind(this);
 
         this.init();
     }
 
     async init() {
-        // Detect browser and OS
         const browserInfo = this.detectBrowser();
 
-        // Initialize session
         try {
             const response = await fetch(this.initUrl, {
                 method: 'POST',
@@ -60,38 +58,26 @@ class ExamHeartbeat {
     detectBrowser() {
         const ua = navigator.userAgent;
         let browser = 'Unknown';
-        let os = 'Unknown';
+        let os      = 'Unknown';
 
-        // Detect browser
-        if (ua.includes('Firefox')) browser = 'Firefox';
-        else if (ua.includes('Chrome')) browser = 'Chrome';
-        else if (ua.includes('Safari')) browser = 'Safari';
-        else if (ua.includes('Edge')) browser = 'Edge';
-        else if (ua.includes('Opera')) browser = 'Opera';
+        if      (ua.includes('Firefox')) browser = 'Firefox';
+        else if (ua.includes('Chrome'))  browser = 'Chrome';
+        else if (ua.includes('Safari'))  browser = 'Safari';
+        else if (ua.includes('Edge'))    browser = 'Edge';
+        else if (ua.includes('Opera'))   browser = 'Opera';
 
-        // Detect OS
-        if (ua.includes('Windows')) os = 'Windows';
-        else if (ua.includes('Mac')) os = 'macOS';
-        else if (ua.includes('Linux')) os = 'Linux';
+        if      (ua.includes('Windows')) os = 'Windows';
+        else if (ua.includes('Mac'))     os = 'macOS';
+        else if (ua.includes('Linux'))   os = 'Linux';
         else if (ua.includes('Android')) os = 'Android';
-        else if (ua.includes('iOS')) os = 'iOS';
+        else if (ua.includes('iOS'))     os = 'iOS';
 
-        return {
-            browser,
-            os,
-            screen_width: window.screen.width,
-            screen_height: window.screen.height,
-        };
+        return { browser, os, screen_width: window.screen.width, screen_height: window.screen.height };
     }
 
     startHeartbeat() {
-        // Send initial heartbeat
         this.sendHeartbeat();
-
-        // Set up interval
-        this.intervalId = setInterval(() => {
-            this.sendHeartbeat();
-        }, this.interval);
+        this.intervalId = setInterval(() => this.sendHeartbeat(), this.interval);
     }
 
     async sendHeartbeat() {
@@ -103,20 +89,18 @@ class ExamHeartbeat {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                 },
                 body: JSON.stringify({
-                    is_focused: this.isFocused,
+                    is_focused:             this.isFocused,
                     current_question_index: this.currentQuestionIndex,
-                    current_section_index: this.currentSectionIndex,
-                    questions_answered: this.questionsAnswered,
+                    current_section_index:  this.currentSectionIndex,
+                    questions_answered:     this.questionsAnswered,
                 }),
             });
 
-            // Validate HTTP response
             if (!response.ok) {
                 console.error('Heartbeat HTTP error:', response.status, response.statusText);
                 return;
             }
 
-            // Validate content type before parsing JSON
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 console.error('Heartbeat: Invalid response type:', contentType);
@@ -125,29 +109,29 @@ class ExamHeartbeat {
 
             const data = await response.json();
 
-            // Handle responses
+            // ── Handle admin actions ──────────────────────────────────────────
             if (data.status === 'terminated') {
                 this.stop();
                 this.onTerminated(data);
-            } else if (data.status === 'force_submitted') {
+                return;
+            }
+
+            if (data.status === 'force_submitted') {
                 this.stop();
                 if (this.onForceSubmit) {
                     this.onForceSubmit(data);
                 } else if (data.redirect) {
                     window.location.href = data.redirect;
                 }
-            } else {
-                if (data.warning) {
-                    this.onWarning(data.warning);
-                }
-                if (data.admin_message) {
-                    this.onMessage(data.admin_message);
-                }
+                return;
             }
 
-            // ── Timer re-sync ─────────────────────────────────────────────────
-            // Always apply when the server sends time data, regardless of status.
-            // This is the polling fallback for when Echo is unavailable.
+            if (data.warning)       this.onWarning(data.warning);
+            if (data.admin_message) this.onMessage(data.admin_message);
+
+            // ── Timer re-sync (polling fallback for when Echo is unavailable) ──
+            // The server returns remaining_seconds on every beat, incorporating
+            // extra_time_minutes so extensions are caught within one poll cycle.
             if (data.remaining_seconds !== undefined && data.remaining_seconds !== null) {
                 this.onTimeSync(data.remaining_seconds, data.extra_time_minutes ?? 0);
             }
@@ -157,15 +141,8 @@ class ExamHeartbeat {
     }
 
     setupEventListeners() {
-        // Track focus/blur
-        window.addEventListener('focus', () => {
-            this.isFocused = true;
-        });
-
-        window.addEventListener('blur', () => {
-            this.isFocused = false;
-        });
-
+        window.addEventListener('focus', () => { this.isFocused = true; });
+        window.addEventListener('blur',  () => { this.isFocused = false; });
         document.addEventListener('visibilitychange', () => {
             this.isFocused = document.visibilityState === 'visible';
         });
@@ -180,51 +157,58 @@ class ExamHeartbeat {
                     case 'warning':
                         this.onWarning({ message: data.message, warned_at: data.timestamp });
                         break;
+
                     case 'terminate':
                         this.stop();
                         this.onTerminated({ reason: data.message, message: 'Your exam session has been terminated by the administrator.' });
                         break;
+
                     case 'force_submit':
-                        if (this.onForceSubmit) {
-                            this.onForceSubmit(data);
-                        }
+                        if (this.onForceSubmit) this.onForceSubmit(data);
                         break;
+
                     case 'message':
                         this.onMessage(data.message);
                         break;
+
                     case 'extend_time':
                         // Real-time path: Echo delivers the extension instantly.
-                        // data.data.additional_minutes = minutes added this time.
-                        // data.data.remaining_seconds  = new server total (preferred).
-                        const addedMinutes     = data.data?.additional_minutes ?? 0;
-                        const newRemaining     = data.data?.remaining_seconds  ?? null;
+                        //
+                        // Prefer remaining_seconds (authoritative) if the broadcast
+                        // includes it. Fall back to additional_minutes if not.
+                        //
+                        // We dispatch exam:sync-time or exam:extend-time so that
+                        // ALL timer instances (desktop + mobile) are updated via
+                        // their document event listeners — no window global needed.
+                        const addedMinutes = data.data?.additional_minutes ?? 0;
+                        const newRemaining = data.data?.remaining_seconds  ?? null;
 
                         if (newRemaining !== null) {
-                            // Authoritative value — use it directly
-                            this.onTimeSync(newRemaining, data.data?.extra_time_minutes ?? 0);
+                            document.dispatchEvent(new CustomEvent('exam:sync-time', {
+                                detail: {
+                                    remaining:   newRemaining,
+                                    extraMinutes: data.data?.extra_time_minutes ?? 0,
+                                },
+                            }));
                         } else if (addedMinutes > 0) {
-                            // Fallback: tell the timer to add minutes to whatever it has
-                            if (typeof window.examTimerExtend === 'function') {
-                                window.examTimerExtend(addedMinutes);
-                            }
+                            document.dispatchEvent(new CustomEvent('exam:extend-time', {
+                                detail: { minutes: addedMinutes },
+                            }));
                         }
 
-                        if (this.onTimeExtended) {
-                            this.onTimeExtended(addedMinutes);
-                        }
+                        // Still call the custom callback (e.g. for logging / UI outside the timer)
+                        if (this.onTimeExtended) this.onTimeExtended(addedMinutes);
                         break;
                 }
             });
     }
 
-    // Update tracking data
     updateProgress(questionIndex, sectionIndex, answeredCount) {
         this.currentQuestionIndex = questionIndex;
-        this.currentSectionIndex = sectionIndex;
-        this.questionsAnswered = answeredCount;
+        this.currentSectionIndex  = sectionIndex;
+        this.questionsAnswered    = answeredCount;
     }
 
-    // Acknowledge warning
     async acknowledgeWarning() {
         try {
             await fetch(this.acknowledgeUrl, {
@@ -239,7 +223,6 @@ class ExamHeartbeat {
         }
     }
 
-    // Stop heartbeat
     stop() {
         if (this.intervalId) {
             clearInterval(this.intervalId);
@@ -247,9 +230,20 @@ class ExamHeartbeat {
         }
     }
 
-    // Default handlers
+    // ── Default handlers ──────────────────────────────────────────────────────
+
+    // Dispatches CustomEvent so every timer instance on the page receives the
+    // sync simultaneously. No window global — no "last writer wins" race.
+    defaultTimeSyncHandler(remainingSeconds, extraTimeMinutes) {
+        document.dispatchEvent(new CustomEvent('exam:sync-time', {
+            detail: {
+                remaining:    remainingSeconds,
+                extraMinutes: extraTimeMinutes ?? 0,
+            },
+        }));
+    }
+
     defaultWarningHandler(warning) {
-        // Show warning modal
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
         modal.innerHTML = `
@@ -261,7 +255,7 @@ class ExamHeartbeat {
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 mb-2">Warning from Proctor</h3>
                 <p class="text-slate-600 mb-6">${warning.message}</p>
-                <button onclick="this.closest('.fixed').remove(); window.examHeartbeat?.acknowledgeWarning();" 
+                <button onclick="this.closest('.fixed').remove(); window.examHeartbeat?.acknowledgeWarning();"
                         class="px-6 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600">
                     I Understand
                 </button>
@@ -271,7 +265,6 @@ class ExamHeartbeat {
     }
 
     defaultTerminatedHandler(data) {
-        // Show termination modal and redirect
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70';
         modal.innerHTML = `
@@ -288,19 +281,13 @@ class ExamHeartbeat {
             </div>
         `;
         document.body.appendChild(modal);
-
-        // Redirect after 3 seconds
-        setTimeout(() => {
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            }
-        }, 3000);
+        setTimeout(() => { if (data.redirect) window.location.href = data.redirect; }, 3000);
     }
 
     defaultMessageHandler(message) {
-        // Show non-blocking notification
+        const text = typeof message === 'object' ? (message.message ?? JSON.stringify(message)) : message;
         const toast = document.createElement('div');
-        toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-blue-600 text-white rounded-lg shadow-lg animate-slide-up';
+        toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-blue-600 text-white rounded-lg shadow-lg';
         toast.innerHTML = `
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -308,7 +295,7 @@ class ExamHeartbeat {
                 </svg>
                 <div>
                     <p class="font-semibold">Message from Proctor</p>
-                    <p class="text-sm opacity-90">${message}</p>
+                    <p class="text-sm opacity-90">${text}</p>
                 </div>
                 <button onclick="this.closest('.fixed').remove();" class="ml-auto text-white/70 hover:text-white">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -318,18 +305,8 @@ class ExamHeartbeat {
             </div>
         `;
         document.body.appendChild(toast);
-
-        // Auto remove after 10 seconds
         setTimeout(() => toast.remove(), 10000);
-    }
-    // Default time-sync handler: delegates to the global exposed by exam-timer.js.
-    // This keeps the heartbeat class decoupled from the timer implementation.
-    defaultTimeSyncHandler(remainingSeconds, extraTimeMinutes) {
-        if (typeof window.examTimerSync === 'function') {
-            window.examTimerSync(remainingSeconds, extraTimeMinutes);
-        }
     }
 }
 
-// Export for use
 window.ExamHeartbeat = ExamHeartbeat;

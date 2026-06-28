@@ -550,31 +550,11 @@ if (document.readyState === 'loading') {
                             }, 3000);
                         },
                         onTimeExtended: function(additionalMinutes) {
-                            // ── 1. Update the running timer immediately ───────
-                            // window.examTimerExtend is exposed by exam-timer.js
-                            // init(). Calling it adds the minutes to the live
-                            // countdown and re-arms the interval if it already
-                            // expired. Guard in case the timer isn't mounted yet.
-                            if (typeof window.examTimerExtend === 'function') {
-                                window.examTimerExtend(additionalMinutes);
-                            }
-
-                            // ── 2. Show the candidate a notification ──────────
-                            // exam-timer.js showTimeExtendedBanner() is already
-                            // called by extendByMinutes(), so we only need a
-                            // fallback toast here in case the timer isn't mounted.
-                            if (typeof window.examTimerExtend !== 'function') {
-                                const toast = document.createElement('div');
-                                toast.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9999;max-width:22rem;border-radius:2px;padding:1rem;background:#059669;color:#fff;font-size:.875rem;font-weight:600;box-shadow:0 4px 20px rgba(5,150,105,.4);display:flex;align-items:center;gap:.75rem;';
-                                toast.innerHTML = `
-                                    <svg style="width:1.25rem;height:1.25rem;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span>+${additionalMinutes} minute${additionalMinutes !== 1 ? 's' : ''} added to your time</span>
-                                `;
-                                document.body.appendChild(toast);
-                                setTimeout(() => toast.remove(), 8000);
-                            }
+                            // The exam:extend-time CustomEvent is already dispatched
+                            // by ExamHeartbeat.setupEchoListener() before this callback
+                            // fires. Both timer instances (desktop + mobile) receive it
+                            // via their document event listeners in timer.blade.php.
+                            // Nothing extra needed here.
                         }
                     });
                 }

@@ -1,23 +1,24 @@
 @props([
-    'timeRemaining' => 0,
-    'isMobile' => false,
+    'timeRemaining'    => 0,
+    'extraTimeMinutes' => 0,
+    'isMobile'         => false,
 ])
 
 @php
-    $seconds = (int) $timeRemaining;
-    $alertId = $isMobile ? 'time-alert-mobile' : 'time-alert';
+    $seconds  = (int) $timeRemaining;
+    $alertId  = $isMobile ? 'time-alert-mobile' : 'time-alert';
 @endphp
 
 <div
-    x-data="examCountdown({{ $seconds }})"
+    x-data="examCountdown({{ $seconds }}, {{ (int) $extraTimeMinutes }})"
     id="{{ $alertId }}"
     class="flex items-center gap-2 px-3 py-1.5 transition-all duration-300 border"
     style="border-radius: 2px;"
     :class="{
-        'bg-red-600 text-white animate-pulse border-red-600':                                                  state === 'expired',
-        'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300':   state === 'critical',
+        'bg-red-600 text-white animate-pulse border-red-600':                                                          state === 'expired',
+        'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300':           state === 'critical',
         'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300': state === 'warning',
-        'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700':                               state === 'normal'
+        'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700':                                       state === 'normal'
     }"
 >
     <svg class="w-4 h-4 flex-shrink-0 transition-colors"
@@ -33,15 +34,18 @@
 
 @script
 <script>
-Alpine.data('examCountdown', (initialSeconds) => ({
-    remaining:     Math.max(0, Math.round(initialSeconds)),
-    state:         initialSeconds <= 0   ? 'expired'
-                 : initialSeconds <= 300 ? 'critical'
-                 : initialSeconds <= 600 ? 'warning'
-                 : 'normal',
+Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
+    remaining:              Math.max(0, Math.round(initialSeconds)),
+    lastKnownExtraMinutes:  initialExtraMinutes ?? 0,
+    state:                  initialSeconds <= 0   ? 'expired'
+                          : initialSeconds <= 300 ? 'critical'
+                          : initialSeconds <= 600 ? 'warning'
+                          : 'normal',
     display:       '--:--:--',
     interval:      null,
     expiredCalled: false,
+    _onSyncEvent:  null,
+    _onExtendEvent: null,
 
     init() {
         this.updateDisplay();
@@ -52,25 +56,17 @@ Alpine.data('examCountdown', (initialSeconds) => ({
             this.triggerExpire();
         }
 
-        // ── Expose globals so the heartbeat and Echo handler can reach us ──
-        //
-        // window.examTimerSync(remainingSeconds)
-        //   Called by ExamHeartbeat.defaultTimeSyncHandler on every heartbeat
-        //   response that carries remaining_seconds.  Corrects clock drift and
-        //   picks up admin-granted extensions within one polling cycle (~15 s).
-        //
-        // window.examTimerExtend(minutes)
-        //   Called by the Echo extend_time handler for instant (real-time)
-        //   extension delivery when Laravel Echo / WebSockets is available.
-        //
-        // Both are set here so they always point to the live Alpine instance.
-        // If Livewire re-mounts this component, init() runs again and the
-        // globals are updated to the new instance automatically.
-        window.examTimerSync   = (secs) => this.syncFromServer(secs);
-        window.examTimerExtend = (mins) => this.extendByMinutes(mins);
+        // Use CustomEvent on document instead of window globals.
+        // This fixes two bugs:
+        //  1. Both desktop + mobile timer instances receive every event —
+        //     no single instance "owns" a global and blocks the other.
+        //  2. The heartbeat class stays decoupled from the timer implementation.
+        this._onSyncEvent   = (e) => this.handleSyncEvent(e.detail);
+        this._onExtendEvent = (e) => this.extendByMinutes(e.detail.minutes);
+        document.addEventListener('exam:sync-time',   this._onSyncEvent);
+        document.addEventListener('exam:extend-time', this._onExtendEvent);
     },
 
-    // ── Countdown tick ────────────────────────────────────────────────────────
     tick() {
         if (this.remaining <= 0) {
             this.remaining = 0;
@@ -85,84 +81,79 @@ Alpine.data('examCountdown', (initialSeconds) => ({
         this.updateState();
     },
 
-    // ── Server sync (heartbeat polling path) ──────────────────────────────────
-    //
-    // Called every ~15 s when the heartbeat response includes remaining_seconds.
-    // We apply the server value only when the difference is meaningful:
-    //
-    //  diff > +5 s  → server has MORE time than client = extension was granted
-    //  diff < -30 s → server has significantly LESS = server-side correction
-    //
-    // Small differences (−30 s to +5 s) are normal network/processing jitter
-    // and are intentionally ignored to prevent the display from jumping around.
-    syncFromServer(serverRemaining) {
+    // Heartbeat polling path — called every ~15 s.
+    // Two cases:
+    //   A) extra_time_minutes increased → genuine admin extension
+    //      → update remaining, show banner for the added minutes
+    //   B) extra_time_minutes unchanged → normal drift correction
+    //      → silently snap remaining only when drift > 30 s; never show banner
+    handleSyncEvent({ remaining: serverRemaining, extraMinutes: serverExtraMinutes }) {
         if (serverRemaining === null || serverRemaining === undefined) return;
 
-        serverRemaining     = Math.max(0, Math.round(serverRemaining));
-        const diff          = serverRemaining - this.remaining; // +ve = server has more
+        serverRemaining    = Math.max(0, Math.round(serverRemaining));
+        serverExtraMinutes = serverExtraMinutes ?? 0;
 
-        if (diff > 5) {
-            // Extension: server has more time than the client countdown thinks
-            const gainedMinutes = Math.ceil(diff / 60);
-            this.remaining      = serverRemaining;
+        if (serverExtraMinutes > this.lastKnownExtraMinutes) {
+            // Case A — genuine extension
+            const addedMinutes         = serverExtraMinutes - this.lastKnownExtraMinutes;
+            this.lastKnownExtraMinutes = serverExtraMinutes;
+            this.remaining             = serverRemaining;
             this.updateDisplay();
             this.updateState();
-            this.showExtensionBanner(gainedMinutes);
+            this.showExtensionBanner(addedMinutes);
             this.rearmInterval();
-        } else if (diff < -30) {
-            // Server-side correction (e.g. resumed submission with different started_at)
-            this.remaining = serverRemaining;
-            this.updateDisplay();
-            this.updateState();
+        } else {
+            // Case B — silent drift correction (no banner)
+            const drift = serverRemaining - this.remaining;
+            if (Math.abs(drift) > 30) {
+                this.remaining = serverRemaining;
+                this.updateDisplay();
+                this.updateState();
+                this.rearmInterval();
+            }
         }
-        // Ignore small differences — they are just heartbeat jitter
     },
 
-    // ── Direct extension (Echo real-time path) ────────────────────────────────
-    //
-    // Called immediately when the admin grants extra time and Echo delivers the
-    // event to the candidate's browser without waiting for the next heartbeat.
+    // Echo real-time path — called immediately on admin push.
     extendByMinutes(minutes) {
         if (!minutes || minutes <= 0) return;
-
-        this.remaining += Math.round(minutes * 60);
+        this.remaining            += Math.round(minutes * 60);
+        // Advance lastKnownExtraMinutes so the next heartbeat sync
+        // does not double-count the same extension via Case A above.
+        this.lastKnownExtraMinutes += minutes;
         this.updateDisplay();
         this.updateState();
         this.showExtensionBanner(minutes);
         this.rearmInterval();
     },
 
-    // ── Re-arm the countdown interval ────────────────────────────────────────
-    //
-    // If the timer had already reached zero and fired triggerExpire(), the
-    // interval is cleared.  An extension after expiry must restart it.
+    // Re-arm the interval if the timer had already expired.
     rearmInterval() {
         if (!this.interval && this.remaining > 0) {
-            this.expiredCalled = false; // allow triggerExpire() to fire again if needed
-            this.state         = this.remaining <= 300 ? 'critical'
-                               : this.remaining <= 600 ? 'warning'
-                               : 'normal';
+            this.expiredCalled = false;
+            this.state = this.remaining <= 300 ? 'critical'
+                       : this.remaining <= 600 ? 'warning'
+                       : 'normal';
             this.interval = setInterval(() => this.tick(), 1000);
         }
     },
 
-    // ── Banner shown to the candidate when time is extended ───────────────────
+    // Green banner shown once per genuine extension.
+    // The id guard means only one banner is visible even with two timer instances.
     showExtensionBanner(minutes) {
         document.getElementById('exam-time-extended-banner')?.remove();
 
-        const banner       = document.createElement('div');
-        banner.id          = 'exam-time-extended-banner';
+        const banner = document.createElement('div');
+        banner.id    = 'exam-time-extended-banner';
         banner.style.cssText = [
-            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
-            'z-index:200',
-            'display:flex', 'align-items:center', 'gap:.75rem',
+            'position:fixed','top:1rem','left:50%','transform:translateX(-50%)',
+            'z-index:200','display:flex','align-items:center','gap:.75rem',
             'padding:.75rem 1.25rem',
             'background:linear-gradient(135deg,#059669,#34d399)',
-            'color:#fff', 'font-size:.875rem', 'font-weight:600',
+            'color:#fff','font-size:.875rem','font-weight:600',
             'border-radius:2px',
             'box-shadow:0 4px 20px rgba(5,150,105,.45)',
-            'pointer-events:none',
-            'white-space:nowrap',
+            'pointer-events:none','white-space:nowrap',
         ].join(';');
 
         banner.innerHTML = `
@@ -173,10 +164,8 @@ Alpine.data('examCountdown', (initialSeconds) => ({
             </svg>
             <span>+${minutes} minute${minutes !== 1 ? 's' : ''} added to your time</span>
         `;
-
         document.body.appendChild(banner);
 
-        // Fade out after 8 s, then remove from DOM
         setTimeout(() => {
             banner.style.transition = 'opacity .5s';
             banner.style.opacity    = '0';
@@ -184,11 +173,9 @@ Alpine.data('examCountdown', (initialSeconds) => ({
         }, 8000);
     },
 
-    // ── Trigger Livewire auto-submit when time reaches zero ───────────────────
     triggerExpire() {
         if (this.expiredCalled) return;
         this.expiredCalled = true;
-
         if (window.examSectionComponent) {
             try {
                 window.examSectionComponent.call('handleTimerExpired');
@@ -200,7 +187,6 @@ Alpine.data('examCountdown', (initialSeconds) => ({
         }
     },
 
-    // ── Display helpers ───────────────────────────────────────────────────────
     updateDisplay() {
         const h = Math.floor(this.remaining / 3600);
         const m = Math.floor((this.remaining % 3600) / 60);
@@ -209,21 +195,16 @@ Alpine.data('examCountdown', (initialSeconds) => ({
     },
 
     updateState() {
-        if (this.remaining <= 0)        this.state = 'expired';
+        if      (this.remaining <= 0)   this.state = 'expired';
         else if (this.remaining <= 300) this.state = 'critical';
         else if (this.remaining <= 600) this.state = 'warning';
         else                            this.state = 'normal';
     },
 
-    // ── Cleanup ───────────────────────────────────────────────────────────────
     destroy() {
-        if (this.interval) clearInterval(this.interval);
-
-        // Only clear the globals if they still point to this instance.
-        // (Protects against a race where a new instance has already registered.)
-        if (window.examTimerSync   === ((secs) => this.syncFromServer(secs)))   window.examTimerSync   = null;
-        if (window.examTimerExtend === ((mins) => this.extendByMinutes(mins))) window.examTimerExtend = null;
-
+        if (this.interval)      clearInterval(this.interval);
+        if (this._onSyncEvent)   document.removeEventListener('exam:sync-time',   this._onSyncEvent);
+        if (this._onExtendEvent) document.removeEventListener('exam:extend-time', this._onExtendEvent);
         document.getElementById('exam-time-extended-banner')?.remove();
     },
 }));
