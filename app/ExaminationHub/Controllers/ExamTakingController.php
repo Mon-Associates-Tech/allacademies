@@ -134,7 +134,7 @@ class ExamTakingController extends Controller
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if ($submission->submitted_at) {
+        if ($submission->isSubmitted()) {
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
@@ -181,7 +181,7 @@ class ExamTakingController extends Controller
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if ($submission->submitted_at) {
+        if ($submission->isSubmitted()) {
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
@@ -302,7 +302,7 @@ class ExamTakingController extends Controller
                 : abort(403);
         }
 
-        if ($submission->submitted_at) {
+        if ($submission->isSubmitted()) {
             return $request->expectsJson()
                 ? response()->json(['status' => 'already_submitted'])
                 : redirect()->route('examination-hub.take.completed', $exam);
@@ -576,17 +576,21 @@ class ExamTakingController extends Controller
         // This happens when the candidate successfully authenticated in a previous
         // request but never reached the preview page (e.g. network drop), so a
         // blank submission row already exists.
-        $existingNotStarted = GeneralExamSubmission::where([
+        $existingInProgress = GeneralExamSubmission::where([
             'general_exam_id'  => $exam->id,
             'participant_type' => $type,
             'participant_id'   => $pid,
         ])
         ->whereNull('submitted_at')
-        ->where('status', GeneralExamSubmission::STATUS_NOT_STARTED)
+        ->whereIn('status', [
+            GeneralExamSubmission::STATUS_NOT_STARTED,
+            GeneralExamSubmission::STATUS_IN_PROGRESS,
+        ])
+        ->oldest('id')
         ->first();
 
-        if ($existingNotStarted) {
-            return $existingNotStarted;
+        if ($existingInProgress) {
+            return $existingInProgress;
         }
 
         // ── 2. Check for an active readmission grant ─────────────────────────
@@ -610,22 +614,17 @@ class ExamTakingController extends Controller
         }
 
         // ── 4. Create (or find an in-progress) submission ────────────────────
-        return GeneralExamSubmission::firstOrCreate(
-            [
-                'general_exam_id'  => $exam->id,
-                'participant_type' => $type,
-                'participant_id'   => $pid,
-                'submitted_at'     => null,
-            ],
-            [
-                'participant_name'  => $participantName,
-                'participant_email' => $participantEmail,
-                'started_at'        => now(),
-                'responses'         => [],
-                'score'             => 0,
-                'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
-            ]
-        );
+        return GeneralExamSubmission::create([
+            'general_exam_id'  => $exam->id,
+            'participant_type' => $type,
+            'participant_id'   => $pid,
+            'participant_name'  => $participantName,
+            'participant_email' => $participantEmail,
+            'started_at'        => now(),
+            'responses'         => [],
+            'score'             => 0,
+            'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
+        ]);
     }
 
     /**
