@@ -399,7 +399,7 @@ if (document.readyState === 'loading') {
     @endif
 
     @push('exam-scripts')
-        @vite(['resources/js/exam-heartbeat.js', 'resources/js/exam-sync.js', 'resources/js/exam-timer.js'])
+        @vite(['resources/js/exam-sync.js', 'resources/js/exam-timer.js'])
     @endpush
 
 @push('exam-scripts')
@@ -550,11 +550,34 @@ if (document.readyState === 'loading') {
                             }, 3000);
                         },
                         onTimeExtended: function(additionalMinutes) {
-                            // The exam:extend-time CustomEvent is already dispatched
-                            // by ExamHeartbeat.setupEchoListener() before this callback
-                            // fires. Both timer instances (desktop + mobile) receive it
-                            // via their document event listeners in timer.blade.php.
-                            // Nothing extra needed here.
+                            // Dispatch CustomEvent — timer.blade.php handles the
+                            // actual countdown update via its own event listener.
+                            document.dispatchEvent(new CustomEvent('exam:extend-time', {
+                                detail: { minutes: additionalMinutes },
+                            }));
+
+                            // Keep the original toast so there is visible feedback
+                            // even before the timer component has mounted.
+                            const toast = document.createElement('div');
+                            toast.className = 'fixed bottom-4 right-4 z-50 max-w-sm p-4 bg-green-600 text-white rounded-lg shadow-lg';
+                            toast.innerHTML = `
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div>
+                                        <p class="font-semibold">Time Extended</p>
+                                        <p class="text-sm opacity-90">Your exam time has been extended by ${additionalMinutes} minutes.</p>
+                                    </div>
+                                    <button onclick="this.closest('.fixed').remove();" class="ml-auto text-white/70 hover:text-white">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            `;
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 8000);
                         }
                     });
                 }

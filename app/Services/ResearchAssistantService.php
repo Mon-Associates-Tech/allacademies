@@ -640,23 +640,15 @@ class ResearchAssistantService
 
             $tmpPath = $file->getRealPath();
             $phpWord = IOFactory::load($tmpPath);
-            $text = '';
+            $html = '';
 
             foreach ($phpWord->getSections() as $section) {
                 foreach ($section->getElements() as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText()."\n";
-                    } elseif (method_exists($element, 'getElements')) {
-                        foreach ($element->getElements() as $childElement) {
-                            if (method_exists($childElement, 'getText')) {
-                                $text .= $childElement->getText()."\n";
-                            }
-                        }
-                    }
+                    $html .= $this->elementToHtml($element);
                 }
             }
 
-            return trim($text);
+            return trim($html);
         } catch (Exception $e) {
             Log::error('DOCX processing failed', [
                 'error' => $e->getMessage(),
@@ -667,5 +659,43 @@ class ResearchAssistantService
                 'File name: '.$file->getClientOriginalName()."\n".
                 'File size: '.$file->getSize()." bytes\n";
         }
+    }
+
+    /**
+     * Convert PhpWord element to HTML
+     */
+    protected function elementToHtml($element): string
+    {
+        $html = '';
+        
+        if (method_exists($element, 'getText')) {
+            $text = $element->getText();
+            $style = method_exists($element, 'getFontStyle') ? $element->getFontStyle() : null;
+            
+            if ($style) {
+                $styleAttr = [];
+                if (method_exists($style, 'isBold') && $style->isBold()) {
+                    $text = '<strong>' . htmlspecialchars($text) . '</strong>';
+                } else {
+                    $text = htmlspecialchars($text);
+                }
+                if (method_exists($style, 'isItalic') && $style->isItalic()) {
+                    $text = '<em>' . $text . '</em>';
+                }
+                if (method_exists($style, 'getUnderline') && $style->getUnderline() !== 'none') {
+                    $text = '<u>' . $text . '</u>';
+                }
+                $html .= $text;
+            } else {
+                $html .= htmlspecialchars($text);
+            }
+            $html .= "\n";
+        } elseif (method_exists($element, 'getElements')) {
+            foreach ($element->getElements() as $childElement) {
+                $html .= $this->elementToHtml($childElement);
+            }
+        }
+        
+        return $html;
     }
 }

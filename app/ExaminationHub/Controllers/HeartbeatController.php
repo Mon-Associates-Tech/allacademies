@@ -99,13 +99,22 @@ class HeartbeatController extends Controller
         // The client timer re-syncs from these values on every heartbeat so that
         // admin-granted extensions are reflected without needing a page reload.
         // getRemainingTime() already incorporates extra_time_minutes.
-        $submission->refresh(); // ensure extra_time_minutes is current
-        $remainingSeconds = $submission->getRemainingTime();
+        // Wrapped in try-catch so any failure here never converts a valid heartbeat
+        // into a 500 response (which would stop the candidate appearing as active).
+        try {
+            $submission->refresh(); // ensure extra_time_minutes is current
+            $remainingSeconds = $submission->getRemainingTime();
 
-        if ($remainingSeconds !== null) {
-            $response['remaining_seconds']     = $remainingSeconds;
-            $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
-            $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+            if ($remainingSeconds !== null) {
+                $response['remaining_seconds']     = $remainingSeconds;
+                $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+                $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('HeartbeatController: failed to compute remaining time', [
+                'submission_id' => $submission->id,
+                'error'         => $e->getMessage(),
+            ]);
         }
 
         // Include warning if present

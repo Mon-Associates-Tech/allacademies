@@ -334,8 +334,13 @@ class ExamParticipantHeartbeat extends Model
 
         // ── 2. Exam-level fallback ─────────────────────────────────────────────
         if (! $hasDuration && $examDurationMinutes && $this->started_at) {
-            $totalAllowedSeconds = $examDurationMinutes * 60;
-            $endAt               = $this->started_at->copy()->addMinutes($examDurationMinutes);
+            // Use the submission's actual total allowed time, which includes any
+            // extra_time_minutes granted by the admin.  Falls back to base duration
+            // when no submission is loaded.
+            $extraMinutes        = $submission?->extra_time_minutes ?? 0;
+            $totalMinutes        = $examDurationMinutes + $extraMinutes;
+            $totalAllowedSeconds = $totalMinutes * 60;
+            $endAt               = $this->started_at->copy()->addMinutes($totalMinutes);
             $remainingSeconds    = max(0, (int) now()->diffInSeconds($endAt, false));
             $hasDuration         = true;
         }
@@ -374,6 +379,7 @@ class ExamParticipantHeartbeat extends Model
             'elapsed_seconds'      => $elapsedSeconds,
             'remaining_seconds'    => $remainingSeconds,
             'total_allowed_seconds'=> $totalAllowedSeconds,
+            'extra_time_minutes'   => $submission?->extra_time_minutes ?? 0,
             'time_taken_seconds'   => $timeTakenSeconds,
             'has_duration'         => $hasDuration,
             'ip_address'           => $this->ip_address,
