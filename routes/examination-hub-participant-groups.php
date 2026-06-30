@@ -35,3 +35,6 @@ Route::middleware(['auth'])->prefix('examinations')->name('examination-hub.')->g
     });
 
 });
+
+Route::get('/examinations/references', [ParticipantGroupController::class, 'guestIndex'])
+    ->name('examination-hub.participant-groups.guest');
