@@ -127,23 +127,56 @@ class ExamParticipantHeartbeat extends Model
     {
         $exam = $submission->assignment;
 
-        return self::updateOrCreate(
-            ['general_exam_submission_id' => $submission->id],
-            [
-                'general_exam_id' => $exam->id,
-                'participant_name' => $submission->participant_name,
-                'participant_email' => $submission->participant_email,
-                'session_token' => self::generateSessionToken(),
-                'started_at' => now(),
+        // ── Re-authentication / second device ────────────────────────────────
+        //
+        // If a heartbeat record already exists for this submission we MUST NOT
+        // reset started_at.  Resetting it would:
+        //   • make toLiveData() compute remaining time from "now", showing the
+        //     full exam duration on the second device instead of what's left.
+        //   • make the first device's timer jump upward when it receives the
+        //     inflated remaining_seconds in the next heartbeat response.
+        //
+        // Instead we preserve started_at and only rotate the session_token (so
+        // HeartbeatController can detect the old device on its next poll) and
+        // update the device/network fingerprint.
+        $existing = self::where('general_exam_submission_id', $submission->id)->first();
+
+        if ($existing) {
+            $existing->update([
+                'session_token'     => self::generateSessionToken(),
                 'last_heartbeat_at' => now(),
-                'status' => self::STATUS_ACTIVE,
-                'total_questions' => $exam->questions()->count(),
-                'ip_address' => $deviceInfo['ip'] ?? request()->ip(),
-                'user_agent' => $deviceInfo['user_agent'] ?? request()->userAgent(),
-                'browser' => $deviceInfo['browser'] ?? null,
-                'os' => $deviceInfo['os'] ?? null,
-            ]
-        );
+                'status'            => self::STATUS_ACTIVE,
+                'participant_name'  => $submission->participant_name,
+                'participant_email' => $submission->participant_email,
+                'ip_address'        => $deviceInfo['ip']         ?? request()->ip(),
+                'user_agent'        => $deviceInfo['user_agent'] ?? request()->userAgent(),
+                'browser'           => $deviceInfo['browser']    ?? null,
+                'os'                => $deviceInfo['os']         ?? null,
+                // started_at intentionally NOT touched — preserves timer continuity
+            ]);
+
+            return $existing->refresh();
+        }
+
+        // ── First authentication for this submission ──────────────────────────
+        //
+        // Use the submission's started_at if already set (e.g. by a previous
+        // start() call), so the heartbeat and the submission are always in sync.
+        return self::create([
+            'general_exam_id'           => $exam->id,
+            'general_exam_submission_id' => $submission->id,
+            'participant_name'          => $submission->participant_name,
+            'participant_email'         => $submission->participant_email,
+            'session_token'             => self::generateSessionToken(),
+            'started_at'                => $submission->started_at ?? now(),
+            'last_heartbeat_at'         => now(),
+            'status'                    => self::STATUS_ACTIVE,
+            'total_questions'           => $exam->questions()->count(),
+            'ip_address'                => $deviceInfo['ip']         ?? request()->ip(),
+            'user_agent'                => $deviceInfo['user_agent'] ?? request()->userAgent(),
+            'browser'                   => $deviceInfo['browser']    ?? null,
+            'os'                        => $deviceInfo['os']         ?? null,
+        ]);
     }
 
     // ─── Instance Methods ────────────────────────────────────────────────────
@@ -333,16 +366,21 @@ class ExamParticipantHeartbeat extends Model
         }
 
         // ── 2. Exam-level fallback ─────────────────────────────────────────────
-        if (! $hasDuration && $examDurationMinutes && $this->started_at) {
-            // Use the submission's actual total allowed time, which includes any
-            // extra_time_minutes granted by the admin.  Falls back to base duration
-            // when no submission is loaded.
-            $extraMinutes        = $submission?->extra_time_minutes ?? 0;
-            $totalMinutes        = $examDurationMinutes + $extraMinutes;
-            $totalAllowedSeconds = $totalMinutes * 60;
-            $endAt               = $this->started_at->copy()->addMinutes($totalMinutes);
-            $remainingSeconds    = max(0, (int) now()->diffInSeconds($endAt, false));
-            $hasDuration         = true;
+        if (! $hasDuration && $examDurationMinutes) {
+            // Always use the submission's started_at as the authoritative clock.
+            // The heartbeat's own started_at can be stale or wrong (it gets
+            // preserved now, but older records may differ).  Submission is the
+            // single source of truth.
+            $clockStart = $submission?->started_at ?? $this->started_at;
+
+            if ($clockStart) {
+                $extraMinutes        = $submission?->extra_time_minutes ?? 0;
+                $totalMinutes        = $examDurationMinutes + $extraMinutes;
+                $totalAllowedSeconds = $totalMinutes * 60;
+                $endAt               = $clockStart->copy()->addMinutes($totalMinutes);
+                $remainingSeconds    = max(0, (int) now()->diffInSeconds($endAt, false));
+                $hasDuration         = true;
+            }
         }
 
         // ── 3. Time taken (final — for completed / terminated participants) ────

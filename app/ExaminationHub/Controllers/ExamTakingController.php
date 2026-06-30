@@ -108,6 +108,14 @@ class ExamTakingController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
+        // ── Single-session enforcement ────────────────────────────────────────
+        // Generate a fresh device token and write it to the submission row.
+        // Any existing PHP session (e.g. device 1) still holds the old token.
+        // HeartbeatController will detect the mismatch on device 1's next poll
+        // and return status:'session_superseded', which kicks that device out.
+        $deviceToken = Str::random(64);
+        $submission->update(['device_token' => $deviceToken]);
+
         // Session security hardening
         session()->regenerate();
         session([
@@ -117,6 +125,7 @@ class ExamTakingController extends Controller
                 'email' => $data['email'] ?? null,
             ],
             'exam_heartbeat_token'    => $heartbeat->session_token,
+            'exam_device_token'       => $deviceToken,   // ← enforces single-session
             'exam_ip_address'         => $request->ip(),
             'exam_user_agent_hash'    => hash('sha256', $request->userAgent()),
             'exam_authenticated_at'   => now()->toIso8601String(),
@@ -134,23 +143,14 @@ class ExamTakingController extends Controller
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if ($submission->isSubmitted()) {
+        if ($submission->submitted_at) {
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
         $exam->load([
-            'sections'        => fn ($q) => $q->orderBy('order')->withCount('questions'),
+            'sections'       => fn ($q) => $q->orderBy('order')->withCount('questions'),
             'academicSubject' => fn ($q) => $q->with('academicLevel'),
-            'participantGroup' => fn ($q) => $q->with('parent'),
         ]);
-
-        $programmeCourse = $exam->academicSubject?->name
-            ?? $exam->participantGroup?->name
-            ?? 'Not specified';
-
-        $profession = $exam->academicSubject?->academicLevel?->name
-            ?? $exam->participantGroup?->parent?->name
-            ?? 'Not specified';
 
         $participantData      = session('exam_participant_data', []);
         $configuredParticipant = $this->resolveConfiguredParticipant($submission);
@@ -166,8 +166,6 @@ class ExamTakingController extends Controller
                                    ?? $submission->participant_email
                                    ?? $participantData['email']
                                    ?? null,
-            'programmeCourse'   => $programmeCourse,
-            'profession'        => $profession,
             'proctoringEnabled' => (bool) $exam->proctoring_enabled,
         ]);
     }
@@ -181,7 +179,7 @@ class ExamTakingController extends Controller
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if ($submission->isSubmitted()) {
+        if ($submission->submitted_at) {
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
@@ -302,7 +300,7 @@ class ExamTakingController extends Controller
                 : abort(403);
         }
 
-        if ($submission->isSubmitted()) {
+        if ($submission->submitted_at) {
             return $request->expectsJson()
                 ? response()->json(['status' => 'already_submitted'])
                 : redirect()->route('examination-hub.take.completed', $exam);
@@ -576,21 +574,17 @@ class ExamTakingController extends Controller
         // This happens when the candidate successfully authenticated in a previous
         // request but never reached the preview page (e.g. network drop), so a
         // blank submission row already exists.
-        $existingInProgress = GeneralExamSubmission::where([
+        $existingNotStarted = GeneralExamSubmission::where([
             'general_exam_id'  => $exam->id,
             'participant_type' => $type,
             'participant_id'   => $pid,
         ])
         ->whereNull('submitted_at')
-        ->whereIn('status', [
-            GeneralExamSubmission::STATUS_NOT_STARTED,
-            GeneralExamSubmission::STATUS_IN_PROGRESS,
-        ])
-        ->oldest('id')
+        ->where('status', GeneralExamSubmission::STATUS_NOT_STARTED)
         ->first();
 
-        if ($existingInProgress) {
-            return $existingInProgress;
+        if ($existingNotStarted) {
+            return $existingNotStarted;
         }
 
         // ── 2. Check for an active readmission grant ─────────────────────────
@@ -614,17 +608,22 @@ class ExamTakingController extends Controller
         }
 
         // ── 4. Create (or find an in-progress) submission ────────────────────
-        return GeneralExamSubmission::create([
-            'general_exam_id'  => $exam->id,
-            'participant_type' => $type,
-            'participant_id'   => $pid,
-            'participant_name'  => $participantName,
-            'participant_email' => $participantEmail,
-            'started_at'        => now(),
-            'responses'         => [],
-            'score'             => 0,
-            'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
-        ]);
+        return GeneralExamSubmission::firstOrCreate(
+            [
+                'general_exam_id'  => $exam->id,
+                'participant_type' => $type,
+                'participant_id'   => $pid,
+                'submitted_at'     => null,
+            ],
+            [
+                'participant_name'  => $participantName,
+                'participant_email' => $participantEmail,
+                'started_at'        => now(),
+                'responses'         => [],
+                'score'             => 0,
+                'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
+            ]
+        );
     }
 
     /**

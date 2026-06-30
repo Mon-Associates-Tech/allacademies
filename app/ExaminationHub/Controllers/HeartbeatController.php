@@ -59,6 +59,26 @@ class HeartbeatController extends Controller
             ]);
         }
 
+        // ── Single-session enforcement ────────────────────────────────────────
+        // Each authenticate() writes a fresh device_token to the submission and
+        // stores it in the PHP session.  If the token in the session doesn't
+        // match the one on the submission, a second device has since authenticated
+        // and this device must be kicked out.
+        //
+        // We do NOT check this for submissions that have no device_token yet
+        // (existing rows created before this feature was deployed).
+        if (
+            $submission->device_token &&
+            session('exam_device_token') !== $submission->device_token
+        ) {
+            return response()->json([
+                'status'   => 'session_superseded',
+                'message'  => 'This exam session has been opened on another device. '
+                            . 'You have been logged out of this session.',
+                'redirect' => route('examination-hub.take.join'),
+            ]);
+        }
+
         // Submission already completed by admin force-submit or other server action
         if ($submission->submitted_at) {
             return response()->json([

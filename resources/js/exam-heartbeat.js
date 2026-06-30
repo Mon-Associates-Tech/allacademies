@@ -17,12 +17,14 @@ class ExamHeartbeat {
         this.questionsAnswered = 0;
 
         // Callbacks
-        this.onWarning = options.onWarning || this.defaultWarningHandler;
-        this.onTerminated = options.onTerminated || this.defaultTerminatedHandler;
-        this.onMessage = options.onMessage || this.defaultMessageHandler;
-        this.onForceSubmit = options.onForceSubmit || null;
+        this.onWarning      = options.onWarning      || this.defaultWarningHandler;
+        this.onTerminated   = options.onTerminated   || this.defaultTerminatedHandler;
+        this.onMessage      = options.onMessage      || this.defaultMessageHandler;
+        this.onForceSubmit  = options.onForceSubmit  || null;
         this.onTimeExtended = options.onTimeExtended || null;
-        this.onTimeSync = options.onTimeSync || this.defaultTimeSyncHandler.bind(this);
+        this.onTimeSync     = options.onTimeSync     || this.defaultTimeSyncHandler.bind(this);
+        // Fired when a second device takes over the session.
+        this.onSessionSuperseded = options.onSessionSuperseded || this.defaultSessionSupersededHandler.bind(this);
 
         this.init();
     }
@@ -127,6 +129,11 @@ class ExamHeartbeat {
             if (data.status === 'terminated') {
                 this.stop();
                 this.onTerminated(data);
+            } else if (data.status === 'session_superseded') {
+                // A second device authenticated for the same exam.
+                // Stop sending heartbeats and hand off to the superseded handler.
+                this.stop();
+                this.onSessionSuperseded(data);
             } else if (data.warning) {
                 this.onWarning(data.warning);
             } else if (data.admin_message) {
@@ -313,6 +320,48 @@ class ExamHeartbeat {
         // Auto remove after 10 seconds
         setTimeout(() => toast.remove(), 10000);
     }
+
+    defaultSessionSupersededHandler(data) {
+        document.querySelectorAll('.exam-blocking-modal').forEach(el => el.remove());
+
+        const modal = document.createElement('div');
+        modal.className = 'exam-blocking-modal fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:2px;max-width:28rem;width:100%;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);">
+                <div style="height:4px;background:linear-gradient(90deg,#dc2626,#f87171);"></div>
+                <div style="padding:2rem;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+                        <div style="flex-shrink:0;width:2.5rem;height:2.5rem;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;">
+                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 style="margin:0;font-size:1rem;font-weight:700;color:#111;">Session Taken Over</h3>
+                            <p style="margin:.25rem 0 0;font-size:.8125rem;color:#6b7280;">Your exam was opened on another device</p>
+                        </div>
+                    </div>
+                    <p style="font-size:.875rem;color:#374151;margin:0 0 1.5rem;line-height:1.6;">
+                        ${data.message || 'This exam session has been opened on another device.'}
+                    </p>
+                    <p style="font-size:.75rem;color:#9ca3af;margin:0;">Redirecting in <span id="superseded-countdown">5</span> seconds...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        let secs = 5;
+        const tick = setInterval(() => {
+            secs--;
+            const el = document.getElementById('superseded-countdown');
+            if (el) el.textContent = secs;
+            if (secs <= 0) {
+                clearInterval(tick);
+                window.location.href = data.redirect || '/examinations/join';
+            }
+        }, 1000);
+    }
+
     // Dispatches a CustomEvent so every timer instance on the page receives
     // the update. Both desktop and mobile timers listen on document.
     defaultTimeSyncHandler(remainingSeconds, extraTimeMinutes) {
