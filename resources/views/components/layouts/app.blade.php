@@ -6,7 +6,7 @@
     'pageName' => null,
     'action_link' => '',
     'actionLinkText' => '',
-    'showTitleArea' => true,
+    'showTitleArea' => false,
     'fullWidth' => false,
     // background allows callers to set additional body background classes, e.g. 'bg-white dark:bg-gray-900'
     'background' => '',

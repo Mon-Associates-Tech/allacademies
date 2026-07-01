@@ -1,4 +1,4 @@
-<x-layouts.app title="Essay Questions" page-name="Essay Questions">
+<x-layouts.app title="Essay Questions" :show-title-area="false" page-name="Essay Questions">
     <!-- Breadcrumb -->
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
