@@ -129,8 +129,8 @@
     {{-- their own <script type="application/ld+json"> into @stack('schema').    --}}
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
+        "@@context": "https://schema.org",
+        "@@type": "WebSite",
         "name": "{{ $siteName }}",
         "url": "{{ $siteUrl }}",
         "description": "{{ $resolvedDescription }}",
