@@ -116,7 +116,7 @@
         <main class="flex-1 animate-fade-in">
             <!-- Breadcrumb -->
             @if($breadcrumb)
-                <div class="max-w-5xl px-4 lg:px-8 py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
+                <div class="max-w-7xl px-4 lg:px-6 w-full py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
             @endif
 
             <!-- Alerts -->
@@ -144,7 +144,7 @@
             @endif
 
             <!-- Page content - NO OVERFLOW HERE -->
-            <div class="pb-12 mb-8 w-full">
+            <div class="pb-12 mb-8 w-full {{ $showTitleArea ? 'mt-0' : 'mt-1' }} print:mt-0">
                 <div class="w-full {{ $fullWidth ? '' : 'sm:px-4 lg:px-4' }}">
                     {{ $slot }}
                 </div>

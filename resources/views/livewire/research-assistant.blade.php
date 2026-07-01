@@ -3,7 +3,7 @@
     message: '',
     newSubtopic: '',
     showScrollToBottom: false,
-    sidebarHistoryOpen: true,
+    sidebarHistoryOpen: false,
     sidebarParametersOpen: false,
     messageRows: 3,
 
@@ -36,7 +36,7 @@
         const textarea = this.$refs.messageInput;
         if (textarea) {
             textarea.style.height = 'auto';
-            const lineHeight = 24; // Approximate line height for text-base leading-relaxed
+            const lineHeight = 24;
             const maxLines = 5;
             const maxHeight = lineHeight * maxLines;
             const newHeight = Math.min(textarea.scrollHeight, maxHeight);
@@ -44,62 +44,61 @@
         }
     }
 }"
-     class="min-h-screen rounded-t-lg bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+    class="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-200 overflow-hidden">
 
     <!-- Header -->
-    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 rounded-t-lg">
-        <div class="max-w-full px-4 sm:px-6 lg:px-8">
+    <header
+        class="flex-shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+        <div class="max-w-full px-4 sm:px-6">
             <div class="flex justify-between items-center h-16">
+                <!-- Logo & Title -->
                 <div class="flex items-center space-x-3 flex-1 min-w-0">
-                    <div class="flex-shrink-0 relative">
-                        <div class="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-50 animate-pulse"></div>
-                        <svg class="h-10 w-10 text-blue-600 dark:text-blue-400 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    <div
+                        class="flex-shrink-0 h-9 w-9 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0114 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                            </path>
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent truncate">
+                        <h1 class="text-base font-bold text-slate-900 dark:text-white truncate tracking-tight">
                             Research Assistant
                         </h1>
-                        @if($conversationTitle)
-                            <p class="text-xs text-gray-600 dark:text-gray-400 font-medium truncate">
-                                {{ $conversationTitle }}
-                            </p>
-                        @else
-                            <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Personalized learning support</p>
-                        @endif
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+                            {{ $conversationTitle ?: 'Personalized learning support' }}
+                        </p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                    <!-- Toggle History Sidebar -->
+                <!-- Actions -->
+                <div class="flex items-center gap-2 flex-shrink-0">
                     <button @click="toggleHistorySidebar()"
-                            :class="sidebarHistoryOpen ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
-                            class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all shadow-sm border border-gray-200 dark:border-gray-600"
-                            title="Toggle history">
+                        class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        title="Toggle history">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </button>
-
-                    <!-- Toggle Parameters Sidebar -->
                     <button @click="toggleParametersSidebar()"
-                            :class="sidebarParametersOpen ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
-                            class="p-2 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all shadow-sm border border-gray-200 dark:border-gray-600"
-                            title="Toggle settings">
+                        class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        title="Toggle settings">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
                     </button>
-
-                    <!-- New Chat -->
                     <button wire:click="newConversation"
-                            class="p-2 rounded-lg bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/30 transition-all shadow-sm border border-red-200 dark:border-red-800"
-                            title="New conversation">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
                         </svg>
+                        <span class="hidden sm:inline">New Chat</span>
                     </button>
                 </div>
             </div>
@@ -107,270 +106,340 @@
     </header>
 
     <!-- Main Content Grid -->
-    <div class="flex h-[calc(100vh-5rem)] overflow-hidden">
+    <div class="flex flex-1 overflow-hidden">
+
+        @php
+            $now = \Carbon\Carbon::now();
+            $grouped = collect($conversationHistory)->groupBy(function ($conv) use ($now) {
+                $date = \Carbon\Carbon::parse($conv['created_at']);
+                if ($date->isToday()) {
+                    return 'Today';
+                }
+                if ($date->isYesterday()) {
+                    return 'Yesterday';
+                }
+                if ($date->greaterThan($now->copy()->subDays(7))) {
+                    return 'Previous 7 Days';
+                }
+                return $date->format('M Y');
+            });
+            $groupKeys = array_keys($grouped->toArray());
+        @endphp
 
         <!-- History Sidebar -->
-        <div :class="sidebarHistoryOpen ? 'lg:w-80 w-80' : 'lg:w-0 w-0'"
-             class="hidden lg:flex lg:flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 overflow-hidden transition-all duration-300 ease-in-out">
-
-             <div class="flex justify-between">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                    Chat History
-                </h2>
+        <div :class="sidebarHistoryOpen ? 'w-80' : 'w-0'"
+            class="flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 ease-in-out">
+            <div
+                class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+                <h2 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">History</h2>
+                <button @click="toggleHistorySidebar()"
+                    class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
             </div>
-            <div class="my-auto m-2">
- <button @click="toggleHistorySidebar()"
-                            :class="sidebarHistoryOpen ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
-                            class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all shadow-sm border border-gray-200 dark:border-gray-600"
-                            title="Toggle history">
-                   <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-</svg>
-                    </button>
-            </div>
-             </div>
 
-
-            <div class="flex-1 overflow-y-auto p-4 space-y-2 thin-scrollbar">
-                @forelse($conversationHistory as $conversation)
-                    <div wire:click="loadConversation('{{ $conversation['id'] }}')"
-                         class="group flex items-center justify-between p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-all duration-200 border {{ $conversationId === $conversation['id'] ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent hover:border-blue-200 dark:hover:border-blue-800' }}">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate {{ $conversationId === $conversation['id'] ? 'text-blue-600 dark:text-blue-400' : '' }}">
-                                {{ $conversation['title'] }}
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {{ Carbon::parse($conversation['created_at'])->format('M j, g:i A') }}
-                            </p>
-                        </div>
-                        <button wire:click.stop="deleteConversation('{{ $conversation['id'] }}')"
-                                wire:confirm="Delete this conversation?"
-                                class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all flex-shrink-0">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            <div x-data="{ openGroups: @js($groupKeys) }" class="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
+                @forelse($grouped as $label => $conversations)
+                    <div>
+                        <button
+                            @click="let label = @js($label); if (openGroups.includes(label)) { openGroups = openGroups.filter(g => g !== label); } else { openGroups.push(label); }"
+                            class="flex items-center justify-between w-full px-2 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                            <span>{{ $label }}</span>
+                            <svg class="w-3 h-3 transition-transform duration-200"
+                                :class="openGroups.includes(@js($label)) ? 'rotate-90' : ''"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
                             </svg>
                         </button>
+                        <div x-show="openGroups.includes(@js($label))" class="mt-1 space-y-1">
+                            @foreach ($conversations as $conversation)
+                                <div wire:click="loadConversation('{{ $conversation['id'] }}')"
+                                    class="group flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all duration-150 {{ $conversationId === $conversation['id'] ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50' }}">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium truncate">{{ $conversation['title'] }}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+                                            {{ Carbon::parse($conversation['created_at'])->format('g:i A') }}
+                                        </p>
+                                    </div>
+                                    <button wire:click.stop="deleteConversation('{{ $conversation['id'] }}')"
+                                        wire:confirm="Delete this conversation?"
+                                        class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-all flex-shrink-0 ml-2">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 @empty
-                    <div class="text-center py-8">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    <div class="text-center py-12 px-4">
+                        <svg class="mx-auto h-10 w-10 text-slate-300 dark:text-slate-700" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                            </path>
                         </svg>
-                        <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">No conversations yet</p>
+                        <p class="mt-3 text-xs text-slate-500 dark:text-slate-500 font-medium">No conversations yet</p>
                     </div>
                 @endforelse
             </div>
         </div>
 
         <!-- Chat Area -->
-        <div class="flex-1 flex flex-col bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl relative overflow-hidden">
+        <div class="flex-1 flex flex-col relative overflow-hidden bg-slate-50 dark:bg-slate-950">
 
             <!-- Token Warning -->
-            @if($this->currentTokenWarning)
-                <div class="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                        </svg>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
-                                @if($this->currentTokenWarning === 'no_subscription')
-                                    Activate  messenger package to get started
-                                @elseif($this->currentTokenWarning === 'insufficient')
-                                    You have insufficient messengers. Top up to continue.
-                                @elseif($this->currentTokenWarning === 'depleted')
-                                    Your messengers are depleted. Purchase more to continue.
-                                @elseif($this->currentTokenWarning === 'expired')
-                                    Your subscription has expired. Renew to continue.
-                                @endif
-                            </p>
-                        </div>
-                        <a href="{{ route('token-subscriptions.create') }}" class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 hover:underline whitespace-nowrap">Get Messengers →</a>
-                    </div>
+            @if ($this->currentTokenWarning)
+                <div
+                    class="flex-shrink-0 mx-4 mt-4 p-3 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 flex items-center gap-3">
+                    <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-200 flex-1">
+                        @if ($this->currentTokenWarning === 'no_subscription')
+                            Activate messenger package to get started
+                        @elseif($this->currentTokenWarning === 'insufficient')
+                            You have insufficient messengers. Top up to continue.
+                        @elseif($this->currentTokenWarning === 'depleted')
+                            Your messengers are depleted. Purchase more to continue.
+                        @elseif($this->currentTokenWarning === 'expired')
+                            Your subscription has expired. Renew to continue.
+                        @endif
+                    </p>
+                    <a href="{{ route('token-subscriptions.create') }}"
+                        class="text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline whitespace-nowrap">Get
+                        Messengers &rarr;</a>
                 </div>
             @endif
 
-            <!-- Chat Messages -->
-            <div x-ref="chatContainer"
-                 @scroll="checkScroll()"
-                 class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-gradient-to-b from-transparent to-gray-50/50 dark:to-gray-900/50 thin-scrollbar">
+            <div class="flex-1 flex flex-col overflow-hidden {{ empty($messages) ? 'justify-center' : '' }}">
+                <!-- Chat Messages -->
+                <div x-ref="chatContainer" @scroll="checkScroll()"
+                    class="{{ empty($messages) ? 'flex-none' : 'flex-1' }} overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
 
-                @if(empty($messages))
-                    <div class="text-center py-20">
-                        <div class="relative inline-block">
-                            <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur-2xl opacity-20"></div>
-                            <svg class="relative mx-auto h-20 w-20 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                            </svg>
+                    @if (empty($messages))
+                        <div class="text-center px-4 pb-8">
+                            <div
+                                class="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-6 mx-auto">
+                                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0114 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">How can I help
+                                you today?</h3>
+                            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">Ask me anything
+                                about your studies, research topics, or complex concepts. I'm here to help you learn.
+                            </p>
                         </div>
-                        <h3 class="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Start Learning</h3>
-                        <p class="mt-2 text-gray-600 dark:text-gray-400">Ask me anything! I'm here to help.</p>
-                    </div>
-                @endif
+                    @endif
 
-                @foreach($messages as $index => $message)
-                    <div key="message-{{ $index }}-{{ $conversationId }}" class="flex {{ $message['role'] === 'user' ? 'justify-end' : 'justify-start' }} animate-fade-in">
-                        <div class="max-w-2xl lg:max-w-3xl">
-                            <div class="flex items-start gap-3 {{ $message['role'] === 'user' ? 'flex-row-reverse' : '' }}">
-                                <!-- Avatar -->
-                                <div class="flex-shrink-0">
-                                    @if($message['role'] === 'user')
-                                        <div class="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full ring-2 ring-purple-200 dark:ring-purple-800 flex items-center justify-center flex-shrink-0">
-                                            <x-avatar class="!w-8 !h-8 sm:!w-10 sm:!h-10" text-size="text-xs" name="{{auth()->user()->name}}" avatar="{{auth()->user()->avatar}}"/>
-                                        </div>
-                                    @else
-                                        <div class="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full ring-2 ring-green-200 dark:ring-green-800 flex items-center justify-center flex-shrink-0">
-                                            <svg class="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0114 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                            </svg>
-                                        </div>
-                                    @endif
-                                </div>
+                    @foreach ($messages as $index => $message)
+                        <div key="message-{{ $index }}-{{ $conversationId }}"
+                            class="flex {{ $message['role'] === 'user' ? 'justify-end' : 'justify-start' }} animate-fade-in">
+                            <div
+                                class="max-w-3xl w-full flex flex-col {{ $message['role'] === 'user' ? 'items-end' : 'items-start' }}">
 
-                                <!-- Message -->
-                                <div class="flex-1 {{ $message['role'] === 'user' ? 'text-right' : '' }}">
-                                    <div class="px-4 py-0.5 rounded-xl shadow-sm {{ $message['role'] === 'user' ? 'bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40' : 'bg-white dark:bg-gray-700/50' }}">
-                                        <div class="prose max-w-none prose-themed">
-                                            @if(is_string($message['content']))
-                                                <x-form.markdown-with-math :content="trim($message['content'])"></x-form.markdown-with-math>
+                                <!-- Message Content -->
+                                <div
+                                    class="inline-block max-w-full {{ $message['role'] === 'user' ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-2xl rounded-tr-sm' : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-2xl rounded-tl-sm border border-slate-200 dark:border-slate-700' }}">
+                                    <div class="px-4 py-1">
+                                        <div
+                                            class="prose prose-sm max-w-none {{ $message['role'] === 'user' ? 'prose-invert' : 'prose-slate dark:prose-invert' }}">
+                                            @if (is_string($message['content']))
+                                                <x-prose-content :content="trim($message['content'])"></x-prose-content>
                                             @else
-                                                <x-form.markdown-with-math :content="$message['content']"></x-form.markdown-with-math>
-                                            @endif
-
-                                            @if(isset($message['images']) && !empty($message['images']))
-                                                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                    @foreach($message['images'] as $image)
-                                                        <img src="{{ $image['url'] }}" alt="Generated image" class="rounded-lg border border-gray-300 dark:border-gray-600 max-h-96 object-cover">
-                                                    @endforeach
-                                                </div>
+                                                <x-prose-content :content="$message['content']"></x-prose-content>
                                             @endif
                                         </div>
+
+                                        @if (isset($message['images']) && !empty($message['images']))
+                                            <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                @foreach ($message['images'] as $image)
+                                                    <img src="{{ $image['url'] }}" alt="Generated image"
+                                                        class="rounded-lg border border-slate-200 dark:border-slate-600 max-h-96 object-cover">
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">{{ Carbon::parse($message['timestamp'])->diffForHumans() }}</p>
+                                </div>
+
+                                <!-- Avatar and Timestamp -->
+                                <div
+                                    class="flex items-center gap-2 mt-1.5 px-1 {{ $message['role'] === 'user' ? 'flex-row-reverse' : '' }}">
+                                    <div class="flex-shrink-0">
+                                        @if ($message['role'] === 'user')
+                                            <div
+                                                class="h-6 w-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden ring-2 ring-white dark:ring-slate-800">
+                                                <x-avatar class="!w-6 !h-6" text-size="text-[10px]"
+                                                    name="{{ auth()->user()->name }}"
+                                                    avatar="{{ auth()->user()->avatar }}" />
+                                            </div>
+                                        @else
+                                            <div
+                                                class="h-6 w-6 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-sm">
+                                                <svg class="h-3 w-3 text-white" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0114 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500">
+                                        {{ Carbon::parse($message['timestamp'])->diffForHumans() }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
 
-                @if($isLoading)
-                    <div class="flex justify-start">
-                        <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-                                <svg class="h-5 w-5 sm:h-6 sm:w-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </div>
-                            <div class="px-4 py-3 rounded-xl bg-white dark:bg-gray-700/50">
-                                <div class="flex gap-1">
-                                    <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
-                                    <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                    <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    @if ($isLoading)
+                        <div class="flex justify-start animate-fade-in">
+                            <div class="flex flex-col items-start max-w-3xl w-full">
+                                <div
+                                    class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                                    <div class="flex gap-1.5 items-center h-5">
+                                        <div
+                                            class="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce">
+                                        </div>
+                                        <div class="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce"
+                                            style="animation-delay: 0.1s"></div>
+                                        <div class="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce"
+                                            style="animation-delay: 0.2s"></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1.5 px-1">
+                                    <div
+                                        class="h-6 w-6 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-sm flex-shrink-0">
+                                        <svg class="h-3 w-3 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0114 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500">Typing...</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endif
-            </div>
+                    @endif
+                </div>
 
-            <!-- Scroll to Bottom -->
-            <button x-show="showScrollToBottom" @click="scrollToBottom()"
-                    class="absolute bottom-32 right-6 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all transform hover:scale-110 z-10">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                </svg>
-            </button>
+                <!-- Scroll to Bottom -->
+                <button x-show="showScrollToBottom" x-transition @click="scrollToBottom()"
+                    class="absolute bottom-36 right-6 p-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all z-10">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </button>
 
-            <!-- Message Input -->
-            <div class="border-t border-gray-200/50 dark:border-gray-700/50 p-4 sm:p-6 bg-white dark:bg-gray-800 transition-all duration-300">
-                <div class="max-w-4xl mx-auto">
-                    <div class="relative flex items-end gap-2 p-1.5 bg-gray-100 dark:bg-gray-900/50 rounded-[24px] border border-gray-200 dark:border-gray-700 shadow-sm focus-within:shadow-md focus-within:border-blue-400 dark:focus-within:border-blue-500/50 transition-all duration-300 {{ $this->messageInputDisabled ? 'opacity-50 grayscale cursor-not-allowed' : '' }}">
-                        <!-- Left Action (Optional: File Upload/Add) -->
-                        <div class="flex-shrink-0 ml-1 mb-1">
-                            <button @disabled($this->messageInputDisabled)
-                                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all duration-200"
+                <!-- Message Input -->
+                <div
+                    class="flex-shrink-0 p-4 sm:p-6 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent dark:from-slate-950 dark:via-slate-950 dark:to-transparent">
+                    <div class="max-w-3xl mx-auto">
+                        <div
+                            class="relative flex items-end gap-2 p-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all duration-200 {{ $this->messageInputDisabled ? 'opacity-60 cursor-not-allowed' : '' }}">
+
+                            <!-- Left Action -->
+                            <div class="flex-shrink-0 ml-1 mb-1">
+                                <button @disabled($this->messageInputDisabled)
+                                    class="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200"
                                     title="Add resource">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                            </button>
-                        </div>
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                </button>
+                            </div>
 
-                        <!-- Textarea -->
-                        <div class="flex-1 min-w-0 flex items-center">
-                            <textarea x-ref="messageInput"
-                                      wire:model.live="message"
-                                      @input="adjustMessageRows()"
-                                      @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
-                                      rows="1"
-                                      class="w-full px-2 py-3 bg-transparent border-0 focus:ring-0 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base resize-none max-h-[120px] overflow-y-auto leading-relaxed"
-                                      placeholder="{{ $this->messageInputDisabled ? 'Subscribe to chat...' : 'Message Research Assistant...' }}"
-                                      @disabled($this->messageInputDisabled)></textarea>
-                        </div>
+                            <!-- Textarea -->
+                            <textarea x-ref="messageInput" wire:model.live="message" @input="adjustMessageRows()"
+                                @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
+                                rows="1"
+                                class="flex-1 w-full px-3 py-2 bg-transparent border-0 focus:ring-0 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm resize-none max-h-[120px] overflow-y-auto leading-relaxed"
+                                placeholder="{{ $this->messageInputDisabled ? 'Subscribe to chat...' : 'Ask anything...' }}"
+                                @disabled($this->messageInputDisabled)></textarea>
 
-                        <!-- Send Button -->
-                        <div class="flex-shrink-0 mr-1 mb-1">
-<button wire:click="sendMessage"
-        wire:loading.attr="disabled"
-        wire:target="sendMessage"
-        class="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-full shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none">
-    
-    <svg wire:loading.remove wire:target="sendMessage" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"></path>
-    </svg>
-    <svg wire:loading wire:target="sendMessage" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-</button>
+                            <!-- Send Button -->
+                            <div class="flex-shrink-0 mr-1 mb-1">
+                                <button wire:click="sendMessage" wire:loading.attr="disabled"
+                                    wire:target="sendMessage" @disabled($this->messageInputDisabled)
+                                    class="flex items-center justify-center h-9 w-9 text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-xl shadow-sm transition-all duration-200 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed">
+                                    <svg wire:loading.remove wire:target="sendMessage" class="h-4 w-4" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M5 12h14M12 5l7 7-7 7"></path>
+                                    </svg>
+                                    <svg wire:loading wire:target="sendMessage" class="h-4 w-4 animate-spin"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex justify-between items-center px-4 mt-2">
-                        <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400/80 font-medium">
-                            {{ !$this->messageInputDisabled ? 'Press Enter to send, Shift+Enter for new line' : 'Subscription required to send messages' }}
-                        </p>
-                        @if(!$this->messageInputDisabled)
-                        <div class="flex items-center gap-2">
-                             <div class="h-1 w-1 bg-green-500 rounded-full animate-pulse"></div>
-                             <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Ready to assist</span>
+                        <div class="flex justify-between items-center px-2 mt-2">
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                                {{ !$this->messageInputDisabled ? 'Press Enter to send, Shift+Enter for new line' : 'Subscription required' }}
+                            </p>
                         </div>
-                        @endif
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Parameters Sidebar -->
-        <div :class="sidebarParametersOpen ? 'lg:w-80 w-80' : 'lg:w-0 w-0'"
-             class="hidden lg:flex lg:flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-l border-gray-200/50 dark:border-gray-700/50 overflow-hidden transition-all duration-300 ease-in-out">
-
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                        Settings
-                    </h2>
-                    <button wire:click="resetParameters" class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline transition-colors">
-                        Reset
+        <div :class="sidebarParametersOpen ? 'w-80' : 'w-0'"
+            class="flex flex-col bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 ease-in-out">
+            <div
+                class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+                <h2 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Settings</h2>
+                <div class="flex items-center gap-2">
+                    <button wire:click="resetParameters"
+                        class="text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Reset</button>
+                    <button @click="toggleParametersSidebar()"
+                        class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors lg:hidden">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
-
-            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
                 <!-- Age -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Age</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Age</label>
                     <input type="number" wire:model.live="age" min="5" max="100"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                           placeholder="Enter age">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors"
+                        placeholder="Enter age">
                 </div>
 
                 <!-- Academic Level -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Level</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Level</label>
                     <select wire:model.live="academic_level"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors">
                         <option value="">Select level</option>
                         <option value="elementary">Elementary</option>
                         <option value="middle_school">Middle School</option>
@@ -382,21 +451,25 @@
 
                 <!-- Subject -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Subject</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Subject</label>
                     <select wire:model.live="subject"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors">
                         <option value="">Select subject</option>
-                        @foreach($availableSubjects as $subject => $topics)
-                            <option value="{{ $subject }}">{{ ucwords(str_replace('_', ' ', $subject)) }}</option>
+                        @foreach ($availableSubjects as $subject => $topics)
+                            <option value="{{ $subject }}">{{ ucwords(str_replace('_', ' ', $subject)) }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
                 <!-- Learning Style -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Learning Style</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Learning
+                        Style</label>
                     <select wire:model.live="learning_style"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors">
                         <option value="">Select style</option>
                         <option value="visual">Visual</option>
                         <option value="auditory">Auditory</option>
@@ -407,9 +480,10 @@
 
                 <!-- Difficulty -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Difficulty</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Difficulty</label>
                     <select wire:model.live="difficulty"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors">
                         <option value="beginner">Beginner</option>
                         <option value="intermediate">Intermediate</option>
                         <option value="advanced">Advanced</option>
@@ -418,9 +492,10 @@
 
                 <!-- Response Format -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Format</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Format</label>
                     <select wire:model.live="response_format"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors">
                         <option value="detailed">Detailed</option>
                         <option value="concise">Concise</option>
                         <option value="interactive">Interactive</option>
@@ -429,9 +504,11 @@
 
                 <!-- Response Length -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Response Length</label>
+                    <label
+                        class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">Response
+                        Length</label>
                     <select wire:model.live="response_length"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-900 dark:text-white text-sm transition-colors">
                         <option value="500">Short</option>
                         <option value="1000">Medium</option>
                         <option value="1500">Long</option>
@@ -444,18 +521,40 @@
 
     <style>
         @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .animate-fade-in { animation: fade-in 0.3s ease-out; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #3B82F6 0%, #6366F1 100%);
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 10px;
         }
-        .dark ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #60A5FA 0%, #818CF8 100%);
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </div>
