@@ -15,7 +15,7 @@ class ResearchAssistantService
 {
     use ResponseExtraction;
 
-    protected string $model = '';
+    protected string $model = 'gpt-4.1-nano';
 
     protected ChatGPTService $chatGPTService;
 
@@ -95,20 +95,20 @@ class ResearchAssistantService
 
         $details = [];
         if (! empty($parameters['subject'])) {
-            $details[] = 'Subject: '.$parameters['subject'];
+            $details[] = 'Subject: ' . $parameters['subject'];
         }
 
         if (! empty($parameters['topics'])) {
-            $details[] = 'Topics: '.(is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
+            $details[] = 'Topics: ' . (is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
         }
 
         if (! empty($parameters['academic_level'])) {
-            $details[] = 'Academic level: '.$parameters['academic_level'];
+            $details[] = 'Academic level: ' . $parameters['academic_level'];
         }
 
         $prompt = $description;
         if (! empty($details)) {
-            $prompt .= '. '.implode('. ', $details);
+            $prompt .= '. ' . implode('. ', $details);
         }
 
         // Add style guidance for educational content
@@ -256,22 +256,22 @@ class ResearchAssistantService
 
     protected function prepareTextPrompt($parameters): string
     {
-        $prompt = 'User request: '.($parameters['input'] ?? '');
+        $prompt = 'User request: ' . ($parameters['input'] ?? '');
 
         // Add context from parameters
         $context = [];
         foreach ($parameters as $key => $value) {
             if ($key !== 'input' && ! empty($value)) {
                 if (is_array($value)) {
-                    $context[] = ucfirst(str_replace('_', ' ', $key)).': '.implode(', ', $value);
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . implode(', ', $value);
                 } else {
-                    $context[] = ucfirst(str_replace('_', ' ', $key)).': '.$value;
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . $value;
                 }
             }
         }
 
         if (! empty($context)) {
-            $prompt .= "\n\nContext:\n".implode("\n", $context);
+            $prompt .= "\n\nContext:\n" . implode("\n", $context);
         }
 
         return $prompt;
@@ -302,8 +302,12 @@ class ResearchAssistantService
             ];
         }
 
-        // Get the appropriate model for this user
-        $modelToUse = $user ? $user->getOpenAiModel() : $this->model;
+        // Get the appropriate model for this user.
+        // In a queue worker context auth()->user() is null — fall back to the
+        // configured default so the API call doesn't receive an empty model string.
+        $modelToUse = $user
+            ? $user->getOpenAiModel()
+            : (config('openai.openai.model') ?: 'gpt-4.1-nano');
 
         // Prepare messages array
         $formattedMessages = [];
@@ -481,10 +485,10 @@ class ResearchAssistantService
                 }
 
                 // If all else fails, return file info
-                return "File uploaded:\n".
-                    '- Name: '.$originalName."\n".
-                    '- Size: '.$file->getSize()." bytes\n".
-                    '- Type: '.$mimeType."\n".
+                return "File uploaded:\n" .
+                    '- Name: ' . $originalName . "\n" .
+                    '- Size: ' . $file->getSize() . " bytes\n" .
+                    '- Type: ' . $mimeType . "\n" .
                     'Note: Content could not be automatically extracted from this file type.';
             }
         } catch (Exception $e) {
@@ -495,8 +499,8 @@ class ResearchAssistantService
             ]);
 
             // Return a more informative error message
-            return 'Error processing file: '.$originalName."\n".
-                'Issue: '.$e->getMessage()."\n".
+            return 'Error processing file: ' . $originalName . "\n" .
+                'Issue: ' . $e->getMessage() . "\n" .
                 'Please try uploading a plain text file (.txt) or ensure the required extraction tools are installed.';
         }
     }
@@ -516,10 +520,10 @@ class ResearchAssistantService
         } catch (Exception $e) {
             Log::error("PDF extraction failed: {$e->getMessage()}");
 
-            return "PDF file content extraction failed.\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n".
-                'Error: '.$e->getMessage();
+            return "PDF file content extraction failed.\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n" .
+                'Error: ' . $e->getMessage();
         }
     }
 
@@ -530,10 +534,10 @@ class ResearchAssistantService
     {
         // For .doc files
         if ($file->getMimeType() === 'application/msword') {
-            return "Word document (.doc) uploaded.\n".
-                "Full content extraction for .doc files requires the phpoffice/phpword library.\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n";
+            return "Word document (.doc) uploaded.\n" .
+                "Full content extraction for .doc files requires the phpoffice/phpword library.\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n";
         }
 
         // For .docx files
@@ -559,9 +563,9 @@ class ResearchAssistantService
             }
 
             // Fallback if XML parsing fails
-            return "Word document (.docx) uploaded.\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n";
+            return "Word document (.docx) uploaded.\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n";
         }
 
         return "Unsupported Word document format.\n";
@@ -574,10 +578,10 @@ class ResearchAssistantService
     {
         // For .xls files
         if ($file->getMimeType() === 'application/vnd.ms-excel') {
-            return "Excel document (.xls) uploaded.\n".
-                "Full content extraction for .xls files requires the phpoffice/phpspreadsheet library.\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n";
+            return "Excel document (.xls) uploaded.\n" .
+                "Full content extraction for .xls files requires the phpoffice/phpspreadsheet library.\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n";
         }
 
         // For .xlsx files
@@ -598,14 +602,14 @@ class ResearchAssistantService
                 $zip->close();
 
                 if (! empty($content)) {
-                    return "Excel spreadsheet content (text values only):\n".trim($content);
+                    return "Excel spreadsheet content (text values only):\n" . trim($content);
                 }
             }
 
             // Fallback if XML parsing fails
-            return "Excel document (.xlsx) uploaded.\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n";
+            return "Excel document (.xlsx) uploaded.\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n";
         }
 
         return "Unsupported Excel document format.\n";
@@ -622,9 +626,9 @@ class ResearchAssistantService
             'pdf' => $this->extractPdfContent($file),
             'txt' => file_get_contents($file->getRealPath()),
             'doc', 'docx' => $this->extractDocxContent($file),
-            default => "Unsupported file type: {$extension}\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n"
+            default => "Unsupported file type: {$extension}\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n"
         };
     }
 
@@ -655,9 +659,9 @@ class ResearchAssistantService
                 'file' => $file->getClientOriginalName(),
             ]);
 
-            return 'Error processing document: '.$e->getMessage()."\n".
-                'File name: '.$file->getClientOriginalName()."\n".
-                'File size: '.$file->getSize()." bytes\n";
+            return 'Error processing document: ' . $e->getMessage() . "\n" .
+                'File name: ' . $file->getClientOriginalName() . "\n" .
+                'File size: ' . $file->getSize() . " bytes\n";
         }
     }
 
@@ -667,11 +671,11 @@ class ResearchAssistantService
     protected function elementToHtml($element): string
     {
         $html = '';
-        
+
         if (method_exists($element, 'getText')) {
             $text = $element->getText();
             $style = method_exists($element, 'getFontStyle') ? $element->getFontStyle() : null;
-            
+
             if ($style) {
                 $styleAttr = [];
                 if (method_exists($style, 'isBold') && $style->isBold()) {
@@ -695,7 +699,7 @@ class ResearchAssistantService
                 $html .= $this->elementToHtml($childElement);
             }
         }
-        
+
         return $html;
     }
 }

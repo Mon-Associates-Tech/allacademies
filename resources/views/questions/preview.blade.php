@@ -127,16 +127,18 @@
                                 Back to Import
                             </a>
                             
-                            <form method="POST" action="{{ $academicTopic ? route('questions.import', [
-                                'academic_topic' => $academicTopic,
-                                'academic_subject' => $academic_subject,
-                                'academic_level' => $academic_level,
-                                'academic_group' => $academic_group
-                            ]) : route('questions.subject.import', [
-                                'academic_subject' => $academic_subject,
-                                'academic_level' => $academic_level,
-                                'academic_group' => $academic_group
-                            ]) }}" class="inline" id="import-form">
+                            <form method="POST" action="{{ (isset($importDriver) && $importDriver === 'ai_document' && isset($batch))
+                                ? route('questions.import.confirm', ['batch' => $batch])
+                                : ($academicTopic ? route('questions.import', [
+                                    'academic_topic' => $academicTopic,
+                                    'academic_subject' => $academic_subject,
+                                    'academic_level' => $academic_level,
+                                    'academic_group' => $academic_group
+                                ]) : route('questions.subject.import', [
+                                    'academic_subject' => $academic_subject,
+                                    'academic_level' => $academic_level,
+                                    'academic_group' => $academic_group
+                                ])) }}" class="inline" id="import-form">
                                 @csrf
                                 <button type="submit" class="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" id="import-button">
                                     Confirm & Import Questions

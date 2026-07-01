@@ -12,6 +12,7 @@ class ChatGPTService
     use ResponseExtraction;
 
     protected mixed $apiKey;
+    protected $model = 'gpt-4.1-nano';
 
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
 
@@ -23,13 +24,14 @@ class ChatGPTService
     {
         $this->apiKey = config('services.openai.key') ?? config('openai.openai.api_key');
         $this->tokenUsageService = $tokenUsageService;
+        $this->model = config('openai.openai.model') ?: 'gpt-4.1-nano';
     }
 
     /**
      * Unified Chat method with retry logic and usage logging
      * Supports both simple message arrays and complex request data
      */
-    public function chat($messages, $model = 'gpt-4.1-nano', array $options = []): array
+    public function chat($messages, $model = '', array $options = []): array
     {
         // Extract internal options
         $requestType = $options['request_type'] ?? 'chat';
@@ -39,7 +41,7 @@ class ChatGPTService
         $formattedMessages = is_string($messages) ? [['role' => 'user', 'content' => $messages]] : $messages;
         
         $requestData = [
-            'model' => $model,
+            'model' => $model ?: $this->model,
             'input' => $formattedMessages,
         ];
 

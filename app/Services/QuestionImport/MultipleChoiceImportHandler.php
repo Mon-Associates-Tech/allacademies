@@ -1,0 +1,141 @@
+<?php
+
+namespace App\Services\QuestionImport;
+
+use App\Models\AcademicSubtopic;
+use App\Models\AcademicTopic;
+use App\Models\MultipleChoiceQuestion;
+use App\Support\Mark;
+
+class MultipleChoiceImportHandler implements QuestionTypeHandlerInterface
+{
+    public function key(): string
+    {
+        return 'multiple_choice';
+    }
+
+    public function promptInstructions(): string
+    {
+        return <<<PROMPT
+MULTIPLE CHOICE QUESTIONS ("multiple_choice" array):
+Extract questions that have 2-5 substantive lettered options where exactly one is correct.
+
+CRITICAL — DO NOT put True/False questions here: if a question's options are (or reduce to) exactly
+"True" and "False" — in any order, casing, or phrasing like "T"/"F" — it belongs in the "true_false"
+array instead, NOT here, even if it is formatted identically to other objective questions in the document
+(lettered options, same section, etc).
+
+For each item return:
+- question_plain: question text with all HTML tags stripped
+- question_html: question text with original formatting preserved (bold/italic/underline only)
+- options: array of 2-5 objects, each {"letter": "A".."E", "plain": "...", "html": "..."}, in source order
+- correct_option: the letter (A-E) of the correct option
+- answer_source: "formatting" | "answer_key" | "inferred_knowledge" | "unknown" — how you determined correct_option.
+  Bold/underline ON A SPECIFIC OPTION = "formatting". An explicit answer key elsewhere in the document = "answer_key".
+  No cue at all, so you used your own subject knowledge = "inferred_knowledge". Could not determine = "unknown"
+  (leave correct_option empty in that case).
+  NOTE: documents sometimes bold the entire question stem for visual styling — that is NOT an answer signal,
+  ignore stem bolding and only look for bold/underline specifically inside the option list.
+- difficulty_level: "easy" | "medium" | "hard" (infer if not explicit, default "medium")
+- score: number (default 1 if not specified)
+PROMPT;
+    }
+
+    public function normalize(array $item): ?array
+    {
+        $ordered = [];
+        foreach ($item['options'] ?? [] as $opt) {
+            $letter = strtoupper($opt['letter'] ?? '');
+            $idx = match ($letter) {
+                'A' => 0,
+                'B' => 1,
+                'C' => 2,
+                'D' => 3,
+                'E' => 4,
+                default => count($ordered),
+            };
+            $ordered[$idx] = ['plain' => $opt['plain'] ?? '', 'html' => $opt['html'] ?? ($opt['plain'] ?? '')];
+        }
+        ksort($ordered);
+        $item['options'] = array_values($ordered);
+
+        if ($this->isTrueFalseShaped($item['options'])) {
+            return null;
+        }
+
+        if (trim($item['question_plain'] ?? '') === '' || count($item['options']) < 2) {
+            return null;
+        }
+
+        return $item;
+    }
+
+    public function buildModelData(array $item, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): ?array
+    {
+        $optA = trim($item['options'][0]['plain'] ?? '');
+        $optB = trim($item['options'][1]['plain'] ?? '');
+
+        if ($optA === '' || $optB === '') {
+            return null;
+        }
+
+        $answerLetter = strtoupper(trim($item['correct_option'] ?? ''));
+        if (! in_array($answerLetter, ['A', 'B', 'C', 'D', 'E'], true)) {
+            $answerLetter = '';
+        }
+
+        $option = fn(int $i) => new Mark(
+            trim($item['options'][$i]['plain'] ?? ''),
+            $item['options'][$i]['html'] ?? trim($item['options'][$i]['plain'] ?? '')
+        );
+
+        return [
+            'question' => new Mark(trim($item['question_plain'] ?? ''), $item['question_html'] ?? $item['question_plain'] ?? ''),
+            'option_a' => $option(0),
+            'option_b' => $option(1),
+            'option_c' => $option(2),
+            'option_d' => $option(3),
+            'option_e' => $option(4),
+            'answer' => $answerLetter,
+            'score' => $item['score'] ?? 1,
+            'difficulty_level' => $item['difficulty_level'] ?? 'medium',
+            'academic_topic_id' => $topic->id,
+            'academic_subtopic_id' => $subtopic?->id,
+            'added_by' => $userId,
+            'modified_by' => $userId,
+        ];
+    }
+
+    public function create(array $modelData): int
+    {
+        return MultipleChoiceQuestion::create($modelData)->id;
+    }
+
+    public function warningFor(array $item, int $index): ?string
+    {
+        $source = $item['answer_source'] ?? 'unknown';
+        $preview = mb_substr($item['question_plain'] ?? '', 0, 60);
+
+        if ($source === 'inferred_knowledge') {
+            return "MCQ #{$index} (\"{$preview}...\"): no answer cue found in the document — the AI guessed \"{$item['correct_option']}\" from its own subject knowledge. Please verify before publishing.";
+        }
+
+        if ($source === 'unknown' || empty($item['correct_option'])) {
+            return "MCQ #{$index} (\"{$preview}...\"): could not determine a correct answer. Please set it manually.";
+        }
+
+        return null;
+    }
+
+    private function isTrueFalseShaped(array $options): bool
+    {
+        if (count($options) !== 2) {
+            return false;
+        }
+
+        $normalized = array_map(fn($opt) => strtolower(trim($opt['plain'] ?? '')), $options);
+        sort($normalized);
+
+        return in_array($normalized, [['false', 'true'], ['f', 't']], true);
+    }
+}
