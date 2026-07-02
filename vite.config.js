@@ -6,10 +6,10 @@ export default defineConfig({
         host: true,
         port: 5173,
         strictPort: true,
-        origin: 'http://192.168.0.138:5173',
+        origin: 'http://169.254.91.54:5173',
         hmr: {
             clientPort: 5173,
-            host: '192.168.0.138',
+            host: '169.254.91.54',
             protocol: 'ws',
         },
     },
