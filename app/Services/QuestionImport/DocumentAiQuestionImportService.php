@@ -27,10 +27,11 @@ class DocumentAiQuestionImportService extends AbstractAiQuestionImportService
 
     public function __construct(
         \App\Services\ResearchAssistantService $chatService,
-        MultipleChoiceImportHandler $multipleChoice,
-        TrueOrFalseImportHandler $trueOrFalse,
-        EssayImportHandler $essay,
-    ) {
+        MultipleChoiceImportHandler            $multipleChoice,
+        TrueOrFalseImportHandler               $trueOrFalse,
+        EssayImportHandler                     $essay,
+    )
+    {
         parent::__construct($chatService);
 
         foreach ([$multipleChoice, $trueOrFalse, $essay] as $handler) {
@@ -39,16 +40,26 @@ class DocumentAiQuestionImportService extends AbstractAiQuestionImportService
     }
 
     /**
+     * Extract + save in one call.
+     */
+    public function import(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null, ?array $only = null): array
+    {
+        $preview = $this->preview($file, $topic, $subtopic, $only);
+
+        return $this->save($preview['results'], $topic, $subtopic, $userId, $preview['errors']);
+    }
+
+    /**
      * Extract + classify questions from a file without saving them.
      *
-     * @param  string[]|null  $only  Restrict to specific type keys, e.g. ['multiple_choice'].
+     * @param string[]|null $only Restrict to specific type keys, e.g. ['multiple_choice'].
      *                               Null (default) extracts all registered types at once.
      */
     public function preview(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?array $only = null): array
     {
         $extracted = $this->extractWithFormatting($file);
 
-        if (! $this->isMeaningfulContent($extracted['html'])) {
+        if (!$this->isMeaningfulContent($extracted['html'])) {
             return [
                 'results' => [],
                 'errors' => ['The document appears to be empty or has no extractable content.'],
@@ -67,12 +78,12 @@ class DocumentAiQuestionImportService extends AbstractAiQuestionImportService
         $prompt = $this->buildCombinedPrompt($extracted, $topic, $subtopic, $activeHandlers);
         $aiResult = $this->callAi($prompt);
 
-        if (! ($aiResult['success'] ?? false)) {
+        if (!($aiResult['success'] ?? false)) {
             Log::error('Question AI extraction failed', ['error' => $aiResult['error'] ?? 'unknown']);
 
             return [
                 'results' => [],
-                'errors' => ['AI extraction failed: '.($aiResult['error'] ?? 'unknown error')],
+                'errors' => ['AI extraction failed: ' . ($aiResult['error'] ?? 'unknown error')],
                 'extraction_method' => $extracted['method'],
             ];
         }
@@ -91,66 +102,7 @@ class DocumentAiQuestionImportService extends AbstractAiQuestionImportService
     }
 
     /**
-     * Extract + save in one call.
-     */
-    public function import(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null, ?array $only = null): array
-    {
-        $preview = $this->preview($file, $topic, $subtopic, $only);
-
-        return $this->save($preview['results'], $topic, $subtopic, $userId, $preview['errors']);
-    }
-
-    /**
-     * Save already-extracted/edited results (e.g. after a user reviews a preview screen).
-     *
-     * @param  array  $results  Shape: ['multiple_choice' => [...items], 'true_false' => [...], 'essay' => [...]]
-     */
-    public function save(array $results, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, array $existingErrors = []): array
-    {
-        $createdIds = [];
-        $errors = $existingErrors;
-
-        foreach ($results as $typeKey => $items) {
-            $handler = $this->handlers[$typeKey] ?? null;
-            if (! $handler) {
-                continue;
-            }
-
-            $createdIds[$typeKey] = [];
-
-            foreach ($items as $index => $item) {
-                try {
-                    $modelData = $handler->buildModelData($item, $topic, $subtopic, $userId);
-
-                    if ($modelData === null) {
-                        $errors[] = "{$typeKey} #{$index}: missing required fields — skipped.";
-
-                        continue;
-                    }
-
-                    $createdIds[$typeKey][] = $handler->create($modelData);
-                } catch (\Throwable $e) {
-                    Log::error('Failed to save AI-imported question', [
-                        'type' => $typeKey,
-                        'error' => $e->getMessage(),
-                        'item' => $item,
-                    ]);
-                    $errors[] = "{$typeKey} #{$index}: failed to save — {$e->getMessage()}";
-                }
-            }
-        }
-
-        $totalCreated = array_sum(array_map('count', $createdIds));
-
-        return [
-            'created_ids' => $createdIds,
-            'created_count' => $totalCreated,
-            'errors' => $errors,
-        ];
-    }
-
-    /**
-     * @param  QuestionTypeHandlerInterface[]  $handlers
+     * @param QuestionTypeHandlerInterface[] $handlers
      */
     private function buildCombinedPrompt(array $extracted, AcademicTopic $topic, ?AcademicSubtopic $subtopic, array $handlers): string
     {
@@ -163,14 +115,14 @@ class DocumentAiQuestionImportService extends AbstractAiQuestionImportService
             ? 'NOTE: This source had no bold/underline formatting preserved (normal for PDFs). Use answer keys in the text where present, otherwise your own subject knowledge as a last resort — track this per item via answer_source as instructed below.'
             : 'Bold/underline formatting IS preserved below. Some documents bold entire question stems for visual styling only — that is not an answer signal. Only bold/underline specifically on an answer/option is meaningful.';
 
-        $typeBlocks = implode("\n\n", array_map(fn ($h) => $h->promptInstructions(), $handlers));
-        $resultKeys = implode(', ', array_map(fn ($h) => '"'.$h->key().'"', $handlers));
+        $typeBlocks = implode("\n\n", array_map(fn($h) => $h->promptInstructions(), $handlers));
+        $resultKeys = implode(', ', array_map(fn($h) => '"' . $h->key() . '"', $handlers));
 
         $exampleSections = [];
         foreach ($handlers as $h) {
             $exampleSections[] = "\"{$h->key()}\": []";
         }
-        $exampleJson = "{\n  ".implode(",\n  ", $exampleSections)."\n}";
+        $exampleJson = "{\n  " . implode(",\n  ", $exampleSections) . "\n}";
 
         return <<<PROMPT
 You are classifying and extracting questions from an academic document. The document may contain a MIX of
@@ -195,7 +147,7 @@ PROMPT;
     }
 
     /**
-     * @param  QuestionTypeHandlerInterface[]  $handlers
+     * @param QuestionTypeHandlerInterface[] $handlers
      */
     private function normalizeParsedResponse(array $parsed, array $handlers, string $extractionMethod): array
     {
@@ -204,14 +156,14 @@ PROMPT;
 
         foreach ($handlers as $key => $handler) {
             $rawItems = $parsed[$key] ?? [];
-            if (! is_array($rawItems)) {
+            if (!is_array($rawItems)) {
                 $rawItems = [];
             }
 
             $normalized = [];
 
             foreach ($rawItems as $item) {
-                if (! is_array($item)) {
+                if (!is_array($item)) {
                     continue;
                 }
 
@@ -236,6 +188,108 @@ PROMPT;
             'results' => $results,
             'errors' => $errors,
             'extraction_method' => $extractionMethod,
+        ];
+    }
+
+    /**
+     * Save already-extracted/edited results (e.g. after a user reviews a preview screen).
+     *
+     * @param array $results Shape: ['multiple_choice' => [...items], 'true_false' => [...], 'essay' => [...]]
+     */
+    public function save(array $results, AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, array $existingErrors = []): array
+    {
+        $createdIds = [];
+        $errors = $existingErrors;
+        $duplicateCount = 0;
+
+        // Preload one hash-set per type — single query each, O(1) lookup during the loop.
+        $dbHashes = [];
+        foreach ($this->handlers as $key => $handler) {
+            if (isset($results[$key]) && is_array($results[$key]) && count($results[$key]) > 0) {
+                $dbHashes[$key] = $handler->existingHashes($topic);
+            }
+        }
+
+        foreach ($results as $typeKey => $items) {
+            $handler = $this->handlers[$typeKey] ?? null;
+            if (!$handler) {
+                continue;
+            }
+
+            $createdIds[$typeKey] = [];
+
+            // Track hashes seen within this batch to catch duplicates inside
+            // the same document (e.g. a question repeated on two pages).
+            $batchHashes = [];
+
+            foreach ($items as $index => $item) {
+                try {
+                    $hash = $handler->questionHash($item);
+
+                    // Check against questions already in the database.
+                    if (isset($dbHashes[$typeKey][$hash])) {
+                        $preview = mb_substr(
+                            strip_tags($item['question_plain'] ?? $item['statement_plain'] ?? ''),
+                            0, 60
+                        );
+                        $errors[] = "{$typeKey} #{$index} (\"{$preview}…\"): skipped — an identical question already exists in this topic.";
+                        $duplicateCount++;
+                        continue;
+                    }
+
+                    // Check for duplicates within the current batch.
+                    if (isset($batchHashes[$hash])) {
+                        $preview = mb_substr(
+                            strip_tags($item['question_plain'] ?? $item['statement_plain'] ?? ''),
+                            0, 60
+                        );
+                        $errors[] = "{$typeKey} #{$index} (\"{$preview}…\"): skipped — duplicate of another question in this document.";
+                        $duplicateCount++;
+                        continue;
+                    }
+
+                    $modelData = $handler->buildModelData($item, $topic, $subtopic, $userId);
+
+                    if ($modelData === null) {
+                        $errors[] = "{$typeKey} #{$index}: missing required fields — skipped.";
+                        continue;
+                    }
+
+                    $createdIds[$typeKey][] = $handler->create($modelData);
+
+                    // Mark as seen so later items in this batch don't duplicate it.
+                    $batchHashes[$hash] = true;
+                    // Also add to the DB hash-set so a re-import in the same
+                    // request (unlikely but safe) won't sneak duplicates through.
+                    $dbHashes[$typeKey][$hash] = true;
+
+                } catch (\Throwable $e) {
+                    Log::error('Failed to save AI-imported question', [
+                        'type' => $typeKey,
+                        'error' => $e->getMessage(),
+                        'item' => $item,
+                    ]);
+                    $errors[] = "{$typeKey} #{$index}: failed to save — {$e->getMessage()}";
+                }
+            }
+        }
+
+        $totalCreated = array_sum(array_map('count', $createdIds));
+
+        $summary = [];
+        if ($totalCreated > 0) {
+            $summary[] = "{$totalCreated} question" . ($totalCreated === 1 ? '' : 's') . ' imported';
+        }
+        if ($duplicateCount > 0) {
+            $summary[] = "{$duplicateCount} duplicate" . ($duplicateCount === 1 ? '' : 's') . ' skipped';
+        }
+
+        return [
+            'created_ids' => $createdIds,
+            'created_count' => $totalCreated,
+            'duplicate_count' => $duplicateCount,
+            'summary' => implode(', ', $summary),
+            'errors' => $errors,
         ];
     }
 }

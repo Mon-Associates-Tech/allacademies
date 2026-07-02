@@ -272,8 +272,6 @@ class QuestionImportController extends Controller
         }
 
         try {
-            $previewResults = $this->mergeEditedPreviewResults($request, $previewResults);
-
             $result = $this->importService->importFromPreviewData(
                 $previewResults,
                 $academic_subject,
@@ -342,101 +340,6 @@ class QuestionImportController extends Controller
             return $this->backToImportForm($academic_group, $academic_level, $academic_subject, $academic_topic)
                 ->with('import_error', 'An error occurred while importing questions: '.$e->getMessage());
         }
-    }
-
-    private function mergeEditedPreviewResults(Request $request, array $previewResults): array
-    {
-        $editedQuestions = $request->input('questions', []);
-
-        if (! isset($previewResults['preview']) || ! is_array($previewResults['preview'])) {
-            return $previewResults;
-        }
-
-        foreach ($editedQuestions as $index => $editedQuestion) {
-            if (! isset($previewResults['preview'][$index])) {
-                continue;
-            }
-
-            $previewResults['preview'][$index] = array_merge(
-                $previewResults['preview'][$index],
-                [
-                    'question' => $editedQuestion['question']['down'] ?? $editedQuestion['question']['up'] ?? $previewResults['preview'][$index]['question'],
-                    'difficulty_level' => $editedQuestion['difficulty_level'] ?? $previewResults['preview'][$index]['difficulty_level'],
-                    'score' => $editedQuestion['score'] ?? $previewResults['preview'][$index]['score'],
-                    'answer' => $editedQuestion['answer'] ?? $previewResults['preview'][$index]['answer'],
-                    'option_a' => $editedQuestion['option_a'] ?? $previewResults['preview'][$index]['option_a'] ?? '',
-                    'option_b' => $editedQuestion['option_b'] ?? $previewResults['preview'][$index]['option_b'] ?? '',
-                    'option_c' => $editedQuestion['option_c'] ?? $previewResults['preview'][$index]['option_c'] ?? '',
-                    'option_d' => $editedQuestion['option_d'] ?? $previewResults['preview'][$index]['option_d'] ?? '',
-                    'option_e' => $editedQuestion['option_e'] ?? $previewResults['preview'][$index]['option_e'] ?? '',
-                ]
-            );
-        }
-
-        return $previewResults;
-    }
-
-    private function buildAiSaveResultsFromRequest(Request $request, QuestionImportBatch $batch): array
-    {
-        $editedQuestions = $request->input('questions', []);
-        $results = [
-            'multiple_choice' => [],
-            'true_false' => [],
-            'essay' => [],
-        ];
-
-        if (! is_array($editedQuestions)) {
-            return $results;
-        }
-
-        foreach ($editedQuestions as $editedQuestion) {
-            $type = strtolower($editedQuestion['type'] ?? 'multiple_choice');
-            $item = [
-                'question_plain' => $editedQuestion['question']['down'] ?? $editedQuestion['question']['up'] ?? '',
-                'question_html' => $editedQuestion['question']['up'] ?? $editedQuestion['question']['down'] ?? '',
-                'difficulty_level' => $editedQuestion['difficulty_level'] ?? 'medium',
-                'score' => $editedQuestion['score'] ?? 1,
-            ];
-
-            if ($type === 'true_false' || $type === 'true/false' || $type === 'tf') {
-                $item['correct_answer'] = filter_var($editedQuestion['answer'] ?? '', FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            }
-
-            if ($type === 'essay') {
-                $item['model_answer_plain'] = $editedQuestion['answer'] ?? '';
-                $item['model_answer_html'] = $editedQuestion['answer'] ?? '';
-            }
-
-            if (in_array($type, ['multiple_choice', 'mcq', 'multiple choice'], true)) {
-                $item['options'] = [];
-                foreach (['a', 'b', 'c', 'd', 'e'] as $letterIndex => $letter) {
-                    $value = $editedQuestion['option_'.$letter] ?? '';
-                    if ($value !== '') {
-                        $item['options'][] = [
-                            'letter' => strtoupper($letter),
-                            'plain' => $value,
-                            'html' => $value,
-                        ];
-                    }
-                }
-
-                $item['correct_option'] = strtoupper(trim($editedQuestion['answer'] ?? '')) ?: null;
-                $results['multiple_choice'][] = $item;
-                continue;
-            }
-
-            if ($type === 'true_false' || $type === 'true/false' || $type === 'tf') {
-                $results['true_false'][] = $item;
-                continue;
-            }
-
-            if ($type === 'essay') {
-                $results['essay'][] = $item;
-                continue;
-            }
-        }
-
-        return $results;
     }
 
     // -------------------------------------------------------------------------
@@ -590,14 +493,24 @@ class QuestionImportController extends Controller
                 'essay' => count($result['created_ids']['essay'] ?? []),
             ];
             $total = $result['created_count'];
+            $duplicates = $result['duplicate_count'] ?? 0;
             $importErrors = $result['errors'] ?? [];
 
-            $message = "Successfully imported {$total} question".($total === 1 ? '' : 's').': '
-                .implode(', ', array_filter([
-                    $stats['multiple_choice'] ? $stats['multiple_choice'].' multiple choice' : null,
-                    $stats['true_false'] ? $stats['true_false'].' true/false' : null,
-                    $stats['essay'] ? $stats['essay'].' essay' : null,
-                ])).'.';
+            $message = $result['summary'] ?? "Successfully imported {$total} question" . ($total === 1 ? '' : 's') . '.';
+
+            $typeSummary = implode(', ', array_filter([
+                $stats['multiple_choice'] ? $stats['multiple_choice'].' multiple choice' : null,
+                $stats['true_false'] ? $stats['true_false'].' true/false' : null,
+                $stats['essay'] ? $stats['essay'].' essay' : null,
+            ]));
+
+            if ($typeSummary) {
+                $message .= " ({$typeSummary})";
+            }
+
+            if ($duplicates > 0) {
+                $message .= " — {$duplicates} duplicate" . ($duplicates === 1 ? '' : 's') . " were skipped.";
+            }
 
             $academicSubject = $topic->academicSubject;
             $academicLevel = $academicSubject->academicLevel;

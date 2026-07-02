@@ -17,6 +17,29 @@ use App\Support\Mark;
  */
 class EssayImportHandler implements QuestionTypeHandlerInterface
 {
+    public function existingHashes(AcademicTopic $topic): array
+    {
+        return \DB::table('essay_questions')
+            ->where('academic_topic_id', $topic->id)
+            ->whereNull('deleted_at')
+            ->pluck('question')
+            ->map(fn ($json) => $this->hashText(
+                json_decode($json, true)['down'] ?? ''
+            ))
+            ->mapWithKeys(fn ($hash) => [$hash => true])
+            ->all();
+    }
+
+    public function questionHash(array $item): string
+    {
+        return $this->hashText($item['question_plain'] ?? '');
+    }
+
+    private function hashText(string $text): string
+    {
+        return md5(mb_strtolower(trim(strip_tags($text))));
+    }
+
     public function key(): string
     {
         return 'essay';
