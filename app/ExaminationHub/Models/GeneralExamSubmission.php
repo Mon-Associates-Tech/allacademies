@@ -95,6 +95,11 @@ class GeneralExamSubmission extends Model
         return $this->belongsTo(GeneralExam::class, 'general_exam_id');
     }
 
+    public function exam(): BelongsTo
+    {
+        return $this->belongsTo(GeneralExam::class, 'general_exam_id');
+    }
+
     public function generalExamParticipant(): MorphTo
     {
         return $this->morphTo();

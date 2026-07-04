@@ -50,10 +50,14 @@ Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
     init() {
         this.updateDisplay();
 
+        // If there is no remaining time at init, show a placeholder rather
+        // than immediately triggering expiry. The authoritative remaining
+        // seconds will arrive via heartbeat (exam:sync-time) or Echo, and
+        // rearmInterval() will start the ticking when appropriate.
         if (this.remaining > 0) {
             this.interval = setInterval(() => this.tick(), 1000);
         } else {
-            this.triggerExpire();
+            this.display = '--:--:--';
         }
 
         // Use CustomEvent on document instead of window globals.
@@ -93,6 +97,16 @@ Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
         serverRemaining    = Math.max(0, Math.round(serverRemaining));
         serverExtraMinutes = serverExtraMinutes ?? 0;
 
+        // If client has no local remaining value (e.g. initial load), accept
+        // server's authoritative remaining so UI reflects current state.
+        if (this.remaining === 0 && serverRemaining > 0) {
+            this.remaining = serverRemaining;
+            this.updateDisplay();
+            this.updateState();
+            this.rearmInterval();
+            return;
+        }
+
         if (serverExtraMinutes > this.lastKnownExtraMinutes) {
             // Case A — genuine extension
             const addedMinutes         = serverExtraMinutes - this.lastKnownExtraMinutes;
@@ -104,8 +118,8 @@ Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
             this.rearmInterval();
         } else {
             // Case B — silent drift correction (no banner)
-            const drift = serverRemaining - this.remaining;
-            if (Math.abs(drift) > 30) {
+            // Only accept server corrections that reduce remaining time.
+            if (serverRemaining < this.remaining - 30) {
                 this.remaining = serverRemaining;
                 this.updateDisplay();
                 this.updateState();

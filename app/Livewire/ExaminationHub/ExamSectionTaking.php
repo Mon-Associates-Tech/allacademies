@@ -58,19 +58,19 @@ class ExamSectionTaking extends Component
         if ($section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
             $startedAt      = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
             $endsAt         = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
-            $sectionSeconds = max(0, now()->diffInSeconds($endsAt, false));
+            $sectionSeconds = max(0, $endsAt->diffInSeconds(now()));
 
             // Exam duration is the hard ceiling — cap the displayed timer to whatever is left on the exam clock
             if ($exam->duration_in_minutes && $submission->started_at) {
                 $examEndsAt  = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
-                $examSeconds = max(0, now()->diffInSeconds($examEndsAt, false));
+                $examSeconds = max(0, $examEndsAt->diffInSeconds(now()));
                 $sectionSeconds = min($sectionSeconds, $examSeconds);
             }
 
             $this->timeRemaining = $sectionSeconds;
         } elseif ($exam->duration_in_minutes && $submission->started_at) {
             $examEndsAt          = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
-            $this->timeRemaining = max(0, now()->diffInSeconds($examEndsAt, false));
+            $this->timeRemaining = max(0, $examEndsAt->diffInSeconds(now()));
         }
     }
 

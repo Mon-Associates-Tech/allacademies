@@ -27,9 +27,14 @@ class AutoSubmitExpiredSectionSubmissions extends Command
         $submitted = 0;
 
         foreach ($submissions as $submission) {
+           /* @var GeneralExam $exam */
             $exam = $submission->exam;
+
+            if (!$exam) {
+                continue;
+            }
             $exam->load(['sections' => fn ($q) => $q->orderBy('order')]);
-            
+
             $sectionStartTimes = $submission->section_start_times ?? [];
             $needsAutoSubmit = false;
             $autoSubmitReason = '';
@@ -38,10 +43,10 @@ class AutoSubmitExpiredSectionSubmissions extends Command
                 if ($section->time_limit_minutes) {
                     $sectionKey = (string) $section->id;
                     $startedAt = $sectionStartTimes[$sectionKey] ?? null;
-                    
+
                     if ($startedAt) {
                         $sectionEndTime = $startedAt + ($section->time_limit_minutes * 60);
-                        
+
                         // Check if section time has expired
                         if (now()->timestamp >= $sectionEndTime) {
                             $needsAutoSubmit = true;
