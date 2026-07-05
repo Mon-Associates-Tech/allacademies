@@ -16,6 +16,8 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('examTimer', (sectionStartTs, timerDuration, serverRemainingSeconds = null) => ({
         remaining: 0,
         lastKnownExtraMinutes: 0,
+        pendingExtensionMinutes: 0,
+        pendingExtensionTimer: null,
         timerStyle: {
             backgroundColor: 'rgb(248 250 252)', // slate-50
             borderColor: 'rgb(226 232 240)',      // slate-200
@@ -95,94 +97,35 @@ document.addEventListener('alpine:init', () => {
 
         // ── Server sync (called by heartbeat polling) ─────────────────────────
         //
-        // Accepts the server's authoritative remaining seconds and decides whether
-        // to update the local counter.  We do NOT blindly overwrite on every poll
-        // because small differences (< 5 s) are just network/processing jitter.
-        //
-        // We DO update when:
-        //  • Server has MORE time than client: admin granted an extension.
-        //  • Server has significantly LESS time (> 30 s): real server-side
-        //    correction needed (e.g. resumed submission with different started_at).
+        // Accepts the server's authoritative remaining seconds and applies them
+        // as the single source of truth. Small client-side jitter will be ignored
+        // because the server value is authoritative.
         syncFromServer(serverRemaining, serverExtraMinutes = 0) {
             if (serverRemaining === null || serverRemaining === undefined) return;
 
             serverRemaining = Math.max(0, Math.round(serverRemaining));
             serverExtraMinutes = serverExtraMinutes ?? 0;
 
-            // If client has no local remaining value (initial load), accept server's
-            // authoritative remaining so the UI reflects the current state.
-            if (this.remaining === 0 && serverRemaining > 0) {
-                this.remaining = serverRemaining;
-                this.updateDisplay();
-                this.updateStyles();
+            const prev = this.remaining;
+            const diff = serverRemaining - prev; // positive = server has more
 
-                // Re-arm the interval in case the timer had already expired
-                if (!this.timerInterval && this.remaining > 0) {
-                    window._timerExpiredCalled = false;
-                    this.timerInterval = setInterval(() => {
-                        if (this.remaining > 0) {
-                            this.remaining--;
-                            this.updateDisplay();
-                            this.updateStyles();
-                        } else {
-                            this.display = 'EXPIRED';
-                            this.timerTextClass = 'text-red-600 dark:text-red-400 font-bold animate-pulse';
-                            clearInterval(this.timerInterval);
-                            this.timerInterval = null;
-                            this.triggerExpiry();
-                        }
-                    }, 1000);
-                }
-
-                return;
-            }
-
-            // If server reports a larger extra_time_minutes than we last knew, treat
-            // it as an authoritative extension delivered via heartbeat payload.
-            if (serverExtraMinutes > this.lastKnownExtraMinutes) {
-                const addedMinutes = serverExtraMinutes - this.lastKnownExtraMinutes;
-                this.lastKnownExtraMinutes = serverExtraMinutes;
-                this.remaining = serverRemaining;
-                this.updateDisplay();
-                this.updateStyles();
-                this.showTimeExtendedBanner(addedMinutes);
-
-                // Re-arm the interval in case the timer had already expired
-                if (!this.timerInterval && this.remaining > 0) {
-                    window._timerExpiredCalled = false;
-                    this.timerInterval = setInterval(() => {
-                        if (this.remaining > 0) {
-                            this.remaining--;
-                            this.updateDisplay();
-                            this.updateStyles();
-                        } else {
-                            this.display = 'EXPIRED';
-                            clearInterval(this.timerInterval);
-                            this.timerInterval = null;
-                            this.triggerExpiry();
-                        }
-                    }, 1000);
-                }
-
-            } else if (serverRemaining < this.remaining - 30) {
-                // Significant server-side correction (reduce remaining time)
-                this.remaining = serverRemaining;
-                this.updateDisplay();
-                this.updateStyles();
-            }
-            // Small differences are ignored to avoid jitter.
-        },
-
-
-        // ── Direct extension (called by Echo real-time push) ──────────────────
-        extendByMinutes(minutes) {
-            if (!minutes || minutes <= 0) return;
-            this.remaining += Math.round(minutes * 60);
+            // Authoritative server update: always apply server's remaining time
+            this.remaining = serverRemaining;
             this.updateDisplay();
             this.updateStyles();
-            this.showTimeExtendedBanner(minutes);
 
-            // Re-arm if the timer had already fired
+            if (serverExtraMinutes > this.lastKnownExtraMinutes) {
+                // Genuine extension via admin
+                const addedMinutes = serverExtraMinutes - this.lastKnownExtraMinutes;
+                this.lastKnownExtraMinutes = serverExtraMinutes;
+                this.showTimeExtendedBanner(addedMinutes);
+            } else if (diff > 5) {
+                // Server reports more time (but extraMinutes didn't change) — show banner
+                const gainedMinutes = Math.ceil(diff / 60);
+                this.showTimeExtendedBanner(gainedMinutes);
+            }
+
+            // Re-arm the interval in case the timer had already expired
             if (!this.timerInterval && this.remaining > 0) {
                 window._timerExpiredCalled = false;
                 this.timerInterval = setInterval(() => {
@@ -192,6 +135,7 @@ document.addEventListener('alpine:init', () => {
                         this.updateStyles();
                     } else {
                         this.display = 'EXPIRED';
+                        this.timerTextClass = 'text-red-600 dark:text-red-400 font-bold animate-pulse';
                         clearInterval(this.timerInterval);
                         this.timerInterval = null;
                         this.triggerExpiry();
@@ -199,6 +143,44 @@ document.addEventListener('alpine:init', () => {
                 }, 1000);
             }
         },
+
+
+        // ── Direct extension (called by Echo real-time push) ──────────────────
+        extendByMinutes(minutes) {
+            if (!minutes || minutes <= 0) return;
+
+            // Debounce to avoid double-applying when a heartbeat sync arrives
+            this.pendingExtensionMinutes = minutes;
+            if (this.pendingExtensionTimer) clearTimeout(this.pendingExtensionTimer);
+            this.pendingExtensionTimer = setTimeout(() => {
+                this.remaining += Math.round(this.pendingExtensionMinutes * 60);
+                this.lastKnownExtraMinutes += this.pendingExtensionMinutes;
+                this.updateDisplay();
+                this.updateStyles();
+                this.showTimeExtendedBanner(this.pendingExtensionMinutes);
+
+                // Re-arm if the timer had already fired
+                if (!this.timerInterval && this.remaining > 0) {
+                    window._timerExpiredCalled = false;
+                    this.timerInterval = setInterval(() => {
+                        if (this.remaining > 0) {
+                            this.remaining--;
+                            this.updateDisplay();
+                            this.updateStyles();
+                        } else {
+                            this.display = 'EXPIRED';
+                            clearInterval(this.timerInterval);
+                            this.timerInterval = null;
+                            this.triggerExpiry();
+                        }
+                    }, 1000);
+                }
+
+                this.pendingExtensionMinutes = 0;
+                this.pendingExtensionTimer = null;
+            }, 700);
+        },
+
 
         // ── Notification banner shown to the candidate ────────────────────────
         showTimeExtendedBanner(minutes) {

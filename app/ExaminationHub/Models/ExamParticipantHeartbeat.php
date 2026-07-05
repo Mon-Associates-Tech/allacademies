@@ -359,7 +359,7 @@ class ExamParticipantHeartbeat extends Model
                 if (isset($sectionStartTimes[$sectionKey])) {
                     $sectionStart     = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
                     $sectionEnd       = $sectionStart->copy()->addMinutes((int) $currentSection->time_limit_minutes);
-                    $remainingSeconds = max(0, (int) now()->diffInSeconds($sectionEnd, false));
+                $remainingSeconds = max(0, (int) $sectionEnd->diffInSeconds(now()));
                     $hasDuration      = true;
                 }
             }
@@ -378,7 +378,7 @@ class ExamParticipantHeartbeat extends Model
                 $totalMinutes        = $examDurationMinutes + $extraMinutes;
                 $totalAllowedSeconds = $totalMinutes * 60;
                 $endAt               = $clockStart->copy()->addMinutes($totalMinutes);
-                $remainingSeconds    = max(0, (int) now()->diffInSeconds($endAt, false));
+                $remainingSeconds    = max(0, (int) $endAt->diffInSeconds(now()));
                 $hasDuration         = true;
             }
         }

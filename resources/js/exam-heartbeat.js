@@ -48,6 +48,12 @@ class ExamHeartbeat {
 
             if (data.session_token) {
                 this.sessionToken = data.session_token;
+
+                // Immediately sync timer if server returned authoritative time
+                if (data.remaining_seconds !== undefined && data.remaining_seconds !== null) {
+                    this.onTimeSync(data.remaining_seconds, data.extra_time_minutes ?? 0);
+                }
+
                 this.startHeartbeat();
                 this.setupEventListeners();
                 this.setupEchoListener();

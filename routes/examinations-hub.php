@@ -68,6 +68,9 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/{submission}/proctoring', [ProctoringController::class, 'show'])->name('proctoring.show');
 
     // ── Live Monitoring (Admin) ───────────────────────────────────────────────
+    Route::get('/live-monitoring', [LiveMonitoringController::class, 'allExamsIndex'])->name('live-monitoring.all-exams');
+    Route::get('/live-monitoring/api/all-participants', [LiveMonitoringController::class, 'apiAllExamsParticipants'])->name('live-monitoring.api.all-participants');
+
     Route::prefix('exams/{exam}/live-monitoring')->name('live-monitoring.')->group(function () {
         Route::get('/', [LiveMonitoringController::class, 'index'])->name('index');
         Route::get('/participant/{submission}', [LiveMonitoringController::class, 'show'])->name('show');

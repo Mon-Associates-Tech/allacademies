@@ -206,6 +206,75 @@ class LiveMonitoringService
         ];
     }
 
+    /**
+     * Get live monitoring data across all exams for a user.
+     */
+    public function getAllExamsMonitoringData(int $userId): array
+    {
+        $exams = GeneralExam::where('user_id', $userId)->get();
+        $examIds = $exams->pluck('id')->toArray();
+
+        $heartbeats = ExamParticipantHeartbeat::whereIn('general_exam_id', $examIds)
+            ->with(['submission', 'exam'])
+            ->get();
+
+        // Sync status for each heartbeat
+        $heartbeats->each(function ($heartbeat) {
+            $terminal = in_array($heartbeat->status, [
+                ExamParticipantHeartbeat::STATUS_COMPLETED,
+                ExamParticipantHeartbeat::STATUS_TERMINATED,
+            ]);
+
+            if ($terminal) {
+                return;
+            }
+
+            if ($heartbeat->submission?->isSubmitted()) {
+                $heartbeat->update(['status' => ExamParticipantHeartbeat::STATUS_COMPLETED]);
+                $heartbeat->status = ExamParticipantHeartbeat::STATUS_COMPLETED;
+                return;
+            }
+
+            $currentStatus = $heartbeat->calculateStatus();
+            if ($heartbeat->status !== $currentStatus) {
+                $heartbeat->update(['status' => $currentStatus]);
+                $heartbeat->status = $currentStatus;
+            }
+        });
+
+        $participants = $heartbeats->map(function ($h) {
+            $exam = $h->exam;
+            $durationMinutes = $exam?->duration_in_minutes;
+            $sections = $exam?->sections()->orderBy('order')->get() ?? collect();
+            $liveData = $h->toLiveData($durationMinutes, $sections);
+
+            return array_merge($liveData, [
+                'exam_id' => $exam?->id,
+                'exam_title' => $exam?->title,
+            ]);
+        });
+
+        // Calculate stats
+        $stats = [
+            'total_participants' => $heartbeats->count(),
+            'active' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_ACTIVE)->count(),
+            'idle' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_IDLE)->count(),
+            'away' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_AWAY)->count(),
+            'disconnected' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_DISCONNECTED)->count(),
+            'completed' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_COMPLETED)->count(),
+            'terminated' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_TERMINATED)->count(),
+            'flagged' => $heartbeats->where('is_flagged', true)->count(),
+            'total_violations' => $heartbeats->sum('violation_count'),
+            'high_violations' => $heartbeats->sum('high_severity_count'),
+            'medium_violations' => $heartbeats->sum('medium_severity_count'),
+        ];
+
+        return [
+            'stats' => $stats,
+            'participants' => $participants->values()->toArray(),
+        ];
+    }
+
     // ─── Admin Actions ───────────────────────────────────────────────────────
 
     /**

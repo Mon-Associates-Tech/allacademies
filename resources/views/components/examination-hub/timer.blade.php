@@ -37,6 +37,8 @@
 Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
     remaining:              Math.max(0, Math.round(initialSeconds)),
     lastKnownExtraMinutes:  initialExtraMinutes ?? 0,
+    pendingExtensionMinutes: 0,
+    pendingExtensionTimer: null,
     state:                  initialSeconds <= 0   ? 'expired'
                           : initialSeconds <= 300 ? 'critical'
                           : initialSeconds <= 600 ? 'warning'
@@ -80,7 +82,8 @@ Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
             this.triggerExpire();
             return;
         }
-        this.remaining--;
+        // Ensure remaining is an integer
+        this.remaining = Math.max(0, Math.floor(this.remaining - 1));
         this.updateDisplay();
         this.updateState();
     },
@@ -97,49 +100,51 @@ Alpine.data('examCountdown', (initialSeconds, initialExtraMinutes) => ({
         serverRemaining    = Math.max(0, Math.round(serverRemaining));
         serverExtraMinutes = serverExtraMinutes ?? 0;
 
-        // If client has no local remaining value (e.g. initial load), accept
-        // server's authoritative remaining so UI reflects current state.
-        if (this.remaining === 0 && serverRemaining > 0) {
-            this.remaining = serverRemaining;
-            this.updateDisplay();
-            this.updateState();
-            this.rearmInterval();
-            return;
-        }
+        const prev = this.remaining;
+        const diff = serverRemaining - prev;
+
+        // Apply server as authoritative source of truth
+        this.remaining = serverRemaining;
+        this.updateDisplay();
+        this.updateState();
 
         if (serverExtraMinutes > this.lastKnownExtraMinutes) {
-            // Case A — genuine extension
+            // Genuine extension
             const addedMinutes         = serverExtraMinutes - this.lastKnownExtraMinutes;
             this.lastKnownExtraMinutes = serverExtraMinutes;
-            this.remaining             = serverRemaining;
-            this.updateDisplay();
-            this.updateState();
             this.showExtensionBanner(addedMinutes);
-            this.rearmInterval();
-        } else {
-            // Case B — silent drift correction (no banner)
-            // Only accept server corrections that reduce remaining time.
-            if (serverRemaining < this.remaining - 30) {
-                this.remaining = serverRemaining;
-                this.updateDisplay();
-                this.updateState();
-                this.rearmInterval();
-            }
+        } else if (diff > 5) {
+            // Server reports more time — show gained minutes banner
+            const gainedMinutes = Math.ceil(diff / 60);
+            this.showExtensionBanner(gainedMinutes);
         }
+
+        this.rearmInterval();
     },
+
 
     // Echo real-time path — called immediately on admin push.
     extendByMinutes(minutes) {
         if (!minutes || minutes <= 0) return;
-        this.remaining            += Math.round(minutes * 60);
-        // Advance lastKnownExtraMinutes so the next heartbeat sync
-        // does not double-count the same extension via Case A above.
-        this.lastKnownExtraMinutes += minutes;
-        this.updateDisplay();
-        this.updateState();
-        this.showExtensionBanner(minutes);
-        this.rearmInterval();
+
+        // Debounce the visible extension to avoid double-applying when a
+        // heartbeat sync (exam:sync-time) carrying the updated remaining
+        // arrives immediately after an Echo push. Apply immediately only
+        // if no sync arrives within 700 ms.
+        this.pendingExtensionMinutes = minutes;
+        if (this.pendingExtensionTimer) clearTimeout(this.pendingExtensionTimer);
+        this.pendingExtensionTimer = setTimeout(() => {
+            this.remaining += Math.round(this.pendingExtensionMinutes * 60);
+            this.lastKnownExtraMinutes += this.pendingExtensionMinutes;
+            this.updateDisplay();
+            this.updateState();
+            this.showExtensionBanner(this.pendingExtensionMinutes);
+            this.rearmInterval();
+            this.pendingExtensionMinutes = 0;
+            this.pendingExtensionTimer = null;
+        }, 700);
     },
+
 
     // Re-arm the interval if the timer had already expired.
     rearmInterval() {

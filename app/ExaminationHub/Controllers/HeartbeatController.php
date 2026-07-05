@@ -203,11 +203,31 @@ class HeartbeatController extends Controller
 
         $heartbeat = $this->monitoringService->initializeSession($submission, $deviceInfo);
 
-        return response()->json([
+        $response = [
             'status' => 'initialized',
             'session_token' => $heartbeat->session_token,
             'server_time' => now()->toIso8601String(),
-        ]);
+        ];
+
+        // Include authoritative remaining time when available so the client
+        // can immediately initialise the timer without waiting for the
+        // first periodic heartbeat poll.
+        try {
+            $submission->refresh();
+            $remainingSeconds = $submission->getRemainingTime();
+            if ($remainingSeconds !== null) {
+                $response['remaining_seconds']     = $remainingSeconds;
+                $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+                $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('HeartbeatController.initialize: failed to compute remaining time', [
+                'submission_id' => $submission->id,
+                'error'         => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json($response);
     }
 
     /**
