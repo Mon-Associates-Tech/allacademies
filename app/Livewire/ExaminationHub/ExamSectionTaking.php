@@ -51,25 +51,11 @@ class ExamSectionTaking extends Component
             $this->currentQuestionIndex = (int) ($lastPos['question'] ?? 0);
         }
 
-        // Determine time remaining for this view: prefer section-level limits
-        $sectionStartTimes = $submission->section_start_times ?? [];
-        $sectionKey = (string) $section->id;
-
-        if ($section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
-            $startedAt      = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-            $endsAt         = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
-            $sectionSeconds = max(0, (int) now()->diffInSeconds($endsAt, false));
-
-            // Exam duration is the hard ceiling — cap the displayed timer to whatever is left on the exam clock
-            if ($exam->duration_in_minutes && $submission->started_at) {
-                $examSeconds = max(0, $submission->getRemainingTime() ?? PHP_INT_MAX);
-                $sectionSeconds = min($sectionSeconds, $examSeconds);
-            }
-
-            $this->timeRemaining = $sectionSeconds;
-        } elseif ($exam->duration_in_minutes && $submission->started_at) {
-            $this->timeRemaining = $submission->getRemainingTime();
-        }
+        // Don't recalculate timeRemaining here — it's already been calculated correctly
+        // by the controller and passed through the Livewire directive. Recalculating here
+        // causes timer jumps when the component re-mounts (e.g., after fullscreen toggle,
+        // page reload, or rejoining the exam).
+        // The timer will be synchronized periodically by the heartbeat system.
     }
 
     protected function loadResponses(): void
@@ -440,7 +426,9 @@ class ExamSectionTaking extends Component
         // Record start time
         $this->start_time = now();
 
-        // Mark section as started
+        // Mark section as started (this updates section_start_times, not exam started_at)
+        // Note: started_at is set by the ExamTakingController::start() method when the user
+        // first enters the exam. We do NOT modify it here.
         $this->updateSectionProgress('started');
 
         // Hide section info to show exam content
@@ -458,9 +446,10 @@ class ExamSectionTaking extends Component
         // Also emit an event to show exam content regardless of fullscreen state
         $this->dispatch('show-exam-content');
 
-
-        // Recompute so the blade template has the correct seconds on re-render
-        $this->timeRemaining = $this->submission->fresh()->getRemainingTime();
+        // Don't recalculate timeRemaining here to avoid timer jumps.
+        // The timer was initialized correctly on page load and the heartbeat will
+        // provide periodic sync updates. Recalculating here causes a jump because
+        // the timer has already been counting down since mount().
     }
 
     public function isQuestionAnswered(int $questionId): bool

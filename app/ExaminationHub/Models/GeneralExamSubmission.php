@@ -234,7 +234,9 @@ class GeneralExamSubmission extends Model
             return null;
         }
 
-        $elapsed   = now()->diffInSeconds($this->started_at);
+        // Calculate elapsed time from started_at to now
+        // (started_at first, then now - returns positive value)
+        $elapsed   = $this->started_at->diffInSeconds(now());
         $remaining = $totalAllowed - $elapsed;
 
         return max(0, $remaining);

@@ -232,41 +232,43 @@ class ExamTakingController extends Controller
             abort(404, 'Section not found.');
         }
 
+        // ── Ensure exam has started ────────────────────────────────────────────
+        // If started_at is null, the exam hasn't officially started yet. This
+        // shouldn't happen if the user went through the start() method, but we
+        // handle it here as a safeguard. Set started_at to now so that:
+        //   1. getRemainingTime() works correctly on this and future loads
+        //   2. Timer shows correct remaining time, not full duration
+        //   3. Page reloads don't reset the timer to full duration
+        if (! $submission->started_at) {
+            $submission->update([
+                'started_at' => now(),
+                'status'     => GeneralExamSubmission::STATUS_IN_PROGRESS,
+            ]);
+            // Refresh the object so started_at is now set in memory for use below
+            $submission->refresh();
+        }
+
         $questions       = $this->resolveQuestionOrder($exam, $section, $submission);
         $isSingleSection = $exam->sections->count() === 1;
 
         // ── Time remaining calculation ────────────────────────────────────────
         //
-        // getRemainingTime() incorporates any extra_time_minutes granted by the
-        // admin, so extensions are reflected here automatically.
+        // ALWAYS use exam-level duration (getRemainingTime), never section times.
+        // This ensures:
+        //   1. Timer never shows more time remaining than exam's total duration
+        //   2. Timer correctly decreases as elapsed time increases
+        //   3. Extensions granted by admin are included automatically
+        //   4. Consistent behavior across page reloads and rejoins
         //
-        // Priority:
-        //  1. Single-section exam with a global duration → exam clock (extra time included)
-        //  2. Multi-section exam with a per-section time limit → section clock
-        //  3. No time limit → null (unlimited)
+        // getRemainingTime() incorporates extra_time_minutes, so admin extensions
+        // are reflected here automatically.
 
         $timeRemaining = null;
 
-        if ($isSingleSection && $exam->duration_in_minutes) {
-            if ($submission->started_at) {
-                // Use the model helper — includes extra_time_minutes in the total
-                $timeRemaining = $submission->getRemainingTime();
-            } else {
-                // Not started yet; use total allowed seconds (base + extra)
-                $timeRemaining = $submission->getTotalAllowedSeconds()
-                              ?? ($exam->duration_in_minutes * 60);
-            }
-        } elseif ($section->time_limit_minutes) {
-            $sectionStartTimes = $submission->section_start_times ?? [];
-            $sectionKey        = (string) $section->id;
-            $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
-
-            if ($startedAt) {
-                $elapsed       = now()->timestamp - $startedAt;
-                $timeRemaining = max(0, ($section->time_limit_minutes * 60) - $elapsed);
-            } else {
-                $timeRemaining = $section->time_limit_minutes * 60;
-            }
+        if ($exam->duration_in_minutes) {
+            // At this point, started_at is guaranteed to be set (see above)
+            // So getRemainingTime() will always return the correct remaining time
+            $timeRemaining = $submission->getRemainingTime();
         }
 
         return view('examination-hub.take.section', [
