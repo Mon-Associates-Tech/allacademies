@@ -13,9 +13,9 @@
 //   window.examTimerExtend(minutes)         — called by Echo real-time push
 
 document.addEventListener('alpine:init', () => {
-    Alpine.data('examTimer', (sectionStartTs, timerDuration, serverRemainingSeconds = null) => ({
+    Alpine.data('examTimer', (sectionStartTs, timerDuration, serverRemainingSeconds = null, initialExtraMinutes = 0) => ({
         remaining: 0,
-        lastKnownExtraMinutes: 0,
+        lastKnownExtraMinutes: initialExtraMinutes,
         pendingExtensionMinutes: 0,
         pendingExtensionTimer: null,
         timerStyle: {
@@ -119,10 +119,6 @@ document.addEventListener('alpine:init', () => {
                 const addedMinutes = serverExtraMinutes - this.lastKnownExtraMinutes;
                 this.lastKnownExtraMinutes = serverExtraMinutes;
                 this.showTimeExtendedBanner(addedMinutes);
-            } else if (diff > 5) {
-                // Server reports more time (but extraMinutes didn't change) — show banner
-                const gainedMinutes = Math.ceil(diff / 60);
-                this.showTimeExtendedBanner(gainedMinutes);
             }
 
             // Re-arm the interval in case the timer had already expired

@@ -58,19 +58,17 @@ class ExamSectionTaking extends Component
         if ($section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
             $startedAt      = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
             $endsAt         = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
-            $sectionSeconds = max(0, $endsAt->diffInSeconds(now()));
+            $sectionSeconds = max(0, (int) now()->diffInSeconds($endsAt, false));
 
             // Exam duration is the hard ceiling — cap the displayed timer to whatever is left on the exam clock
             if ($exam->duration_in_minutes && $submission->started_at) {
-                $examEndsAt  = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
-                $examSeconds = max(0, $examEndsAt->diffInSeconds(now()));
+                $examSeconds = max(0, $submission->getRemainingTime() ?? PHP_INT_MAX);
                 $sectionSeconds = min($sectionSeconds, $examSeconds);
             }
 
             $this->timeRemaining = $sectionSeconds;
         } elseif ($exam->duration_in_minutes && $submission->started_at) {
-            $examEndsAt          = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
-            $this->timeRemaining = max(0, $examEndsAt->diffInSeconds(now()));
+            $this->timeRemaining = $submission->getRemainingTime();
         }
     }
 
@@ -239,7 +237,7 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             $examEndsAt = $submission->started_at
-                ? $submission->started_at->copy()->addMinutes($exam->duration_in_minutes)
+                ? $submission->started_at->copy()->addSeconds($submission->getTotalAllowedSeconds() ?? ($exam->duration_in_minutes * 60))
                 : now()->subSecond(); // treat as expired when no start time
             if (now()->greaterThanOrEqualTo($examEndsAt)) {
                 $this->performAutoSubmit(
@@ -459,6 +457,10 @@ class ExamSectionTaking extends Component
 
         // Also emit an event to show exam content regardless of fullscreen state
         $this->dispatch('show-exam-content');
+
+
+        // Recompute so the blade template has the correct seconds on re-render
+        $this->timeRemaining = $this->submission->fresh()->getRemainingTime();
     }
 
     public function isQuestionAnswered(int $questionId): bool

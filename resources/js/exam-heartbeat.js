@@ -17,12 +17,12 @@ class ExamHeartbeat {
         this.questionsAnswered = 0;
 
         // Callbacks
-        this.onWarning      = options.onWarning      || this.defaultWarningHandler;
-        this.onTerminated   = options.onTerminated   || this.defaultTerminatedHandler;
-        this.onMessage      = options.onMessage      || this.defaultMessageHandler;
-        this.onForceSubmit  = options.onForceSubmit  || null;
+        this.onWarning = options.onWarning || this.defaultWarningHandler;
+        this.onTerminated = options.onTerminated || this.defaultTerminatedHandler;
+        this.onMessage = options.onMessage || this.defaultMessageHandler;
+        this.onForceSubmit = options.onForceSubmit || null;
         this.onTimeExtended = options.onTimeExtended || null;
-        this.onTimeSync     = options.onTimeSync     || this.defaultTimeSyncHandler.bind(this);
+        this.onTimeSync = options.onTimeSync || this.defaultTimeSyncHandler.bind(this);
         // Fired when a second device takes over the session.
         this.onSessionSuperseded = options.onSessionSuperseded || this.defaultSessionSupersededHandler.bind(this);
 
@@ -146,11 +146,11 @@ class ExamHeartbeat {
                 this.onMessage(data.admin_message);
             }
 
-            // Re-sync timer from server's authoritative remaining time.
-            // Called on every heartbeat so extensions are picked up within
-            // one polling cycle even when Echo is unavailable.
-            if (data.remaining_seconds !== undefined && data.remaining_seconds !== null) {
-                this.onTimeSync(data.remaining_seconds, data.extra_time_minutes ?? 0);
+            // Pass null for remaining — the client-side setInterval is the
+            // authority after initial load. Only extra_time_minutes is forwarded
+            // so the timer can still detect admin extensions via polling.
+            if (data.extra_time_minutes !== undefined) {
+                this.onTimeSync(null, data.extra_time_minutes ?? 0);
             }
         } catch (error) {
             console.error('Heartbeat failed:', error.message);
@@ -179,11 +179,14 @@ class ExamHeartbeat {
             .listen('.admin.action', (data) => {
                 switch (data.action) {
                     case 'warning':
-                        this.onWarning({ message: data.message, warned_at: data.timestamp });
+                        this.onWarning({message: data.message, warned_at: data.timestamp});
                         break;
                     case 'terminate':
                         this.stop();
-                        this.onTerminated({ reason: data.message, message: 'Your exam session has been terminated by the administrator.' });
+                        this.onTerminated({
+                            reason: data.message,
+                            message: 'Your exam session has been terminated by the administrator.'
+                        });
                         break;
                     case 'force_submit':
                         if (this.onForceSubmit) {
@@ -198,18 +201,20 @@ class ExamHeartbeat {
                         // mobile) receive the update via their own event listeners.
                         // No window global — avoids "last writer wins" race.
                         const addedMinutes = data.data?.additional_minutes ?? 0;
-                        const newRemaining = data.data?.remaining_seconds   ?? null;
-
-                        if (newRemaining !== null) {
+                        // Never pass remaining_seconds — client countdown is authoritative.
+                        // Route through extra_time_minutes so the timer's lastKnownExtraMinutes
+                        // tracking deduplicates extensions that arrive via both Echo and polling.
+                        if (data.data?.extra_time_minutes !== undefined) {
                             document.dispatchEvent(new CustomEvent('exam:sync-time', {
                                 detail: {
-                                    remaining:    newRemaining,
-                                    extraMinutes: data.data?.extra_time_minutes ?? 0,
+                                    remaining: null,
+                                    extraMinutes: data.data.extra_time_minutes,
                                 },
                             }));
                         } else if (addedMinutes > 0) {
+                            // Fallback: payload has no extra_time_minutes field
                             document.dispatchEvent(new CustomEvent('exam:extend-time', {
-                                detail: { minutes: addedMinutes },
+                                detail: {minutes: addedMinutes},
                             }));
                         }
 
@@ -373,7 +378,7 @@ class ExamHeartbeat {
     defaultTimeSyncHandler(remainingSeconds, extraTimeMinutes) {
         document.dispatchEvent(new CustomEvent('exam:sync-time', {
             detail: {
-                remaining:    remainingSeconds,
+                remaining: remainingSeconds,
                 extraMinutes: extraTimeMinutes ?? 0,
             },
         }));

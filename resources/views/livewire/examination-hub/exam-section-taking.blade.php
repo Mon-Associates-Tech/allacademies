@@ -327,7 +327,7 @@ $wire.on('examAutoSubmitted', (payload) => {
 
                 <div class="flex items-center gap-3 flex-shrink-0">
                     {{-- TIMER (Desktop) --}}
-                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" :extraTimeMinutes="$extraTimeMinutes ?? 0" />
+                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? null" :extraTimeMinutes="$extraTimeMinutes ?? 0" />
 
                     {{-- Progress pill --}}
                     <div class="flex flex-col items-end gap-1">
@@ -380,7 +380,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                         </div>
                     </div>
                     {{-- TIMER (Mobile) --}}
-                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" :extraTimeMinutes="$extraTimeMinutes ?? 0" :isMobile="true" />
+                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? null" :extraTimeMinutes="$extraTimeMinutes ?? 0" :isMobile="true" />
                 </div>
 
                 {{-- Row 2: Actions --}}
