@@ -260,16 +260,22 @@ class ExamTakingController extends Controller
         //   3. Extensions granted by admin are included automatically
         //   4. Consistent behavior across page reloads and rejoins
         //
-        // getRemainingTime() incorporates extra_time_minutes, so admin extensions
-        // are reflected here automatically.
+        // DO NOT pass timeRemaining to the view initially. The timer component is
+        // part of the Livewire component which is rendered even while the preview
+        // panel is showing. If we pass timeRemaining here, the timer will initialize
+        // and start counting down before the user clicks "Begin Section".
+        //
+        // Instead, pass null and let the timer wait for the first sync event (via
+        // the heartbeat), which will initialize it with the correct remaining time.
+        // This prevents the timer from counting down during the preview phase.
 
         $timeRemaining = null;
 
-        if ($exam->duration_in_minutes) {
-            // At this point, started_at is guaranteed to be set (see above)
-            // So getRemainingTime() will always return the correct remaining time
-            $timeRemaining = $submission->getRemainingTime();
-        }
+//        if ($exam->duration_in_minutes) {
+//            // At this point, started_at is guaranteed to be set (see above)
+//            // So getRemainingTime() will always return the correct remaining time
+//            $timeRemaining = $submission->getRemainingTime();
+//        }
 
         return view('examination-hub.take.section', [
             'exam'                => $exam,

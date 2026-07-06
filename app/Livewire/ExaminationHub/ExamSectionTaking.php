@@ -223,7 +223,7 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             $examEndsAt = $submission->started_at
-                ? $submission->started_at->copy()->addSeconds($submission->getTotalAllowedSeconds() ?? ($exam->duration_in_minutes * 60))
+                ? $submission->started_at->copy()->addSeconds($submission->getTotalAllowedSeconds() ?? 0)
                 : now()->subSecond(); // treat as expired when no start time
             if (now()->greaterThanOrEqualTo($examEndsAt)) {
                 $this->performAutoSubmit(
@@ -446,10 +446,13 @@ class ExamSectionTaking extends Component
         // Also emit an event to show exam content regardless of fullscreen state
         $this->dispatch('show-exam-content');
 
-        // Don't recalculate timeRemaining here to avoid timer jumps.
-        // The timer was initialized correctly on page load and the heartbeat will
-        // provide periodic sync updates. Recalculating here causes a jump because
-        // the timer has already been counting down since mount().
+        // Now that the section is officially starting, calculate the actual remaining time
+        // for the timer to initialize. We couldn't pass this from the controller because
+        // the timer would have started counting down during the preview phase.
+        $exam = $this->exam;
+        if ($exam->duration_in_minutes) {
+            $this->timeRemaining = $this->submission->getRemainingTime();
+        }
     }
 
     public function isQuestionAnswered(int $questionId): bool
