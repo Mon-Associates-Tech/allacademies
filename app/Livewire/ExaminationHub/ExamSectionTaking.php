@@ -151,7 +151,8 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             if ($submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->performAutoSubmit(
                         $submission,
@@ -166,7 +167,8 @@ class ExamSectionTaking extends Component
 
             // Exam-level hard ceiling applies even in multi-section exams
             if ($exam->duration_in_minutes && $submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->performAutoSubmit($submission, 'Exam duration exceeded (server-side auto-submit)', $exam);
                     return;
@@ -224,7 +226,7 @@ class ExamSectionTaking extends Component
         if ($isSingleSection && $exam->duration_in_minutes) {
             $examEndsAt = $submission->started_at
                 ? $submission->started_at->copy()->addSeconds($submission->getTotalAllowedSeconds() ?? 0)
-                : now()->subSecond(); // treat as expired when no start time
+                : now()->subSecond();
             if (now()->greaterThanOrEqualTo($examEndsAt)) {
                 $this->performAutoSubmit(
                     $submission,
@@ -236,7 +238,8 @@ class ExamSectionTaking extends Component
         } elseif ($this->section->time_limit_minutes) {
             // Exam-level ceiling check first
             if ($exam->duration_in_minutes && $submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->performAutoSubmit($submission, 'Exam duration exceeded (client timer, server-verified)', $exam);
                     return;
@@ -345,7 +348,8 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             if ($submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->addError('general', 'Exam time limit has expired.');
                     return false;
@@ -354,7 +358,8 @@ class ExamSectionTaking extends Component
         } elseif ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
         } elseif ($exam->duration_in_minutes && $submission->started_at) {
             // Multi-section: always enforce exam-level ceiling
-            $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+            $totalSeconds = $submission->getTotalAllowedSeconds();
+            $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
             if (now()->greaterThanOrEqualTo($examEndsAt)) {
                 $this->addError('general', 'Exam time limit has expired.');
                 return false;
