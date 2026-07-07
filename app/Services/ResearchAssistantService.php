@@ -133,7 +133,7 @@ class ResearchAssistantService
 
         return $this->chatGPTService->chat($messages, $model, [
             'temperature' => (float) ($parameters['creativity_level'] ?? 1.0),
-            'max_output_tokens' => (int) ($parameters['response_length'] ?? 10000),
+            'max_output_tokens' => (int) ($parameters['response_length'] ?? 1000000),
             //            'request_type' => $parameters['request_type'] ?? 'chat'
         ]);
     }
@@ -348,7 +348,7 @@ class ResearchAssistantService
             'temperature' => (float) ($parameters['creativity_level'] ?? 1.0),
         ];
 
-        $tokenLimit = (int) ($parameters['response_length'] ?? 10000);
+        $tokenLimit = (int) ($parameters['response_length'] ?? 1000000);
         $requestData['max_output_tokens'] = $tokenLimit;
 
         if (isset($parameters['top_p'])) {

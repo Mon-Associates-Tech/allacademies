@@ -13,6 +13,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
 
 class ProcessDocumentQuestionImportJob implements ShouldQueue
 {
@@ -24,7 +26,7 @@ class ProcessDocumentQuestionImportJob implements ShouldQueue
      * this is the real ceiling for slow AI responses. Set it generously above
      * ChatGPTService's own worst-case retry budget (~3 attempts x ~90s + sleeps).
      */
-    public int $timeout = 420;
+    public int $timeout = 1200;
 
     /**
      * ChatGPTService::sendChatRequest() already retries internally on
@@ -38,6 +40,10 @@ class ProcessDocumentQuestionImportJob implements ShouldQueue
 
     public function handle(DocumentAiQuestionImportService $service): void
     {
+
+                set_time_limit(0);
+
+        //DB::reconnect();
         $batch = QuestionImportBatch::find($this->batchId);
 
         if (! $batch) {

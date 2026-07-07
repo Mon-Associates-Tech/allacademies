@@ -39,67 +39,6 @@ class DocumentAiQuestionImportService extends AbstractAiQuestionImportService
         }
     }
 
-    /**
-     * Extract + save in one call.
-     */
-    public function import(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null, ?array $only = null): array
-    {
-        $preview = $this->preview($file, $topic, $subtopic, $only);
-
-        return $this->save($preview['results'], $topic, $subtopic, $userId, $preview['errors']);
-    }
-
-    /**
-     * Extract + classify questions from a file without saving them.
-     *
-     * @param string[]|null $only Restrict to specific type keys, e.g. ['multiple_choice'].
-     *                               Null (default) extracts all registered types at once.
-     */
-    public function preview(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?array $only = null): array
-    {
-        $extracted = $this->extractWithFormatting($file);
-
-        if (!$this->isMeaningfulContent($extracted['html'])) {
-            return [
-                'results' => [],
-                'errors' => ['The document appears to be empty or has no extractable content.'],
-                'extraction_method' => $extracted['method'],
-            ];
-        }
-
-        $activeHandlers = $only !== null
-            ? array_intersect_key($this->handlers, array_flip($only))
-            : $this->handlers;
-
-        if (empty($activeHandlers)) {
-            throw new \InvalidArgumentException('No valid question type handlers selected.');
-        }
-
-        $prompt = $this->buildCombinedPrompt($extracted, $topic, $subtopic, $activeHandlers);
-        $aiResult = $this->callAi($prompt);
-
-        if (!($aiResult['success'] ?? false)) {
-            Log::error('Question AI extraction failed', ['error' => $aiResult['error'] ?? 'unknown']);
-
-            return [
-                'results' => [],
-                'errors' => ['AI extraction failed: ' . ($aiResult['error'] ?? 'unknown error')],
-                'extraction_method' => $extracted['method'],
-            ];
-        }
-
-        $parsed = $this->parseJsonResponse($aiResult['content'] ?? '');
-
-        if ($parsed === null) {
-            return [
-                'results' => [],
-                'errors' => ['The AI did not return valid, parseable question data.'],
-                'extraction_method' => $extracted['method'],
-            ];
-        }
-
-        return $this->normalizeParsedResponse($parsed, $activeHandlers, $extracted['method']);
-    }
 
     /**
      * @param QuestionTypeHandlerInterface[] $handlers
@@ -291,5 +230,137 @@ PROMPT;
             'summary' => implode(', ', $summary),
             'errors' => $errors,
         ];
+    }
+
+    public function import(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?int $userId = null, ?array $only = null): array
+    {
+        $preview = $this->preview($file, $topic, $subtopic, $only);
+        return $this->save($preview['results'], $topic, $subtopic, $userId, $preview['errors']);
+    }
+
+    /**
+     * Extract + classify questions from a file without saving them.
+     * NOW SUPPORTS BATCH PROCESSING FOR LARGE DOCUMENTS.
+     */
+    public function preview(UploadedFile $file, AcademicTopic $topic, ?AcademicSubtopic $subtopic = null, ?array $only = null): array
+    {
+        $extracted = $this->extractWithFormatting($file);
+
+        if (!$this->isMeaningfulContent($extracted['html'])) {
+            return [
+                'results' => [],
+                'errors' => ['The document appears to be empty or has no extractable content.'],
+                'extraction_method' => $extracted['method'],
+            ];
+        }
+
+        $activeHandlers = $only !== null
+            ? array_intersect_key($this->handlers, array_flip($only))
+            : $this->handlers;
+
+        if (empty($activeHandlers)) {
+            throw new \InvalidArgumentException('No valid question type handlers selected.');
+        }
+
+        // --- BATCH PROCESSING: Split large documents into manageable chunks ---
+        $chunks = $this->chunkContent($extracted['html']);
+        $totalChunks = count($chunks);
+        $allParsedResults = [];
+        $chunkErrors = [];
+
+        foreach ($chunks as $index => $chunk) {
+            $chunkExtracted = [
+                'html' => $chunk,
+                'method' => $extracted['method'],
+            ];
+
+            $prompt = $this->buildCombinedPrompt($chunkExtracted, $topic, $subtopic, $activeHandlers);
+            $aiResult = $this->callAi($prompt);
+
+            if (!($aiResult['success'] ?? false)) {
+                Log::error('Question AI extraction failed for chunk ' . ($index + 1), ['error' => $aiResult['error'] ?? 'unknown']);
+                $chunkErrors[] = 'AI extraction failed for part ' . ($index + 1) . ' of ' . $totalChunks . ': ' . ($aiResult['error'] ?? 'unknown error');
+                continue;
+            }
+
+            $parsed = $this->parseJsonResponse($aiResult['content'] ?? '');
+
+            if ($parsed === null) {
+                $chunkErrors[] = 'The AI did not return valid, parseable question data for part ' . ($index + 1) . ' of ' . $totalChunks . '.';
+                continue;
+            }
+
+            // Merge parsed results from this chunk into the master array
+            foreach ($activeHandlers as $key => $handler) {
+                if (!isset($allParsedResults[$key])) {
+                    $allParsedResults[$key] = [];
+                }
+                if (isset($parsed[$key]) && is_array($parsed[$key])) {
+                    $allParsedResults[$key] = array_merge($allParsedResults[$key], $parsed[$key]);
+                }
+            }
+        }
+
+        // If all chunks failed, return early
+        if (empty($allParsedResults) && !empty($chunkErrors)) {
+            return [
+                'results' => [],
+                'errors' => $chunkErrors,
+                'extraction_method' => $extracted['method'],
+            ];
+        }
+
+        // Normalize the merged results
+        $normalized = $this->normalizeParsedResponse($allParsedResults, $activeHandlers, $extracted['method']);
+        
+        // Prepend any chunk-level errors to the normalization errors
+        $normalized['errors'] = array_merge($chunkErrors, $normalized['errors']);
+
+        return $normalized;
+    }
+
+    /**
+     * Split large HTML content into smaller chunks to avoid hitting AI context/output limits.
+     * Attempts to break at natural boundaries (paragraphs, divs, double newlines) to avoid 
+     * splitting a single question in half.
+     */
+    private function chunkContent(string $html, int $maxChunkSize = 15000): array
+    {
+        $html = trim($html);
+        if (mb_strlen($html) <= $maxChunkSize) {
+            return [$html];
+        }
+
+        $chunks = [];
+        // Split by closing tags or double newlines to preserve structure
+        $parts = preg_split('/(<\/(?:p|div|section|article|tr|table)>|<br\s*\/?>|\n{2,})/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        
+        $currentChunk = '';
+        foreach ($parts as $part) {
+            if (mb_strlen($currentChunk . $part) > $maxChunkSize) {
+                if ($currentChunk !== '') {
+                    $chunks[] = trim($currentChunk);
+                    $currentChunk = '';
+                }
+                
+                // If the individual part is still larger than the limit, split it forcefully
+                if (mb_strlen($part) > $maxChunkSize) {
+                    $length = mb_strlen($part);
+                    for ($i = 0; $i < $length; $i += $maxChunkSize) {
+                        $chunks[] = mb_substr($part, $i, $maxChunkSize);
+                    }
+                } else {
+                    $currentChunk = $part;
+                }
+            } else {
+                $currentChunk .= $part;
+            }
+        }
+        
+        if (trim($currentChunk) !== '') {
+            $chunks[] = trim($currentChunk);
+        }
+        
+        return array_filter($chunks, fn($c) => trim($c) !== '');
     }
 }
