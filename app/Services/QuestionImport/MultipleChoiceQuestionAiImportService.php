@@ -147,7 +147,7 @@ class MultipleChoiceQuestionAiImportService
             'input' => $prompt,
             'request_type' => 'quiz_generation',
             'creativity_level' => 0.2,
-            'response_length' => 4000,
+            'response_length' => 400000,
         ]);
 
         if (! ($result['success'] ?? false)) {
