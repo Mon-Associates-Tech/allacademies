@@ -45,9 +45,20 @@ class AutoSubmitExpiredSectionSubmissions extends Command
                     $startedAt = $sectionStartTimes[$sectionKey] ?? null;
 
                     if ($startedAt) {
-                        $sectionEndTime = $startedAt + ($section->time_limit_minutes * 60);
+                        // Use getTotalAllowedSeconds() for exam-level extra time.
+                        // Section time limits don't have their own extra_time field,
+                        // so we honour the exam-level extension as a ceiling.
+                        $totalAllowed = $submission->getTotalAllowedSeconds();
+                        $examEndsAt   = $submission->started_at
+                            ? $submission->started_at->timestamp + $totalAllowed
+                            : null;
 
-                        // Check if section time has expired
+                        $sectionEndTime = $startedAt + ($section->time_limit_minutes * 60);
+                        // Clamp section end to exam-level ceiling if set
+                        if ($examEndsAt !== null) {
+                            $sectionEndTime = min($sectionEndTime, $examEndsAt);
+                        }
+
                         if (now()->timestamp >= $sectionEndTime) {
                             $needsAutoSubmit = true;
                             $autoSubmitReason = "Section '{$section->title}' time limit exceeded (server-side auto-submit)";

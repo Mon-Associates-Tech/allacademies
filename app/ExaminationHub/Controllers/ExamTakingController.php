@@ -337,13 +337,24 @@ class ExamTakingController extends Controller
             $sectionKey        = (string) $section->id;
             $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
 
-            if (! $startedAt || now()->timestamp >= ($startedAt + ($section->time_limit_minutes * 60))) {
-                return $this->autoSubmitExpired(
-                    $submission,
-                    $exam,
-                    $request,
-                    "Section '{$section->title}' time limit exceeded (server-side auto-submit)"
-                );
+            if ($startedAt) {
+                $totalAllowed   = $submission->getTotalAllowedSeconds();
+                $examEndsAt     = $submission->started_at
+                    ? $submission->started_at->timestamp + $totalAllowed
+                    : null;
+                $sectionEndTime = $startedAt + ($section->time_limit_minutes * 60);
+                if ($examEndsAt !== null) {
+                    $sectionEndTime = min($sectionEndTime, $examEndsAt);
+                }
+
+                if (now()->timestamp >= $sectionEndTime) {
+                    return $this->autoSubmitExpired(
+                        $submission,
+                        $exam,
+                        $request,
+                        "Section '{$section->title}' time limit exceeded (server-side auto-submit)"
+                    );
+                }
             }
         }
 
