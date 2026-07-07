@@ -115,20 +115,20 @@ class HeartbeatController extends Controller
             'server_time'  => now()->toIso8601String(),
         ];
 
-        // ── Authoritative time information ────────────────────────────────────
-        // The client timer re-syncs from these values on every heartbeat so that
-        // admin-granted extensions are reflected without needing a page reload.
-        // getRemainingTime() already incorporates extra_time_minutes.
-        // Wrapped in try-catch so any failure here never converts a valid heartbeat
-        // into a 500 response (which would stop the candidate appearing as active).
+        // Only return remaining time after the exam has actually started.
+        // Before "Begin Section" is clicked, started_at is null and we must
+        // not send a remaining_seconds value — doing so would start the admin
+        // monitoring clock before the participant has begun.
         try {
             $submission->refresh(); // ensure extra_time_minutes is current
-            $remainingSeconds = $submission->getRemainingTime();
+            if ($submission->started_at) {
+                $remainingSeconds = $submission->getRemainingTime();
 
-            if ($remainingSeconds !== null) {
-                $response['remaining_seconds']     = $remainingSeconds;
-                $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
-                $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+                if ($remainingSeconds !== null) {
+                    $response['remaining_seconds']     = $remainingSeconds;
+                    $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+                    $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+                }
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('HeartbeatController: failed to compute remaining time', [
@@ -209,16 +209,18 @@ class HeartbeatController extends Controller
             'server_time' => now()->toIso8601String(),
         ];
 
-        // Include authoritative remaining time when available so the client
-        // can immediately initialise the timer without waiting for the
-        // first periodic heartbeat poll.
+        // Only return remaining time if the exam has actually started.
+        // If started_at is null the participant hasn't clicked "Begin Section" yet—
+        // returning a value here would start the admin monitoring clock prematurely.
         try {
             $submission->refresh();
-            $remainingSeconds = $submission->getRemainingTime();
-            if ($remainingSeconds !== null) {
-                $response['remaining_seconds']     = $remainingSeconds;
-                $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
-                $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+            if ($submission->started_at) {
+                $remainingSeconds = $submission->getRemainingTime();
+                if ($remainingSeconds !== null) {
+                    $response['remaining_seconds']     = $remainingSeconds;
+                    $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+                    $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+                }
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('HeartbeatController.initialize: failed to compute remaining time', [

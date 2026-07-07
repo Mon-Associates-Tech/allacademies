@@ -184,10 +184,10 @@ class ExamTakingController extends Controller
         }
 
         if ($submission->status === GeneralExamSubmission::STATUS_NOT_STARTED) {
-            $submission->update([
-                'status'     => GeneralExamSubmission::STATUS_IN_PROGRESS,
-                'started_at' => $submission->started_at ?? now(),
-            ]);
+            // Do NOT set started_at here — the timer must only begin when the
+            // participant explicitly clicks "Begin Section". Setting it here
+            // would start the admin monitoring clock before the exam begins.
+            $submission->update(['status' => GeneralExamSubmission::STATUS_IN_PROGRESS]);
         }
 
         // Show waiting/countdown view if the exam window hasn't opened yet
@@ -233,20 +233,15 @@ class ExamTakingController extends Controller
         }
 
         // ── Ensure exam has started ────────────────────────────────────────────
-        // If started_at is null, the exam hasn't officially started yet. This
-        // shouldn't happen if the user went through the start() method, but we
-        // handle it here as a safeguard. Set started_at to now so that:
-        //   1. getRemainingTime() works correctly on this and future loads
-        //   2. Timer shows correct remaining time, not full duration
-        //   3. Page reloads don't reset the timer to full duration
-        if (! $submission->started_at) {
-            $submission->update([
-                'started_at' => now(),
-                'status'     => GeneralExamSubmission::STATUS_IN_PROGRESS,
-            ]);
-            // Refresh the object so started_at is now set in memory for use below
-            $submission->refresh();
-        }
+        // The start time is now managed in the Livewire component when the user
+        // explicitly begins the section, so no longer setting started_at here
+        // if (! $submission->started_at) {
+        //     $submission->update([
+        //         'started_at' => now(),
+        //         'status'     => GeneralExamSubmission::STATUS_IN_PROGRESS,
+        //     ]);
+        //     $submission->refresh();
+        // }
 
         $questions       = $this->resolveQuestionOrder($exam, $section, $submission);
         $isSingleSection = $exam->sections->count() === 1;
@@ -626,7 +621,7 @@ class ExamTakingController extends Controller
             [
                 'participant_name'  => $participantName,
                 'participant_email' => $participantEmail,
-                'started_at'        => now(),
+                'started_at'        => null, // set when participant clicks "Begin Section"
                 'responses'         => [],
                 'score'             => 0,
                 'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,

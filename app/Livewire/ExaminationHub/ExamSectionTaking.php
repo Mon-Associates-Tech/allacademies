@@ -423,12 +423,22 @@ class ExamSectionTaking extends Component
             return;
         }
 
-        // Record start time
-        $this->start_time = now();
+        // Record start time — only set started_at on the very first section click.
+        // This is the authoritative moment the exam clock begins for both the
+        // participant timer and the admin live-monitoring dashboard.
+        $submission = $this->submission;
+        if (! $submission->started_at) {
+            $submission->update(['started_at' => now()]);
+            $submission->refresh();
 
-        // Mark section as started (this updates section_start_times, not exam started_at)
-        // Note: started_at is set by the ExamTakingController::start() method when the user
-        // first enters the exam. We do NOT modify it here.
+            // Sync the heartbeat record so the admin monitoring clock starts
+            // from the same moment as the participant timer.
+            \App\ExaminationHub\Models\ExamParticipantHeartbeat::where(
+                'general_exam_submission_id', $submission->id
+            )->whereNull('started_at')->update(['started_at' => $submission->started_at]);
+        }
+        $this->start_time = $submission->started_at->timestamp;
+
         $this->updateSectionProgress('started');
 
         // Hide section info to show exam content

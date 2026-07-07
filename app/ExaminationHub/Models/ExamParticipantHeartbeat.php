@@ -168,7 +168,7 @@ class ExamParticipantHeartbeat extends Model
             'participant_name'          => $submission->participant_name,
             'participant_email'         => $submission->participant_email,
             'session_token'             => self::generateSessionToken(),
-            'started_at'                => $submission->started_at ?? now(),
+            'started_at'                => $submission->started_at, // null until "Begin Section" is clicked
             'last_heartbeat_at'         => now(),
             'status'                    => self::STATUS_ACTIVE,
             'total_questions'           => $exam->questions()->count(),
@@ -367,10 +367,8 @@ class ExamParticipantHeartbeat extends Model
 
         // ── 2. Exam-level fallback ─────────────────────────────────────────────
         if (! $hasDuration && $examDurationMinutes) {
-            // Always use the submission's started_at as the authoritative clock.
-            // The heartbeat's own started_at can be stale or wrong (it gets
-            // preserved now, but older records may differ).  Submission is the
-            // single source of truth.
+            // Only compute remaining time after the exam has actually started.
+            // started_at is null until the participant clicks "Begin Section".
             $clockStart = $submission?->started_at ?? $this->started_at;
 
             if ($clockStart) {
