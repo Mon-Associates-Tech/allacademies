@@ -43,7 +43,7 @@ class ProcessDocumentQuestionImportJob implements ShouldQueue
 
                 set_time_limit(0);
 
-        DB::reconnect();
+        //DB::reconnect();
         $batch = QuestionImportBatch::find($this->batchId);
 
         if (! $batch) {
