@@ -38,6 +38,9 @@ class ProcessDocumentQuestionImportJob implements ShouldQueue
 
     public function handle(DocumentAiQuestionImportService $service): void
     {
+
+                set_time_limit(0);
+
         DB::reconnect();
         $batch = QuestionImportBatch::find($this->batchId);
 
