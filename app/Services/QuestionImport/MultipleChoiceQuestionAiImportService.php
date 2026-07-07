@@ -136,61 +136,6 @@ class MultipleChoiceQuestionAiImportService
         ];
     }
 
-    /**
-     * Ask the AI to extract MCQs from the formatted content and parse the JSON response.
-     */
-    private function extractQuestions(array $extracted, AcademicTopic $topic, ?AcademicSubtopic $subtopic): array
-    {
-        $prompt = $this->buildPrompt($extracted, $topic, $subtopic);
-
-        $result = $this->chatService->chat([
-            'input' => $prompt,
-            'request_type' => 'quiz_generation',
-            'creativity_level' => 0.2,
-            'response_length' => 400000,
-        ]);
-
-        if (! ($result['success'] ?? false)) {
-            Log::error('MCQ AI extraction failed', ['error' => $result['error'] ?? 'unknown']);
-
-            return [
-                'questions' => [],
-                'errors' => ['AI extraction failed: '.($result['error'] ?? 'unknown error')],
-                'extraction_method' => $extracted['method'],
-            ];
-        }
-
-        $parsed = $this->parseJsonResponse($result['content'] ?? '');
-
-        if ($parsed === null) {
-            return [
-                'questions' => [],
-                'errors' => ['The AI did not return valid, parseable question data.'],
-                'extraction_method' => $extracted['method'],
-            ];
-        }
-
-        $questions = $parsed['questions'] ?? [];
-        $errors = [];
-
-        foreach ($questions as $i => $q) {
-            $source = $q['answer_source'] ?? 'unknown';
-            $preview = mb_substr($q['question_plain'] ?? '', 0, 60);
-
-            if ($source === 'inferred_knowledge') {
-                $errors[] = "Question #{$i} (\"{$preview}...\"): no answer cue found in the document — the AI guessed \"{$q['correct_option']}\" from its own subject knowledge. Please verify before publishing.";
-            } elseif ($source === 'unknown' || empty($q['correct_option'])) {
-                $errors[] = "Question #{$i} (\"{$preview}...\"): could not determine a correct answer. Please set it manually.";
-            }
-        }
-
-        return [
-            'questions' => $questions,
-            'errors' => $errors,
-            'extraction_method' => $extracted['method'],
-        ];
-    }
-
     private function buildPrompt(array $extracted, AcademicTopic $topic, ?AcademicSubtopic $subtopic): string
     {
         $context = "Topic: {$topic->name}.";
@@ -466,5 +411,107 @@ PROMPT;
         $clean = preg_replace('/\n{3,}/', "\n\n", trim($clean));
 
         return $clean;
+    }
+
+    /**
+     * Ask the AI to extract MCQs from the formatted content and parse the JSON response.
+     * NOW SUPPORTS BATCH PROCESSING FOR LARGE DOCUMENTS.
+     */
+    private function extractQuestions(array $extracted, AcademicTopic $topic, ?AcademicSubtopic $subtopic): array
+    {
+        $chunks = $this->chunkContent($extracted['html']);
+        $totalChunks = count($chunks);
+        $allQuestions = [];
+        $errors = [];
+
+        foreach ($chunks as $index => $chunk) {
+            $chunkExtracted = [
+                'html' => $chunk,
+                'method' => $extracted['method'],
+            ];
+
+            $prompt = $this->buildPrompt($chunkExtracted, $topic, $subtopic);
+            $result = $this->chatService->chat([
+                'input' => $prompt,
+                'request_type' => 'quiz_generation',
+                'creativity_level' => 0.2,
+                'response_length' => 400000,
+            ]);
+
+            if (!($result['success'] ?? false)) {
+                Log::error('MCQ AI extraction failed for chunk ' . ($index + 1), ['error' => $result['error'] ?? 'unknown']);
+                $errors[] = 'AI extraction failed for part ' . ($index + 1) . ' of ' . $totalChunks . ': ' . ($result['error'] ?? 'unknown error');
+                continue;
+            }
+
+            $parsed = $this->parseJsonResponse($result['content'] ?? '');
+            if ($parsed === null) {
+                $errors[] = 'The AI did not return valid, parseable question data for part ' . ($index + 1) . ' of ' . $totalChunks . '.';
+                continue;
+            }
+
+            $questions = $parsed['questions'] ?? [];
+            $allQuestions = array_merge($allQuestions, $questions);
+        }
+
+        // Process warnings for all merged questions
+        foreach ($allQuestions as $i => $q) {
+            $source = $q['answer_source'] ?? 'unknown';
+            $preview = mb_substr($q['question_plain'] ?? '', 0, 60);
+            if ($source === 'inferred_knowledge') {
+                $errors[] = "Question #{$i} (\"{$preview}...\"): no answer cue found in the document — the AI guessed \"{$q['correct_option']}\" from its own subject knowledge. Please verify before publishing.";
+            } elseif ($source === 'unknown' || empty($q['correct_option'])) {
+                $errors[] = "Question #{$i} (\"{$preview}...\"): could not determine a correct answer. Please set it manually.";
+            }
+        }
+
+        return [
+            'questions' => $allQuestions,
+            'errors' => $errors,
+            'extraction_method' => $extracted['method'],
+        ];
+    }
+
+    // ... (buildPrompt, parseJsonResponse, isTrueFalseQuestion, extractWithFormatting, etc. remain the same)
+
+    /**
+     * Split large HTML content into smaller chunks to avoid hitting AI context/output limits.
+     */
+    private function chunkContent(string $html, int $maxChunkSize = 15000): array
+    {
+        $html = trim($html);
+        if (mb_strlen($html) <= $maxChunkSize) {
+            return [$html];
+        }
+
+        $chunks = [];
+        $parts = preg_split('/(<\/(?:p|div|section|article|tr|table)>|<br\s*\/?>|\n{2,})/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        
+        $currentChunk = '';
+        foreach ($parts as $part) {
+            if (mb_strlen($currentChunk . $part) > $maxChunkSize) {
+                if ($currentChunk !== '') {
+                    $chunks[] = trim($currentChunk);
+                    $currentChunk = '';
+                }
+                
+                if (mb_strlen($part) > $maxChunkSize) {
+                    $length = mb_strlen($part);
+                    for ($i = 0; $i < $length; $i += $maxChunkSize) {
+                        $chunks[] = mb_substr($part, $i, $maxChunkSize);
+                    }
+                } else {
+                    $currentChunk = $part;
+                }
+            } else {
+                $currentChunk .= $part;
+            }
+        }
+        
+        if (trim($currentChunk) !== '') {
+            $chunks[] = trim($currentChunk);
+        }
+        
+        return array_filter($chunks, fn($c) => trim($c) !== '');
     }
 }
