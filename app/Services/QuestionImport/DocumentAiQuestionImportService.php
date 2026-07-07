@@ -363,3 +363,4 @@ PROMPT;
         
         return array_filter($chunks, fn($c) => trim($c) !== '');
     }
+}
