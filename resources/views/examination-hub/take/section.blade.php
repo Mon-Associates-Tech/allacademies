@@ -181,13 +181,39 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Fullscreen Required</h3>
-                <p class="text-slate-600 dark:text-slate-400 mb-6">You have exited fullscreen mode. This exam must be taken in fullscreen. Please click the button below to return to fullscreen mode.</p>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">You have exited fullscreen mode. This exam must be taken in fullscreen. Please click the button below to return to fullscreen mode.</p>
+                <div id="fullscreen-dialog-timer-mount" class="flex justify-center mb-6"></div>
                 <button id="reenter-fullscreen-btn" class="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors shadow-lg">
                     Re-enter Fullscreen
                 </button>
             </div>
         `;
                 document.body.appendChild(dialog);
+
+                // Mount a live timer inside the dialog so the candidate can see
+                // time is still counting while they are outside fullscreen.
+                const mount = document.getElementById('fullscreen-dialog-timer-mount');
+                if (mount && typeof Alpine !== 'undefined') {
+                    mount.innerHTML = `
+                        <div
+                            x-data="examCountdown(null, 0)"
+                            class="flex items-center gap-2 px-3 py-1.5 border transition-all duration-300"
+                            style="border-radius:2px;"
+                            :class="{
+                                'bg-red-600 text-white animate-pulse border-red-600': state === 'expired',
+                                'bg-red-100 border-red-300 text-red-700': state === 'critical',
+                                'bg-amber-100 border-amber-300 text-amber-700': state === 'warning',
+                                'bg-slate-50 border-slate-200': state === 'normal'
+                            }"
+                        >
+                            <svg class="w-4 h-4 flex-shrink-0" :class="state === 'expired' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm font-bold tabular-nums" :class="state === 'expired' ? 'text-white' : 'text-slate-800'" x-text="display">--:--:--</span>
+                        </div>
+                    `;
+                    Alpine.initTree(mount.firstElementChild);
+                }
 
                 document.getElementById('reenter-fullscreen-btn').addEventListener('click', () => {
                     dialog.remove();
