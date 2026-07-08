@@ -8,7 +8,7 @@ use App\ExaminationHub\Services\ParticipantGroupService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Validation\Rule;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ParticipantGroupController extends Controller
@@ -105,7 +105,7 @@ class ParticipantGroupController extends Controller
         }
 
         $message = "{$result['imported']} participant(s) imported into {$result['groups']} group(s).";
-        
+
         if (!empty($result['errors'])) {
             return redirect()->route('examination-hub.participant-groups.index')
                 ->with('success', $message)
@@ -152,5 +152,13 @@ class ParticipantGroupController extends Controller
         $this->groupService->deleteMember($member);
 
         return back()->with('success', 'Participant removed from group.');
+    }
+
+    public function guestIndex(Request $request): View
+    {
+        $search = $request->query('search');
+        $exams = $this->groupService->searchExamReferencesForGuest($search);
+
+        return view('examination-hub.participant-groups.guest', compact('exams', 'search'));
     }
 }

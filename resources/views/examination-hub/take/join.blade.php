@@ -188,7 +188,7 @@
                         </div>
 
                         <p class="text-center text-xs text-slate-500 dark:text-slate-400 pt-2">
-                            Ensure stable internet connection before starting
+                            Comply with all rules and regulations.
                         </p>
                     </form>
                 </div>

@@ -108,4 +108,13 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Redirect to join page after 10 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                window.location.href = "{{ route('examination-hub.take.join') }}";
+            }, 10000);
+        });
+    </script>
 </x-layouts.exam>

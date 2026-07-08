@@ -35,6 +35,11 @@ class GeneralExamSubmission extends Model
         'extra_time_minutes',
         'extra_time_granted_by',
         'extra_time_granted_at',
+        // ── Single-session enforcement ─────────────────────────────────────
+        // Rotated on every authenticate() call. HeartbeatController compares
+        // session('exam_device_token') against this; a mismatch means a second
+        // device has taken over and the old one must be kicked.
+        'device_token',
         // ──────────────────────────────────────────────────────────────────
         'time_taken_minutes',
         'responses',
@@ -86,6 +91,11 @@ class GeneralExamSubmission extends Model
     // ─── Relationships ────────────────────────────────────────────────────────
 
     public function assignment(): BelongsTo
+    {
+        return $this->belongsTo(GeneralExam::class, 'general_exam_id');
+    }
+
+    public function exam(): BelongsTo
     {
         return $this->belongsTo(GeneralExam::class, 'general_exam_id');
     }
@@ -224,7 +234,9 @@ class GeneralExamSubmission extends Model
             return null;
         }
 
-        $elapsed   = now()->diffInSeconds($this->started_at);
+        // Calculate elapsed time from started_at to now
+        // (started_at first, then now - returns positive value)
+        $elapsed   = $this->started_at->diffInSeconds(now());
         $remaining = $totalAllowed - $elapsed;
 
         return max(0, $remaining);

@@ -35,12 +35,12 @@ $wire.on('examAutoSubmitted', (payload) => {
     const redirectUrl = payload?.redirectUrl;
     if (!redirectUrl) return;
 
-    // 3.1 s: the parent modal counts down 3 s before navigating, so this
+    // 9.1 s: the parent modal counts down 3 s before navigating, so this
     // fires 100 ms after the modal countdown ends as a safety net.  If the
     // parent already navigated away this is a no-op.
     setTimeout(() => {
         window.location.href = redirectUrl;
-    }, 3100);
+    }, 9100);
 });
 </script>
 @endscript
@@ -327,7 +327,9 @@ $wire.on('examAutoSubmitted', (payload) => {
 
                 <div class="flex items-center gap-3 flex-shrink-0">
                     {{-- TIMER (Desktop) --}}
-                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" />
+                    @if($start_time)
+                        <x-examination-hub.timer :timeRemaining="$timeRemaining ?? null" :extraTimeMinutes="$extraTimeMinutes ?? 0" />
+                    @endif
 
                     {{-- Progress pill --}}
                     <div class="flex flex-col items-end gap-1">
@@ -351,7 +353,7 @@ $wire.on('examAutoSubmitted', (payload) => {
 
                     {{-- Section info toggle --}}
                     <button wire:click="toggleSectionInfo"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
+                           class="inline-flexed items-center hidden gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
                            style="border-radius: 2px;">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -380,13 +382,15 @@ $wire.on('examAutoSubmitted', (payload) => {
                         </div>
                     </div>
                     {{-- TIMER (Mobile) --}}
-                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" :isMobile="true" />
+                    @if($start_time)
+                        <x-examination-hub.timer :timeRemaining="$timeRemaining ?? null" :extraTimeMinutes="$extraTimeMinutes ?? 0" :isMobile="true" />
+                    @endif
                 </div>
 
                 {{-- Row 2: Actions --}}
                 <div class="flex items-center justify-end gap-2">
                     <button wire:click="toggleSectionInfo"
-                           class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
+                           class="inline-flexed hidden items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
                            style="border-radius: 2px;">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>

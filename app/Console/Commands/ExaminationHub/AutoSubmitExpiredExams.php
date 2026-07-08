@@ -32,11 +32,8 @@ class AutoSubmitExpiredExams extends Command
                 ->where('status', GeneralExamSubmission::STATUS_IN_PROGRESS)
                 ->whereNull('submitted_at')
                 ->whereNotNull('started_at')
-                ->whereRaw(
-                    'DATE_ADD(started_at, INTERVAL ? MINUTE) < NOW()',
-                    [$exam->duration_in_minutes]
-                )
-                ->get();
+                ->get()
+                ->filter(fn ($submission) => $submission->getRemainingTime() === 0);
 
             foreach ($expired as $submission) {
                 DB::transaction(function () use ($submission, $gradingService) {

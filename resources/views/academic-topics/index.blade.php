@@ -1,4 +1,4 @@
-<x-layouts.app title="Academic Topics" :page-name="$academicSubject->name">
+<x-layouts.app title="Academic Topics" :show-title-area="false" :page-name="$academicSubject->name">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),

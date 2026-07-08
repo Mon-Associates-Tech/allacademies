@@ -1,4 +1,4 @@
-<x-layouts.app title="True Or False Questions" :has-action="false">
+<x-layouts.app title="True Or False Questions" :show-title-area="false" :has-action="false">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[
             'Academic Groups' => route('academic-groups.index'),

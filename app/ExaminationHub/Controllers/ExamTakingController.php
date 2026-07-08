@@ -108,6 +108,14 @@ class ExamTakingController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
+        // ── Single-session enforcement ────────────────────────────────────────
+        // Generate a fresh device token and write it to the submission row.
+        // Any existing PHP session (e.g. device 1) still holds the old token.
+        // HeartbeatController will detect the mismatch on device 1's next poll
+        // and return status:'session_superseded', which kicks that device out.
+        $deviceToken = Str::random(64);
+        $submission->update(['device_token' => $deviceToken]);
+
         // Session security hardening
         session()->regenerate();
         session([
@@ -117,6 +125,7 @@ class ExamTakingController extends Controller
                 'email' => $data['email'] ?? null,
             ],
             'exam_heartbeat_token'    => $heartbeat->session_token,
+            'exam_device_token'       => $deviceToken,   // ← enforces single-session
             'exam_ip_address'         => $request->ip(),
             'exam_user_agent_hash'    => hash('sha256', $request->userAgent()),
             'exam_authenticated_at'   => now()->toIso8601String(),
@@ -134,23 +143,14 @@ class ExamTakingController extends Controller
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if ($submission->isSubmitted()) {
+        if ($submission->submitted_at) {
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
         $exam->load([
-            'sections'        => fn ($q) => $q->orderBy('order')->withCount('questions'),
+            'sections'       => fn ($q) => $q->orderBy('order')->withCount('questions'),
             'academicSubject' => fn ($q) => $q->with('academicLevel'),
-            'participantGroup' => fn ($q) => $q->with('parent'),
         ]);
-
-        $programmeCourse = $exam->academicSubject?->name
-            ?? $exam->participantGroup?->name
-            ?? 'Not specified';
-
-        $profession = $exam->academicSubject?->academicLevel?->name
-            ?? $exam->participantGroup?->parent?->name
-            ?? 'Not specified';
 
         $participantData      = session('exam_participant_data', []);
         $configuredParticipant = $this->resolveConfiguredParticipant($submission);
@@ -166,8 +166,6 @@ class ExamTakingController extends Controller
                                    ?? $submission->participant_email
                                    ?? $participantData['email']
                                    ?? null,
-            'programmeCourse'   => $programmeCourse,
-            'profession'        => $profession,
             'proctoringEnabled' => (bool) $exam->proctoring_enabled,
         ]);
     }
@@ -181,15 +179,15 @@ class ExamTakingController extends Controller
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if ($submission->isSubmitted()) {
+        if ($submission->submitted_at) {
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
         if ($submission->status === GeneralExamSubmission::STATUS_NOT_STARTED) {
-            $submission->update([
-                'status'     => GeneralExamSubmission::STATUS_IN_PROGRESS,
-                'started_at' => $submission->started_at ?? now(),
-            ]);
+            // Do NOT set started_at here — the timer must only begin when the
+            // participant explicitly clicks "Begin Section". Setting it here
+            // would start the admin monitoring clock before the exam begins.
+            $submission->update(['status' => GeneralExamSubmission::STATUS_IN_PROGRESS]);
         }
 
         // Show waiting/countdown view if the exam window hasn't opened yet
@@ -234,42 +232,45 @@ class ExamTakingController extends Controller
             abort(404, 'Section not found.');
         }
 
+        // ── Ensure exam has started ────────────────────────────────────────────
+        // The start time is now managed in the Livewire component when the user
+        // explicitly begins the section, so no longer setting started_at here
+        // if (! $submission->started_at) {
+        //     $submission->update([
+        //         'started_at' => now(),
+        //         'status'     => GeneralExamSubmission::STATUS_IN_PROGRESS,
+        //     ]);
+        //     $submission->refresh();
+        // }
+
         $questions       = $this->resolveQuestionOrder($exam, $section, $submission);
         $isSingleSection = $exam->sections->count() === 1;
 
         // ── Time remaining calculation ────────────────────────────────────────
         //
-        // getRemainingTime() incorporates any extra_time_minutes granted by the
-        // admin, so extensions are reflected here automatically.
+        // ALWAYS use exam-level duration (getRemainingTime), never section times.
+        // This ensures:
+        //   1. Timer never shows more time remaining than exam's total duration
+        //   2. Timer correctly decreases as elapsed time increases
+        //   3. Extensions granted by admin are included automatically
+        //   4. Consistent behavior across page reloads and rejoins
         //
-        // Priority:
-        //  1. Single-section exam with a global duration → exam clock (extra time included)
-        //  2. Multi-section exam with a per-section time limit → section clock
-        //  3. No time limit → null (unlimited)
+        // DO NOT pass timeRemaining to the view initially. The timer component is
+        // part of the Livewire component which is rendered even while the preview
+        // panel is showing. If we pass timeRemaining here, the timer will initialize
+        // and start counting down before the user clicks "Begin Section".
+        //
+        // Instead, pass null and let the timer wait for the first sync event (via
+        // the heartbeat), which will initialize it with the correct remaining time.
+        // This prevents the timer from counting down during the preview phase.
 
         $timeRemaining = null;
 
-        if ($isSingleSection && $exam->duration_in_minutes) {
-            if ($submission->started_at) {
-                // Use the model helper — includes extra_time_minutes in the total
-                $timeRemaining = $submission->getRemainingTime();
-            } else {
-                // Not started yet; use total allowed seconds (base + extra)
-                $timeRemaining = $submission->getTotalAllowedSeconds()
-                              ?? ($exam->duration_in_minutes * 60);
-            }
-        } elseif ($section->time_limit_minutes) {
-            $sectionStartTimes = $submission->section_start_times ?? [];
-            $sectionKey        = (string) $section->id;
-            $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
-
-            if ($startedAt) {
-                $elapsed       = now()->timestamp - $startedAt;
-                $timeRemaining = max(0, ($section->time_limit_minutes * 60) - $elapsed);
-            } else {
-                $timeRemaining = $section->time_limit_minutes * 60;
-            }
-        }
+//        if ($exam->duration_in_minutes) {
+//            // At this point, started_at is guaranteed to be set (see above)
+//            // So getRemainingTime() will always return the correct remaining time
+//            $timeRemaining = $submission->getRemainingTime();
+//        }
 
         return view('examination-hub.take.section', [
             'exam'                => $exam,
@@ -302,7 +303,7 @@ class ExamTakingController extends Controller
                 : abort(403);
         }
 
-        if ($submission->isSubmitted()) {
+        if ($submission->submitted_at) {
             return $request->expectsJson()
                 ? response()->json(['status' => 'already_submitted'])
                 : redirect()->route('examination-hub.take.completed', $exam);
@@ -336,13 +337,24 @@ class ExamTakingController extends Controller
             $sectionKey        = (string) $section->id;
             $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
 
-            if (! $startedAt || now()->timestamp >= ($startedAt + ($section->time_limit_minutes * 60))) {
-                return $this->autoSubmitExpired(
-                    $submission,
-                    $exam,
-                    $request,
-                    "Section '{$section->title}' time limit exceeded (server-side auto-submit)"
-                );
+            if ($startedAt) {
+                $totalAllowed   = $submission->getTotalAllowedSeconds();
+                $examEndsAt     = $submission->started_at
+                    ? $submission->started_at->timestamp + $totalAllowed
+                    : null;
+                $sectionEndTime = $startedAt + ($section->time_limit_minutes * 60);
+                if ($examEndsAt !== null) {
+                    $sectionEndTime = min($sectionEndTime, $examEndsAt);
+                }
+
+                if (now()->timestamp >= $sectionEndTime) {
+                    return $this->autoSubmitExpired(
+                        $submission,
+                        $exam,
+                        $request,
+                        "Section '{$section->title}' time limit exceeded (server-side auto-submit)"
+                    );
+                }
             }
         }
 
@@ -576,21 +588,17 @@ class ExamTakingController extends Controller
         // This happens when the candidate successfully authenticated in a previous
         // request but never reached the preview page (e.g. network drop), so a
         // blank submission row already exists.
-        $existingInProgress = GeneralExamSubmission::where([
+        $existingNotStarted = GeneralExamSubmission::where([
             'general_exam_id'  => $exam->id,
             'participant_type' => $type,
             'participant_id'   => $pid,
         ])
         ->whereNull('submitted_at')
-        ->whereIn('status', [
-            GeneralExamSubmission::STATUS_NOT_STARTED,
-            GeneralExamSubmission::STATUS_IN_PROGRESS,
-        ])
-        ->oldest('id')
+        ->where('status', GeneralExamSubmission::STATUS_NOT_STARTED)
         ->first();
 
-        if ($existingInProgress) {
-            return $existingInProgress;
+        if ($existingNotStarted) {
+            return $existingNotStarted;
         }
 
         // ── 2. Check for an active readmission grant ─────────────────────────
@@ -614,17 +622,22 @@ class ExamTakingController extends Controller
         }
 
         // ── 4. Create (or find an in-progress) submission ────────────────────
-        return GeneralExamSubmission::create([
-            'general_exam_id'  => $exam->id,
-            'participant_type' => $type,
-            'participant_id'   => $pid,
-            'participant_name'  => $participantName,
-            'participant_email' => $participantEmail,
-            'started_at'        => now(),
-            'responses'         => [],
-            'score'             => 0,
-            'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
-        ]);
+        return GeneralExamSubmission::firstOrCreate(
+            [
+                'general_exam_id'  => $exam->id,
+                'participant_type' => $type,
+                'participant_id'   => $pid,
+                'submitted_at'     => null,
+            ],
+            [
+                'participant_name'  => $participantName,
+                'participant_email' => $participantEmail,
+                'started_at'        => null, // set when participant clicks "Begin Section"
+                'responses'         => [],
+                'score'             => 0,
+                'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
+            ]
+        );
     }
 
     /**

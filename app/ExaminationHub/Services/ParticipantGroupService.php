@@ -2,6 +2,7 @@
 
 namespace App\ExaminationHub\Services;
 
+use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Models\GeneralExamParticipantGroupMember;
 use Illuminate\Support\Collection;
@@ -219,6 +220,52 @@ class ParticipantGroupService
             ->with(['creator', 'parent'])
             ->orderBy('name')
             ->paginate();
+    }
+
+    public function searchExamReferencesForGuest(?string $search = null): Collection
+    {
+        $query = GeneralExam::with(['participantGroup', 'configuredParticipants' => function ($query) {
+                return $query->orderBy('name');
+            }])
+            ->withCount('configuredParticipants')
+            ->orderBy('starts_at')
+            ->orderBy('title');
+
+        if ($search) {
+            $searchTerm = '%'.trim($search).'%';
+
+            $query->where(function ($query) use ($searchTerm) {
+                $query->where('access_code', 'like', $searchTerm)
+                    ->orWhere('title', 'like', $searchTerm)
+                    ->orWhereHas('participantGroup', function ($query) use ($searchTerm) {
+                        $query->where('name', 'like', $searchTerm);
+                    })
+                    ->orWhereHas('configuredParticipants', function ($query) use ($searchTerm) {
+                        $query->where(function ($participantQuery) use ($searchTerm) {
+                            $participantQuery->where('name', 'like', $searchTerm)
+                                ->orWhere('email', 'like', $searchTerm)
+                                ->orWhere('unique_code', 'like', $searchTerm);
+                        });
+                    });
+            });
+        }
+
+        return $query->get();
+    }
+
+    public function getGroupsWithExamsForGuest()
+    {
+        return GeneralExamParticipantGroup::withCount('members')
+            ->with(['exams' => function ($query) {
+                return $query->withCount('configuredParticipants')
+                    ->with(['configuredParticipants' => function ($query) {
+                        return $query->orderBy('name');
+                    }])
+                    ->orderBy('starts_at')
+                    ->orderBy('title');
+            }])
+            ->orderBy('name')
+            ->get();
     }
 
     public function getGroupWithMembers(GeneralExamParticipantGroup $group): GeneralExamParticipantGroup

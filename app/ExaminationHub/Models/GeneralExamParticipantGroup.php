@@ -2,6 +2,7 @@
 
 namespace App\ExaminationHub\Models;
 
+use App\ExaminationHub\Models\GeneralExam;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,7 +43,7 @@ class GeneralExamParticipantGroup extends Model
     {
         return $this->hasMany(GeneralExamParticipantGroupMember::class, 'group_id');
     }
-    
+
        /**
      * Get the parent group (e.g., The Course)
      */
@@ -57,6 +58,11 @@ class GeneralExamParticipantGroup extends Model
     public function children(): HasMany
     {
         return $this->hasMany(GeneralExamParticipantGroup::class, 'parent_id');
+    }
+
+    public function exams(): HasMany
+    {
+        return $this->hasMany(GeneralExam::class, 'participant_group_id');
     }
 
     protected static function boot(): void

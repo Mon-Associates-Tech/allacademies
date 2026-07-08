@@ -27,9 +27,14 @@ class AutoSubmitExpiredSectionSubmissions extends Command
         $submitted = 0;
 
         foreach ($submissions as $submission) {
+           /* @var GeneralExam $exam */
             $exam = $submission->exam;
+
+            if (!$exam) {
+                continue;
+            }
             $exam->load(['sections' => fn ($q) => $q->orderBy('order')]);
-            
+
             $sectionStartTimes = $submission->section_start_times ?? [];
             $needsAutoSubmit = false;
             $autoSubmitReason = '';
@@ -38,11 +43,22 @@ class AutoSubmitExpiredSectionSubmissions extends Command
                 if ($section->time_limit_minutes) {
                     $sectionKey = (string) $section->id;
                     $startedAt = $sectionStartTimes[$sectionKey] ?? null;
-                    
+
                     if ($startedAt) {
+                        // Use getTotalAllowedSeconds() for exam-level extra time.
+                        // Section time limits don't have their own extra_time field,
+                        // so we honour the exam-level extension as a ceiling.
+                        $totalAllowed = $submission->getTotalAllowedSeconds();
+                        $examEndsAt   = $submission->started_at
+                            ? $submission->started_at->timestamp + $totalAllowed
+                            : null;
+
                         $sectionEndTime = $startedAt + ($section->time_limit_minutes * 60);
-                        
-                        // Check if section time has expired
+                        // Clamp section end to exam-level ceiling if set
+                        if ($examEndsAt !== null) {
+                            $sectionEndTime = min($sectionEndTime, $examEndsAt);
+                        }
+
                         if (now()->timestamp >= $sectionEndTime) {
                             $needsAutoSubmit = true;
                             $autoSubmitReason = "Section '{$section->title}' time limit exceeded (server-side auto-submit)";

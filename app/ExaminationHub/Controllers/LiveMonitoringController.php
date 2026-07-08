@@ -35,6 +35,15 @@ class LiveMonitoringController extends Controller
         ]);
     }
 
+    public function allExamsIndex(): View
+    {
+        $data = $this->monitoringService->getAllExamsMonitoringData(auth()->id());
+
+        return view('examination-hub.live-monitoring.all-exams', [
+            'initialData' => $data,
+        ]);
+    }
+
     public function show(GeneralExam $exam, int $submissionId): View
     {
         $this->ensureOwnerAccess($exam);
@@ -57,6 +66,11 @@ class LiveMonitoringController extends Controller
         $this->ensureOwnerAccess($exam);
 
         return response()->json($this->monitoringService->getExamMonitoringData($exam));
+    }
+
+    public function apiAllExamsParticipants(): JsonResponse
+    {
+        return response()->json($this->monitoringService->getAllExamsMonitoringData(auth()->id()));
     }
 
     public function apiParticipant(GeneralExam $exam, int $submissionId): JsonResponse

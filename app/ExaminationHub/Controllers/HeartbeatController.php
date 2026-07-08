@@ -59,6 +59,26 @@ class HeartbeatController extends Controller
             ]);
         }
 
+        // ── Single-session enforcement ────────────────────────────────────────
+        // Each authenticate() writes a fresh device_token to the submission and
+        // stores it in the PHP session.  If the token in the session doesn't
+        // match the one on the submission, a second device has since authenticated
+        // and this device must be kicked out.
+        //
+        // We do NOT check this for submissions that have no device_token yet
+        // (existing rows created before this feature was deployed).
+        if (
+            $submission->device_token &&
+            session('exam_device_token') !== $submission->device_token
+        ) {
+            return response()->json([
+                'status'   => 'session_superseded',
+                'message'  => 'This exam session has been opened on another device. '
+                            . 'You have been logged out of this session.',
+                'redirect' => route('examination-hub.take.join'),
+            ]);
+        }
+
         // Submission already completed by admin force-submit or other server action
         if ($submission->submitted_at) {
             return response()->json([
@@ -95,17 +115,26 @@ class HeartbeatController extends Controller
             'server_time'  => now()->toIso8601String(),
         ];
 
-        // ── Authoritative time information ────────────────────────────────────
-        // The client timer re-syncs from these values on every heartbeat so that
-        // admin-granted extensions are reflected without needing a page reload.
-        // getRemainingTime() already incorporates extra_time_minutes.
-        $submission->refresh(); // ensure extra_time_minutes is current
-        $remainingSeconds = $submission->getRemainingTime();
+        // Only return remaining time after the exam has actually started.
+        // Before "Begin Section" is clicked, started_at is null and we must
+        // not send a remaining_seconds value — doing so would start the admin
+        // monitoring clock before the participant has begun.
+        try {
+            $submission->refresh(); // ensure extra_time_minutes is current
+            if ($submission->started_at) {
+                $remainingSeconds = $submission->getRemainingTime();
 
-        if ($remainingSeconds !== null) {
-            $response['remaining_seconds']     = $remainingSeconds;
-            $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
-            $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+                if ($remainingSeconds !== null) {
+                    $response['remaining_seconds']     = $remainingSeconds;
+                    $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+                    $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('HeartbeatController: failed to compute remaining time', [
+                'submission_id' => $submission->id,
+                'error'         => $e->getMessage(),
+            ]);
         }
 
         // Include warning if present
@@ -174,11 +203,33 @@ class HeartbeatController extends Controller
 
         $heartbeat = $this->monitoringService->initializeSession($submission, $deviceInfo);
 
-        return response()->json([
+        $response = [
             'status' => 'initialized',
             'session_token' => $heartbeat->session_token,
             'server_time' => now()->toIso8601String(),
-        ]);
+        ];
+
+        // Only return remaining time if the exam has actually started.
+        // If started_at is null the participant hasn't clicked "Begin Section" yet—
+        // returning a value here would start the admin monitoring clock prematurely.
+        try {
+            $submission->refresh();
+            if ($submission->started_at) {
+                $remainingSeconds = $submission->getRemainingTime();
+                if ($remainingSeconds !== null) {
+                    $response['remaining_seconds']     = $remainingSeconds;
+                    $response['total_allowed_seconds'] = $submission->getTotalAllowedSeconds();
+                    $response['extra_time_minutes']    = $submission->extra_time_minutes ?? 0;
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('HeartbeatController.initialize: failed to compute remaining time', [
+                'submission_id' => $submission->id,
+                'error'         => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json($response);
     }
 
     /**
