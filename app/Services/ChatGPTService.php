@@ -60,8 +60,8 @@ class ChatGPTService
     protected function sendChatRequest(array $requestData, array $options = []): array
     {
         $user = auth()->user();
-        $timeout = config('openai.openai.timeout', 90);
-        $maxRetries = 3;
+        $timeout = config('openai.openai.timeout', 60);
+        $maxRetries = 1;
         $retryDelay = 2;
 
         // Extract request_type before sending to API (it's for internal use only)
@@ -73,7 +73,6 @@ class ChatGPTService
                 $response = Http::withToken($this->apiKey)
                     ->timeout($timeout)
                     ->connectTimeout(10)
-                    ->retry(2, 1000)
                     ->post($this->textEndpoint, $requestData);
 
                 if ($response->successful()) {
