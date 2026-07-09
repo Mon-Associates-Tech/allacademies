@@ -44,7 +44,9 @@
         }
     }
 }"
-    class="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-200 overflow-hidden">
+    class="h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-200 overflow-hidden"
+    @if($isLoading) wire:poll.2500ms="checkForResponse" @endif
+    @scroll-to-bottom.window="scrollToBottom()">
 
     <!-- Header -->
     <header

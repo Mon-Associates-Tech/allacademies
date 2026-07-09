@@ -60,6 +60,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
                     Route::resource('true-or-false-questions', TrueOrFalseQuestionController::class);
                     Route::resource('multiple-choice-questions', MultipleChoiceQuestionController::class);
                     Route::resource('subtopics', SubtopicController::class);
+
+                    Route::get('multiple-choice-questions-bulk-edit', [MultipleChoiceQuestionController::class, 'bulkEdit'])
+                        ->name('multiple-choice-questions.bulk-edit');
+                    Route::post('multiple-choice-questions-bulk-update', [MultipleChoiceQuestionController::class, 'bulkUpdate'])
+                        ->name('multiple-choice-questions.bulk-update');
                 });
 
                 // Topic-level import routes

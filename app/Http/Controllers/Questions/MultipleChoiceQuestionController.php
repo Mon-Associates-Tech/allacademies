@@ -132,4 +132,66 @@ class MultipleChoiceQuestionController extends Controller
         return to_route('multiple-choice-questions.index', ['academic_topic' => $multipleChoiceQuestion->academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])
             ->with('success', __('status.resource.deleted', ['name' => $multipleChoiceQuestion->question->summary]));
     }
+
+    public function bulkEdit(\Illuminate\Http\Request $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic): \Illuminate\View\View
+    {
+        $this->authorize('moderate');
+
+        $academicTopic->load('academicSubject.academicLevel.academicGroup');
+
+        $search = $request->query('search');
+
+        $query = $academicTopic->multipleChoiceQuestions()->latest('created_at');
+
+        if ($search) {
+            $query->whereRaw('LOWER(question) LIKE ?', ['%'.strtolower($search).'%']);
+        }
+
+        $questions = $query->get();
+
+        return view('questions.multiple-choice-questions.bulk-edit', [
+            'academicTopic'   => $academicTopic,
+            'academicSubject' => $academicSubject,
+            'academicLevel'   => $academicLevel,
+            'academicGroup'   => $academicGroup,
+            'questions'       => $questions,
+            'search'          => $search,
+        ]);
+    }
+
+    public function bulkUpdate(\Illuminate\Http\Request $request, AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic): RedirectResponse
+    {
+        $this->authorize('moderate');
+
+        $rows = $request->input('questions', []);
+
+        foreach ($rows as $row) {
+            $id = $row['id'] ?? null;
+            if (! $id) continue;
+
+            $question = MultipleChoiceQuestion::where('academic_topic_id', $academicTopic->id)->find($id);
+            if (! $question) continue;
+
+            $toMark = fn($v) => is_array($v) ? $v : ['up' => (string) $v, 'down' => (string) $v];
+
+            $question->update([
+                'question'         => $toMark($row['question'] ?? $question->question),
+                'option_a'         => $toMark($row['option_a'] ?? ''),
+                'option_b'         => $toMark($row['option_b'] ?? ''),
+                'option_c'         => $toMark($row['option_c'] ?? null),
+                'option_d'         => $toMark($row['option_d'] ?? null),
+                'option_e'         => $toMark($row['option_e'] ?? null),
+                'answer'           => strtolower($row['answer'] ?? $question->answer),
+                'difficulty_level' => $row['difficulty_level'] ?? $question->difficulty_level,
+                'score'            => $row['score'] ?? $question->score,
+            ]);
+        }
+
+        return to_route('multiple-choice-questions.index', [
+            'academic_topic'   => $academicTopic,
+            'academic_subject' => $academicSubject,
+            'academic_level'   => $academicLevel,
+            'academic_group'   => $academicGroup,
+        ])->with('success', 'Questions updated successfully.');
+    }
 }
