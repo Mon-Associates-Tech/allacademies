@@ -26,6 +26,12 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::post('/quick-save', [ExamCreationController::class, 'quickSave'])->name('create.quick-save');
     Route::get('/subscriptions', [DashboardController::class, 'subscriptions'])->name('subscriptions');
     Route::get('/admin', [DashboardController::class, 'admin'])->name('admin');
+
+     Route::get(
+            '/answer-key-resolution',
+            \App\Livewire\ExaminationHub\AnswerKeyResolution::class
+        )->name('examination-hub.answer-key-resolution');
+
     Route::get('/exams/{exam}', [DashboardController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/edit', [ExamCreationController::class, 'edit'])->name('exams.edit');
     Route::post('/exams/{exam}/send-invitations', [DashboardController::class, 'sendInvitations'])->name('exams.send-invitations');

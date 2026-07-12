@@ -11,18 +11,13 @@ class GeneralExamQuestion extends Model
     use HasFactory;
 
     public const TYPE_MULTIPLE_CHOICE = 'multiple_choice';
+    public const TYPE_TRUE_FALSE      = 'true_false';
+    public const TYPE_SHORT_ANSWER    = 'short_answer';
+    public const TYPE_ESSAY           = 'essay';
 
-    public const TYPE_TRUE_FALSE = 'true_false';
-
-    public const TYPE_SHORT_ANSWER = 'short_answer';
-
-    public const TYPE_ESSAY = 'essay';
-
-    public const DIFFICULTY_EASY = 'easy';
-
+    public const DIFFICULTY_EASY   = 'easy';
     public const DIFFICULTY_MEDIUM = 'medium';
-
-    public const DIFFICULTY_HARD = 'hard';
+    public const DIFFICULTY_HARD   = 'hard';
 
     protected $fillable = [
         'general_exam_id',
@@ -39,17 +34,24 @@ class GeneralExamQuestion extends Model
         'order',
         'ai_generated',
         'is_edited',
+        // ── Answer-key traceability ────────────────────────────────────────
+        // PK in the source question-bank table (e.g. multiple_choice_questions.id).
+        // NULL for AI-generated or manually authored questions.
+        'source_question_id',
     ];
 
     protected function casts(): array
     {
         return [
-            'options' => 'array',
-            'keywords' => 'array',
-            'ai_generated' => 'boolean',
-            'is_edited' => 'boolean',
+            'options'            => 'array',
+            'keywords'           => 'array',
+            'ai_generated'       => 'boolean',
+            'is_edited'          => 'boolean',
+            'source_question_id' => 'integer',
         ];
     }
+
+    // ─── Relationships ────────────────────────────────────────────────────────
 
     public function assignment(): BelongsTo
     {
@@ -60,6 +62,8 @@ class GeneralExamQuestion extends Model
     {
         return $this->belongsTo(GeneralExamSection::class, 'general_exam_section_id');
     }
+
+    // ─── Type helpers ─────────────────────────────────────────────────────────
 
     public function isMultipleChoice(): bool
     {
@@ -91,75 +95,72 @@ class GeneralExamQuestion extends Model
         return $this->isMultipleChoice() || $this->isTrueFalse();
     }
 
+    // ─── Grading ─────────────────────────────────────────────────────────────
+
     /**
-     * Grade a response for this question
+     * Grade a response for this question.
      *
-     * @return array{is_correct: bool, points_earned: float, feedback: string|null}
+     * @return array{is_correct: bool|null, points_earned: float, feedback: string|null}
      */
     public function gradeResponse(string $response): array
     {
         return match ($this->type) {
             self::TYPE_MULTIPLE_CHOICE => $this->gradeMultipleChoice($response),
-            self::TYPE_TRUE_FALSE => $this->gradeTrueFalse($response),
-            self::TYPE_SHORT_ANSWER => $this->gradeShortAnswer($response),
-            self::TYPE_ESSAY => $this->gradeEssay($response),
-            default => ['is_correct' => false, 'points_earned' => 0, 'feedback' => null],
+            self::TYPE_TRUE_FALSE      => $this->gradeTrueFalse($response),
+            self::TYPE_SHORT_ANSWER    => $this->gradeShortAnswer($response),
+            self::TYPE_ESSAY           => $this->gradeEssay($response),
+            default                    => ['is_correct' => false, 'points_earned' => 0, 'feedback' => null],
         };
     }
 
     protected function gradeMultipleChoice(string $response): array
     {
         $normalizedResponse = strtoupper(trim($response));
-        $normalizedCorrect = strtoupper(trim($this->correct_answer));
-
-        $isCorrect = $normalizedResponse === $normalizedCorrect;
+        $normalizedCorrect  = strtoupper(trim($this->correct_answer));
+        $isCorrect          = $normalizedResponse === $normalizedCorrect;
 
         return [
-            'is_correct' => $isCorrect,
+            'is_correct'    => $isCorrect,
             'points_earned' => $isCorrect ? $this->marks : 0,
-            'feedback' => $isCorrect ? null : "The correct answer is: {$this->correct_answer}",
+            'feedback'      => $isCorrect ? null : "The correct answer is: {$this->correct_answer}",
         ];
     }
 
     protected function gradeTrueFalse(string $response): array
     {
         $normalizedResponse = strtolower(trim($response));
-        $normalizedCorrect = strtolower(trim($this->correct_answer));
+        $normalizedCorrect  = strtolower(trim($this->correct_answer));
 
-        // Normalize various true/false representations
-        $trueValues = ['true', '1', 'yes', 't'];
+        $trueValues  = ['true', '1', 'yes', 't'];
         $falseValues = ['false', '0', 'no', 'f'];
 
-        $responseIsTrue = in_array($normalizedResponse, $trueValues);
+        $responseIsTrue  = in_array($normalizedResponse, $trueValues);
         $responseIsFalse = in_array($normalizedResponse, $falseValues);
-        $correctIsTrue = in_array($normalizedCorrect, $trueValues);
+        $correctIsTrue   = in_array($normalizedCorrect, $trueValues);
 
-        $isCorrect = ($responseIsTrue && $correctIsTrue) || ($responseIsFalse && ! $correctIsTrue);
+        $isCorrect = ($responseIsTrue && $correctIsTrue)
+                  || ($responseIsFalse && ! $correctIsTrue);
 
         return [
-            'is_correct' => $isCorrect,
+            'is_correct'    => $isCorrect,
             'points_earned' => $isCorrect ? $this->marks : 0,
-            'feedback' => $isCorrect ? null : "The correct answer is: {$this->correct_answer}",
+            'feedback'      => $isCorrect ? null : "The correct answer is: {$this->correct_answer}",
         ];
     }
 
     protected function gradeShortAnswer(string $response): array
     {
-        // Basic keyword matching for short answers
-        // This will be enhanced by AI grading service
         $normalizedResponse = strtolower(trim($response));
-        $normalizedCorrect = strtolower(trim($this->correct_answer ?? ''));
+        $normalizedCorrect  = strtolower(trim($this->correct_answer ?? ''));
 
-        // Check for exact match first
         if ($normalizedResponse === $normalizedCorrect) {
             return [
-                'is_correct' => true,
+                'is_correct'    => true,
                 'points_earned' => $this->marks,
-                'feedback' => null,
+                'feedback'      => null,
             ];
         }
 
-        // Check keywords if available
         if (! empty($this->keywords)) {
             $matchedKeywords = 0;
             foreach ($this->keywords as $keyword) {
@@ -172,54 +173,69 @@ class GeneralExamQuestion extends Model
             $pointsEarned = round($this->marks * $keywordRatio, 2);
 
             return [
-                'is_correct' => $keywordRatio >= 0.8,
-                'points_earned' => $pointsEarned,
-                'feedback' => "Matched {$matchedKeywords} of ".count($this->keywords).' expected keywords.',
+                'is_correct'      => $keywordRatio >= 0.8,
+                'points_earned'   => $pointsEarned,
+                'feedback'        => "Matched {$matchedKeywords} of " . count($this->keywords) . ' expected keywords.',
                 'requires_review' => true,
             ];
         }
 
-        // Mark for manual/AI review
         return [
-            'is_correct' => null,
-            'points_earned' => 0,
-            'feedback' => 'Requires manual review',
+            'is_correct'      => null,
+            'points_earned'   => 0,
+            'feedback'        => 'Requires manual review',
             'requires_review' => true,
         ];
     }
 
     protected function gradeEssay(string $response): array
     {
-        // Essays always require AI or manual grading
         return [
-            'is_correct' => null,
-            'points_earned' => 0,
-            'feedback' => 'Requires grading',
+            'is_correct'      => null,
+            'points_earned'   => 0,
+            'feedback'        => 'Requires grading',
             'requires_review' => true,
         ];
     }
 
+    // ─── Display helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Returns options as an associative array: ['A' => 'text', 'B' => 'text', ...]
+     */
     public function getOptionsForDisplay(): array
     {
         if (! $this->isMultipleChoice() || empty($this->options)) {
             return [];
         }
 
-        // Handle new format: [{'key': 'A', 'value': 'text'}, ...]
+        // Current format: [{key: 'A', value: '...'}, ...]
         if (isset($this->options[0]) && is_array($this->options[0]) && isset($this->options[0]['key'])) {
             return collect($this->options)->pluck('value', 'key')->toArray();
         }
 
-        // Handle legacy format: ['text1', 'text2', ...] - convert to keyed array
+        // Legacy format: ['text1', 'text2', ...] — convert to keyed array
         $keyed = [];
         foreach ($this->options as $index => $value) {
             $keyed[chr(65 + $index)] = $value;
         }
+
         return $keyed;
     }
 
     public function getFormattedQuestion(): string
     {
         return nl2br(e($this->question));
+    }
+
+    // ─── Source traceability ──────────────────────────────────────────────────
+
+    /**
+     * Whether this question was pulled from the question bank
+     * (as opposed to AI-generated or manually authored inline).
+     */
+    public function hasSourceQuestion(): bool
+    {
+        return $this->source_question_id !== null;
     }
 }
