@@ -135,6 +135,97 @@
             @endforeach
         </div>
 
+        {{-- ── QUESTIONS PANEL ── --}}
+        @if(!$exam->hardened_mode || ($exam->starts_at && now()->gte($exam->starts_at)))
+            @if($exam->questions_count > 0)
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Exam Questions</h2>
+                    </div>
+                    <span class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" style="border-radius: 2px;">{{ $exam->questions_count }} total</span>
+                </div>
+                <div class="divide-y divide-slate-50 dark:divide-slate-800">
+                    @foreach($exam->sections as $section)
+                        @if($section->questions->isNotEmpty())
+                        <div x-data="{ open: false }">
+                            <button type="button"
+                                    @click="open = !open"
+                                    class="w-full flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white flex-shrink-0"
+                                          style="background: linear-gradient(135deg, #b45309, #d97706); border-radius: 2px;">{{ $loop->iteration }}</span>
+                                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $section->title }}</span>
+                                    <span class="text-xs text-slate-400">{{ $section->questions->count() }} questions</span>
+                                </div>
+                                <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div x-show="open" x-cloak class="border-t border-slate-50 dark:border-slate-800">
+                                @foreach($section->questions as $question)
+                                <div class="px-5 py-4 {{ !$loop->last ? 'border-b border-slate-50 dark:border-slate-800' : '' }}">
+                                    <div class="flex items-start gap-3">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 flex-shrink-0 mt-0.5" style="border-radius: 2px;">{{ $loop->iteration }}</span>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1.5">
+                                                <span class="text-xs font-semibold px-1.5 py-0.5 border
+                                                    {{ $question->type === 'multiple_choice' ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800' : '' }}
+                                                    {{ $question->type === 'true_false' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800' : '' }}
+                                                    {{ $question->type === 'essay' ? 'text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800' : '' }}
+                                                    {{ $question->type === 'short_answer' ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : '' }}"
+                                                      style="border-radius: 2px;">
+                                                    {{ str_replace('_', ' ', ucfirst($question->type)) }}
+                                                </span>
+                                                <span class="text-xs text-slate-400">{{ $question->marks }} {{ Str::plural('mark', $question->marks) }}</span>
+                                                @if($question->difficulty)
+                                                    <span class="text-xs text-slate-400">· {{ ucfirst($question->difficulty) }}</span>
+                                                @endif
+                                            </div>
+                                            <p class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">{!! nl2br(e($question->question)) !!}</p>
+                                            @if($question->isMultipleChoice() && !empty($question->options))
+                                                <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                    @foreach($question->getOptionsForDisplay() as $key => $value)
+                                                        <div class="flex items-start gap-2 px-2.5 py-1.5 text-xs rounded
+                                                            {{ strtoupper($key) === strtoupper($question->correct_answer) ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 font-semibold' : 'bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-300' }}"
+                                                             style="border-radius: 2px;">
+                                                            <span class="font-bold flex-shrink-0">{{ $key }}.</span>
+                                                            <span>{!! $value !!}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @elseif($question->isTrueFalse())
+                                                <p class="mt-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                                                    Answer: {{ ucfirst($question->correct_answer) }}
+                                                </p>
+                                            @elseif(!$question->isEssay() && $question->correct_answer)
+                                                <p class="mt-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                                                    Answer: {{ $question->correct_answer }}
+                                                </p>
+                                            @endif
+                                            @if($question->explanation)
+                                                <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 italic">{{ $question->explanation }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        @else
+            <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30" style="border-radius: 2px;">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <p class="text-sm text-amber-800 dark:text-amber-300">Questions are hidden in hardened mode until the exam starts on <span class="font-semibold">{{ $exam->starts_at?->format('M d, Y \a\t h:i A') }}</span>.</p>
+            </div>
+        @endif
+
         {{-- ── MAIN TWO-COLUMN GRID ── --}}
         <div class="grid md:grid-cols-2 gap-6 items-start">
 

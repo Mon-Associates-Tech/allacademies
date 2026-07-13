@@ -35,7 +35,7 @@ class DashboardController extends Controller
     {
         $this->ensureOwnerAccess($exam);
         $exam->loadCount(['sections', 'questions', 'submissions']);
-        $exam->load(['sections', 'participantGroup']);
+        $exam->load(['sections.questions', 'participantGroup']);
 
         $configuredParticipants = $exam->configuredParticipants()
             ->orderBy('name')
