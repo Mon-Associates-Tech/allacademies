@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\ExaminationHub\SyncSourceQuestionJob;
 use App\Models\MultipleChoiceQuestion;
 use App\Support\Mark;
 
@@ -21,6 +22,11 @@ class MultipleChoiceQuestionObserver
     public function updating(MultipleChoiceQuestion $question): void
     {
         $this->validateQuestionContent($question);
+    }
+
+    public function updated(MultipleChoiceQuestion $question): void
+    {
+        SyncSourceQuestionJob::dispatch('multiple_choice', $question->id);
     }
 
     /**

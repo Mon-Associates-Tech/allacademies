@@ -279,11 +279,12 @@ class ExamQuestionPreviewService
 
         return $query->inRandomOrder()->limit($count)->get()->map(function ($q) {
             return [
-                'type' => 'multiple_choice',
-                'question' => $this->asText($q->question),
-                'options' => array_values(array_filter([$this->asText($q->option_a), $this->asText($q->option_b), $this->asText($q->option_c), $this->asText($q->option_d), $this->asText($q->option_e)])),
-                'answer' => strtoupper((string) $q->answer),
-                'points' => (float) ($q->score ?? 1),
+                'type'               => 'multiple_choice',
+                'source_question_id' => $q->id,
+                'question'           => $this->asText($q->question),
+                'options'            => array_values(array_filter([$this->asText($q->option_a), $this->asText($q->option_b), $this->asText($q->option_c), $this->asText($q->option_d), $this->asText($q->option_e)])),
+                'answer'             => strtoupper((string) $q->answer),
+                'points'             => (float) ($q->score ?? 1),
             ];
         })->all();
     }
@@ -295,11 +296,12 @@ class ExamQuestionPreviewService
 
         return $query->inRandomOrder()->limit($count)->get()->map(function ($q) {
             return [
-                'type' => 'true_false',
-                'question' => $this->asText($q->question),
-                'options' => ['True', 'False'],
-                'answer' => $q->answer ? 'True' : 'False',
-                'points' => (float) ($q->score ?? 1),
+                'type'               => 'true_false',
+                'source_question_id' => $q->id,
+                'question'           => $this->asText($q->question),
+                'options'            => ['True', 'False'],
+                'answer'             => $q->answer ? 'True' : 'False',
+                'points'             => (float) ($q->score ?? 1),
             ];
         })->all();
     }
@@ -311,10 +313,11 @@ class ExamQuestionPreviewService
 
         return $query->inRandomOrder()->limit($count)->get()->map(function ($q) {
             return [
-                'type' => 'essay',
-                'question' => $this->asText($q->question),
-                'answer' => $this->asText($q->answer),
-                'points' => (float) ($q->score ?? 5),
+                'type'               => 'essay',
+                'source_question_id' => $q->id,
+                'question'           => $this->asText($q->question),
+                'answer'             => $this->asText($q->answer),
+                'points'             => (float) ($q->score ?? 5),
             ];
         })->all();
     }
