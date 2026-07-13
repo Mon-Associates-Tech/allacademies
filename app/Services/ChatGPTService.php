@@ -49,6 +49,9 @@ class ChatGPTService
         if (isset($options['temperature'])) {
             $requestData['temperature'] = $options['temperature'];
         }
+        if (isset($options['max_output_tokens'])) {
+            $requestData['max_output_tokens'] = (int) $options['max_output_tokens'];
+        }
 
         return $this->sendChatRequest($requestData, ['request_type' => $requestType]);
     }
@@ -117,10 +120,15 @@ class ChatGPTService
                     'attempt' => $attempt,
                 ]);
 
-                return [
-                    'success' => false,
-                    'error' => 'API Error: '.$response->body(),
-                ];
+                $status = $response->status();
+                $error = match(true) {
+                    $status === 401 => 'AI service authentication failed. Please contact support.',
+                    $status === 429 => 'AI service is busy. Please try again in a moment.',
+                    $status >= 500 => 'AI service is temporarily unavailable. Please try again.',
+                    default        => 'AI service error. Please try again.',
+                };
+
+                return ['success' => false, 'error' => $error];
 
             } catch (ConnectionException $e) {
                 Log::error('OpenAI Connection Error', [
