@@ -296,7 +296,7 @@
 
                                                 {{-- Option text input --}}
                                                 <div class="flex-1 flex flex-col gap-1">
-                                                    <input
+                                                    {{-- <input
                                                         type="text"
                                                         :value="edits[q.id] ? edits[q.id]['option_' + letter.toLowerCase()] : ''"
                                                         @input="edits[q.id]['option_' + letter.toLowerCase()] = $el.value"
@@ -304,7 +304,7 @@
                                                                text-gray-800 dark:text-gray-200 placeholder-gray-400
                                                                focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
                                                         :placeholder="'Option ' + letter"
-                                                    />
+                                                    /> --}}
                                                     <div class="prose prose-sm max-w-none dark:prose-invert px-1 text-gray-500 dark:text-gray-400"
                                                          x-show="edits[q.id] && edits[q.id]['option_' + letter.toLowerCase()]"
                                                          x-html="renderMd(edits[q.id] ? edits[q.id]['option_' + letter.toLowerCase()] : '')">
