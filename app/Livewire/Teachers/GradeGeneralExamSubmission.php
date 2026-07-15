@@ -9,7 +9,7 @@ use App\Services\GeneralExam\GeneralExamGradingService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class GradePublicAssignmentSubmission extends Component
+class GradeGeneralExamSubmission extends Component
 {
     public GeneralExamSubmission $submission;
 
@@ -33,7 +33,7 @@ class GradePublicAssignmentSubmission extends Component
     public function mount(GeneralExamSubmission $submission): void
     {
         $this->submission = $submission;
-        $this->assignment = $submission->assignment;
+        $this->assignment = $submission->exam; // Changed from assignment to exam
 
         $user = Auth::user();
         $ownsByUser = $this->assignment->user_id === $user->id;

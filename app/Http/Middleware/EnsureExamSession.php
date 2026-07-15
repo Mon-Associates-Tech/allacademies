@@ -11,7 +11,7 @@ class EnsureExamSession
     public function handle(Request $request, Closure $next): Response
     {
         if (!session()->has('exam_submission_id')) {
-            return redirect()->route('examinations-hub.take.join')
+            return redirect()->route('examination-hub.take.join')
                 ->withErrors(['error' => 'Please join the examination first.']);
         }
 

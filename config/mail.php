@@ -98,6 +98,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Email Sending Control
+    |--------------------------------------------------------------------------
+    |
+    | Enable or disable email sending across the entire application.
+    | If disabled, emails will be logged but not sent to recipients.
+    | Useful for development, testing, or temporarily halting email communication.
+    |
+    */
+
+    'enabled' => (bool) env('EMAIL_SENDING_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Mail Settings
     |--------------------------------------------------------------------------
     |

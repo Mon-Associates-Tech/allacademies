@@ -36,6 +36,8 @@ use App\Livewire\Forums\ForumManagement;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\Route;
 
+use App\Livewire\StatusPage;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -170,13 +172,10 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Notifications
+    | Notifications (Unified)
     |--------------------------------------------------------------------------
     */
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/{type}/{id}', [NotificationController::class, 'show'])->name('notifications.show');
-    Route::post('/notifications/{type}/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications', \App\Livewire\UnifiedNotifications::class)->name('notifications.index');
 
     /*
     |--------------------------------------------------------------------------
@@ -323,37 +322,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('assessments', AssessmentController::class);
 
-    // Book Routes
-    Route::get('books', [BookController::class, 'index'])->name('books.index');
-    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show')->middleware('token.subscription');
-    Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
-    Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
-    Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
-    Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
-    Route::get('books/{book}/file', [BookController::class, 'streamFile'])->name('books.file.stream');
-    Route::get('books/{book}/download', [BookController::class, 'downloadFile'])->middleware('signed')->name('books.file.download');
-    Route::get('books/{book}/paint', [BookController::class, 'paint'])->name('books.paint');
-    Route::get('books/{book}/pdf-page-png', [BookController::class, 'pdfPageToPng'])->name('books.pdf-page-png');
-
-    // Book Subscription Routes
-    Route::get('books/{book}/payment-instructions', [BookSubscriptionController::class, 'create'])->name('books.payment-instructions');
-    Route::post('books/{book}/subscribe', [BookSubscriptionController::class, 'store'])->name('books.subscribe.store');
-    Route::get('subscriptions/{subscription}/payment', [BookSubscriptionController::class, 'showPayment'])->name('subscriptions.payment.show');
-    Route::post('subscriptions/{subscription}/verify-payment', [BookSubscriptionController::class, 'verifyPayment'])->name('subscriptions.payment.verify');
-    Route::delete('subscriptions/{subscription}/cancel', [BookSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
-    Route::post('/books/{book}/reviews/')->name('books.reviews.store');
-
-    // Book Reading Progress Routes
-    Route::post('/books/update-progress', [BookProgressController::class, 'updateProgress'])->name('books.progress.update');
-    Route::get('/books/{book}/progress', [BookProgressController::class, 'getProgress'])->name('books.progress.get');
-    Route::get('/my-reading-progress', [BookProgressController::class, 'getUserProgress'])->name('books.progress.user');
-    Route::post('/books/mark-completed', [BookProgressController::class, 'markCompleted'])->name('books.progress.complete');
-    Route::delete('/books/{book}/progress', [BookProgressController::class, 'deleteProgress'])->name('books.progress.delete');
-
-    // Book Annotations Routes
-    Route::get('/books/{book}/annotations', [\App\Http\Controllers\BookAnnotationController::class, 'index'])->name('books.annotations.index');
-    Route::post('/books/{book}/annotations', [\App\Http\Controllers\BookAnnotationController::class, 'store'])->name('books.annotations.store');
-    Route::delete('/books/{book}/annotations/{annotation}', [\App\Http\Controllers\BookAnnotationController::class, 'destroy'])->name('books.annotations.destroy');
 
     // Activity Tracker Routes
     Route::get('/activities', \App\Livewire\Activities\ActivityTracker::class)->name('activities.index');
@@ -455,6 +423,14 @@ Route::get('/components', function () {
     return view('components');
 })->name('components');
 
+Route::get('/license-expired', fn() => view('license.expired'))
+    ->name('license.expired')
+    ->withoutMiddleware([\App\Http\Middleware\ValidateLicense::class]);
+
+
+Route::get('/status', StatusPage::class)->name('status');
+
+
 /*
 |--------------------------------------------------------------------------
 | Include Additional Route Files
@@ -497,4 +473,8 @@ include_once 'lms.php';
 // General Exams Routes (code-based assignments for teachers and participants)
 include_once 'general-exams.php';
 include_once 'examinations-hub.php';
+
+// Debug Routes (testing and monitoring - development only)
+include_once 'debug.php';
+
 include_once 'mock-exams.php';

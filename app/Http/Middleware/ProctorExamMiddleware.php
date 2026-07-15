@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Polymorphic Proctor Exam Middleware
  *
@@ -9,8 +10,8 @@
  * Usage: Route::middleware('proctor.exam:exam') or 'proctor.exam:quiz'
  * The parameter name after the colon must match a key in config('proctoring.model_mappings')
  */
-namespace App\Http\Middleware;
 
+namespace App\Http\Middleware;
 
 use App\Models\Proctoring\ExamProctoringSession;
 use App\Services\Proctoring\ProctoringManager;
@@ -31,11 +32,12 @@ class ProctorExamMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param string $modelKey The config key for the model mapping (e.g., 'exam', 'quiz')
+     * @param  string  $modelKey  The config key for the model mapping (e.g., 'exam', 'quiz')
      */
     public function handle(Request $request, Closure $next, string $modelKey = 'assessment'): Response
     {
-        if (!Auth::check()) {
+        // Allow unauthenticated participants if they have a valid exam session
+        if (! Auth::check() && ! session()->has('exam_submission_id')) {
             return abort(403, 'Authentication required for proctored exams.');
         }
 
@@ -49,16 +51,21 @@ class ProctorExamMiddleware
         // Resolve the examinable model dynamically using the modelKey
         $proctorable = $this->resolveProctorableModel($request, $modelKey);
 
-        if (!$proctorable) {
+        if (! $proctorable) {
             // Don't abort here - let Laravel's route model binding handle 404s
             // This prevents masking "route not found" with "model not found"
+            return $next($request);
+        }
+
+        // Skip proctoring session initialization for unauthenticated participants
+        if (! Auth::check()) {
             return $next($request);
         }
 
         // Initialize or retrieve existing session
         $session = $this->resolveSession($request, Auth::user(), $proctorable, $driver);
 
-        if (!$session) {
+        if (! $session) {
             return abort(403, 'Invalid or expired proctoring session.');
         }
 
@@ -80,9 +87,10 @@ class ProctorExamMiddleware
     {
         $mappings = config('proctoring.model_mappings', []);
 
-        if (!isset($mappings[$modelKey])) {
+        if (! isset($mappings[$modelKey])) {
             // Log error but don't break the request - let other middleware handle it
             \Log::warning("Proctoring: No model mapping configured for key: {$modelKey}");
+
             return null;
         }
 
@@ -104,12 +112,12 @@ class ProctorExamMiddleware
 
         // Fallback: resolve by numeric id from named or first parameter.
         $id = $bound;
-        if (!is_numeric($id)) {
+        if (! is_numeric($id)) {
             $firstParam = reset($params);
             $id = is_numeric($firstParam) ? $firstParam : null;
         }
 
-        if (!$id) {
+        if (! $id) {
             return null;
         }
 
@@ -141,7 +149,7 @@ class ProctorExamMiddleware
     {
         $session = ExamProctoringSession::find($request->input('proctoring_session_id'));
 
-        if (!$session) {
+        if (! $session) {
             return response()->json(['error' => 'Invalid session'], 400);
         }
 

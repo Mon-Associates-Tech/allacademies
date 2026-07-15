@@ -3,9 +3,10 @@
 namespace App\ExaminationHub\Controllers;
 
 use App\ExaminationHub\Contracts\ExamParticipantAccessServiceInterface;
+use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
-use App\ExaminationHub\Models\GeneralExam;
 use App\Services\GeneralExam\GeneralExamService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,17 +59,48 @@ class ParticipantController extends Controller
     {
         $this->ensureOwnerAccess($exam);
 
-        $data = $request->validate([
-            'participants_csv' => ['required', 'file', 'mimes:csv,txt'],
+        $request->validate([
+            'participants_csv' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
         ]);
 
-        $result = $this->accessService->importConfiguredParticipants($exam, $data['participants_csv']->getRealPath());
+        $result = $this->accessService->importConfiguredParticipants($exam, $request->file('participants_csv')->getRealPath());
 
         if (! $result['success']) {
-            return back()->with('error', 'Could not import configured participants.');
+            return back()->with('error', $result['errors'][0] ?? 'Could not import participants.');
         }
 
-        return back()->with('success', "{$result['imported']} configured participants imported.");
+        $response = back()->with('success', "{$result['imported']} participant(s) imported successfully.");
+
+        if (! empty($result['errors'])) {
+            $response = $response->with('warning', count($result['errors']).' row(s) were skipped: '.implode(' ', $result['errors']));
+        }
+
+        return $response;
+    }
+
+    public function toggleConfigured(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+
+        $participant->update(['is_active' => ! $participant->is_active]);
+
+        $status = $participant->is_active ? 'activated' : 'deactivated';
+
+        return back()->with('success', "{$participant->name} has been {$status}.");
+    }
+
+    public function destroyConfigured(GeneralExam $exam, GeneralExamConfiguredParticipant $participant): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        abort_unless($participant->general_exam_id === $exam->id, 404);
+
+        $name = $participant->name;
+        $participant->delete();
+
+        return back()->with('success', "{$name} has been removed.");
     }
 
     public function joinForm(string $code): View

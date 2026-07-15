@@ -1,6 +1,9 @@
 <x-layouts.exam>
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-gradient-to-br from-slate-900 to-slate-800">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <div class="max-w-md w-full space-y-7">
+            <div class="flex justify-end">
+                <x-snippets.theme-toggle />
+            </div>
 
             {{-- ── SUCCESS CARD ── --}}
             <x-ui.card variant="default" shadow="true">
@@ -14,8 +17,20 @@
                     </div>
 
                     <h3 class="text-2xl font-bold text-slate-900 dark:text-white leading-snug tracking-tight font-serif">
-                        Examination Submitted!
+                        Examination Completed
                     </h3>
+
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                        @if($submission?->auto_submitted)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                                    <path d="M12 8v5l3 3"/>
+                                </svg>
+                                Automatically Submitted
+                            </span>
+                        @endif
+                    </p>
 
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                         Your responses have been successfully submitted for <strong>{{ $exam->title }}</strong>
@@ -23,14 +38,34 @@
 
                     {{-- Results Info --}}
                     <div class="mt-5 p-4 border border-blue-200/50 rounded-[2px] bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-200">
-                        <p class="text-sm">
+                        <p class="text-sm font-medium mb-2">
                             @if($exam->canShowResults())
-                                Your results will be available shortly. Please check back later.
+                                📧 An email with your results link has been sent to <strong>{{ $participantEmail }}</strong>
                             @else
                                 Your results will be released by the examiner. You will be notified when they are available.
                             @endif
                         </p>
+                        <p class="text-xs opacity-80">
+                            The secure access link will expire in 7 days for security purposes.
+                        </p>
                     </div>
+
+                    @if($submission?->auto_submitted)
+                    <div class="mt-5 p-4 border border-amber-200/50 rounded-[2px] bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-300">
+                        <p class="text-sm font-medium mb-2">
+                            <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                                <path d="M12 8v5l3 3"/>
+                            </svg>
+                            This exam was automatically submitted because the time duration for the exam has expired.
+                        </p>
+                        <p class="text-xs opacity-80">
+                            @if($submission?->auto_submit_reason)
+                                <span class="italic">Reason: {{ $submission->auto_submit_reason }}</span>
+                            @endif
+                        </p>
+                    </div>
+                    @endif
 
                     {{-- Action Buttons --}}
                     <div class="mt-6 space-y-3">

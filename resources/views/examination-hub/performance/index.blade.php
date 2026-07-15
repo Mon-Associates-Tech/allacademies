@@ -10,13 +10,37 @@
     <div class="overflow-hidden"
          style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
         <div class="h-1 w-full" style="background: linear-gradient(90deg, #2563eb, #60a5fa, #93c5fd);"></div>
-        <div class="px-7 py-6">
-            <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
-                Participant Performance
-            </h1>
-            <p class="text-slate-400 mt-2 text-sm">
-                View examination performance and metrics for all participants
-            </p>
+        <div class="px-7 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div>
+                <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                    Participant Performance
+                </h1>
+                <p class="text-slate-400 mt-2 text-sm">
+                    View examination performance and metrics for all participants
+                </p>
+            </div>
+            <div class="flex-shrink-0">
+                <div class="flex gap-2">
+                    <a href="{{ route('examination-hub.performance.export-all-excel') }}"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white transition-all"
+                       style="border-radius: 2px; background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 2px 8px rgba(37,99,235,0.3);"
+                       title="Export all participants to Excel">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Export Excel
+                    </a>
+                    <a href="{{ route('examination-hub.performance.export-all-pdf') }}"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white transition-all"
+                       style="border-radius: 2px; background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 2px 8px rgba(220,38,38,0.3);"
+                       title="Export all participants to PDF">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Export PDF
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 

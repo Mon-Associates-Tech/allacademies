@@ -109,8 +109,20 @@ class TakeGeneralExam extends Component
     {
         $questions = $this->assignment->questions;
 
+        // Use stored randomized order on the submission if available. For
+        // assignments without sections we store the order under the 'default' key
+        // in `randomized_question_order` so it persists across page reloads.
+        $randomized = $this->submission->randomized_question_order ?? [];
+
         if ($this->assignment->is_randomized) {
-            $this->questionOrder = $questions->pluck('id')->shuffle()->toArray();
+            if (isset($randomized['default']) && is_array($randomized['default']) && count($randomized['default']) > 0) {
+                $this->questionOrder = $randomized['default'];
+            } else {
+                $order = $questions->pluck('id')->shuffle()->toArray();
+                $randomized['default'] = $order;
+                $this->submission->update(['randomized_question_order' => $randomized]);
+                $this->questionOrder = $order;
+            }
         } else {
             $this->questionOrder = $questions->pluck('id')->toArray();
         }
@@ -236,6 +248,7 @@ class TakeGeneralExam extends Component
     {
         if ($this->currentQuestionIndex < count($this->questionOrder) - 1) {
             $this->currentQuestionIndex++;
+            $this->submission->update(['last_position' => ['section' => 0, 'question' => $this->currentQuestionIndex]]);
         }
     }
 
@@ -243,6 +256,7 @@ class TakeGeneralExam extends Component
     {
         if ($this->currentQuestionIndex > 0) {
             $this->currentQuestionIndex--;
+            $this->submission->update(['last_position' => ['section' => 0, 'question' => $this->currentQuestionIndex]]);
         }
     }
 
@@ -250,6 +264,7 @@ class TakeGeneralExam extends Component
     {
         if ($index >= 0 && $index < count($this->questionOrder)) {
             $this->currentQuestionIndex = $index;
+            $this->submission->update(['last_position' => ['section' => 0, 'question' => $this->currentQuestionIndex]]);
         }
     }
 

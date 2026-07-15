@@ -6,16 +6,23 @@ export default defineConfig({
         host: true,
         port: 5173,
         strictPort: true,
-        origin: 'http://192.168.0.118:5173',
+        origin: 'http://192.168.0.138:5173',
         hmr: {
             clientPort: 5173,
-            host: '192.168.0.118',
+            host: '192.168.0.138',
             protocol: 'ws',
         },
     },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/paint.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/paint.js',
+                'resources/js/exam-sync.js',
+                'resources/js/exam-timer.js',
+
+            ],
             refresh: true,
         }),
     ],

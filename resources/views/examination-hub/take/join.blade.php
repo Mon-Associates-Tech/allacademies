@@ -1,119 +1,204 @@
 <x-layouts.exam>
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-gradient-to-br from-slate-900 to-slate-800">
-        <div class="max-w-md w-full space-y-7">
-
-            {{-- ── PAGE HEADER ── --}}
-            <div class="overflow-hidden text-center rounded-[2px] bg-gradient-to-br from-slate-900 to-slate-800 shadow-xl">
-                <div class="h-1 w-full bg-gradient-to-r from-violet-600 via-violet-400 to-indigo-300"></div>
-                <div class="px-7 py-6">
-                    <h1 class="text-2xl font-bold text-white leading-snug tracking-tight font-serif">
-                        Join Examination
-                    </h1>
-                    <p class="text-slate-400 mt-2 text-sm">
-                        Enter your access code to begin
-                    </p>
+    {{-- Skip to main content link for accessibility --}}
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg">
+        Skip to main content
+    </a>
+    
+    <div class="h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 font-sans bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden">
+        <div class="w-full max-w-5xl h-[90vh] max-h-[700px] flex shadow-2xl rounded-2xl overflow-hidden border border-slate-200/50 dark:border-slate-800/50">
+            
+            {{-- Left Column - Branding & Info --}}
+            <div class="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 p-8 flex-col justify-between relative overflow-hidden">
+                {{-- Decorative circles --}}
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-2xl font-bold text-white">Examination Hub</h1>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-3">Ready to Begin?</h2>
+                            <p class="text-white/90 text-sm leading-relaxed">
+                                Enter your access code and participant details to start your examination.
+                            </p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-white font-semibold text-sm">Secure Access</p>
+                                    <p class="text-white/70 text-xs">Protected by unique access codes</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-white font-semibold text-sm">Real-time Monitoring</p>
+                                    <p class="text-white/70 text-xs">Proctored examination environment</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-white font-semibold text-sm">Instant Results</p>
+                                    <p class="text-white/70 text-xs">Get your score immediately after submission</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative z-10">
+                    <p class="text-white/60 text-xs">© {{ date('Y') }} Examination Hub. All rights reserved.</p>
                 </div>
             </div>
+            
+            {{-- Right Column - Form --}}
+            <div id="main-content" class="w-full lg:w-3/5 bg-white dark:bg-slate-900 flex flex-col">
+                {{-- Compact Header with Theme Toggle --}}
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="lg:hidden flex items-center gap-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-lg font-bold text-slate-900 dark:text-white">Join Exam</h1>
+                    </div>
+                    <div class="ml-auto">
+                        <x-snippets.theme-toggle />
+                    </div>
+                </div>
+                
+                {{-- Form Content --}}
+                <div class="flex-1 flex items-center justify-center p-6 lg:p-8 overflow-y-auto">
+                    <form method="POST" action="{{ route('examination-hub.take.authenticate') }}" class="w-full max-w-md space-y-4" novalidate>
+                        @csrf
 
-            {{-- ── AUTH FORM CARD ── --}}
-            <x-ui.card variant="default" shadow="true">
-                <x-ui.card-header title="Participant Details" accent="info" />
-
-                <form method="POST" action="{{ route('examination-hub.take.authenticate') }}" class="p-5 space-y-5">
-                    @csrf
-
-                    {{-- Errors --}}
-                    @if($errors->any())
-                        <x-ui.card variant="accent" accent="danger" shadow="true">
-                            <x-ui.card-header title="Validation Error" accent="danger" />
-                            <div class="p-5">
+                        {{-- Errors --}}
+                        @if($errors->any())
+                            <div role="alert" aria-live="assertive" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
                                 <p class="text-sm text-red-700 dark:text-red-400">{{ $errors->first() }}</p>
                             </div>
-                        </x-ui.card>
-                    @endif
+                        @endif
 
-                    {{-- Access Code --}}
-                    <div>
-                        <label for="access_code" class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">
-                            Access Code <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            id="access_code"
-                            name="access_code"
-                            type="text"
-                            required
-                            value="{{ old('access_code') }}"
-                            class="w-full px-4 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-[2px] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all text-center font-mono uppercase tracking-widest"
-                            placeholder="XXXXXXXX"
-                            maxlength="8"
-                        >
-                    </div>
+                        {{-- Access Code --}}
+                        <div>
+                            <label for="access_code" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Access Code <span class="text-red-500" aria-label="required">*</span>
+                            </label>
+                            <input
+                                id="access_code"
+                                name="access_code"
+                                type="text"
+                                required
+                                aria-required="true"
+                                value="{{ old('access_code') }}"
+                                class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all text-center font-mono uppercase tracking-widest"
+                                placeholder="XXXXXXXX"
+                                maxlength="8"
+                                autocomplete="off"
+                            >
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">8-character code from your examiner</p>
+                        </div>
 
-                    {{-- Name --}}
-                    <div>
-                        <label for="name" class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">
-                            Your Name <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            id="name"
-                            name="name"
-                            type="text"
-                            value="{{ old('name') }}"
-                            class="w-full px-4 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-[2px] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                            placeholder="Enter your full name"
-                        >
-                    </div>
+                        {{-- Name --}}
+                        <div>
+                            <label for="name" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Full Name <span class="text-red-500" aria-label="required">*</span>
+                            </label>
+                            <input
+                                id="name"
+                                name="name"
+                                type="text"
+                                required
+                                aria-required="true"
+                                value="{{ old('name') }}"
+                                class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
+                                placeholder="Enter your full name"
+                                autocomplete="name"
+                            >
+                        </div>
 
-                    {{-- Email --}}
-                    <div>
-                        <label for="email" class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">
-                            Email Address <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value="{{ old('email') }}"
-                            class="w-full px-4 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-[2px] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                            placeholder="your.email@example.com"
-                        >
-                    </div>
+                        {{-- Email --}}
+                        <div>
+                            <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Email Address <span class="text-red-500" aria-label="required">*</span>
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                aria-required="true"
+                                value="{{ old('email') }}"
+                                class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
+                                placeholder="your.email@example.com"
+                                autocomplete="email"
+                            >
+                        </div>
 
-                    {{-- Unique Code --}}
-                    <div>
-                        <label for="unique_code" class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">
-                            Unique Code <span class="text-slate-400">(if provided)</span>
-                        </label>
-                        <input
-                            id="unique_code"
-                            name="unique_code"
-                            type="text"
-                            value="{{ old('unique_code') }}"
-                            class="w-full px-4 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-[2px] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                            placeholder="Your unique participant code"
-                        >
-                    </div>
+                        {{-- Unique Code --}}
+                        <div>
+                            <label for="unique_code" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Unique Code <span class="text-slate-400 font-normal">(optional)</span>
+                            </label>
+                            <input
+                                id="unique_code"
+                                name="unique_code"
+                                type="text"
+                                value="{{ old('unique_code') }}"
+                                class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
+                                placeholder="If provided"
+                                autocomplete="off"
+                            >
+                        </div>
 
-                    {{-- Submit Button --}}
-                    <div class="pt-2">
-                        <x-ui.button
-                            variant="primary"
-                            size="md"
-                            type="submit"
-                            fullWidth="true"
-                        >
-                            <x-heroicon-o-arrow-left-on-rectangle class="w-4 h-4"/>
-                            Join Examination
-                        </x-ui.button>
-                    </div>
-                </form>
-            </x-ui.card>
-
-            {{-- ── FOOTER NOTE ── --}}
-            <div class="text-center">
-                <p class="text-xs text-slate-400">
-                    Make sure you have a stable internet connection before starting
-                </p>
+                        {{-- Submit Button --}}
+                        <div class="pt-2">
+                            <x-ui.button
+                                variant="primary"
+                                size="md"
+                                type="submit"
+                                fullWidth="true"
+                                class="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700"
+                                aria-label="Join examination and start taking the test"
+                            >
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                </svg>
+                                Join Examination
+                            </x-ui.button>
+                        </div>
+                        
+                        <p class="text-center text-xs text-slate-500 dark:text-slate-400 pt-2">
+                            Ensure stable internet connection before starting
+                        </p>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -38,6 +38,9 @@ class GeneralExamSubmission extends Model
         'time_taken_minutes',
         'responses',
         'randomized_question_order',
+        'section_start_times',
+        'flagged_questions',
+        'last_position',
         'score',
         'total_marks',
         'percentage',
@@ -64,6 +67,9 @@ class GeneralExamSubmission extends Model
             'graded_at' => 'datetime',
             'responses' => 'array',
             'randomized_question_order' => 'array',
+            'section_start_times' => 'array',
+            'flagged_questions' => 'array',
+            'last_position' => 'array',
             'violations' => 'array',
             'requires_manual_review' => 'boolean',
             'auto_submitted' => 'boolean',
@@ -316,6 +322,34 @@ class GeneralExamSubmission extends Model
         }
 
         return $this->participant?->email ?? '';
+    }
+
+    // ── Flagging helpers ───────────────────────────────────────────────────
+
+    public function flagQuestion(int $questionId): void
+    {
+        $flags = $this->flagged_questions ?? [];
+        $flags[(string) $questionId] = now()->toIso8601String();
+        $this->update(['flagged_questions' => $flags]);
+    }
+
+    public function unflagQuestion(int $questionId): void
+    {
+        $flags = $this->flagged_questions ?? [];
+        unset($flags[(string) $questionId]);
+        $this->update(['flagged_questions' => $flags]);
+    }
+
+    public function isFlagged(int $questionId): bool
+    {
+        $flags = $this->flagged_questions ?? [];
+        return isset($flags[(string) $questionId]);
+    }
+
+    public function flaggedCount(): int
+    {
+        $flags = $this->flagged_questions ?? [];
+        return count($flags);
     }
 
     public function canViewResults(): bool

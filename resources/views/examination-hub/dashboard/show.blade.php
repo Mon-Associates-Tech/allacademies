@@ -30,15 +30,39 @@
                             <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                             {{ $exam->questions_count }} questions
                         </span>
+                        @if($exam->is_randomized)
+                            <span class="inline-flex items-center gap-1.5 text-xs text-purple-400">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                                Randomized
+                            </span>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    @if(!$exam->starts_at || now()->lt($exam->starts_at))
-                        <a href="{{ route('examination-hub.exams.edit', $exam) }}"
+                    <a href="{{ route('examination-hub.live-monitoring.index', $exam) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
+                       style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 8px rgba(5,150,105,0.3);">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
+                        </span>
+                        Live Monitoring
+                    </a>
+                    <a href="{{ route('examination-hub.exams.edit', $exam) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
+                       style="border-radius: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Edit Exam
+                        @if($exam->starts_at && now()->gte($exam->starts_at) || $exam->submissions_count > 0)
+                            <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        @endif
+                    </a>
+                    @if($exam->proctoring_enabled)
+                        <a href="{{ route('examination-hub.proctoring.index', $exam) }}"
                            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
-                           style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 8px rgba(5,150,105,0.3);">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            Edit Exam
+                           style="border-radius: 2px; background: linear-gradient(135deg, #7c2d12, #b91c1c); box-shadow: 0 2px 8px rgba(185,28,28,0.3);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            Proctoring
                         </a>
                     @endif
                     <a href="{{ route('examination-hub.submissions.index', $exam) }}"
@@ -57,6 +81,13 @@
                  style="border-radius: 2px;">
                 <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <p class="text-sm text-emerald-800 dark:text-emerald-300">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="flex items-start gap-3 px-5 py-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                 style="border-radius: 2px;">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p class="text-sm text-amber-800 dark:text-amber-300">{{ session('warning') }}</p>
             </div>
         @endif
         @if(session('error'))
@@ -317,6 +348,38 @@
                                 </div>
                             @endforeach
                         </dl>
+
+                        <!-- Participant Mode Toggle Form -->
+                        <form action="{{ route('examination-hub.exams.participant-mode', $exam) }}" method="POST" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            @csrf
+                            @method('POST')
+                            <div class="flex items-center gap-4">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Participant Mode:</label>
+                                <div class="flex gap-2">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="participant_mode" value="general" 
+                                               {{ $exam->participant_mode === 'general' ? 'checked' : '' }}
+                                               class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+                                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">General</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="participant_mode" value="configured" 
+                                               {{ $exam->participant_mode === 'configured' ? 'checked' : '' }}
+                                               class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+                                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Configured</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="participant_mode" value="both" 
+                                               {{ $exam->participant_mode === 'both' ? 'checked' : '' }}
+                                               class="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+                                        <span class="ml-2 text-sm text-slate-700 dark:text-slate-300">Both</span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="ml-4 px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500" style="border-radius: 2px;">
+                                    Update
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -394,6 +457,67 @@
                         </form>
                     </div>
                 </div>
+
+                {{-- ── ACTIVE VIOLATIONS (per-exam toggles) ── --}}
+                @if($exam->proctoring_enabled)
+                <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wider" style="letter-spacing: 0.08em;">Violation Settings</h2>
+                    </div>
+                    <div class="p-5">
+                        @php
+                            $resolvedViolations = $exam->resolvedViolationSettings();
+                            $violationMeta = [
+                                'tab_switch'        => ['label' => 'Tab Switch',        'severity' => 'medium'],
+                                'window_blur'       => ['label' => 'Window Blur',        'severity' => 'medium'],
+                                'copy_attempt'      => ['label' => 'Copy Attempt',       'severity' => 'low'],
+                                'paste_attempt'     => ['label' => 'Paste Attempt',      'severity' => 'low'],
+                                'right_click'       => ['label' => 'Right Click',        'severity' => 'low'],
+                                'keyboard_shortcut' => ['label' => 'Keyboard Shortcut',  'severity' => 'low'],
+                                'fullscreen_exit'   => ['label' => 'Fullscreen Exit',    'severity' => 'medium'],
+                                'exam_exit'         => ['label' => 'Exam Exit',          'severity' => 'high'],
+                                'multiple_faces'    => ['label' => 'Multiple Faces',     'severity' => 'high'],
+                                'no_face'           => ['label' => 'No Face Detected',   'severity' => 'medium'],
+                                'face_mismatch'     => ['label' => 'Face Mismatch',      'severity' => 'high'],
+                            ];
+                            $severityColors = [
+                                'high'   => 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
+                                'medium' => 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+                                'low'    => 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
+                            ];
+                        @endphp
+                        <form action="{{ route('examination-hub.exams.violation-settings', $exam) }}" method="POST" class="space-y-1">
+                            @csrf
+                            @foreach($violationMeta as $key => $meta)
+                                <label class="flex items-center justify-between py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center text-xs font-semibold px-2 py-0.5 border {{ $severityColors[$meta['severity']] }}"
+                                              style="border-radius: 2px;">{{ ucfirst($meta['severity']) }}</span>
+                                        <span class="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                                            {{ $meta['label'] }}
+                                        </span>
+                                    </div>
+                                    <input type="hidden" name="violations[{{ $key }}]" value="0">
+                                    <input type="checkbox"
+                                           name="violations[{{ $key }}]"
+                                           value="1"
+                                           {{ ($resolvedViolations[$key] ?? true) ? 'checked' : '' }}
+                                           class="w-4 h-4 rounded text-indigo-600 border-slate-300 dark:border-slate-600 focus:ring-indigo-500">
+                                </label>
+                            @endforeach
+                            <div class="pt-3">
+                                <button type="submit"
+                                        class="w-full py-2 text-sm font-medium text-white transition-all"
+                                        style="border-radius: 2px; background: linear-gradient(135deg, #4f46e5, #6366f1); box-shadow: 0 2px 8px rgba(99,102,241,0.25);">
+                                    Save Violation Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                @endif
 
                 <div class="bg-white dark:bg-slate-900 overflow-hidden"
                      style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
@@ -560,6 +684,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Unique Code</th>
                                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Status</th>
+                                <th class="px-6 py-3"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
@@ -589,6 +714,41 @@
                                                 Inactive
                                             </span>
                                         @endif
+                                    </td>
+                                    <td class="px-6 py-3.5">
+                                        <div class="flex items-center justify-end gap-2">
+                                            {{-- Toggle active/inactive --}}
+                                            <form method="POST" action="{{ route('examination-hub.participants.configured.toggle', [$exam, $participant]) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium border transition-colors {{ $participant->is_active ? 'text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/30' : 'text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30' }}"
+                                                        style="border-radius: 2px;"
+                                                        title="{{ $participant->is_active ? 'Deactivate' : 'Activate' }}">
+                                                    @if($participant->is_active)
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                        Deactivate
+                                                    @else
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        Activate
+                                                    @endif
+                                                </button>
+                                            </form>
+
+                                            {{-- Delete --}}
+                                            <form method="POST" action="{{ route('examination-hub.participants.configured.destroy', [$exam, $participant]) }}"
+                                                  onsubmit="return confirm('Remove {{ addslashes($participant->name) }} from this exam?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                                                        style="border-radius: 2px;"
+                                                        title="Remove participant">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

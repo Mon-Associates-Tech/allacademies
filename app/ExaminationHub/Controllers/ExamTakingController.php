@@ -2,24 +2,30 @@
 
 namespace App\ExaminationHub\Controllers;
 
-use App\ExaminationHub\Services\GradingSystemService;
-use App\Http\Controllers\Controller;
+use App\ExaminationHub\Models\ExamParticipantHeartbeat;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
+use App\ExaminationHub\Services\ExamGradingService;
+use App\ExaminationHub\Services\ExamParticipantAccessService;
+use App\ExaminationHub\Services\LiveMonitoringService;
+use App\Http\Controllers\Controller;
+use App\Notifications\ResultAccessNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ExamTakingController extends Controller
 {
-    private $gradingService;
-
-    public function __construct()
-    {
-        $this->gradingService = app()->make(GradingSystemService::class);
-    }
+    public function __construct(
+        private readonly ExamParticipantAccessService $accessService,
+        private readonly ExamGradingService $gradingService,
+        private readonly LiveMonitoringService $monitoringService,
+    ) {}
 
     public function join(): View
     {
@@ -28,6 +34,18 @@ class ExamTakingController extends Controller
 
     public function authenticate(Request $request): RedirectResponse
     {
+        // Rate limiting: 5 attempts per 5 minutes per IP
+        $key = 'exam_auth:' . $request->ip();
+        
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return back()->withErrors([
+                'access_code' => "Too many authentication attempts. Please try again in {$seconds} seconds."
+            ])->withInput();
+        }
+        
+        RateLimiter::hit($key, 300); // 5 minutes decay
+        
         $data = $request->validate([
             'access_code' => ['required', 'string'],
             'name' => ['nullable', 'string', 'max:255'],
@@ -37,29 +55,49 @@ class ExamTakingController extends Controller
 
         $exam = GeneralExam::findByAccessCode($data['access_code']);
 
-        if (!$exam) {
-            return back()->withErrors(['access_code' => 'Invalid access code.']);
+        if (! $exam) {
+            return back()->withErrors(['access_code' => 'Invalid access code.'])->withInput();
         }
 
-        if (!$exam->isActive()) {
-            return back()->withErrors(['access_code' => 'This examination is not currently active.']);
+        if (! $exam->isActive()) {
+            return back()->withErrors(['access_code' => 'This examination is not currently active.'])->withInput();
         }
 
-        $participantData = $this->validateParticipant($exam, $data);
+        // Delegate participant validation to the access service
+        $access = $this->accessService->authorizeJoinByCode(
+            $exam,
+            $data['name'] ?? '',
+            $data['email'] ?? '',
+            $data['unique_code'] ?? null
+        );
 
-        if (isset($participantData['error'])) {
-            return back()->withErrors(['access_code' => $participantData['error']]);
+        if (! $access['allowed']) {
+            return back()->withErrors(['access_code' => $access['message'] ?? 'You are not authorised to take this exam.'])->withInput();
         }
 
-        $submission = $this->getOrCreateSubmission($exam, $participantData);
+        $submission = $this->resolveSubmission($exam, $data, $access);
 
-        if (!$submission) {
-            return back()->withErrors(['access_code' => 'You have reached the maximum number of attempts.']);
+        if (! $submission) {
+            return back()->withErrors(['access_code' => 'You have reached the maximum number of attempts.'])->withInput();
         }
 
+        $heartbeat = $this->monitoringService->initializeSession($submission, [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        // Session security hardening
+        session()->regenerate(); // Prevent session fixation
         session([
             'exam_submission_id' => $submission->id,
-            'exam_participant_data' => $participantData,
+            'exam_participant_data' => [
+                'name' => $data['name'] ?? null,
+                'email' => $data['email'] ?? null,
+            ],
+            'exam_heartbeat_token' => $heartbeat->session_token,
+            'exam_ip_address' => $request->ip(), // Bind session to IP
+            'exam_user_agent_hash' => hash('sha256', $request->userAgent()), // Device fingerprint
+            'exam_authenticated_at' => now()->toIso8601String(),
         ]);
 
         return redirect()->route('examination-hub.take.start', $exam);
@@ -67,10 +105,9 @@ class ExamTakingController extends Controller
 
     public function start(GeneralExam $exam): View|RedirectResponse
     {
-        $submissionId = session('exam_submission_id');
-        $submission = GeneralExamSubmission::find($submissionId);
+        $submission = $this->resolveSessionSubmission($exam);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission) {
             return redirect()->route('examination-hub.take.join')
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
@@ -79,22 +116,41 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $exam->load(['sections' => function ($query) {
-            $query->orderBy('order')->withCount('questions');
-        }]);
+        if ($submission->status === GeneralExamSubmission::STATUS_NOT_STARTED) {
+            $submission->update([
+                'status' => GeneralExamSubmission::STATUS_IN_PROGRESS,
+                'started_at' => $submission->started_at ?? now(),
+            ]);
+        }
 
-        return view('examination-hub.take.start', [
-            'exam' => $exam,
-            'submission' => $submission,
-        ]);
+        // If the exam hasn't opened yet show the waiting/countdown page — that
+        // is the only scenario where the start view adds value.
+        if ($exam->starts_at && $exam->starts_at->isFuture()) {
+            $exam->load(['sections' => fn ($q) => $q->orderBy('order')->withCount('questions')]);
+
+            return view('examination-hub.take.start', [
+                'exam'              => $exam,
+                'submission'        => $submission,
+                'proctoringEnabled' => (bool) $exam->proctoring_enabled,
+            ]);
+        }
+
+        // Resume from the last saved position when the candidate returns mid-exam.
+        $lastPos = $submission->last_position ?? null;
+        if ($submission->isInProgress() && is_array($lastPos) && isset($lastPos['section'])) {
+            return redirect()->route('examination-hub.take.section', [$exam, (int) $lastPos['section']])
+                ->with('restored_question', (int) ($lastPos['question'] ?? 0));
+        }
+
+        // First visit — go straight to section 0.
+        return redirect()->route('examination-hub.take.section', [$exam, 0]);
     }
 
-    public function section(Request $request, GeneralExam $exam, int $sectionIndex): View|RedirectResponse
+    public function section(GeneralExam $exam, int $sectionIndex): View|RedirectResponse
     {
-        $submissionId = session('exam_submission_id');
-        $submission = GeneralExamSubmission::find($submissionId);
+        $submission = $this->resolveSessionSubmission($exam);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission) {
             return redirect()->route('examination-hub.take.join')
                 ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
@@ -103,42 +159,40 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $exam->load(['sections.questions' => function ($query) {
-            $query->orderBy('order');
-        }]);
+        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')]);
 
         $section = $exam->sections->get($sectionIndex);
 
-        if (!$section) {
+        if (! $section) {
             abort(404, 'Section not found.');
         }
 
-        $questions = $section->questions;
+        $questions = $this->resolveQuestionOrder($exam, $section, $submission);
 
-        // Handle randomization per participant
-        if ($section->is_randomized && $questions->isNotEmpty()) {
-            $randomizedOrder = $submission->randomized_question_order ?? [];
-            $sectionKey = "section_{$section->id}";
+        // Calculate time remaining.
+        // Rule: for a single-section exam that has an exam-level duration, the exam
+        // clock is authoritative (the section's own time_limit_minutes is ignored for
+        // timing purposes so the two clocks never diverge).
+        $timeRemaining    = null;
+        $isSingleSection  = $exam->sections->count() === 1;
 
-            // If this section hasn't been randomized for this participant yet, randomize and store
-            if (!isset($randomizedOrder[$sectionKey])) {
-                $questionIds = $questions->pluck('id')->shuffle()->values()->toArray();
-                $randomizedOrder[$sectionKey] = $questionIds;
-                $submission->update(['randomized_question_order' => $randomizedOrder]);
+        if ($isSingleSection && $exam->duration_in_minutes && $submission->started_at) {
+            $examEndsAt    = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+            $timeRemaining = max(0, (int) now()->diffInSeconds($examEndsAt, false));
+        } elseif ($isSingleSection && $exam->duration_in_minutes) {
+            $timeRemaining = $exam->duration_in_minutes * 60;
+        } elseif ($section->time_limit_minutes) {
+            $sectionStartTimes = $submission->section_start_times ?? [];
+            $sectionKey        = (string) $section->id;
+            $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
+
+            if ($startedAt) {
+                $elapsed       = now()->timestamp - $startedAt;
+                $timeRemaining = max(0, ($section->time_limit_minutes * 60) - $elapsed);
+            } else {
+                $timeRemaining = $section->time_limit_minutes * 60;
             }
-
-            // Reorder questions based on stored randomized order
-            $orderedQuestions = collect();
-            foreach ($randomizedOrder[$sectionKey] as $questionId) {
-                $question = $questions->firstWhere('id', $questionId);
-                if ($question) {
-                    $orderedQuestions->push($question);
-                }
-            }
-            $questions = $orderedQuestions;
         }
-
-        $responses = $submission->responses ?? [];
 
         return view('examination-hub.take.section', [
             'exam' => $exam,
@@ -146,57 +200,107 @@ class ExamTakingController extends Controller
             'section' => $section,
             'sectionIndex' => $sectionIndex,
             'questions' => $questions,
-            'responses' => $responses,
-            'proctoringSessionId' => $request->input('proctoring_session_id')
-                ?? $request->attributes->get('proctoring_session_id'),
+            'responses' => $submission->responses ?? [],
+            'proctoringEnabled' => (bool) $exam->proctoring_enabled,
+            'proctoringSessionId' => session('exam_heartbeat_token'),
+            'sectionTitle' => $section->title,
+            'sectionTimeLimit' => $section->time_limit_minutes ? $section->time_limit_minutes * 60 : null,
+            'timeRemaining' => $timeRemaining,
+            'totalMarks' => $section->total_marks,
         ]);
     }
 
     public function saveResponse(Request $request, GeneralExam $exam): JsonResponse|RedirectResponse
     {
-        $submissionId = session('exam_submission_id');
-        $submission   = GeneralExamSubmission::find($submissionId);
+        $submission = $this->resolveSessionSubmission($exam);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Invalid session.'], 403);
-            }
-            abort(403, 'Invalid session.');
+        if (! $submission) {
+            return $request->expectsJson()
+                ? response()->json(['error' => 'Invalid session.'], 403)
+                : abort(403);
         }
 
         if ($submission->submitted_at) {
-            if ($request->expectsJson()) {
-                return response()->json(['status' => 'already_submitted']);
-            }
-            return redirect()->route('examination-hub.take.completed', $exam);
+            return $request->expectsJson()
+                ? response()->json(['status' => 'already_submitted'])
+                : redirect()->route('examination-hub.take.completed', $exam);
         }
 
         $data = $request->validate([
-            'question_id'  => ['required', 'integer', 'exists:general_exam_questions,id'],
-            'response'     => ['required', 'string'],
+            'question_id' => ['required', 'integer', 'exists:general_exam_questions,id'],
+            'response' => ['required', 'string'],
             'section_index' => ['required', 'integer'],
         ]);
 
+        // Enforce time limits server-side (exam clock for single-section, section clock otherwise)
+        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
+        $section         = $exam->sections->get($data['section_index']);
+        $isSingleSection = $exam->sections->count() === 1;
+
+        if ($isSingleSection && $exam->duration_in_minutes) {
+            if ($submission->started_at) {
+                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                if (now()->greaterThanOrEqualTo($examEndsAt)) {
+                    // Auto-submit the exam if it's past the time limit
+                    $submission->update([
+                        'submitted_at' => now(),
+                        'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
+                        'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+                        'auto_submitted' => true,
+                        'auto_submit_reason' => 'Time limit exceeded (server-side auto-submit)',
+                    ]);
+
+                    // Dispatch grading as a background job
+                    $this->gradingService->dispatchGrading($submission);
+
+                    // Redirect to the completed page
+                    return $request->expectsJson()
+                        ? response()->json(['status' => 'auto_submitted'])
+                        : redirect()->route('examination-hub.take.completed', $exam);
+                }
+            }
+        } elseif ($section && $section->time_limit_minutes) {
+            $sectionStartTimes = $submission->section_start_times ?? [];
+            $sectionKey        = (string) $section->id;
+            $startedAt         = $sectionStartTimes[$sectionKey] ?? null;
+            if (! $startedAt || now()->timestamp >= ($startedAt + ($section->time_limit_minutes * 60))) {
+                // Auto-submit the exam if it's past the section time limit
+                $submission->update([
+                    'submitted_at' => now(),
+                    'time_taken_minutes' => (int) $submission->started_at->diffInMinutes(now()),
+                    'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+                    'auto_submitted' => true,
+                    'auto_submit_reason' => "Section '{$section->title}' time limit exceeded (server-side auto-submit)",
+                ]);
+
+                // Dispatch grading as a background job
+                $this->gradingService->dispatchGrading($submission);
+
+                // Redirect to the completed page
+                return $request->expectsJson()
+                    ? response()->json(['status' => 'auto_submitted'])
+                    : redirect()->route('examination-hub.take.completed', $exam);
+            }
+        }
+
         $responses = $submission->responses ?? [];
         $responses[$data['question_id']] = [
-            'response'    => $data['response'],
+            'response' => $data['response'],
             'answered_at' => now()->toIso8601String(),
         ];
 
         $submission->update(['responses' => $responses]);
 
-        if ($request->expectsJson()) {
-            return response()->json(['status' => 'saved', 'question_id' => $data['question_id']]);
-        }
-
-        return back()->with('success', 'Response saved.');
+        return $request->expectsJson()
+            ? response()->json(['status' => 'saved', 'question_id' => $data['question_id']])
+            : back()->with('success', 'Response saved.');
     }
+
     public function submit(Request $request, GeneralExam $exam): RedirectResponse
     {
-        $submissionId = session('exam_submission_id');
-        $submission = GeneralExamSubmission::find($submissionId);
+        $submission = $this->resolveSessionSubmission($exam);
 
-        if (!$submission || $submission->general_exam_id !== $exam->id) {
+        if (! $submission) {
             abort(403, 'Invalid session.');
         }
 
@@ -204,184 +308,306 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        DB::transaction(function () use ($submission, $exam) {
+        // Check if the submission has any responses saved
+        $hasResponses = !empty($submission->responses) && is_array($submission->responses) && count($submission->responses) > 0;
+
+        DB::transaction(function () use ($submission, $hasResponses) {
             $timeTaken = $submission->started_at
-                ? $submission->started_at->diffInMinutes(now())
+                ? (int) $submission->started_at->diffInMinutes(now())
                 : 0;
 
-            $submission->update([
+            // Ensure that the submission status is properly updated
+            $updateData = [
                 'submitted_at' => now(),
                 'time_taken_minutes' => $timeTaken,
-            ]);
+                'status' => GeneralExamSubmission::STATUS_SUBMITTED,
+            ];
 
-            $this->autoGradeSubmission($submission, $exam);
+            // If there are no responses, log this as a potential issue for review
+            if (!$hasResponses) {
+                $updateData['requires_manual_review'] = true;
+                $updateData['teacher_feedback'] = 'No responses were recorded for this submission. May require manual review.';
+            }
+
+            $submission->update($updateData);
+
+            $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submission->id)->first();
+            $heartbeat?->markCompleted();
         });
 
-        session()->forget(['exam_submission_id', 'exam_participant_data']);
+        // Attempt to save any pending responses without blocking submission
+        try {
+            $this->savePendingResponses($request, $exam, $submission);
+        } catch (\Exception $e) {
+            \Log::error("Failed to save pending responses before submission: " . $e->getMessage());
+            // Continue with submission even if saving fails
+        }
+
+        // Dispatch grading as a background job — don't block the response
+        // Even if no responses were saved, the grading job will handle it appropriately
+        $this->gradingService->dispatchGrading($submission);
+        
+        // Generate secure token for result access
+        if ($submission->participant_email) {
+            $token = Str::random(64);
+            Cache::put("result_access:{$token}", [
+                'submission_id' => $submission->id,
+                'email' => $submission->participant_email,
+                'expires_at' => now()->addDays(7),
+            ], now()->addDays(7));
+            
+            // Send email notification with secure link
+            try {
+                $submission->notify(new ResultAccessNotification($submission, $token));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send result access email: ' . $e->getMessage(), [
+                    'submission_id' => $submission->id,
+                    'email' => $submission->participant_email,
+                ]);
+            }
+        }
+
+        // Persist a lightweight completion record before clearing the main exam
+        // session keys, so completed() can retrieve the submission even after
+        // exam_submission_id has been forgotten.
+        session([
+            'exam_completed_submission_id'    => $submission->id,
+            'exam_completed_participant_email' => $submission->participant_email,
+        ]);
+
+        session()->forget(['exam_submission_id', 'exam_participant_data', 'exam_heartbeat_token']);
 
         return redirect()->route('examination-hub.take.completed', $exam);
     }
 
+    /**
+     * Save any pending responses in the final submission request.
+     */
+    private function savePendingResponses(Request $request, GeneralExam $exam, GeneralExamSubmission $submission): void
+    {
+        $data = $request->validate([
+            'responses' => ['sometimes', 'array'],
+        ]);
+
+        if (empty($data['responses']) || !is_array($data['responses'])) {
+            return;
+        }
+
+        $responses = $submission->responses ?? [];
+
+        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
+
+        foreach ($data['responses'] as $questionId => $response) {
+            if (!is_numeric($questionId)) {
+                continue;
+            }
+
+            $questionId = (int)$questionId;
+
+            // Ensure the question belongs to the exam
+            $found = false;
+            foreach ($exam->sections as $section) {
+                if ($section->questions->contains('id', $questionId)) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                continue;
+            }
+
+            $responses[$questionId] = [
+                'response' => (string)$response,
+                'answered_at' => now()->toIso8601String(),
+            ];
+        }
+
+        $submission->update(['responses' => $responses]);
+    }
+
     public function completed(GeneralExam $exam): View
     {
-        $participantEmail = session('exam_participant_data.email');
+        // Two paths lead here; the session state differs between them:
+        //
+        // a) Auto-submit (Livewire performAutoSubmit): the Livewire component
+        //    redirects client-side without touching the session, so
+        //    exam_submission_id is still present and resolveSessionSubmission()
+        //    returns the submission directly.
+        //
+        // b) Manual submit (submit() controller): the session is cleared before
+        //    redirecting, so we fall back to exam_completed_submission_id which
+        //    submit() writes just before calling session()->forget().
+        $submission = $this->resolveSessionSubmission($exam);
+
+        if (! $submission) {
+            $id = session('exam_completed_submission_id');
+            $submission = $id ? GeneralExamSubmission::find($id) : null;
+        }
+
+        // Derive email: live session key (auto-submit) → completion key (manual
+        // submit) → submission model (last resort, covers both paths).
+        $participantEmail = session('exam_participant_data.email')
+                         ?? session('exam_completed_participant_email')
+                         ?? $submission?->participant_email;
 
         return view('examination-hub.take.completed', [
-            'exam' => $exam,
+            'exam'             => $exam,
+            'submission'       => $submission,
             'participantEmail' => $participantEmail,
         ]);
     }
-
-    private function validateParticipant(GeneralExam $exam, array $data): array
+    
+    /**
+     * Show answer review page before final submission
+     */
+    public function review(GeneralExam $exam): View|RedirectResponse
     {
-        $mode = $exam->participant_mode;
-        $requiredFields = $exam->participant_required_fields ?? [];
+        $submission = $this->resolveSessionSubmission($exam);
 
-        foreach ($requiredFields as $field) {
-            if (empty($data[$field])) {
-                return ['error' => "The {$field} field is required."];
-            }
+        if (! $submission) {
+            return redirect()->route('examination-hub.take.join')
+                ->withErrors(['error' => 'Invalid session. Please join again.']);
         }
 
-        if (in_array($mode, ['configured', 'both'])) {
-            $matchMode = $exam->configured_match_mode ?? 'any';
-            $email = $data['email'] ?? null;
-            $code = $data['unique_code'] ?? null;
+        if ($submission->submitted_at) {
+            return redirect()->route('examination-hub.take.completed', $exam);
+        }
 
-            $query = $exam->configuredParticipants()->where('is_active', true);
+        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')]);
 
-            if ($matchMode === 'both') {
-                $query->where('email', $email)->where('unique_code', $code);
-            } else {
-                $query->where(function ($q) use ($email, $code) {
-                    if ($email) {
-                        $q->orWhere('email', $email);
-                    }
-                    if ($code) {
-                        $q->orWhere('unique_code', $code);
-                    }
-                });
-            }
+        // Build review data
+        $reviewData = [];
+        $totalQuestions = 0;
+        $answeredQuestions = 0;
 
-            $configured = $query->first();
+        foreach ($exam->sections as $sectionIndex => $section) {
+            $sectionData = [
+                'index' => $sectionIndex,
+                'title' => $section->title,
+                'questions' => [],
+            ];
 
-            if ($mode === 'configured' && !$configured) {
-                return ['error' => 'You are not authorized to take this examination.'];
-            }
+            foreach ($section->questions as $question) {
+                $totalQuestions++;
+                $isAnswered = isset($submission->responses[$question->id]);
+                
+                if ($isAnswered) {
+                    $answeredQuestions++;
+                }
 
-            if ($configured) {
-                return [
-                    'type' => 'configured',
-                    'id' => $configured->id,
-                    'name' => $data['name'] ?? $configured->name,
-                    'email' => $data['email'] ?? $configured->email,
+                $sectionData['questions'][] = [
+                    'id' => $question->id,
+                    'question_text' => $question->question_text,
+                    'question_type' => $question->question_type,
+                    'marks' => $question->marks,
+                    'response' => $submission->responses[$question->id]['response'] ?? null,
+                    'is_answered' => $isAnswered,
+                    'is_flagged' => isset($submission->flagged_questions[$question->id]),
                 ];
             }
+
+            $reviewData[] = $sectionData;
         }
 
-        return [
-            'type' => 'general',
-            'id' => null,
-            'name' => $data['name'] ?? 'Anonymous',
-            'email' => $data['email'] ?? null,
-        ];
+        return view('examination-hub.take.review', [
+            'exam' => $exam,
+            'submission' => $submission,
+            'reviewData' => $reviewData,
+            'totalQuestions' => $totalQuestions,
+            'answeredQuestions' => $answeredQuestions,
+            'unansweredQuestions' => $totalQuestions - $answeredQuestions,
+        ]);
     }
 
-    private function getOrCreateSubmission(GeneralExam $exam, array $participantData): ?GeneralExamSubmission
-    {
-        $participantType = $participantData['type'];
-        $participantId = $participantData['id'];
+    // ─── Private helpers ─────────────────────────────────────────────────────
 
-        // For general participants, generate a unique numeric ID from email
-        if ($participantType === 'general' && !empty($participantData['email'])) {
-            // Use CRC32 to convert email to a numeric ID (always positive)
-            $participantId = abs(crc32($participantData['email']));
+    private function resolveSessionSubmission(GeneralExam $exam): ?GeneralExamSubmission
+    {
+        $id = session('exam_submission_id');
+        if (! $id) {
+            return null;
         }
 
-        if (!$exam->canParticipantAttempt($participantType, $participantId)) {
+        $submission = GeneralExamSubmission::find($id);
+
+        if (! $submission || $submission->general_exam_id !== $exam->id) {
+            return null;
+        }
+
+        return $submission;
+    }
+
+    private function resolveSubmission(GeneralExam $exam, array $data, array $access): ?GeneralExamSubmission
+    {
+        if ($access['mode'] === 'configured' && isset($access['configured_participant'])) {
+            $cp = $access['configured_participant'];
+            $type = 'configured';
+            $pid = $cp->id;
+        } else {
+            $type = 'general';
+            $pid = ! empty($data['email']) ? abs(crc32($data['email'])) : null;
+        }
+
+        // First, check if there's an existing submission that hasn't been started yet
+        // If so, we can reuse that submission instead of creating a new one
+        $existingSubmission = GeneralExamSubmission::where([
+            'general_exam_id' => $exam->id,
+            'participant_type' => $type,
+            'participant_id' => $pid,
+        ])
+        ->whereNull('submitted_at') // Not submitted yet
+        ->where('status', GeneralExamSubmission::STATUS_NOT_STARTED) // Not started
+        ->first();
+
+        // If we find an existing submission that was created but never started, 
+        // we can reuse it (meaning authentication failed previously)
+        if ($existingSubmission) {
+            return $existingSubmission;
+        }
+
+        // Check if the participant can attempt the exam based on max attempts
+        if (! $exam->canParticipantAttempt($type, $pid)) {
             return null;
         }
 
         return GeneralExamSubmission::firstOrCreate(
             [
                 'general_exam_id' => $exam->id,
-                'participant_type' => $participantType,
-                'participant_id' => $participantId,
+                'participant_type' => $type,
+                'participant_id' => $pid,
                 'submitted_at' => null,
             ],
             [
-                'participant_name' => $participantData['name'],
-                'participant_email' => $participantData['email'],
+                'participant_name' => $data['name'] ?? 'Anonymous',
+                'participant_email' => $data['email'] ?? null,
                 'started_at' => now(),
                 'responses' => [],
                 'score' => 0,
-                'status' => 'not_started',
+                'status' => GeneralExamSubmission::STATUS_NOT_STARTED,
             ]
         );
     }
 
-    private function autoGradeSubmission(GeneralExamSubmission $submission, GeneralExam $exam): void
+    private function resolveQuestionOrder(GeneralExam $exam, $section, GeneralExamSubmission $submission): \Illuminate\Support\Collection
     {
-        $exam->load('questions');
-        $responses      = $submission->responses ?? [];
-        $totalScore     = 0;
-        $totalMarks     = 0;
-        $gradedResponses = [];
+        $questions = $section->questions;
 
-        foreach ($exam->questions as $question) {
-            $questionId  = $question->id;
-            $totalMarks += $question->marks;
-            $response    = $responses[$questionId]['response'] ?? null;
-
-            if ($response === null) {
-                $gradedResponses[$questionId] = [
-                    'response'    => null,
-                    'is_correct'  => false,
-                    'points_earned' => 0,
-                    'answered_at' => null,
-                ];
-                continue;
-            }
-
-            if ($question->canAutoGrade()) {
-                $gradeResult = $question->gradeResponse($response);
-                $gradedResponses[$questionId] = array_merge($responses[$questionId], $gradeResult);
-                $totalScore += $gradeResult['points_earned'];
-            } else {
-                $gradedResponses[$questionId] = array_merge($responses[$questionId], [
-                    'is_correct'      => null,
-                    'points_earned'   => 0,
-                    'requires_grading' => true,
-                ]);
-            }
+        if (! ($exam->is_randomized || $section->is_randomized) || $questions->isEmpty()) {
+            return $questions;
         }
 
-        $percentage = $totalMarks > 0 ? ($totalScore / $totalMarks) * 100 : 0;
+        $randomizedOrder = $submission->randomized_question_order ?? [];
+        $sectionKey = "section_{$section->id}";
 
-        // ── Use the configurable grading system ──────────────────────────────
-        $grade = $this->calculateGrade($percentage, $exam);
+        if (! isset($randomizedOrder[$sectionKey])) {
+            $randomizedOrder[$sectionKey] = $questions->pluck('id')->shuffle()->values()->toArray();
+            $submission->update(['randomized_question_order' => $randomizedOrder]);
+        }
 
-        $submission->update([
-            'responses'          => $gradedResponses,
-            'score'              => $totalScore,
-            'total_marks'        => $totalMarks,
-            'percentage'         => round($percentage, 2),
-            'grade'              => $grade,
-            'status'             => 'auto_graded',
-        ]);
-    }
-
-    /**
-     * Resolve a percentage to a grade label.
-     *
-     * Priority: exam owner's custom grade scales → built-in fallback.
-     */
-    private function calculateGrade(float $percentage, GeneralExam $exam): string
-    {
-        return $this->gradingService->resolveGrade(
-            $percentage,
-            $exam->user_id,
-            $exam->school_id
-        );
+        return collect($randomizedOrder[$sectionKey])
+            ->map(fn ($id) => $questions->firstWhere('id', $id))
+            ->filter()
+            ->values();
     }
 }

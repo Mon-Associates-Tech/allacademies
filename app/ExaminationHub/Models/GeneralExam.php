@@ -53,6 +53,7 @@ class GeneralExam extends Model
         'auto_submit_on_violation',
         'auto_submit_high_severity_threshold',
         'auto_submit_medium_severity_threshold',
+        'violation_settings',
         'require_webcam',
         'require_fullscreen',
         'ai_generated',
@@ -83,6 +84,7 @@ class GeneralExam extends Model
             'auto_submit_on_violation' => 'boolean',
             'auto_submit_high_severity_threshold' => 'integer',
             'auto_submit_medium_severity_threshold' => 'integer',
+            'violation_settings' => 'array',
             'require_webcam' => 'boolean',
             'require_fullscreen' => 'boolean',
             'ai_generated' => 'boolean',
@@ -157,6 +159,32 @@ class GeneralExam extends Model
         return $this->hasMany(GeneralExamConfiguredParticipant::class);
     }
 
+    /**
+     * Resolve whether a violation type is enabled for this exam.
+     * Exam-level setting takes precedence; falls back to config/env.
+     */
+    public function isViolationEnabled(string $type): bool
+    {
+        $settings = $this->violation_settings ?? [];
+
+        if (array_key_exists($type, $settings)) {
+            return (bool) $settings[$type];
+        }
+
+        return (bool) config('proctoring.violations.'.$type, true);
+    }
+
+    /**
+     * Return the full violation settings map, merging exam overrides onto config defaults.
+     */
+    public function resolvedViolationSettings(): array
+    {
+        $defaults = config('proctoring.violations', []);
+        $overrides = $this->violation_settings ?? [];
+
+        return array_merge($defaults, $overrides);
+    }
+
     public function isActive(): bool
     {
         $now = now();
@@ -222,6 +250,7 @@ class GeneralExam extends Model
         return $this->submissions()
             ->where('participant_type', $participantType)
             ->where('participant_id', $participantId)
+            ->whereNotNull('submitted_at') // Only count actual submissions, not just created records
             ->count();
     }
 

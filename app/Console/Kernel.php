@@ -5,7 +5,8 @@ namespace App\Console;
 use App\Jobs\ResetMonthlySubscriptionCycles;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Services\SubscriptionCycleService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -23,6 +24,16 @@ class Kernel extends ConsoleKernel
         $schedule->command('messages:send-scheduled')->everyMinute();
         $schedule->command('calendar:process-reminders')->everyMinute();
         $schedule->command('tokens:check-expired')->daily();
+
+        // Auto-submit exam submissions that have exceeded their time limit
+        $schedule->command('examination-hub:auto-submit-expired')
+            ->everyMinute()
+            ->withoutOverlapping();
+
+        // Auto-submit exam submissions that have exceeded their section time limits
+        $schedule->command('examination-hub:auto-submit-expired-sections')
+            ->everyMinute()
+            ->withoutOverlapping();
 
         // Generate recurring sessions daily
         $schedule->job(new \App\Jobs\GenerateRecurringSessionsJob)
@@ -52,6 +63,24 @@ class Kernel extends ConsoleKernel
             ->dailyAt('00:00')
             ->name('reset-monthly-subscription-cycles')
             ->withoutOverlapping();
+
+        
+
+$schedule->call(function () {
+    try {
+        $time = now()->toDateTimeString();
+        $store = config('cache.default'); // Explicitly get the default store
+        
+        // 1. Write to the explicit store
+        Cache::store($store)->put('scheduler:heartbeat', $time, 300);
+        
+        // 2. Immediately try to read it back to verify
+        $verify = Cache::store($store)->get('scheduler:heartbeat');
+        
+    } catch (\Exception $e) {
+        Log::error('Scheduler Heartbeat FAILED', ['error' => $e->getMessage()]);
+    }
+})->everyMinute()->name('scheduler:heartbeat')->withoutOverlapping();
 
     }
 

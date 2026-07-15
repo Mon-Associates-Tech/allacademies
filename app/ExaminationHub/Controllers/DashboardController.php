@@ -3,10 +3,9 @@
 namespace App\ExaminationHub\Controllers;
 
 use App\ExaminationHub\Contracts\ExamDashboardServiceInterface;
+use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
-use App\Jobs\SendExamRemindersJob;
-use App\ExaminationHub\Models\GeneralExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -38,7 +37,6 @@ class DashboardController extends Controller
         $exam->load('sections');
 
         $configuredParticipants = $exam->configuredParticipants()
-            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -82,92 +80,32 @@ class DashboardController extends Controller
 
     public function sendInvitations(GeneralExam $exam): RedirectResponse
     {
-        $this->ensureOwnerAccess($exam);
-
-        $participantsCount = $exam->configuredParticipants()
-            ->where('is_active', true)
-            ->whereNotNull('email')
-            ->count();
-
-        if ($participantsCount === 0) {
-            return back()->withErrors(['error' => 'No configured participants with email addresses found.']);
-        }
-
-        SendExamRemindersJob::dispatch($exam, false);
-
-        return back()->with('success', "Invitations are being sent to {$participantsCount} participant(s).");
+        // Moved to ExamSettingsController
+        return app(ExamSettingsController::class)->sendInvitations($exam);
     }
 
     public function sendReminder(GeneralExam $exam): RedirectResponse
     {
-        $this->ensureOwnerAccess($exam);
-
-        $participantsCount = $exam->configuredParticipants()
-            ->where('is_active', true)
-            ->whereNotNull('email')
-            ->count();
-
-        if ($participantsCount === 0) {
-            return back()->withErrors(['error' => 'No configured participants with email addresses found.']);
-        }
-
-        SendExamRemindersJob::dispatch($exam, true);
-
-        return back()->with('success', "Reminders are being sent to {$participantsCount} participant(s).");
+        return app(ExamSettingsController::class)->sendReminder($exam);
     }
 
     public function updateReminderSettings(Request $request, GeneralExam $exam): RedirectResponse
     {
-        $this->ensureOwnerAccess($exam);
-
-        $data = $request->validate([
-            'send_reminders' => ['boolean'],
-            'reminder_datetime' => ['nullable', 'date', 'after:now'],
-        ]);
-
-        $exam->update($data);
-
-        return back()->with('success', 'Reminder settings updated successfully.');
+        return app(ExamSettingsController::class)->updateReminderSettings($request, $exam);
     }
 
     public function updateProctoringSettings(Request $request, GeneralExam $exam): RedirectResponse
     {
-        $this->ensureOwnerAccess($exam);
-
-        $data = $request->validate([
-            'proctoring_enabled' => ['nullable', 'boolean'],
-            'auto_submit_on_violation' => ['nullable', 'boolean'],
-            'auto_submit_high_severity_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'auto_submit_medium_severity_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
-        ]);
-
-        $proctoringEnabled = $request->boolean('proctoring_enabled');
-        $autoSubmitEnabled = $request->boolean('auto_submit_on_violation');
-
-        $exam->update([
-            'proctoring_enabled' => $proctoringEnabled,
-            'auto_submit_on_violation' => $autoSubmitEnabled,
-            'auto_submit_high_severity_threshold' => $data['auto_submit_high_severity_threshold'] ?? $exam->auto_submit_high_severity_threshold ?? 2,
-            'auto_submit_medium_severity_threshold' => $data['auto_submit_medium_severity_threshold'] ?? $exam->auto_submit_medium_severity_threshold ?? 5,
-        ]);
-
-        return back()->with('success', 'Proctoring settings updated successfully.');
+        return app(ExamSettingsController::class)->updateProctoringSettings($request, $exam);
     }
 
     public function toggleResults(GeneralExam $exam): RedirectResponse
     {
-        $this->ensureOwnerAccess($exam);
+        return app(ExamSettingsController::class)->toggleResults($exam);
+    }
 
-        if ($exam->result_visibility !== 'manual_release') {
-            return back()->withErrors(['error' => 'Results can only be toggled for exams with manual release mode.']);
-        }
-
-        $exam->update(['results_released' => !$exam->results_released]);
-
-        $message = $exam->results_released 
-            ? 'Results have been released to participants.' 
-            : 'Results have been hidden from participants.';
-
-        return back()->with('success', $message);
+    public function updateViolationSettings(Request $request, GeneralExam $exam): RedirectResponse
+    {
+        return app(ExamSettingsController::class)->updateViolationSettings($request, $exam);
     }
 }

@@ -142,7 +142,7 @@
                 <button type="submit" 
                         class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-all"
                         style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
-                    Create Examination
+                    {{ !empty($payload['exam_id']) ? 'Update Examination' : 'Create Examination' }}
                 </button>
             </div>
         </form>

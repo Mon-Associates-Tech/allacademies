@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Examinations\Services;
+namespace App\ExaminationHub\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;

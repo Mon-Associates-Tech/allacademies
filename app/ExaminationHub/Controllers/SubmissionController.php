@@ -39,6 +39,17 @@ class SubmissionController extends Controller
         ]);
     }
 
+    public function grade(GeneralExam $exam, GeneralExamSubmission $submission): View
+    {
+        $this->ensureOwnerAccess($exam);
+        abort_unless($submission->general_exam_id === $exam->id, 404);
+
+        return view('examination-hub.submissions.grade', [
+            'exam' => $exam,
+            'submission' => $submission,
+        ]);
+    }
+
     public function export(GeneralExam $exam): StreamedResponse
     {
         $this->ensureOwnerAccess($exam);
@@ -54,4 +65,3 @@ class SubmissionController extends Controller
         return $this->exportService->exportExcel($exam);
     }
 }
-

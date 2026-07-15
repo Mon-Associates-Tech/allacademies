@@ -32,9 +32,7 @@ Route::middleware(['auth', 'verified', 'parent'])->prefix('parent')->name('paren
     Route::get('terminal-reports/{student}/download', [\App\Http\Controllers\Parent\TerminalReportController::class, 'download'])->name('terminal-reports.download');
 
     // Notifications
-    Route::get('notifications', \App\Livewire\Parent\ParentNotificationsHandler::class)->name('notifications');
-    Route::post('notifications/{notification}/mark-read', [\App\Http\Controllers\Parent\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('notifications/mark-all-read', [\App\Http\Controllers\Parent\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('notifications', \App\Livewire\UnifiedNotifications::class)->name('notifications');
 
     // Book Subscriptions
     Route::get('books', \App\Livewire\Parent\ParentBooksManager::class)->name('books');

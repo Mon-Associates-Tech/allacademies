@@ -1,7 +1,5 @@
-@extends('layouts.exam')
-
-@section('content')
-<x-examinations-hub.navigation active="manage" />
+<x-layouts.exam>
+<x-examination-hub.navigation active="manage" />
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
@@ -9,7 +7,7 @@
     <div class="flex items-center justify-between mb-8">
         <div>
             <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
-                <a href="{{ route('examinations-hub.exams.show', $exam) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ $exam->title }}</a>
+                <a href="{{ route('examination-hub.exams.show', $exam) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ $exam->title }}</a>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 <span>Proctoring</span>
             </div>
@@ -18,7 +16,7 @@
                 {{ $summaries->count() }} submission(s) with recorded violations.
             </p>
         </div>
-        <a href="{{ route('examinations-hub.submissions.index', $exam) }}"
+        <a href="{{ route('examination-hub.submissions.index', $exam) }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             ← All Submissions
         </a>
@@ -85,7 +83,7 @@
                                     ● Low: {{ $proctoring['low'] }}
                                 </span>
                             @endif
-                            <a href="{{ route('examinations-hub.proctoring.show', [$exam, $submission]) }}"
+                            <a href="{{ route('examination-hub.proctoring.show', [$exam, $submission]) }}"
                                class="ml-2 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                                 View Logs
                             </a>
@@ -96,4 +94,4 @@
         </div>
     @endif
 </div>
-@endsection
+</x-layouts.exam>

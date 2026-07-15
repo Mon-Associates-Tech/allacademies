@@ -77,6 +77,11 @@
                     <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Questions & Answers</h2>
                 </div>
 
+                <div class="p-5 flex flex-wrap items-center justify-end gap-3 border-b border-slate-100 dark:border-slate-800">
+                    <a href="{{ route('examination-hub.results.certificate', ['submission' => $submission, 'email' => $email]) }}" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 bg-slate-900 text-white rounded text-sm font-medium hover:bg-slate-700">View Certificate</a>
+                    <a href="{{ route('examination-hub.results.certificate.download', ['submission' => $submission, 'email' => $email]) }}" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded text-sm font-medium hover:bg-emerald-500">Download PDF</a>
+                </div>
+
                 <div class="p-5 space-y-6">
                     @php
                         $questionNumber = 1;
@@ -110,16 +115,20 @@
                                             </div>
                                         </div>
                                         <div class="flex-shrink-0 text-right">
-                                            @php
-                                                $scoreColor = $isCorrect === true 
-                                                    ? 'text-emerald-600 dark:text-emerald-400' 
-                                                    : ($isCorrect === false 
-                                                        ? 'text-red-600 dark:text-red-400' 
-                                                        : 'text-slate-600 dark:text-slate-400');
-                                            @endphp
-                                            <span class="text-sm font-mono font-semibold {{ $scoreColor }}">
-                                                {{ $pointsEarned }}/{{ $question->marks }}
-                                            </span>
+                                            @if($submission->assignment->show_score_breakdown)
+                                                @php
+                                                    $scoreColor = $isCorrect === true 
+                                                        ? 'text-emerald-600 dark:text-emerald-400' 
+                                                        : ($isCorrect === false 
+                                                            ? 'text-red-600 dark:text-red-400' 
+                                                            : 'text-slate-600 dark:text-slate-400');
+                                                @endphp
+                                                <span class="text-sm font-mono font-semibold {{ $scoreColor }}">
+                                                    {{ $pointsEarned }}/{{ $question->marks }}
+                                                </span>
+                                            @else
+                                                <span class="text-sm font-mono text-slate-500">Hidden</span>
+                                            @endif
                                         </div>
                                     </div>
 
