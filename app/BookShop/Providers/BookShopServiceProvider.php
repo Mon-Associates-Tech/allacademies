@@ -58,6 +58,13 @@ class BookShopServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->app['router']->aliasMiddleware('bookshop.auth', \App\BookShop\Http\Middleware\Authenticate::class);
+        $this->app['router']->aliasMiddleware('bookshop.guest', \App\BookShop\Http\Middleware\RedirectIfAuthenticated::class);
+        $this->app['router']->aliasMiddleware(
+            'bookshop.staff.branch-check',
+            \App\BookShop\Http\Middleware\EnsureStaffHasBranch::class
+        );
+
         // Kept in their own subfolder (database/migrations/bookshop) rather than
         // the app's root migrations folder, both so this doesn't double-register
         // the host app's own migrations and so the module stays cleanly extractable.
