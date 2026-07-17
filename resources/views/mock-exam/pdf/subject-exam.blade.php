@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $subjectExam->getDisplayTitle() }} - {{ $subjectExam->mockExam->title }}</title>
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -212,7 +212,7 @@
         .page-break {
             page-break-before: always;
         }
-        
+
         /* ─── Front Page Styles ─── */
         .front-page {
             page-break-after: always;
@@ -337,10 +337,10 @@
                                                     {{ $subjectExam->mockExam->starts_at ? $subjectExam->mockExam->starts_at->format('h:i A') : 'N/A' }}
                                                     @break
                                                 @case('Duration')
-                                                    {{ $subjectExam->duration_in_minutes ? 
-                                                        ($subjectExam->duration_in_minutes >= 60 ? 
-                                                            floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '') : 
-                                                            $subjectExam->duration_in_minutes . ' mins') 
+                                                    {{ $subjectExam->duration_in_minutes ?
+                                                        ($subjectExam->duration_in_minutes >= 60 ?
+                                                            floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '') :
+                                                            $subjectExam->duration_in_minutes . ' mins')
                                                         : 'N/A' }}
                                                     @break
                                                 @case('Subject')
@@ -362,7 +362,7 @@
             @endforeach
         </div>
     @endif
-    
+
     <div class="exam-container">
         {{-- Header --}}
         <div class="header-section">
@@ -379,26 +379,26 @@
                 <span class="ig-val">{{ $subjectExam->academicGroup->name }}</span>
             </div>
             @endif
-            
+
             @if($subjectExam->academicLevel)
             <div class="info-item">
                 <span class="ig-lbl">Level</span>
                 <span class="ig-val">{{ $subjectExam->academicLevel->name }}</span>
             </div>
             @endif
-            
+
             <div class="info-item">
                 <span class="ig-lbl">Subject</span>
                 <span class="ig-val">{{ $subjectExam->academicSubject?->name }}</span>
             </div>
-            
+
             @if($subjectExam->duration_in_minutes)
             <div class="info-item">
                 <span class="ig-lbl">Duration</span>
                 <span class="ig-val">{{ $subjectExam->duration_in_minutes }} minutes</span>
             </div>
             @endif
-            
+
             <div class="info-item">
                 <span class="ig-lbl">Total Marks</span>
                 <span class="ig-val">{{ number_format($subjectExam->getTotalMarks(), 1) }}</span>
@@ -425,7 +425,7 @@
             <div class="section-header">
                 <div class="section-title">{{ $section->title }}</div>
                 <div class="section-meta">
-                    {{ $section->questions->count() }} questions • 
+                    {{ $section->questions->count() }} questions •
                     {{ number_format($section->getTotalMarks(), 1) }} marks
                     @if($section->question_type !== 'mixed')
                         • {{ ucwords(str_replace('_', ' ', $section->question_type)) }}
@@ -441,10 +441,11 @@
 
             @foreach($section->questions as $qIndex => $question)
             <div class="question-block">
-                <div class="question-header">
+                <div class="question-header" style="display: flex; flex-wrap: nowrap; align-items: center;">
                     <span class="question-number">{{ $loop->parent->iteration }}.{{ $loop->iteration }}</span>
                     <span class="question-text">
-                        <x-form.markdown-with-math :content="$question->question_text" inline="true" />
+                        {{-- <x-prose-content :content="$question->question_text" inline="true" /> --}}
+                        <span> {{ $question->question_text }} </span>
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
                 </div>
@@ -453,11 +454,11 @@
                 <div class="options-list">
                     @php $optionIndex = 0; @endphp
                     @foreach($question->options as $option)
-                    
+
                     <div class="option-item">
                         <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
                         <span class="option-text">
-                            <x-form.markdown-with-math :content="$option" inline="true" />
+                            <span>{{ $option }}</span>
                         </span>
                     </div>
                     @php $optionIndex++; @endphp
