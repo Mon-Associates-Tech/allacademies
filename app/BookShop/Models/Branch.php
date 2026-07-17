@@ -65,10 +65,17 @@ class Branch extends Model
         return $this->hasMany(Staff::class);
     }
 
-    // Relations below will be wired up as those modules land (Phase 3/4/5):
-    // public function stockLevels(): HasMany { return $this->hasMany(BranchStockLevel::class); }
-    // public function orders(): HasMany { return $this->hasMany(Order::class); }
-    // public function restockRequests(): HasMany { return $this->hasMany(RestockRequest::class); }
+    public function stockLevels(): HasMany
+    {
+        return $this->hasMany(BranchStockLevel::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    // public function restockRequests(): HasMany { return $this->hasMany(RestockRequest::class); } // Phase 5
 
     public function scopeActive($query)
     {

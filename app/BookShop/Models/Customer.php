@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 
@@ -61,5 +62,8 @@ class Customer extends Model implements AuthenticatableContract, MustVerifyEmail
         return $this->belongsTo(Branch::class, 'preferred_branch_id');
     }
 
-    // public function orders(): HasMany { return $this->hasMany(Order::class); } // Phase 4
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }

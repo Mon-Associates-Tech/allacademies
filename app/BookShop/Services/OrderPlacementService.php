@@ -1,0 +1,108 @@
+<?php
+
+namespace App\BookShop\Services;
+
+use App\BookShop\Exceptions\OrderPlacementException;
+use App\BookShop\Models\Book;
+use App\BookShop\Models\BranchStockLevel;
+use App\BookShop\Models\Customer;
+use App\BookShop\Models\Order;
+use App\BookShop\Models\OrderItem;
+use Illuminate\Support\Facades\DB;
+
+class OrderPlacementService
+{
+    public function __construct(
+        private readonly BranchResolutionService $branchResolver,
+    ) {
+    }
+
+    /**
+     * @param  array<int, int>  $items  book_id => quantity
+     *
+     * @throws OrderPlacementException
+     */
+    public function place(Customer $customer, array $items, ?string $notes = null): Order
+    {
+        $items = array_filter($items, fn ($quantity) => (int) $quantity > 0);
+
+        if (empty($items)) {
+            throw new OrderPlacementException('Select at least one book and quantity to place an order.');
+        }
+
+        $branch = $this->branchResolver->resolveForCustomer($customer);
+
+        if (! $branch) {
+            throw new OrderPlacementException(
+                'No branch currently serves your region yet. Please contact support or update your location.'
+            );
+        }
+
+        return DB::transaction(function () use ($customer, $branch, $items, $notes) {
+            $books = Book::query()->active()->whereIn('id', array_keys($items))->get()->keyBy('id');
+
+            // Lock the relevant stock rows for the duration of the
+            // transaction so two simultaneous orders can't both succeed
+            // against the same last few units.
+            $stockLevels = BranchStockLevel::query()
+                ->where('branch_id', $branch->id)
+                ->whereIn('book_id', array_keys($items))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('book_id');
+
+            $subtotal = 0;
+            $lineItems = [];
+
+            foreach ($items as $bookId => $quantity) {
+                $book = $books->get($bookId);
+
+                if (! $book) {
+                    throw new OrderPlacementException("One of the selected books is no longer available.");
+                }
+
+                $stock = $stockLevels->get($bookId);
+                $available = $stock?->quantity ?? 0;
+
+                if ($available < $quantity) {
+                    throw new OrderPlacementException(
+                        "Only {$available} copies of \"{$book->title}\" are available at ".$branch->name.'.'
+                    );
+                }
+
+                $lineTotal = round($book->price * $quantity, 2);
+                $subtotal += $lineTotal;
+
+                $lineItems[] = [
+                    'book' => $book,
+                    'stock' => $stock,
+                    'quantity' => $quantity,
+                    'line_total' => $lineTotal,
+                ];
+            }
+
+            $order = Order::create([
+                'customer_id' => $customer->id,
+                'branch_id' => $branch->id,
+                'subtotal' => $subtotal,
+                'notes' => $notes,
+            ]);
+
+            foreach ($lineItems as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'book_id' => $item['book']->id,
+                    'title_snapshot' => $item['book']->title,
+                    'author_snapshot' => $item['book']->author,
+                    'unit_price' => $item['book']->price,
+                    'quantity' => $item['quantity'],
+                    'line_total' => $item['line_total'],
+                ]);
+
+                $item['stock']->decrement('quantity', $item['quantity']);
+            }
+
+            return $order->fresh('items');
+        });
+    }
+}

@@ -64,6 +64,10 @@ class BookShopServiceProvider extends ServiceProvider
             'bookshop.staff.branch-check',
             \App\BookShop\Http\Middleware\EnsureStaffHasBranch::class
         );
+        $this->app['router']->aliasMiddleware(
+            'bookshop.staff.superadmin-only',
+            \App\BookShop\Http\Middleware\EnsureStaffIsSuperAdmin::class
+        );
 
         // Kept in their own subfolder (database/migrations/bookshop) rather than
         // the app's root migrations folder, both so this doesn't double-register

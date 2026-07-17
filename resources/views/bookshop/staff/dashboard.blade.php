@@ -1,30 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BookShop Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-slate-100 dark:bg-slate-950" style="font-family: 'system-ui', -apple-system, sans-serif;">
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
+<x-bookshop::layouts.staff :title="'Dashboard - BookShop'">
     <div class="overflow-hidden"
          style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
         <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
-        <div class="px-7 py-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
-                    Welcome, {{ $staff->name }}
-                </h1>
-                <p class="text-slate-400 mt-2 text-sm">
-                    {{ $staff->isSuperAdmin() ? 'Super Admin \u2014 all branches' : 'Branch Admin' }}
-                </p>
-            </div>
-            <form method="POST" action="{{ route('bookshop.staff.logout') }}">
-                @csrf
-                <button type="submit" class="text-sm text-slate-300 hover:text-white transition-colors">Sign Out</button>
-            </form>
+        <div class="px-7 py-6">
+            <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                Welcome, {{ $staff->name }}
+            </h1>
+            <p class="text-slate-400 mt-2 text-sm">
+                {{ $staff->isSuperAdmin() ? 'Super Admin — all branches' : 'Branch Admin' }}
+            </p>
         </div>
     </div>
 
@@ -45,10 +29,12 @@
                 </span>
             </div>
         @empty
-            <p class="text-sm text-slate-500 dark:text-slate-400">No branches yet. Branch management, inventory, and orders land in the next phases.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+                No branches yet.
+                @if($staff->isSuperAdmin())
+                    <a href="{{ route('bookshop.staff.branches.create') }}" class="text-purple-600 dark:text-purple-400 font-medium">Create your first branch &rarr;</a>
+                @endif
+            </p>
         @endforelse
     </div>
-
-</div>
-</body>
-</html>
+</x-bookshop::layouts.staff>
