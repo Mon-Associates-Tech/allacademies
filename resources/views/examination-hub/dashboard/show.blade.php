@@ -1,10 +1,20 @@
 <x-layouts.app>
-    <x-examination-hub.navigation active="manage" />
+    <style>
+        @media print {
+            html, body { overflow: visible !important; height: auto !important; }
+            .relative.flex.flex-col.flex-1 { overflow: visible !important; height: auto !important; }
+            .no-print { display: none !important; }
+            .hidden { display: block !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+
+    <x-examination-hub.navigation active="manage" class="no-print" />
 
     {{-- ═══════════════════════════════════════════════════════════
          PAGE SHELL
     ═══════════════════════════════════════════════════════════ --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
+    <div id="exam-show-printable" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
          style="font-family: 'system-ui', -apple-system, sans-serif;">
 
         {{-- ── PAGE HEADER ── --}}
@@ -42,6 +52,14 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
+                    <button onclick="window.print()"
+                            class="no-print inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white border border-slate-600 hover:border-slate-400 transition-colors"
+                            style="border-radius: 2px;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Export / Print
+                    </button>
                     <a href="{{ route('examination-hub.live-monitoring.index', $exam) }}"
                        class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white transition-all"
                        style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 8px rgba(5,150,105,0.3);">
@@ -112,6 +130,7 @@
             </div>
         @endif
 
+        <div class="no-print">
         {{-- ── STATS STRIP ── --}}
         <div class="grid grid-cols-3 gap-4">
             @foreach([
@@ -134,6 +153,8 @@
                 </div>
             @endforeach
         </div>
+
+        </div>{{-- /no-print --}}
 
         {{-- ── QUESTIONS PANEL ── --}}
         @if(!$exam->hardened_mode || ($exam->starts_at && now()->gte($exam->starts_at)))
@@ -164,7 +185,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </button>
-                            <div x-show="open" x-cloak class="border-t border-slate-50 dark:border-slate-800">
+                            <div :class="open ? '' : 'hidden'" class="border-t border-slate-50 dark:border-slate-800">
                                 @foreach($section->questions as $question)
                                 <div class="px-5 py-4 {{ !$loop->last ? 'border-b border-slate-50 dark:border-slate-800' : '' }}">
                                     <div class="flex items-start gap-3">
@@ -226,6 +247,7 @@
             </div>
         @endif
 
+        <div class="no-print">
         {{-- ── COLLAPSIBLE SECTIONS ── --}}
         <div class="space-y-4">
 
@@ -647,10 +669,11 @@
             @endif
 
         </div>{{-- /collapsible sections --}}
+        </div>{{-- /no-print --}}
 
         {{-- ── CONFIGURED PARTICIPANTS TABLE ── --}}
         @if($configuredParticipants->isNotEmpty())
-            <div x-data="{ open: true }" class="bg-white dark:bg-slate-900 overflow-hidden" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+            <div class="no-print" x-data="{ open: true }" class="bg-white dark:bg-slate-900 overflow-hidden" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <button @click="open = !open" class="flex flex-col gap-2 text-left flex-1 hover:opacity-80 transition-opacity">
                         <div class="flex items-center gap-2">

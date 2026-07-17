@@ -1,4 +1,13 @@
 <div>
+    <style>
+        @media print {
+            html, body { overflow: visible !important; height: auto !important; }
+            .relative.flex.flex-col.flex-1 { overflow: visible !important; height: auto !important; }
+            .no-print { display: none !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+
     {{-- ─── Page Header ──────────────────────────────────────────────────── --}}
     <div class="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-900 shadow-xl border-b-2 border-purple-500 mb-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
@@ -163,6 +172,17 @@
 
                         {{-- Buttons --}}
                         <div class="flex items-center gap-2">
+                            <button
+                                onclick="window.print()"
+                                type="button"
+                                class="no-print text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600
+                                       text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700
+                                       transition-colors flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Export / Print
+                            </button>
                             <button
                                 @click="resetAll()"
                                 x-show="changedCount > 0"

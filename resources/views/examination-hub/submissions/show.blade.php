@@ -1,4 +1,13 @@
 <x-layouts.app>
+    <style>
+        @media print {
+            html, body { overflow: visible !important; height: auto !important; }
+            .relative.flex.flex-col.flex-1 { overflow: visible !important; }
+            .no-print { display: none !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+
     {{-- ═══════════════════════════════════════════════════════════
          PAGE SHELL
     ═══════════════════════════════════════════════════════════ --}}
@@ -10,13 +19,23 @@
              style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
             <div class="h-1 w-full" style="background: linear-gradient(90deg, #0369a1, #38bdf8, #7dd3fc);"></div>
             <div class="px-7 py-6">
-                <a href="{{ route('examination-hub.submissions.index', $exam) }}"
-                   class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors mb-3">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                    Back to Submissions
-                </a>
+                <div class="flex items-center justify-between mb-3">
+                    <a href="{{ route('examination-hub.submissions.index', $exam) }}"
+                       class="no-print inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Submissions
+                    </a>
+                    <button onclick="window.print()"
+                            class="no-print inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-400 transition-colors"
+                            style="border-radius: 2px;">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Export / Print
+                    </button>
+                </div>
                 <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
                     Submission Details
                 </h1>
