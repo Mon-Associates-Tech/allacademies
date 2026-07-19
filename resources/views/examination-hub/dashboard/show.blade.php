@@ -204,6 +204,12 @@
                                                 @if($question->difficulty)
                                                     <span class="text-xs text-slate-400">· {{ ucfirst($question->difficulty) }}</span>
                                                 @endif
+                                                @if($question->excluded_from_grading)
+                                                    <span class="inline-flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800" style="border-radius: 2px;">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                        Excluded from grading
+                                                    </span>
+                                                @endif
                                             </div>
                                             <p class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">{!! nl2br(e($question->question)) !!}</p>
                                             @if($question->isMultipleChoice() && !empty($question->options))
@@ -230,6 +236,42 @@
                                                 <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 italic">{{ $question->explanation }}</p>
                                             @endif
                                         </div>
+                                        {{-- Toggle grading button --}}
+                                        <form method="POST" action="{{ route('examination-hub.questions.toggle-grading', [$exam, $question]) }}"
+                                              x-data="{ open: false }"
+                                              @submit.prevent="if(confirm($el.dataset.confirm)) $el.submit()"
+                                              :data-confirm="{{ $question->excluded_from_grading ? '\'Restore this question to grading? All submissions will be regraded.\'' : '\'Remove this question from grading? All submissions will be regraded.\'' }}">
+                                            @csrf
+                                            @if(!$question->excluded_from_grading)
+                                                <div x-show="open" x-cloak class="mb-2">
+                                                    <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
+                                                        <input type="checkbox" name="award_marks" value="1"
+                                                               class="w-3.5 h-3.5 rounded text-amber-600 border-slate-300 focus:ring-amber-500">
+                                                        Award full marks to all candidates
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center gap-1.5">
+                                                    <button type="button" @click="open = !open"
+                                                            class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium border transition-colors text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                            style="border-radius: 2px;" title="Options">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
+                                                    </button>
+                                                    <button type="submit"
+                                                            class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium border transition-colors text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                                            style="border-radius: 2px;">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                        Remove from grading
+                                                    </button>
+                                                </div>
+                                            @else
+                                                <button type="submit"
+                                                        class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium border transition-colors text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                                                        style="border-radius: 2px;">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    Restore
+                                                </button>
+                                            @endif
+                                        </form>
                                     </div>
                                 </div>
                                 @endforeach

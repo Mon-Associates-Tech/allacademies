@@ -34,7 +34,11 @@ class DashboardController extends Controller
     public function show(GeneralExam $exam): View
     {
         $this->ensureOwnerAccess($exam);
-        $exam->loadCount(['sections', 'questions', 'submissions']);
+        $exam->loadCount([
+            'sections',
+            'questions as questions_count' => fn ($q) => $q->where('excluded_from_grading', false),
+            'submissions',
+        ]);
         $exam->load(['sections.questions', 'participantGroup']);
 
         $configuredParticipants = $exam->configuredParticipants()

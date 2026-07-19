@@ -148,7 +148,7 @@ class ExamTakingController extends Controller
         }
 
         $exam->load([
-            'sections'       => fn ($q) => $q->orderBy('order')->withCount('questions'),
+            'sections'       => fn ($q) => $q->orderBy('order')->withCount(['questions as questions_count' => fn ($q) => $q->where('excluded_from_grading', false)]),
             'academicSubject' => fn ($q) => $q->with('academicLevel'),
         ]);
 
@@ -192,7 +192,7 @@ class ExamTakingController extends Controller
 
         // Show waiting/countdown view if the exam window hasn't opened yet
         if ($exam->starts_at && $exam->starts_at->isFuture()) {
-            $exam->load(['sections' => fn ($q) => $q->orderBy('order')->withCount('questions')]);
+            $exam->load(['sections' => fn ($q) => $q->orderBy('order')->withCount(['questions as questions_count' => fn ($q) => $q->where('excluded_from_grading', false)])]);
 
             return view('examination-hub.take.start', [
                 'exam'              => $exam,
@@ -224,7 +224,7 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')]);
+        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')->where('excluded_from_grading', false)]);
 
         $section = $exam->sections->get($sectionIndex);
 
@@ -489,7 +489,7 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')]);
+        $exam->load(['sections.questions' => fn ($q) => $q->orderBy('order')->where('excluded_from_grading', false)]);
 
         $reviewData          = [];
         $totalQuestions      = 0;
@@ -757,7 +757,7 @@ class ExamTakingController extends Controller
             return;
         }
 
-        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
+        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with(['questions' => fn ($q) => $q->where('excluded_from_grading', false)])]);
 
         // Build a flat set of valid question IDs that belong to this exam
         $validIds = $exam->sections

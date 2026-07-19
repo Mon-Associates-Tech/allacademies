@@ -34,6 +34,8 @@ class GeneralExamQuestion extends Model
         'order',
         'ai_generated',
         'is_edited',
+        'excluded_from_grading',
+        'award_marks_on_exclusion',
         // ── Answer-key traceability ────────────────────────────────────────
         // PK in the source question-bank table (e.g. multiple_choice_questions.id).
         // NULL for AI-generated or manually authored questions.
@@ -45,9 +47,11 @@ class GeneralExamQuestion extends Model
         return [
             'options'            => 'array',
             'keywords'           => 'array',
-            'ai_generated'       => 'boolean',
-            'is_edited'          => 'boolean',
-            'source_question_id' => 'integer',
+            'ai_generated'          => 'boolean',
+            'is_edited'             => 'boolean',
+            'excluded_from_grading'    => 'boolean',
+            'award_marks_on_exclusion' => 'boolean',
+            'source_question_id'       => 'integer',
         ];
     }
 
@@ -237,5 +241,10 @@ class GeneralExamQuestion extends Model
     public function hasSourceQuestion(): bool
     {
         return $this->source_question_id !== null;
+    }
+
+    public function isExcludedFromGrading(): bool
+    {
+        return (bool) $this->excluded_from_grading;
     }
 }

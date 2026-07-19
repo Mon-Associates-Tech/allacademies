@@ -41,9 +41,32 @@ class GeneralExamGradingService
         $gradedResponses     = [];
 
         foreach ($questions as $question) {
+            $questionId = $question->id;
+
+            // Excluded questions: removed from grading entirely.
+            // If award_marks_on_exclusion is set, full marks are given; otherwise skipped.
+            if ($question->excluded_from_grading) {
+                $awardMarks = (bool) $question->award_marks_on_exclusion;
+
+                if ($awardMarks) {
+                    $questionSum += $question->marks;
+                    $rawScore    += $question->marks;
+                }
+
+                $gradedResponses[$questionId] = array_merge(
+                    $submission->responses[$questionId] ?? [],
+                    [
+                        'points_earned'         => $awardMarks ? $question->marks : 0,
+                        'excluded_from_grading' => true,
+                        'award_marks_on_exclusion' => $awardMarks,
+                    ]
+                );
+                continue;
+            }
+
             $questionSum += $question->marks;
-            $questionId   = $question->id;
-            $response     = $submission->getResponse($questionId);
+
+            $response = $submission->getResponse($questionId);
 
             if ($response !== null && $response !== '') {
                 $gradeResult  = $this->gradeQuestion($question, (string) $response);
@@ -323,17 +346,22 @@ class GeneralExamGradingService
 
         $points    = min($question->marks, max(0, $points));
         $responses = $submission->responses ?? [];
+        $key       = (string) $questionId;
 
-        if (isset($responses[$questionId])) {
-            $responses[$questionId]['points_earned']   = $points;
-            $responses[$questionId]['manual_feedback'] = $feedback;
-            $responses[$questionId]['manually_graded'] = true;
-            $responses[$questionId]['graded_by']       = $graderId;
-            $responses[$questionId]['graded_at']       = now()->toISOString();
-            $responses[$questionId]['is_correct']      = $points >= $question->marks * 0.7;
-        }
+        $responses[$key] = array_merge($responses[$key] ?? [], [
+            'points_earned'   => $points,
+            'manual_feedback' => $feedback,
+            'manually_graded' => true,
+            'graded_by'       => $graderId,
+            'graded_at'       => now()->toISOString(),
+            'is_correct'      => $points >= $question->marks * 0.7,
+        ]);
 
-        $totalScore = collect($responses)->sum('points_earned');
+
+        // Excluded questions must not contribute to the score
+        $totalScore = collect($responses)
+            ->filter(fn($r) => empty($r['excluded_from_grading']))
+            ->sum('points_earned');
         $percentage = $submission->total_marks > 0
             ? min(100, ($totalScore / $submission->total_marks) * 100)
             : 0;

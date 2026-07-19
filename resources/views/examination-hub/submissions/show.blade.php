@@ -173,6 +173,25 @@
             $questionsBySection = $exam->questions->groupBy(fn($q) => $q->section?->title ?? 'Unsectioned');
         @endphp
 
+        {{-- ── MANUAL GRADING BANNER ── --}}
+        @if($submission->isGraded())
+        <div class="no-print flex items-center justify-between gap-4 px-5 py-4 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30" style="border-radius: 2px;">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <div>
+                    <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Manual Grading Available</p>
+                    <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">You can override individual question scores below, or use the full grading interface.</p>
+                </div>
+            </div>
+            <a href="{{ route('examination-hub.submissions.grade', [$exam, $submission]) }}"
+               class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white transition-all"
+               style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706); box-shadow: 0 2px 8px rgba(180,83,9,0.25);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Full Grading Interface
+            </a>
+        </div>
+        @endif
+
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
@@ -191,6 +210,8 @@
                             @foreach($questions as $index => $question)
                                 @php
                                     $response     = $responses[$question->id] ?? null;
+                                    // Skip questions excluded from grading — they don't appear in the submission
+                                    if ($response['excluded_from_grading'] ?? $question->excluded_from_grading) continue;
                                     $isCorrect    = $response['is_correct'] ?? null;
                                     $studentAnswer = $response['response'] ?? null;
                                     $pointsEarned = $response['points_earned'] ?? 0;
@@ -330,6 +351,43 @@
                                             <p class="font-semibold">Feedback:</p>
                                             <p class="mt-1">{{ $response['feedback'] }}</p>
                                         </div>
+                                    @endif
+
+                                    {{-- Inline manual grade override --}}
+                                    @if($submission->isGraded() && !($response['excluded_from_grading'] ?? false))
+                                    <div class="no-print mt-4" x-data="{ open: false }">
+                                        <button @click="open = !open"
+                                                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            Override score
+                                        </button>
+                                        <div x-show="open" x-cloak class="mt-2">
+                                            <form method="POST" action="{{ route('examination-hub.submissions.manual-grade', [$exam, $submission]) }}"
+                                                  class="flex items-end gap-2 flex-wrap">
+                                                @csrf
+                                                <input type="hidden" name="question_id" value="{{ $question->id }}">
+                                                <div>
+                                                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Points (max {{ $question->marks }})</label>
+                                                    <input type="number" name="points" step="0.5" min="0" max="{{ $question->marks }}"
+                                                           value="{{ $pointsEarned }}"
+                                                           class="w-24 px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                                           style="border-radius: 2px;" required>
+                                                </div>
+                                                <div class="flex-1 min-w-40">
+                                                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Feedback (optional)</label>
+                                                    <input type="text" name="feedback" placeholder="Reason for override"
+                                                           value="{{ $response['manual_feedback'] ?? '' }}"
+                                                           class="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                                           style="border-radius: 2px;">
+                                                </div>
+                                                <button type="submit"
+                                                        class="px-3 py-1.5 text-xs font-semibold text-white transition-all"
+                                                        style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706);">
+                                                    Save
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                     @endif
                                 </div>
                             @endforeach

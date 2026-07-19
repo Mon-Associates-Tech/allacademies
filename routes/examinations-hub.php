@@ -2,6 +2,7 @@
 
 use App\ExaminationHub\Controllers\DashboardController;
 use App\ExaminationHub\Controllers\ExamCreationController;
+use App\ExaminationHub\Controllers\ExamQuestionController;
 use App\ExaminationHub\Controllers\ExamTakingController;
 use App\ExaminationHub\Controllers\GradingSystemController;
 use App\ExaminationHub\Controllers\HeartbeatController;
@@ -47,6 +48,9 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
     Route::get('/exams/{exam}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
+    Route::post('/exams/{exam}/submissions/{submission}/manual-grade', [SubmissionController::class, 'manualGrade'])->name('submissions.manual-grade');
+
+    Route::post('/exams/{exam}/questions/{question}/toggle-grading', [ExamQuestionController::class, 'toggleGrading'])->name('questions.toggle-grading');
 
     Route::get('/exams/{exam}/participants/{participant}/edit', [ParticipantController::class, 'edit'])->name('participants.configured.edit');
     Route::patch('/exams/{exam}/participants/{participant}', [ParticipantController::class, 'update'])->name('participants.configured.update');
