@@ -50,6 +50,10 @@ class GeneralExamSubmission extends Model
         'score',
         'total_marks',
         'percentage',
+        'bonus_points',
+        'bonus_reason',
+        'bonus_granted_by',
+        'bonus_granted_at',
         'grade',
         'status',
         'requires_manual_review',
@@ -85,6 +89,9 @@ class GeneralExamSubmission extends Model
             'score'                    => 'decimal:2',
             'total_marks'              => 'decimal:2',
             'percentage'               => 'decimal:2',
+            'bonus_points'             => 'decimal:2',
+            'bonus_granted_at'         => 'datetime',
+            'bonus_granted_by'         => 'integer',
         ];
     }
 

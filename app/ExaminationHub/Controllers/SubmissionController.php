@@ -86,6 +86,80 @@ class SubmissionController extends Controller
         return back()->with('success', 'Score updated successfully.');
     }
 
+    public function applyBonus(Request $request, GeneralExam $exam, GeneralExamSubmission $submission): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+        abort_unless($submission->general_exam_id === $exam->id, 404);
+
+        $validated = $request->validate([
+            'bonus_points' => ['required', 'numeric', 'min:0', 'max:100'],
+            'bonus_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $this->gradingService->applyBonus(
+            $submission,
+            (float) $validated['bonus_points'],
+            $validated['bonus_reason'] ?? null,
+            auth()->id()
+        );
+
+        return back()->with('success', 'Bonus applied successfully.');
+    }
+
+    public function removeBonus(GeneralExam $exam, GeneralExamSubmission $submission): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+        abort_unless($submission->general_exam_id === $exam->id, 404);
+
+        $this->gradingService->applyBonus($submission, 0, null, auth()->id());
+
+        return back()->with('success', 'Bonus removed.');
+    }
+
+    public function removeBonusAll(GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $count = $exam->submissions()
+            ->where('bonus_points', '>', 0)
+            ->get()
+            ->each(fn($s) => $this->gradingService->applyBonus($s, 0, null, auth()->id()))
+            ->count();
+
+        return back()->with('success', "Bonus removed from {$count} submission(s).");
+    }
+
+    public function applyBonusAll(Request $request, GeneralExam $exam): RedirectResponse
+    {
+        $this->ensureOwnerAccess($exam);
+
+        $validated = $request->validate([
+            'bonus_points' => ['required', 'numeric', 'min:0', 'max:100'],
+            'bonus_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $submissions = $exam->submissions()
+            ->whereNotNull('submitted_at')
+            ->whereIn('status', [
+                GeneralExamSubmission::STATUS_SUBMITTED,
+                GeneralExamSubmission::STATUS_AUTO_GRADED,
+                GeneralExamSubmission::STATUS_MANUALLY_REVIEWED,
+                GeneralExamSubmission::STATUS_FINAL,
+            ])
+            ->get();
+
+        foreach ($submissions as $submission) {
+            $this->gradingService->applyBonus(
+                $submission,
+                (float) $validated['bonus_points'],
+                $validated['bonus_reason'] ?? null,
+                auth()->id()
+            );
+        }
+
+        return back()->with('success', "Bonus applied to {$submissions->count()} submission(s).");
+    }
+
     public function export(GeneralExam $exam): StreamedResponse
     {
         $this->ensureOwnerAccess($exam);

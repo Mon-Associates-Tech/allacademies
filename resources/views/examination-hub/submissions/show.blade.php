@@ -101,6 +101,56 @@
                             {{ $grade }}
                         </span>
                     </div>
+                    @if(($submission->bonus_points ?? 0) > 0)
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Bonus Applied</p>
+                        <p class="text-base font-semibold text-amber-600 dark:text-amber-400 mt-1">+{{ number_format($submission->bonus_points, 1) }} pts</p>
+                        @if($submission->bonus_reason)
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ $submission->bonus_reason }}</p>
+                        @endif
+                        <form method="POST" action="{{ route('examination-hub.submissions.bonus.remove', [$exam, $submission]) }}" class="mt-1.5"
+                              onsubmit="return confirm('Remove bonus from this submission?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline">Remove bonus</button>
+                        </form>
+                    </div>
+                    @endif
+
+                    {{-- Individual bonus form --}}
+                    <div class="no-print pt-2 border-t border-slate-100 dark:border-slate-800" x-data="{ open: false }">
+                        <button @click="open = !open"
+                                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            {{ ($submission->bonus_points ?? 0) > 0 ? 'Update bonus' : 'Apply bonus' }}
+                        </button>
+                        <div x-show="open" x-cloak class="mt-3">
+                            <form method="POST" action="{{ route('examination-hub.submissions.bonus', [$exam, $submission]) }}">
+                                @csrf
+                                <div class="flex items-end gap-2 flex-wrap">
+                                    <div>
+                                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Bonus pts (max 100)</label>
+                                        <input type="number" name="bonus_points" step="0.5" min="0" max="100"
+                                               value="{{ $submission->bonus_points ?? 0 }}"
+                                               class="w-24 px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                               style="border-radius: 2px;" required>
+                                    </div>
+                                    <div class="flex-1 min-w-36">
+                                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Reason (optional)</label>
+                                        <input type="text" name="bonus_reason"
+                                               value="{{ $submission->bonus_reason ?? '' }}"
+                                               placeholder="Reason for bonus"
+                                               class="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                               style="border-radius: 2px;">
+                                    </div>
+                                    <button type="submit"
+                                            class="px-3 py-1.5 text-xs font-semibold text-white"
+                                            style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706);">
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

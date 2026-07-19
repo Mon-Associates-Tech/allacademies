@@ -106,6 +106,59 @@
             </div>
         </div>
 
+        {{-- ── BULK BONUS ── --}}
+        <div class="no-print" x-data="{ open: false }">
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <button @click="open = !open"
+                        class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-5" style="background: linear-gradient(180deg, #b45309, #d97706); border-radius: 1px;"></div>
+                        <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Apply Bonus to All Participants</h2>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-cloak class="px-5 pb-5">
+                    @if(session('success'))
+                        <div class="mb-3 px-4 py-2.5 text-sm text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800" style="border-radius: 2px;">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Bonus is added to each participant's percentage. Final score is capped at 100%.</p>
+                    <form method="POST" action="{{ route('examination-hub.submissions.bonus-all', $exam) }}"
+                          onsubmit="return confirm('Apply bonus to ALL submitted participants? This cannot be undone automatically.')">
+                        @csrf
+                        <div class="flex items-end gap-3 flex-wrap">
+                            <div>
+                                <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Bonus Points (max 100)</label>
+                                <input type="number" name="bonus_points" step="0.5" min="0" max="100" required
+                                       class="w-28 px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                       style="border-radius: 2px;">
+                            </div>
+                            <div class="flex-1 min-w-48">
+                                <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Reason (optional)</label>
+                                <input type="text" name="bonus_reason" placeholder="e.g. Technical issue during exam"
+                                       class="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                       style="border-radius: 2px;">
+                            </div>
+                            <button type="submit"
+                                    class="px-4 py-1.5 text-sm font-semibold text-white"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706);">
+                                Apply to All
+                            </button>
+                        </div>
+                    </form>
+                    <form method="POST" action="{{ route('examination-hub.submissions.bonus-all.remove', $exam) }}" class="mt-3"
+                          onsubmit="return confirm('Remove bonus from ALL submissions for this exam?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline">Remove all bonuses</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         {{-- ── SUBMISSIONS TABLE ── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
@@ -139,6 +192,9 @@
                                     <div>
                                         <p class="font-semibold text-slate-900 dark:text-white">{{ number_format($submission->percentage ?? 0, 1) }}%</p>
                                         <p class="text-xs text-slate-500 dark:text-slate-400">{{ $submission->score ?? 0 }}/{{ $submission->total_marks ?? 0 }}</p>
+                                        @if(($submission->bonus_points ?? 0) > 0)
+                                            <p class="text-xs text-amber-600 dark:text-amber-400">+{{ number_format($submission->bonus_points, 1) }} bonus</p>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">

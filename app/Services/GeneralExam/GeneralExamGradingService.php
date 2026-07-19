@@ -377,6 +377,40 @@ class GeneralExamGradingService
         return $submission->fresh();
     }
 
+    // ─── Bonus ─────────────────────────────────────────────────────────────
+
+    /**
+     * Apply bonus points to a submission.
+     * The final percentage is capped at 100 regardless of bonus size.
+     * Passing null bonus_points removes any existing bonus.
+     */
+    public function applyBonus(
+        GeneralExamSubmission $submission,
+        float                 $bonusPoints,
+        ?string               $reason = null,
+        ?int                  $grantedBy = null
+    ): GeneralExamSubmission {
+        $bonusPoints = max(0, $bonusPoints);
+
+        // Recompute base percentage from stored score/total_marks (without any prior bonus)
+        $basePercentage = $submission->total_marks > 0
+            ? ($submission->score / $submission->total_marks) * 100
+            : 0;
+
+        $finalPercentage = min(100, round($basePercentage + $bonusPoints, 2));
+
+        $submission->update([
+            'bonus_points'      => $bonusPoints,
+            'bonus_reason'      => $reason,
+            'bonus_granted_by'  => $grantedBy,
+            'bonus_granted_at'  => $bonusPoints > 0 ? now() : null,
+            'percentage'        => $finalPercentage,
+            'grade'             => $this->calculateGrade($finalPercentage),
+        ]);
+
+        return $submission->fresh();
+    }
+
     // ─── Finalisation ─────────────────────────────────────────────────────────
 
     public function finalizeGrading(

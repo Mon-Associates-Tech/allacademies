@@ -49,6 +49,10 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     Route::get('/exams/{exam}/submissions/export-excel', [SubmissionController::class, 'exportExcel'])->name('submissions.export-excel');
     Route::get('/exams/{exam}/submissions/{submission}/grade', [SubmissionController::class, 'grade'])->name('submissions.grade');
     Route::post('/exams/{exam}/submissions/{submission}/manual-grade', [SubmissionController::class, 'manualGrade'])->name('submissions.manual-grade');
+    Route::post('/exams/{exam}/submissions/{submission}/bonus', [SubmissionController::class, 'applyBonus'])->name('submissions.bonus');
+    Route::delete('/exams/{exam}/submissions/{submission}/bonus', [SubmissionController::class, 'removeBonus'])->name('submissions.bonus.remove');
+    Route::post('/exams/{exam}/submissions/bonus-all', [SubmissionController::class, 'applyBonusAll'])->name('submissions.bonus-all');
+    Route::delete('/exams/{exam}/submissions/bonus-all', [SubmissionController::class, 'removeBonusAll'])->name('submissions.bonus-all.remove');
 
     Route::post('/exams/{exam}/questions/{question}/toggle-grading', [ExamQuestionController::class, 'toggleGrading'])->name('questions.toggle-grading');
 
