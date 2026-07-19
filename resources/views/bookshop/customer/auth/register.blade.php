@@ -36,7 +36,7 @@
         {{-- Reuses the project's existing location-selector component so
              region/city map identically onto how orders get resolved to a
              branch later (Phase 4). --}}
-        <x-location-selector
+        <x-bookshop::location-fields
             id-prefix="bookshop-register"
             :country-value="old('country', '')"
             :country-code-value="old('country_code', '')"

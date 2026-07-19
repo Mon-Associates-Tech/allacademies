@@ -153,15 +153,15 @@
                     console.log('Type:', typeof countries);
                     console.log('IsNull:', countries === null);
                     console.log('IsUndefined:', countries === undefined);
-                    
+
                     countrySelect.innerHTML = '<option value="">Select country</option>';
-                    
+
                     if (countries === null || countries === undefined) {
                         console.error('ERROR: countries is null or undefined!');
                         countrySelect.innerHTML += '<option disabled>No countries data</option>';
                         return;
                     }
-                    
+
                     const appendOption = (code, name) => {
                         if (!code || !name) return;
                         const option = new Option(name, code);
@@ -185,16 +185,16 @@
                             console.error('ERROR: countries is not an object despite typeof check');
                             return;
                         }
-                        
+
                         const keys = Object.keys(countries);
                         console.log('Keys count:', keys.length);
                         console.log('Sample keys:', keys.slice(0, 5));
-                        
+
                         if (keys.length === 0) {
                             console.warn('WARNING: Empty countries object');
                             return;
                         }
-                        
+
                         try {
                             const entries = Object.entries(countries);
                             console.log('Entries count:', entries.length);
@@ -210,14 +210,14 @@
                     } else {
                         console.error('Unexpected type:', typeof countries);
                     }
-                    
-                    // Support both {US: "United States"} and [{code:"US", name:"United States"}] shapes
-                    const appendOption = (code, name) => {
-                        if (!code || !name) return;
-                        const option = new Option(name, code);
-                        if (code === initialCountry) option.selected = true;
-                        countrySelect.appendChild(option);
-                    };
+
+                    // // Support both {US: "United States"} and [{code:"US", name:"United States"}] shapes
+                    // const appendOption = (code, name) => {
+                    //     if (!code || !name) return;
+                    //     const option = new Option(name, code);
+                    //     if (code === initialCountry) option.selected = true;
+                    //     countrySelect.appendChild(option);
+                    // };
 
                     if (Array.isArray(countries)) {
                         console.log('Processing countries as array, length:', countries.length);
@@ -252,7 +252,7 @@
                     }
 
                     console.log('Country select populated with options:', countrySelect.options.length);
-                    
+
                     if (countrySelect.value) {
                         countryCodeInput.value = countrySelect.value;
                         loadRegions(countrySelect.value, initialRegion, initialCity);
@@ -310,12 +310,12 @@
                         console.log('Regions is null?:', regions === null);
                         console.log('Regions is undefined?:', regions === undefined);
                         console.log('Regions isArray?:', Array.isArray(regions));
-                        
+
                         if (regions == null) {
                             console.error('Regions data is null or undefined');
                             return;
                         }
-                        
+
                         if (!Array.isArray(regions)) {
                             console.error('Invalid regions data format - expected array, got:', typeof regions, regions);
                             console.log('Attempting to convert to array if possible...');
@@ -327,7 +327,7 @@
                                 return;
                             }
                         }
-                        
+
                         console.log('Regions array length:', regions.length);
                         regionSelect.innerHTML = '<option value="">Select region</option>';
                         regions.forEach((region, index) => {
@@ -372,12 +372,12 @@
                         console.log('Cities is null?:', cities === null);
                         console.log('Cities is undefined?:', cities === undefined);
                         console.log('Cities isArray?:', Array.isArray(cities));
-                        
+
                         if (cities == null) {
                             console.error('Cities data is null or undefined');
                             return;
                         }
-                        
+
                         if (!Array.isArray(cities)) {
                             console.error('Invalid cities data format - expected array, got:', typeof cities, cities);
                             console.log('Attempting to convert to array if possible...');
@@ -389,7 +389,7 @@
                                 return;
                             }
                         }
-                        
+
                         console.log('Cities array length:', cities.length);
                         citySelect.innerHTML = '<option value="">Select city</option>';
                         cities.forEach((city, index) => {
@@ -438,16 +438,16 @@
                             console.warn('Skipping selector without prefix');
                             return;
                         }
-                        
+
                         const countryEl = el.querySelector(`#${prefix}-country`);
                         const country = el.dataset.countryValue || countryEl?.dataset?.value || '';
                         const region = el.dataset.regionValue || '';
                         const city = el.dataset.cityValue || '';
                         const code = el.dataset.countryCodeValue || '';
-                        
+
                         console.log('Initializing selector with prefix:', prefix);
                         console.log('Initial values - country:', country, 'region:', region, 'city:', city, 'code:', code);
-                        
+
                         initLocationSelector(prefix, country, region, city, code);
                     } catch (error) {
                         console.error('Error initializing location selector:', error);

@@ -172,6 +172,8 @@ class AppServiceProvider extends ServiceProvider
             'librarian' => \App\Models\Librarian::class,
             'accountant' => \App\Models\Accountant::class,
             'parent' => \App\Models\StudentParent::class,
+            'staff' => \App\BookShop\Models\Staff::class,
+            'customer' => \App\BookShop\Models\Customer::class,
         ]);
     }
 }

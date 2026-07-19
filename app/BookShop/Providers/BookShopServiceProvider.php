@@ -64,6 +64,14 @@ class BookShopServiceProvider extends ServiceProvider
             'bookshop.staff.branch-check',
             \App\BookShop\Http\Middleware\EnsureStaffHasBranch::class
         );
+        $this->app['router']->aliasMiddleware(
+            'bookshop.staff.password-check',
+            \App\BookShop\Http\Middleware\EnsureStaffHasChangedPassword::class
+        );
+        $this->app['router']->aliasMiddleware(
+            'bookshop.staff.superadmin-only',
+            \App\BookShop\Http\Middleware\EnsureStaffIsSuperAdmin::class
+        );
 
         // Kept in their own subfolder (database/migrations/bookshop) rather than
         // the app's root migrations folder, both so this doesn't double-register
@@ -71,5 +79,21 @@ class BookShopServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(database_path('migrations/bookshop'));
         $this->loadRoutesFrom(base_path('routes/bookshop.php'));
         $this->loadViewsFrom(resource_path('views/bookshop'), 'bookshop');
+
+        // Blade's <x-namespace::name> tag syntax does NOT resolve through
+        // the view namespace registered by loadViewsFrom() above — by
+        // convention it looks for "{namespace}::components.{name}" (i.e.
+        // it silently expects a components/ subfolder). Since this module's
+        // views are organized by feature (layouts/, staff/branches/, etc.)
+        // rather than nested under components/, we register the same
+        // directory explicitly as an anonymous-component source instead.
+        // Both registrations can point at the same directory without
+        // conflicting: loadViewsFrom() handles view('bookshop::...') /
+        // @include('bookshop::...') calls from controllers, while this
+        // handles <x-bookshop::...> tags inside Blade templates.
+        \Illuminate\Support\Facades\Blade::anonymousComponentPath(
+            resource_path('views/bookshop'),
+            'bookshop'
+        );
     }
 }

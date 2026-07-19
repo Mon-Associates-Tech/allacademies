@@ -4,6 +4,7 @@ namespace App\BookShop\Models;
 
 use App\BookShop\Enums\StaffRole;
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class Staff extends Model implements AuthenticatableContract, MustVerifyEmail
 {
-    use Authenticatable, Authorizable, HasFactory, Notifiable;
+    use Authenticatable, Authorizable, HasFactory, MustVerifyEmailTrait, Notifiable;
 
     protected $table = 'bookshop_staff';
 
@@ -63,5 +64,18 @@ class Staff extends Model implements AuthenticatableContract, MustVerifyEmail
     public function isBranchAdmin(): bool
     {
         return $this->role === StaffRole::ADMIN;
+    }
+
+    /**
+     * Overrides HasDatabaseNotifications (pulled in via Notifiable), which
+     * hardcodes Illuminate\Notifications\DatabaseNotification against the
+     * host app's default `notifications` table. Points at our own
+     * bookshop_notifications table instead — readNotifications() /
+     * unreadNotifications() from the trait build on top of this method,
+     * so overriding just this is sufficient.
+     */
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
     }
 }

@@ -23,7 +23,6 @@
         "laravel/reverb": "*",
         "laravel/sanctum": "*",
         "laravel/telescope": "^5.7",
-        "laravel/tinker": "^2.7",
         "league/commonmark": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^3.6",

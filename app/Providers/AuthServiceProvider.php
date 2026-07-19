@@ -10,8 +10,13 @@ use App\Models\Lms\Course;
 use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\Librarian;
+use App\Models\Administrator;
 use App\Policies\CoursePolicy;
 use App\Policies\RolePolicy;
+use App\Policies\StudentPolicy;
 use App\Policies\UserTokenSubscriptionPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -26,24 +31,24 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         //        Role::class => RolePolicy::class,
         Student::class => StudentPolicy::class,
-        Teacher::class => TeacherPolicy::class,
-        Librarian::class => LibrarianPolicy::class,
-        Administrator::class => AdministratorPolicy::class,
-        Author::class => AuthorPolicy::class,
-        Book::class => BookPolicy::class,
-        BookCategory::class => BookCategoryPolicy::class,
-        BookBorrowing::class => BookBorrowingPolicy::class,
-        BookSubscription::class => BookSubscriptionPolicy::class,
-        GroupBookSubscription::class => GroupBookSubscriptionPolicy::class,
-        BookApproval::class => BookApprovalPolicy::class,
-        Assessment::class => AssessmentPolicy::class,
-        StudentGroup::class => StudentGroupPolicy::class,
-        Lesson::class => LessonPolicy::class,
-        LessonNote::class => LessonNotePolicy::class,
-        Subject::class => SubjectPolicy::class,
-        Topic::class => TopicPolicy::class,
-        UserTokenSubscription::class => UserTokenSubscriptionPolicy::class,
-        Course::class => CoursePolicy::class,
+        Teacher::class => \App\Policies\TeacherPolicy::class,
+        Librarian::class => \App\Policies\LibrarianPolicy::class,
+        Administrator::class => \App\Policies\AdministratorPolicy::class,
+        \App\Models\Author::class => \App\Policies\AuthorPolicy::class,
+        \App\Models\Book::class => \App\Policies\BookPolicy::class,
+        \App\Models\BookCategory::class => \App\Policies\BookCategoryPolicy::class,
+        \App\Models\BookBorrowing::class => \App\Policies\BookBorrowingPolicy::class,
+        \App\Models\BookSubscription::class => \App\Policies\BookSubscriptionPolicy::class,
+        \App\Models\GroupBookSubscription::class => \App\Policies\GroupBookSubscriptionPolicy::class,
+        \App\Models\BookApproval::class => \App\Policies\BookApprovalPolicy::class,
+        \App\Models\Assessment::class => \App\Policies\AssessmentPolicy::class,
+        \App\Models\StudentGroup::class => \App\Policies\StudentGroupPolicy::class,
+        \App\Models\Lesson::class => \App\Policies\LessonPolicy::class,
+        \App\Models\LessonNote::class => \App\Policies\LessonNotePolicy::class,
+        \App\Models\AcademicSubject::class => \App\Policies\SubjectPolicy::class,
+        \App\Models\AcademicTopic::class => \App\Policies\TopicPolicy::class,
+        \App\Models\Chat\UserTokenSubscription::class => \App\Policies\UserTokenSubscriptionPolicy::class,
+        \App\Models\Lms\Course::class => CoursePolicy::class,
 
     ];
 

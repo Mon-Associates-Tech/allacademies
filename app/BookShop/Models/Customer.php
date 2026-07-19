@@ -3,11 +3,13 @@
 namespace App\BookShop\Models;
 
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 
@@ -22,7 +24,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class Customer extends Model implements AuthenticatableContract, MustVerifyEmail
 {
-    use Authenticatable, Authorizable, HasFactory, Notifiable;
+    use Authenticatable, Authorizable, HasFactory, MustVerifyEmailTrait, Notifiable;
 
     protected $table = 'bookshop_customers';
 
@@ -61,5 +63,18 @@ class Customer extends Model implements AuthenticatableContract, MustVerifyEmail
         return $this->belongsTo(Branch::class, 'preferred_branch_id');
     }
 
-    // public function orders(): HasMany { return $this->hasMany(Order::class); } // Phase 4
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * See Staff::notifications() for why this override exists - same
+     * reasoning, points at bookshop_notifications instead of the
+     * framework default table.
+     */
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
+    }
 }
