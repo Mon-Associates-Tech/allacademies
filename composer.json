@@ -19,6 +19,7 @@
         "intervention/image": "^3.11",
         "jenssegers/agent": "^2.6",
         "lab404/laravel-impersonate": "*",
+        "laravel/ai": "^0.9.1",
         "laravel/framework": "^13.8",
         "laravel/reverb": "*",
         "laravel/sanctum": "*",
