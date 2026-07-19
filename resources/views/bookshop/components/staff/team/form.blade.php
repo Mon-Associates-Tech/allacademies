@@ -56,7 +56,7 @@
             @if($staffMember)
                 Leave blank to keep their current password.
             @else
-                Share this with them directly — there's no invite email yet, so they'll need it from you to log in the first time.
+                We'll email them this password directly. They'll be asked to change it on first login.
             @endif
         </p>
     </div>

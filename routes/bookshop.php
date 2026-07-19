@@ -81,7 +81,7 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
 
             Route::get('notifications', [StaffNotificationController::class, 'index'])->name('notifications.index');
             Route::patch('notifications/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-            Route::patch('notifications/{notification}/read', [StaffNotificationController::class, 'markAsRead'])->name('notifications.read');
+            Route::get('notifications/{notification}/open', [StaffNotificationController::class, 'open'])->name('notifications.open');
 
             // Index: both roles. Create/store: branch admins only (enforced
             // in the controller, since a superadmin has no branch of their
@@ -152,7 +152,7 @@ Route::prefix('bookshop/shop')->name('bookshop.shop.')->group(function () {
 
         Route::get('notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');
         Route::patch('notifications/mark-all-read', [CustomerNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-        Route::patch('notifications/{notification}/read', [CustomerNotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::get('notifications/{notification}/open', [CustomerNotificationController::class, 'open'])->name('notifications.open');
     });
 });
 

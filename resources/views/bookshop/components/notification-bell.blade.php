@@ -35,14 +35,12 @@
 
         <div class="max-h-80 overflow-y-auto">
             @forelse($recent as $notification)
-                <form method="POST" action="{{ route($routePrefix.'notifications.read', $notification->id) }}">
-                    @csrf @method('PATCH')
-                    <button type="submit" class="w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 {{ $notification->read_at ? 'opacity-60' : '' }}">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ $notification->data['body'] ?? '' }}</p>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                    </button>
-                </form>
+                <a href="{{ route($routePrefix.'notifications.open', $notification->id) }}"
+                   class="block w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 {{ $notification->read_at ? 'opacity-60' : '' }}">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ $notification->data['body'] ?? '' }}</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                </a>
             @empty
                 <p class="px-4 py-6 text-sm text-slate-500 dark:text-slate-400 text-center">No notifications yet.</p>
             @endforelse

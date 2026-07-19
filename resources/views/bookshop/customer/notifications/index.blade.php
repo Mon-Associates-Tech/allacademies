@@ -9,22 +9,19 @@
 
     <div class="bg-white dark:bg-slate-900 overflow-hidden" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
         @forelse($notifications as $notification)
-            <form method="POST" action="{{ route('bookshop.shop.notifications.read', $notification->id) }}"
-                  class="border-b border-slate-100 dark:border-slate-800 last:border-0">
-                @csrf @method('PATCH')
-                <button type="submit" class="w-full text-left px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-start gap-3 {{ $notification->read_at ? 'opacity-60' : '' }}">
-                    @if(! $notification->read_at)
-                        <span class="w-2 h-2 mt-1.5 bg-purple-500 flex-shrink-0" style="border-radius: 2px;"></span>
-                    @else
-                        <span class="w-2 h-2 mt-1.5 flex-shrink-0"></span>
-                    @endif
-                    <span class="flex-1">
-                        <span class="block text-sm font-semibold text-slate-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</span>
-                        <span class="block text-sm text-slate-500 dark:text-slate-400 mt-0.5">{{ $notification->data['body'] ?? '' }}</span>
-                        <span class="block text-xs text-slate-400 dark:text-slate-500 mt-1">{{ $notification->created_at->diffForHumans() }}</span>
-                    </span>
-                </button>
-            </form>
+            <a href="{{ route('bookshop.shop.notifications.open', $notification->id) }}"
+               class="block w-full text-left px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800 last:border-0 {{ $notification->read_at ? 'opacity-60' : '' }}">
+                @if(! $notification->read_at)
+                    <span class="w-2 h-2 mt-1.5 bg-purple-500 flex-shrink-0" style="border-radius: 2px;"></span>
+                @else
+                    <span class="w-2 h-2 mt-1.5 flex-shrink-0"></span>
+                @endif
+                <span class="flex-1">
+                    <span class="block text-sm font-semibold text-slate-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</span>
+                    <span class="block text-sm text-slate-500 dark:text-slate-400 mt-0.5">{{ $notification->data['body'] ?? '' }}</span>
+                    <span class="block text-xs text-slate-400 dark:text-slate-500 mt-1">{{ $notification->created_at->diffForHumans() }}</span>
+                </span>
+            </a>
         @empty
             <p class="px-5 py-12 text-center text-sm text-slate-500 dark:text-slate-400">No notifications yet.</p>
         @endforelse

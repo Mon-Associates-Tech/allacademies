@@ -21,7 +21,13 @@ class NotificationController extends Controller
         return view('bookshop::staff.notifications.index', compact('notifications'));
     }
 
-    public function markAsRead(Notification $notification): RedirectResponse
+    /**
+     * GET-navigable and reachable via a plain link (not a PATCH-only form) -
+     * matches how notification links work everywhere else (Slack, GitHub,
+     * email): click it, it opens, it happens to also mark itself read.
+     * Bookmarkable/shareable as a side effect of being a real GET route.
+     */
+    public function open(Notification $notification): RedirectResponse
     {
         $this->authorizeOwnership($notification);
 

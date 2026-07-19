@@ -37,9 +37,6 @@
             color: #64748b; /* slate-500 */
             margin-bottom: 0.5rem;
         }
-        .dark .bookshop-location-fields label {
-            color: #94a3b8; /* slate-400 */
-        }
 
         .bookshop-location-fields select,
         .bookshop-location-fields input[type="text"] {
@@ -53,12 +50,6 @@
             box-shadow: none !important;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
-        .dark .bookshop-location-fields select,
-        .dark .bookshop-location-fields input[type="text"] {
-            background-color: #1e293b !important; /* slate-800 */
-            border-color: #334155 !important; /* slate-700 */
-            color: #fff !important;
-        }
 
         .bookshop-location-fields select:focus,
         .bookshop-location-fields input[type="text"]:focus {
@@ -71,12 +62,35 @@
             background-color: #f1f5f9 !important; /* slate-100 */
             opacity: 1 !important;
         }
-        .dark .bookshop-location-fields select:disabled {
-            background-color: #334155 !important; /* slate-700 */
-        }
 
         .bookshop-location-fields svg {
             color: #94a3b8 !important; /* slate-400, matches the rest of the module's icon tone */
+        }
+
+        /*
+         * This module's layouts load Tailwind via the CDN script
+         * (<script src="https://cdn.tailwindcss.com">), which defaults to
+         * the "media" dark-mode strategy unless explicitly configured
+         * otherwise — meaning every dark: utility elsewhere in BookShop
+         * responds to prefers-color-scheme, NOT a `.dark` class on the
+         * page. A `.dark ...` selector here would never match, since
+         * nothing in this standalone shell ever adds that class. Using
+         * the same media query keeps this override consistent with how
+         * the rest of the module's dark mode actually behaves.
+         */
+        @media (prefers-color-scheme: dark) {
+            .bookshop-location-fields label {
+                color: #94a3b8; /* slate-400 */
+            }
+            .bookshop-location-fields select,
+            .bookshop-location-fields input[type="text"] {
+                background-color: #1e293b !important; /* slate-800 */
+                border-color: #334155 !important; /* slate-700 */
+                color: #fff !important;
+            }
+            .bookshop-location-fields select:disabled {
+                background-color: #334155 !important; /* slate-700 */
+            }
         }
     </style>
 @endonce
