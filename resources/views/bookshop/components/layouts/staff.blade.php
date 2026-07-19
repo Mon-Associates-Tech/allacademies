@@ -12,12 +12,17 @@
 </head>
 <body class="min-h-screen bg-slate-100 dark:bg-slate-950" style="font-family: 'system-ui', -apple-system, sans-serif;">
 
+<<<<<<< HEAD:resources/views/bookshop/components/layouts/staff.blade.php
 <div class="overflow-hiddend" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+=======
+<div class="overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
+>>>>>>> 1e2fa793faca0e8484f60038887ede5040bf486d:resources/views/bookshop/layouts/staff.blade.php
     <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center gap-8">
             <span class="text-white font-bold" style="font-family: 'Georgia', serif; letter-spacing: -0.02em;">BookShop</span>
             <nav class="flex items-center gap-5 text-sm">
+<<<<<<< HEAD:resources/views/bookshop/components/layouts/staff.blade.php
                 <x-bookshop::nav-link route="bookshop.staff.dashboard">Dashboard</x-bookshop::nav-link>
                 <x-bookshop::nav-link route="bookshop.staff.orders.index" :active="['bookshop.staff.orders.*']">Orders</x-bookshop::nav-link>
                 <x-bookshop::nav-link route="bookshop.staff.books.index" :active="['bookshop.staff.books.*']">Books</x-bookshop::nav-link>
@@ -38,6 +43,22 @@
                 <button type="submit" class="text-sm text-slate-300 hover:text-white transition-colors">Sign Out ({{ $staff?->name }})</button>
             </form>
         </div>
+=======
+                <a href="{{ route('bookshop.staff.dashboard') }}" class="text-slate-300 hover:text-white transition-colors">Dashboard</a>
+                <a href="{{ route('bookshop.staff.orders.index') }}" class="text-slate-300 hover:text-white transition-colors">Orders</a>
+                <a href="{{ route('bookshop.staff.books.index') }}" class="text-slate-300 hover:text-white transition-colors">Books</a>
+                <a href="{{ route('bookshop.staff.stock.index') }}" class="text-slate-300 hover:text-white transition-colors">Stock</a>
+                @if($staff?->isSuperAdmin())
+                    <a href="{{ route('bookshop.staff.branches.index') }}" class="text-slate-300 hover:text-white transition-colors">Branches</a>
+                    <a href="{{ route('bookshop.staff.categories.index') }}" class="text-slate-300 hover:text-white transition-colors">Categories</a>
+                @endif
+            </nav>
+        </div>
+        <form method="POST" action="{{ route('bookshop.staff.logout') }}">
+            @csrf
+            <button type="submit" class="text-sm text-slate-300 hover:text-white transition-colors">Sign Out ({{ $staff?->name }})</button>
+        </form>
+>>>>>>> 1e2fa793faca0e8484f60038887ede5040bf486d:resources/views/bookshop/layouts/staff.blade.php
     </div>
 </div>
 
@@ -60,6 +81,9 @@
     {{ $slot }}
 </div>
 
+<<<<<<< HEAD:resources/views/bookshop/components/layouts/staff.blade.php
 @stack('scripts')
+=======
+>>>>>>> 1e2fa793faca0e8484f60038887ede5040bf486d:resources/views/bookshop/layouts/staff.blade.php
 </body>
 </html>
