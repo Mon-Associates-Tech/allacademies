@@ -36,13 +36,18 @@
             @if(! $branch)
                 <div class="px-4 py-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800" style="border-radius: 2px;">
                     No branch currently serves your region yet, so this can't be ordered right now.
+                    <a href="{{ route('bookshop.shop.branches.index') }}" class="underline font-medium">Choose a branch &rarr;</a>
                 </div>
             @elseif($availableQuantity < 1)
                 <div class="px-4 py-3 text-sm text-slate-600 bg-slate-50 border border-slate-200 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700" style="border-radius: 2px;">
-                    Out of stock at {{ $branch->name }} right now.
+                    Out of stock at {{ $branch->name }}.
+                    <a href="{{ route('bookshop.shop.branches.index') }}" class="underline font-medium">Try another branch &rarr;</a>
                 </div>
             @else
-                <p class="text-sm text-emerald-700 dark:text-emerald-400 font-medium">{{ $availableQuantity }} available at {{ $branch->name }}</p>
+                <p class="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                    {{ $availableQuantity }} available at {{ $branch->name }}
+                    <a href="{{ route('bookshop.shop.branches.index') }}" class="text-slate-400 dark:text-slate-500 font-normal underline">(switch branch)</a>
+                </p>
             @endif
 
             @if($book->hasPreview())
@@ -58,25 +63,21 @@
             @endif
 
             @if($branch && $availableQuantity > 0)
-                <form method="POST" action="{{ route('bookshop.shop.orders.store') }}" class="pt-2">
+                <form method="POST" action="{{ route('bookshop.shop.cart.add') }}" class="pt-2">
                     @csrf
+                    <input type="hidden" name="book_id" value="{{ $book->id }}">
                     <div class="flex items-center gap-3">
                         <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Quantity</label>
-                        <input type="number" name="quantities[{{ $book->id }}]" min="1" max="{{ $availableQuantity }}" value="1"
+                        <input type="number" name="quantity" min="1" max="{{ $availableQuantity }}" value="1"
                                class="w-20 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                style="border-radius: 2px;">
-                    </div>
-                    <div class="mt-3">
-                        <label class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Notes (optional)</label>
-                        <textarea name="notes" rows="2" placeholder="Any special instructions for this order..."
-                                  class="mt-1 w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                  style="border-radius: 2px;"></textarea>
                     </div>
                     <button type="submit"
                             class="mt-4 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 text-sm font-semibold text-white transition-all"
                             style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
-                        Place Order
+                        Add to Cart
                     </button>
+                    <a href="{{ route('bookshop.shop.cart.show') }}" class="block mt-2 text-center sm:text-left text-xs text-slate-500 dark:text-slate-400 underline">View Cart</a>
                 </form>
             @endif
 

@@ -29,6 +29,11 @@
             <div class="bg-white dark:bg-slate-900 overflow-hidden"
                  style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
                 <div class="p-7">
+                    @if(session('status'))
+                        <div class="mb-5 px-4 py-3 text-sm text-purple-800 bg-purple-50 border border-purple-200 dark:text-purple-200 dark:bg-purple-900/30 dark:border-purple-800" style="border-radius: 2px;">
+                            {{ session('status') }}
+                        </div>
+                    @endif
                     {{ $slot }}
                 </div>
             </div>

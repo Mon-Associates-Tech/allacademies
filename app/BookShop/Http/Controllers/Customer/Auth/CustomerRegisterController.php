@@ -4,6 +4,7 @@ namespace App\BookShop\Http\Controllers\Customer\Auth;
 
 use App\BookShop\Http\Controllers\Controller;
 use App\BookShop\Models\Customer;
+use App\BookShop\Services\CartService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,10 @@ use Illuminate\View\View;
 
 class CustomerRegisterController extends Controller
 {
+    public function __construct(private readonly CartService $cart)
+    {
+    }
+
     public function create(): View
     {
         return view('bookshop::customer.auth.register');
@@ -33,14 +38,20 @@ class CustomerRegisterController extends Controller
 
         $data['password'] = Hash::make($data['password']);
 
-        $customer = Customer::create($data);
+        // If they were browsing as a guest and already picked a branch,
+        // carry that choice onto the new account rather than dropping it
+        // and making them pick again right after registering.
+        $data['preferred_branch_id'] = $this->cart->branchId();
 
-        // Branch resolution from region/city -> Branch happens properly in
-        // Phase 4 (order placement). Nothing wired to preferred_branch_id yet.
+        $customer = Customer::create($data);
 
         Auth::guard('bookshop_customer')->login($customer);
         $request->session()->regenerate();
 
-        return redirect()->route('bookshop.shop.home');
+        // The cart itself (session-based) survives session regenerate()
+        // untouched - regenerate() cycles the session ID to prevent
+        // fixation, it doesn't clear session data. So a guest's cart is
+        // still right there once they land back on it.
+        return redirect()->route('bookshop.shop.cart.show');
     }
 }

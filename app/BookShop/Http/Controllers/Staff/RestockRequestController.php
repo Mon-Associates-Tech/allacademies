@@ -4,7 +4,6 @@ namespace App\BookShop\Http\Controllers\Staff;
 
 use App\BookShop\Exceptions\OrderPlacementException;
 use App\BookShop\Http\Controllers\Controller;
-use App\BookShop\Models\Book;
 use App\BookShop\Models\RestockRequest;
 use App\BookShop\Models\Staff;
 use App\BookShop\Services\RestockService;
@@ -46,9 +45,7 @@ class RestockRequestController extends Controller
         $staff = Auth::guard('bookshop_staff')->user();
         abort_if($staff->isSuperAdmin(), 403, 'Super admins allocate stock directly rather than filing a request.');
 
-        $prefillBook = old('book_id') ? Book::find(old('book_id')) : null;
-
-        return view('bookshop::staff.restock-requests.create', compact('prefillBook'));
+        return view('bookshop::staff.restock-requests.create');
     }
 
     public function store(Request $request): RedirectResponse
@@ -58,21 +55,22 @@ class RestockRequestController extends Controller
         abort_if($staff->isSuperAdmin(), 403);
 
         $data = $request->validate([
-            'book_id' => ['required', 'exists:bookshop_books,id'],
-            'requested_quantity' => ['required', 'integer', 'min:1'],
+            'items' => ['required', 'array'],
+            'items.*.book_id' => ['nullable', 'exists:bookshop_books,id'],
+            'items.*.quantity' => ['nullable', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $book = Book::findOrFail($data['book_id']);
-
         try {
-            $this->restockService->createRequest($staff, $book, $data['requested_quantity'], $data['notes'] ?? null);
+            $requests = $this->restockService->createBatch($staff, $data['items'], $data['notes'] ?? null);
         } catch (OrderPlacementException $e) {
-            return back()->withErrors(['request' => $e->getMessage()])->withInput();
+            return back()->withErrors(['items' => $e->getMessage()])->withInput();
         }
 
+        $count = $requests->count();
+
         return redirect()->route('bookshop.staff.restock-requests.index')
-            ->with('status', "Restock request for \"{$book->title}\" submitted.");
+            ->with('status', "Restock request".($count > 1 ? "s" : "")." for {$count} book(s) submitted.");
     }
 
     public function approve(RestockRequest $restockRequest): RedirectResponse

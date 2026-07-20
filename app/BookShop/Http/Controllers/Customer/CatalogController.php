@@ -5,8 +5,8 @@ namespace App\BookShop\Http\Controllers\Customer;
 use App\BookShop\Http\Controllers\Controller;
 use App\BookShop\Models\Book;
 use App\BookShop\Models\Category;
-use App\BookShop\Models\Customer;
 use App\BookShop\Services\BranchResolutionService;
+use App\BookShop\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -21,15 +21,17 @@ class CatalogController extends Controller
         'newest' => ['created_at', 'desc'],
     ];
 
-    public function __construct(private readonly BranchResolutionService $branchResolver)
-    {
+    public function __construct(
+        private readonly BranchResolutionService $branchResolver,
+        private readonly CartService $cart,
+    ) {
     }
 
     public function index(Request $request): View
     {
-        /** @var Customer $customer */
+        /** @var \App\BookShop\Models\Customer|null $customer */
         $customer = Auth::guard('bookshop_customer')->user();
-        $branch = $this->branchResolver->resolveForCustomer($customer);
+        $branch = $this->branchResolver->resolveCurrentShoppingBranch($customer, $this->cart);
 
         $sortKey = $request->string('sort')->value();
         [$sortColumn, $sortDirection] = self::SORTS[$sortKey] ?? self::SORTS['title_asc'];

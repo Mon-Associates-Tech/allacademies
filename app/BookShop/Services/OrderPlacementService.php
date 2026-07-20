@@ -18,17 +18,12 @@ use Illuminate\Support\Facades\Notification;
 
 class OrderPlacementService
 {
-    public function __construct(
-        private readonly BranchResolutionService $branchResolver,
-    ) {
-    }
-
     /**
      * @param  array<int, int>  $items  book_id => quantity
      *
      * @throws OrderPlacementException
      */
-    public function place(Customer $customer, array $items, ?string $notes = null): Order
+    public function place(Customer $customer, Branch $branch, array $items, ?string $notes = null): Order
     {
         $items = array_filter($items, fn ($quantity) => (int) $quantity > 0);
 
@@ -36,12 +31,8 @@ class OrderPlacementService
             throw new OrderPlacementException('Select at least one book and quantity to place an order.');
         }
 
-        $branch = $this->branchResolver->resolveForCustomer($customer);
-
-        if (! $branch) {
-            throw new OrderPlacementException(
-                'No branch currently serves your region yet. Please contact support or update your location.'
-            );
+        if (! $branch->is_active) {
+            throw new OrderPlacementException('That branch is no longer accepting orders. Please choose a different one.');
         }
 
         // Notifications are dispatched AFTER the transaction commits, not

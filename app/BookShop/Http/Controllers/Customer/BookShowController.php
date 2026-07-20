@@ -4,24 +4,26 @@ namespace App\BookShop\Http\Controllers\Customer;
 
 use App\BookShop\Http\Controllers\Controller;
 use App\BookShop\Models\Book;
-use App\BookShop\Models\Customer;
 use App\BookShop\Services\BranchResolutionService;
+use App\BookShop\Services\CartService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class BookShowController extends Controller
 {
-    public function __construct(private readonly BranchResolutionService $branchResolver)
-    {
+    public function __construct(
+        private readonly BranchResolutionService $branchResolver,
+        private readonly CartService $cart,
+    ) {
     }
 
     public function show(Book $book): View
     {
         abort_unless($book->is_active, 404);
 
-        /** @var Customer $customer */
+        /** @var \App\BookShop\Models\Customer|null $customer */
         $customer = Auth::guard('bookshop_customer')->user();
-        $branch = $this->branchResolver->resolveForCustomer($customer);
+        $branch = $this->branchResolver->resolveCurrentShoppingBranch($customer, $this->cart);
 
         $book->load('category');
 

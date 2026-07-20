@@ -4,6 +4,8 @@ use App\BookShop\Http\Controllers\Customer\Auth\CustomerRegisterController;
 use App\BookShop\Http\Controllers\Customer\Auth\CustomerSignInController;
 use App\BookShop\Http\Controllers\Customer\Auth\CustomerSignOutController;
 use App\BookShop\Http\Controllers\Customer\BookShowController;
+use App\BookShop\Http\Controllers\Customer\BranchSwitchController;
+use App\BookShop\Http\Controllers\Customer\CartController;
 use App\BookShop\Http\Controllers\Customer\CatalogController;
 use App\BookShop\Http\Controllers\Customer\CustomerHomeController;
 use App\BookShop\Http\Controllers\Customer\NotificationController as CustomerNotificationController;
@@ -15,6 +17,7 @@ use App\BookShop\Http\Controllers\Staff\BookController;
 use App\BookShop\Http\Controllers\Staff\BranchController;
 use App\BookShop\Http\Controllers\Staff\BranchPendingController;
 use App\BookShop\Http\Controllers\Staff\CategoryController;
+use App\BookShop\Http\Controllers\Staff\CustomerController as StaffCustomerController;
 use App\BookShop\Http\Controllers\Staff\NotificationController as StaffNotificationController;
 use App\BookShop\Http\Controllers\Staff\OrderController as StaffOrderController;
 use App\BookShop\Http\Controllers\Staff\RestockRequestController;
@@ -91,6 +94,9 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
             Route::get('restock-requests/create', [RestockRequestController::class, 'create'])->name('restock-requests.create');
             Route::post('restock-requests', [RestockRequestController::class, 'store'])->name('restock-requests.store');
 
+            Route::get('customers', [StaffCustomerController::class, 'index'])->name('customers.index');
+            Route::post('customers/send-email', [StaffCustomerController::class, 'sendEmail'])->name('customers.send-email');
+
             Route::middleware('bookshop.staff.superadmin-only')->group(function () {
                 Route::get('team', [StaffController::class, 'index'])->name('team.index');
                 Route::get('team/create', [StaffController::class, 'create'])->name('team.create');
@@ -139,15 +145,32 @@ Route::prefix('bookshop/shop')->name('bookshop.shop.')->group(function () {
         Route::post('login', [CustomerSignInController::class, 'store']);
     });
 
+    // Public - no account required. A guest can browse the catalog, view
+    // book detail pages, pick a branch, and build up a cart entirely
+    // anonymously. Auth::guard('bookshop_customer')->user() returns null
+    // for guests throughout these controllers, which is handled
+    // explicitly rather than assumed away.
+    Route::get('catalog', [CatalogController::class, 'index'])->name('catalog');
+    Route::get('books/{book}', [BookShowController::class, 'show'])->name('books.show');
+
+    Route::get('branches', [BranchSwitchController::class, 'index'])->name('branches.index');
+    Route::post('branches/{branch}/switch', [BranchSwitchController::class, 'switch'])->name('branches.switch');
+
+    Route::get('cart', [CartController::class, 'show'])->name('cart.show');
+    Route::post('cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::put('cart', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('cart/{book}', [CartController::class, 'remove'])->name('cart.remove');
+    // Also public - checkout() checks auth internally and redirects a
+    // guest to registration rather than relying on route middleware (see
+    // the docblock on CartController for why: POST + intended-URL
+    // redirects after login don't resubmit the original POST).
+    Route::post('cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+
     Route::middleware('bookshop.auth:bookshop_customer')->group(function () {
         Route::get('home', [CustomerHomeController::class, 'index'])->name('home');
         Route::post('logout', [CustomerSignOutController::class, 'store'])->name('logout');
 
-        Route::get('catalog', [CatalogController::class, 'index'])->name('catalog');
-        Route::get('books/{book}', [BookShowController::class, 'show'])->name('books.show');
-
         Route::get('orders', [CustomerOrderController::class, 'index'])->name('orders.index');
-        Route::post('orders', [CustomerOrderController::class, 'store'])->name('orders.store');
         Route::get('orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
 
         Route::get('notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');

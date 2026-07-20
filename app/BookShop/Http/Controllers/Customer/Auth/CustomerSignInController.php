@@ -44,6 +44,6 @@ class CustomerSignInController extends Controller
             ]);
         }
 
-        return redirect()->intended(route('bookshop.shop.home'));
+        return redirect()->intended(route('bookshop.shop.cart.show'));
     }
 }

@@ -54,9 +54,11 @@ class Customer extends Model implements AuthenticatableContract, MustVerifyEmail
     ];
 
     /**
-     * The branch a customer's region resolves to for order fulfillment.
-     * Set/refreshed at order time via a resolution service (Phase 4) —
-     * kept here as a cached convenience pointer, not the source of truth.
+     * The branch a customer is currently shopping at. Set by
+     * BranchSwitchController when they explicitly switch, and used as a
+     * fallback by BranchResolutionService::resolveCurrentShoppingBranch()
+     * ahead of the region-based default - no longer just a cached
+     * convenience pointer now that cross-branch shopping is a real flow.
      */
     public function preferredBranch(): BelongsTo
     {
@@ -76,5 +78,27 @@ class Customer extends Model implements AuthenticatableContract, MustVerifyEmail
     public function notifications()
     {
         return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Single source of truth for which customers a staff member can see,
+     * matching the Branch/Order/RestockRequest scopeVisibleTo(Staff)
+     * pattern:
+     *  - superadmin: unrestricted, sees every customer
+     *  - admin: customers whose current shopping branch is theirs, OR
+     *    who have placed at least one order there - catches customers
+     *    who ordered cross-branch even if their preferred branch is
+     *    elsewhere.
+     */
+    public function scopeVisibleTo($query, Staff $staff)
+    {
+        if ($staff->isSuperAdmin()) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($staff) {
+            $q->where('preferred_branch_id', $staff->branch_id)
+                ->orWhereHas('orders', fn ($oq) => $oq->where('branch_id', $staff->branch_id));
+        });
     }
 }

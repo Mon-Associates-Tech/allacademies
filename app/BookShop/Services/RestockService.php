@@ -5,13 +5,13 @@ namespace App\BookShop\Services;
 use App\BookShop\Enums\RestockRequestStatus;
 use App\BookShop\Enums\StaffRole;
 use App\BookShop\Exceptions\OrderPlacementException;
-use App\BookShop\Models\Book;
 use App\BookShop\Models\BranchStockLevel;
 use App\BookShop\Models\RestockRequest;
 use App\BookShop\Models\Staff;
 use App\BookShop\Models\WarehouseStock;
-use App\BookShop\Notifications\RestockRequestedNotification;
+use App\BookShop\Notifications\RestockBatchRequestedNotification;
 use App\BookShop\Notifications\RestockReviewedNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
@@ -22,31 +22,47 @@ use Illuminate\Support\Facades\Notification;
  */
 class RestockService
 {
-    public function createRequest(Staff $branchAdmin, Book $book, int $quantity, ?string $notes = null): RestockRequest
+    /**
+     * Creates one RestockRequest row per item (each stays independently
+     * approvable/rejectable - a superadmin might approve some and reject
+     * others from the same batch), but notifies superadmins once with a
+     * summary rather than once per item, so a 5-item batch doesn't
+     * generate 5 separate emails.
+     *
+     * @param  iterable<array{book_id: int, quantity: int}>  $items
+     * @return Collection<int, RestockRequest>
+     *
+     * @throws OrderPlacementException
+     */
+    public function createBatch(Staff $branchAdmin, iterable $items, ?string $notes = null): Collection
     {
         if ($branchAdmin->isSuperAdmin() || ! $branchAdmin->branch_id) {
             throw new OrderPlacementException('Only a staff member assigned to a branch can request stock.');
         }
 
-        if ($quantity < 1) {
-            throw new OrderPlacementException('Requested quantity must be at least 1.');
+        $items = collect($items)->filter(fn ($row) => ! empty($row['book_id']) && (int) ($row['quantity'] ?? 0) > 0);
+
+        if ($items->isEmpty()) {
+            throw new OrderPlacementException('Add at least one book and quantity.');
         }
 
-        $request = RestockRequest::create([
-            'branch_id' => $branchAdmin->branch_id,
-            'book_id' => $book->id,
-            'requested_quantity' => $quantity,
-            'requested_by_staff_id' => $branchAdmin->id,
-            'notes' => $notes,
-        ]);
+        $requests = DB::transaction(function () use ($branchAdmin, $items, $notes) {
+            return $items->map(fn ($row) => RestockRequest::create([
+                'branch_id' => $branchAdmin->branch_id,
+                'book_id' => $row['book_id'],
+                'requested_quantity' => (int) $row['quantity'],
+                'requested_by_staff_id' => $branchAdmin->id,
+                'notes' => $notes,
+            ]));
+        });
 
         $superadmins = Staff::where('role', StaffRole::SUPERADMIN)->where('is_active', true)->get();
 
         if ($superadmins->isNotEmpty()) {
-            Notification::send($superadmins, new RestockRequestedNotification($request));
+            Notification::send($superadmins, new RestockBatchRequestedNotification($requests));
         }
 
-        return $request;
+        return $requests;
     }
 
     /**
