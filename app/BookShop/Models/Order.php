@@ -3,6 +3,7 @@
 namespace App\BookShop\Models;
 
 use App\BookShop\Enums\OrderStatus;
+use App\BookShop\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,9 @@ class Order extends Model
         'customer_id',
         'branch_id',
         'status',
+        'payment_status',
+        'payment_reference',
+        'paid_at',
         'subtotal',
         'notes',
         'cancelled_reason',
@@ -28,10 +32,17 @@ class Order extends Model
 
     protected $casts = [
         'status' => OrderStatus::class,
+        'payment_status' => PaymentStatus::class,
+        'paid_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'cancelled_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === PaymentStatus::PAID;
+    }
 
     protected static function booted(): void
     {

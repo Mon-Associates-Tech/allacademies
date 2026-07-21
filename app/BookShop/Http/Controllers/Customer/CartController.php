@@ -148,7 +148,10 @@ class CartController extends Controller
 
         $this->cart->clear();
 
-        return redirect()->route('bookshop.shop.orders.show', $order)
-            ->with('status', "Order {$order->order_number} placed successfully.");
+        // Stock is already decremented at this point (OrderPlacementService
+        // reserves it immediately on order creation, same as before payment
+        // existed) - the order now sits at payment_status: pending until
+        // Paystack confirms. See PaymentController::initialize().
+        return redirect()->route('bookshop.shop.payments.initialize', $order);
     }
 }

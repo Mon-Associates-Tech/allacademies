@@ -10,11 +10,13 @@ use App\BookShop\Http\Controllers\Customer\CatalogController;
 use App\BookShop\Http\Controllers\Customer\CustomerHomeController;
 use App\BookShop\Http\Controllers\Customer\NotificationController as CustomerNotificationController;
 use App\BookShop\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\BookShop\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
 use App\BookShop\Http\Controllers\Staff\Auth\ChangePasswordController;
 use App\BookShop\Http\Controllers\Staff\Auth\StaffSignInController;
 use App\BookShop\Http\Controllers\Staff\Auth\StaffSignOutController;
 use App\BookShop\Http\Controllers\Staff\BookController;
 use App\BookShop\Http\Controllers\Staff\BranchController;
+use App\BookShop\Http\Controllers\Staff\BranchPaymentController;
 use App\BookShop\Http\Controllers\Staff\BranchPendingController;
 use App\BookShop\Http\Controllers\Staff\CategoryController;
 use App\BookShop\Http\Controllers\Staff\CustomerController as StaffCustomerController;
@@ -118,6 +120,10 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
                 Route::put('branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
                 Route::patch('branches/{branch}/toggle-active', [BranchController::class, 'toggleActive'])->name('branches.toggle-active');
 
+                Route::get('branches/{branch}/payment', [BranchPaymentController::class, 'edit'])->name('branches.payment.edit');
+                Route::put('branches/{branch}/payment', [BranchPaymentController::class, 'update'])->name('branches.payment.update');
+                Route::patch('branches/{branch}/payment/deactivate', [BranchPaymentController::class, 'deactivate'])->name('branches.payment.deactivate');
+
                 Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
                 Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
                 Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
@@ -172,6 +178,9 @@ Route::prefix('bookshop/shop')->name('bookshop.shop.')->group(function () {
 
         Route::get('orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+
+        Route::get('payments/callback', [CustomerPaymentController::class, 'callback'])->name('payments.callback');
+        Route::get('payments/{order}/initialize', [CustomerPaymentController::class, 'initialize'])->name('payments.initialize');
 
         Route::get('notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');
         Route::patch('notifications/mark-all-read', [CustomerNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');

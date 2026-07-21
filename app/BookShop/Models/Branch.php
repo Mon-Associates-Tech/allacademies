@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Branch extends Model
 {
@@ -78,6 +79,11 @@ class Branch extends Model
     public function restockRequests(): HasMany
     {
         return $this->hasMany(RestockRequest::class);
+    }
+
+    public function paymentAccount(): HasOne
+    {
+        return $this->hasOne(BranchPaymentAccount::class);
     }
 
     public function scopeActive($query)

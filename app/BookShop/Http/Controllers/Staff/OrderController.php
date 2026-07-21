@@ -28,6 +28,7 @@ class OrderController extends Controller
             ->with(['customer', 'branch'])
             ->visibleTo($staff)
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($request->filled('payment_status'), fn ($q) => $q->where('payment_status', $request->string('payment_status')))
             ->latest()
             ->paginate(20)
             ->withQueryString();

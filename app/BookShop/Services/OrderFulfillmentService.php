@@ -22,6 +22,15 @@ class OrderFulfillmentService
             );
         }
 
+        // Payment is required before fulfillment starts, but an unpaid or
+        // abandoned order can still always be cancelled (which restocks
+        // it) - staff need that escape valve regardless of payment state.
+        if ($target !== OrderStatus::CANCELLED && ! $order->isPaid()) {
+            throw new OrderPlacementException(
+                "This order hasn't been paid for yet ({$order->payment_status->label()}) - it can't move to \"{$target->label()}\" until payment is confirmed."
+            );
+        }
+
         $previousStatus = $order->status;
 
         $updated = DB::transaction(function () use ($order, $target, $reason) {

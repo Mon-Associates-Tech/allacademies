@@ -1,7 +1,12 @@
 <x-bookshop::layouts.staff :title="$order->order_number . ' - BookShop'">
     <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold text-slate-900 dark:text-white" style="font-family: 'Georgia', serif;">{{ $order->order_number }}</h1>
-        <span class="text-xs font-semibold px-3 py-1 border" style="border-radius: 2px;">{{ $order->status->label() }}</span>
+        <div class="flex gap-2">
+            <span class="text-xs font-semibold px-3 py-1 border" style="border-radius: 2px;">{{ $order->status->label() }}</span>
+            <span class="text-xs font-semibold px-3 py-1 border {{ $order->isPaid() ? 'text-emerald-800 bg-emerald-50 border-emerald-200 dark:text-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800' : 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800' }}" style="border-radius: 2px;">
+                {{ $order->payment_status->label() }}
+            </span>
+        </div>
     </div>
 
     <p class="text-sm text-slate-500 dark:text-slate-400">
@@ -9,6 +14,12 @@
         {{ $order->customer?->city }}, {{ $order->customer?->region }} &middot;
         Placed {{ $order->created_at->format('M d, Y \a\t h:i A') }}
     </p>
+
+    @if(! $order->isPaid() && $order->status->value !== 'cancelled')
+        <div class="px-4 py-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800" style="border-radius: 2px;">
+            Awaiting payment from the customer — fulfillment actions are unavailable until this shows as Paid. You can still cancel it, which restocks the items.
+        </div>
+    @endif
 
     @if($order->notes)
         <div class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
@@ -48,7 +59,12 @@
         </table>
     </div>
 
-    @php($nextStatuses = $order->status->allowedNextStatuses())
+    @php
+        $nextStatuses = $order->status->allowedNextStatuses();
+        if (! $order->isPaid()) {
+            $nextStatuses = array_filter($nextStatuses, fn ($s) => $s->value === 'cancelled');
+        }
+    @endphp
     @if(count($nextStatuses))
         <div class="bg-white dark:bg-slate-900 p-6" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider mb-4" style="letter-spacing: 0.1em;">Update Status</h2>

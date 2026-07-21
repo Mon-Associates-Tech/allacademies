@@ -35,6 +35,7 @@
                         </td>
                         <td class="px-5 py-3 text-right space-x-3">
                             <a href="{{ route('bookshop.staff.branches.edit', $branch) }}" class="text-purple-600 dark:text-purple-400 font-medium">Edit</a>
+                            <a href="{{ route('bookshop.staff.branches.payment.edit', $branch) }}" class="text-purple-600 dark:text-purple-400 font-medium">Payment</a>
                             <form method="POST" action="{{ route('bookshop.staff.branches.toggle-active', $branch) }}" class="inline">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="text-slate-500 dark:text-slate-400 font-medium">

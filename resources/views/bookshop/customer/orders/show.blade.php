@@ -1,13 +1,34 @@
 <x-bookshop::layouts.customer :title="$order->order_number . ' - BookShop'">
     <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold text-slate-900 dark:text-white" style="font-family: 'Georgia', serif;">{{ $order->order_number }}</h1>
-        <span class="text-xs font-semibold px-3 py-1 border" style="border-radius: 2px;">{{ $order->status->label() }}</span>
+        <div class="flex gap-2">
+            <span class="text-xs font-semibold px-3 py-1 border" style="border-radius: 2px;">{{ $order->status->label() }}</span>
+            <span class="text-xs font-semibold px-3 py-1 border {{ $order->isPaid() ? 'text-emerald-800 bg-emerald-50 border-emerald-200 dark:text-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800' : 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800' }}" style="border-radius: 2px;">
+                {{ $order->payment_status->label() }}
+            </span>
+        </div>
     </div>
 
     <p class="text-sm text-slate-500 dark:text-slate-400">
         Placed {{ $order->created_at->format('M d, Y \a\t h:i A') }} &middot;
         Served by {{ $order->branch?->name ?? 'Unassigned' }}
     </p>
+
+    @if(! $order->isPaid() && $order->status->value !== 'cancelled')
+        <div class="px-4 py-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800 flex items-center justify-between gap-3" style="border-radius: 2px;">
+            <span>
+                @if($order->payment_status->value === 'failed')
+                    Your last payment attempt didn't go through. Your items are still reserved — you can retry.
+                @else
+                    This order isn't paid for yet. Complete payment to have it fulfilled.
+                @endif
+            </span>
+            <a href="{{ route('bookshop.shop.payments.initialize', $order) }}"
+               class="flex-shrink-0 text-xs font-semibold px-4 py-2 text-white" style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa);">
+                {{ $order->payment_status->value === 'failed' ? 'Retry Payment' : 'Complete Payment' }}
+            </a>
+        </div>
+    @endif
 
     @if($order->status->value === 'cancelled' && $order->cancelled_reason)
         <div class="px-4 py-3 text-sm text-red-700 bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300" style="border-radius: 2px;">
