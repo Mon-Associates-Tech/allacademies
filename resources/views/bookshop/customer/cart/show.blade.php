@@ -56,9 +56,29 @@
             <form method="POST" action="{{ route('bookshop.shop.cart.checkout') }}" class="bg-white dark:bg-slate-900 p-6" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
                 @csrf
                 @if(! $isGuest)
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">How would you like this order?</label>
+                        <div class="flex gap-3" id="fulfillment-toggle">
+                            <label class="flex-1 flex items-center gap-2 px-4 py-3 border border-slate-200 dark:border-slate-700 cursor-pointer" style="border-radius: 2px;">
+                                <input type="radio" name="fulfillment_method" value="pickup" checked data-fulfillment-option>
+                                <span class="text-sm text-slate-700 dark:text-slate-200">Pickup at {{ $branch->name }}</span>
+                            </label>
+                            <label class="flex-1 flex items-center gap-2 px-4 py-3 border border-slate-200 dark:border-slate-700 cursor-pointer" style="border-radius: 2px;">
+                                <input type="radio" name="fulfillment_method" value="delivery" data-fulfillment-option>
+                                <span class="text-sm text-slate-700 dark:text-slate-200">Delivery</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="delivery-address-field" class="mb-4 hidden">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Delivery Address</label>
+                        <textarea name="delivery_address" rows="2" placeholder="Where should this be delivered?"
+                                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white" style="border-radius: 2px;">{{ old('delivery_address') }}</textarea>
+                    </div>
+
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Notes (optional)</label>
                     <textarea name="notes" rows="2" placeholder="Any special instructions for this order..."
-                              class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white" style="border-radius: 2px;"></textarea>
+                              class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white" style="border-radius: 2px;">{{ old('notes') }}</textarea>
                 @else
                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
                         You'll create a free account on the next step — your cart stays exactly as it is now.
@@ -75,6 +95,24 @@
                     @endif
                 </button>
             </form>
+
+            @if(! $isGuest)
+                <script>
+                    (function () {
+                        const options = document.querySelectorAll('[data-fulfillment-option]');
+                        const addressField = document.getElementById('delivery-address-field');
+                        if (!options.length || !addressField) return;
+
+                        const sync = () => {
+                            const selected = document.querySelector('[data-fulfillment-option]:checked');
+                            addressField.classList.toggle('hidden', !selected || selected.value !== 'delivery');
+                        };
+
+                        options.forEach((el) => el.addEventListener('change', sync));
+                        sync();
+                    })();
+                </script>
+            @endif
         @endif
 
         <div class="space-y-2">

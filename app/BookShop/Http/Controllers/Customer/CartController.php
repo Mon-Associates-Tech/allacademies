@@ -2,6 +2,7 @@
 
 namespace App\BookShop\Http\Controllers\Customer;
 
+use App\BookShop\Enums\FulfillmentMethod;
 use App\BookShop\Exceptions\OrderPlacementException;
 use App\BookShop\Http\Controllers\Controller;
 use App\BookShop\Models\Book;
@@ -132,6 +133,8 @@ class CartController extends Controller
 
         $data = $request->validate([
             'notes' => ['nullable', 'string', 'max:500'],
+            'fulfillment_method' => ['required', 'in:pickup,delivery'],
+            'delivery_address' => ['required_if:fulfillment_method,delivery', 'nullable', 'string', 'max:500'],
         ]);
 
         $branch = $this->branchResolver->resolveCurrentShoppingBranch($customer, $this->cart);
@@ -141,9 +144,16 @@ class CartController extends Controller
         }
 
         try {
-            $order = $this->orderPlacer->place($customer, $branch, $this->cart->items(), $data['notes'] ?? null);
+            $order = $this->orderPlacer->place(
+                $customer,
+                $branch,
+                $this->cart->items(),
+                $data['notes'] ?? null,
+                FulfillmentMethod::from($data['fulfillment_method']),
+                $data['delivery_address'] ?? null,
+            );
         } catch (OrderPlacementException $e) {
-            return back()->withErrors(['cart' => $e->getMessage()]);
+            return back()->withErrors(['cart' => $e->getMessage()])->withInput();
         }
 
         $this->cart->clear();

@@ -11,8 +11,18 @@
 
     <p class="text-sm text-slate-500 dark:text-slate-400">
         Placed {{ $order->created_at->format('M d, Y \a\t h:i A') }} &middot;
-        Served by {{ $order->branch?->name ?? 'Unassigned' }}
+        Served by {{ $order->branch?->name ?? 'Unassigned' }} &middot;
+        {{ $order->fulfillment_method->label() }}
+        @if($order->isPaid())
+            &middot; <a href="{{ route('bookshop.shop.orders.receipt', $order) }}" target="_blank" class="text-purple-600 dark:text-purple-400 underline">Download Receipt</a>
+        @endif
     </p>
+
+    @if($order->isDelivery() && $order->delivery_address)
+        <div class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+            <strong>Delivering to:</strong> {{ $order->delivery_address }}
+        </div>
+    @endif
 
     @if(! $order->isPaid() && $order->status->value !== 'cancelled')
         <div class="px-4 py-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800 flex items-center justify-between gap-3" style="border-radius: 2px;">

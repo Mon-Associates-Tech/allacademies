@@ -2,6 +2,7 @@
 
 namespace App\BookShop\Models;
 
+use App\BookShop\Enums\FulfillmentMethod;
 use App\BookShop\Enums\OrderStatus;
 use App\BookShop\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,8 @@ class Order extends Model
         'payment_status',
         'payment_reference',
         'paid_at',
+        'fulfillment_method',
+        'delivery_address',
         'subtotal',
         'notes',
         'cancelled_reason',
@@ -33,6 +36,7 @@ class Order extends Model
     protected $casts = [
         'status' => OrderStatus::class,
         'payment_status' => PaymentStatus::class,
+        'fulfillment_method' => FulfillmentMethod::class,
         'paid_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'cancelled_at' => 'datetime',
@@ -42,6 +46,11 @@ class Order extends Model
     public function isPaid(): bool
     {
         return $this->payment_status === PaymentStatus::PAID;
+    }
+
+    public function isDelivery(): bool
+    {
+        return $this->fulfillment_method === FulfillmentMethod::DELIVERY;
     }
 
     protected static function booted(): void

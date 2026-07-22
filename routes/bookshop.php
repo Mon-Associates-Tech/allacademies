@@ -22,6 +22,7 @@ use App\BookShop\Http\Controllers\Staff\CategoryController;
 use App\BookShop\Http\Controllers\Staff\CustomerController as StaffCustomerController;
 use App\BookShop\Http\Controllers\Staff\NotificationController as StaffNotificationController;
 use App\BookShop\Http\Controllers\Staff\OrderController as StaffOrderController;
+use App\BookShop\Http\Controllers\Staff\ReportController;
 use App\BookShop\Http\Controllers\Staff\RestockRequestController;
 use App\BookShop\Http\Controllers\Staff\StaffController;
 use App\BookShop\Http\Controllers\Staff\StaffDashboardController;
@@ -83,6 +84,7 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
             Route::get('orders', [StaffOrderController::class, 'index'])->name('orders.index');
             Route::get('orders/{order}', [StaffOrderController::class, 'show'])->name('orders.show');
             Route::patch('orders/{order}/status', [StaffOrderController::class, 'updateStatus'])->name('orders.update-status');
+            Route::get('orders/{order}/packing-slip', [StaffOrderController::class, 'packingSlip'])->name('orders.packing-slip');
 
             Route::get('notifications', [StaffNotificationController::class, 'index'])->name('notifications.index');
             Route::patch('notifications/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
@@ -98,6 +100,9 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
 
             Route::get('customers', [StaffCustomerController::class, 'index'])->name('customers.index');
             Route::post('customers/send-email', [StaffCustomerController::class, 'sendEmail'])->name('customers.send-email');
+
+            Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
             Route::middleware('bookshop.staff.superadmin-only')->group(function () {
                 Route::get('team', [StaffController::class, 'index'])->name('team.index');
@@ -178,6 +183,7 @@ Route::prefix('bookshop/shop')->name('bookshop.shop.')->group(function () {
 
         Route::get('orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+        Route::get('orders/{order}/receipt', [CustomerOrderController::class, 'receipt'])->name('orders.receipt');
 
         Route::get('payments/callback', [CustomerPaymentController::class, 'callback'])->name('payments.callback');
         Route::get('payments/{order}/initialize', [CustomerPaymentController::class, 'initialize'])->name('payments.initialize');

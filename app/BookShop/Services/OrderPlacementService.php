@@ -2,6 +2,7 @@
 
 namespace App\BookShop\Services;
 
+use App\BookShop\Enums\FulfillmentMethod;
 use App\BookShop\Exceptions\OrderPlacementException;
 use App\BookShop\Models\Book;
 use App\BookShop\Models\Branch;
@@ -23,8 +24,14 @@ class OrderPlacementService
      *
      * @throws OrderPlacementException
      */
-    public function place(Customer $customer, Branch $branch, array $items, ?string $notes = null): Order
-    {
+    public function place(
+        Customer $customer,
+        Branch $branch,
+        array $items,
+        ?string $notes = null,
+        FulfillmentMethod $fulfillmentMethod = FulfillmentMethod::PICKUP,
+        ?string $deliveryAddress = null,
+    ): Order {
         $items = array_filter($items, fn ($quantity) => (int) $quantity > 0);
 
         if (empty($items)) {
@@ -35,6 +42,10 @@ class OrderPlacementService
             throw new OrderPlacementException('That branch is no longer accepting orders. Please choose a different one.');
         }
 
+        if ($fulfillmentMethod === FulfillmentMethod::DELIVERY && empty(trim((string) $deliveryAddress))) {
+            throw new OrderPlacementException('A delivery address is required for delivery orders.');
+        }
+
         // Notifications are dispatched AFTER the transaction commits, not
         // from inside it - queued jobs could otherwise pick the
         // notification up before the transaction is durable, or worse,
@@ -42,7 +53,7 @@ class OrderPlacementService
         // elsewhere in the same request. $lowStockLevels is collected
         // inside the transaction (decrement() already syncs the in-memory
         // quantity, no extra query needed) and used for alerts afterward.
-        [$order, $lowStockLevels] = DB::transaction(function () use ($customer, $branch, $items, $notes) {
+        [$order, $lowStockLevels] = DB::transaction(function () use ($customer, $branch, $items, $notes, $fulfillmentMethod, $deliveryAddress) {
             $books = Book::query()->active()->whereIn('id', array_keys($items))->get()->keyBy('id');
 
             // Lock the relevant stock rows for the duration of the
@@ -90,6 +101,8 @@ class OrderPlacementService
                 'branch_id' => $branch->id,
                 'subtotal' => $subtotal,
                 'notes' => $notes,
+                'fulfillment_method' => $fulfillmentMethod,
+                'delivery_address' => $fulfillmentMethod === FulfillmentMethod::DELIVERY ? $deliveryAddress : null,
             ]);
 
             $lowStockLevels = [];

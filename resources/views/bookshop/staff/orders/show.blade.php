@@ -1,8 +1,12 @@
 <x-bookshop::layouts.staff :title="$order->order_number . ' - BookShop'">
     <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold text-slate-900 dark:text-white" style="font-family: 'Georgia', serif;">{{ $order->order_number }}</h1>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('bookshop.staff.orders.packing-slip', $order) }}" target="_blank" class="text-sm text-purple-600 dark:text-purple-400 underline">Packing Slip</a>
             <span class="text-xs font-semibold px-3 py-1 border" style="border-radius: 2px;">{{ $order->status->label() }}</span>
+            <span class="text-xs font-semibold px-3 py-1 border {{ $order->isDelivery() ? 'text-blue-800 bg-blue-50 border-blue-200 dark:text-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : '' }}" style="border-radius: 2px;">
+                {{ $order->fulfillment_method->label() }}
+            </span>
             <span class="text-xs font-semibold px-3 py-1 border {{ $order->isPaid() ? 'text-emerald-800 bg-emerald-50 border-emerald-200 dark:text-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800' : 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800' }}" style="border-radius: 2px;">
                 {{ $order->payment_status->label() }}
             </span>
@@ -14,6 +18,12 @@
         {{ $order->customer?->city }}, {{ $order->customer?->region }} &middot;
         Placed {{ $order->created_at->format('M d, Y \a\t h:i A') }}
     </p>
+
+    @if($order->isDelivery() && $order->delivery_address)
+        <div class="px-4 py-3 text-sm text-blue-800 bg-blue-50 border border-blue-200 dark:text-blue-200 dark:bg-blue-900/30 dark:border-blue-800" style="border-radius: 2px;">
+            <strong>Deliver to:</strong> {{ $order->delivery_address }}
+        </div>
+    @endif
 
     @if(! $order->isPaid() && $order->status->value !== 'cancelled')
         <div class="px-4 py-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800" style="border-radius: 2px;">
@@ -80,7 +90,7 @@
                         <button type="submit"
                                 class="px-5 py-2.5 text-sm font-semibold transition-all {{ $next->value === 'cancelled' ? 'text-red-600 border border-red-200 dark:border-red-800' : 'text-white' }}"
                                 style="border-radius: 2px; {{ $next->value === 'cancelled' ? '' : 'background: linear-gradient(135deg, #7c3aed, #a78bfa);' }}">
-                            Mark as {{ $next->label() }}
+                            Mark as {{ $next->value === 'ready' && $order->isDelivery() ? 'Out for Delivery' : $next->label() }}
                         </button>
                     </form>
                 @endforeach

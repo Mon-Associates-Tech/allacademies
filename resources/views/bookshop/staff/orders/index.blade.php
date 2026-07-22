@@ -16,6 +16,12 @@
                     <option value="{{ $paymentStatus->value }}" {{ request('payment_status') === $paymentStatus->value ? 'selected' : '' }}>{{ $paymentStatus->label() }}</option>
                 @endforeach
             </select>
+            <select name="fulfillment_method" onchange="this.form.submit()" class="px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white" style="border-radius: 2px;">
+                <option value="">Pickup + Delivery</option>
+                @foreach(\App\BookShop\Enums\FulfillmentMethod::cases() as $method)
+                    <option value="{{ $method->value }}" {{ request('fulfillment_method') === $method->value ? 'selected' : '' }}>{{ $method->label() }}</option>
+                @endforeach
+            </select>
         </form>
     </div>
 
@@ -30,6 +36,7 @@
                     @endif
                     <th class="text-left px-5 py-3">Total</th>
                     <th class="text-left px-5 py-3">Status</th>
+                    <th class="text-left px-5 py-3">Fulfillment</th>
                     <th class="text-left px-5 py-3">Payment</th>
                     <th class="text-left px-5 py-3">Placed</th>
                 </tr>
@@ -48,6 +55,11 @@
                             <span class="text-xs font-semibold px-3 py-1 border" style="border-radius: 2px;">{{ $order->status->label() }}</span>
                         </td>
                         <td class="px-5 py-3">
+                            <span class="text-xs font-semibold px-3 py-1 border {{ $order->isDelivery() ? 'text-blue-800 bg-blue-50 border-blue-200 dark:text-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : '' }}" style="border-radius: 2px;">
+                                {{ $order->fulfillment_method->label() }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3">
                             <span class="text-xs font-semibold px-3 py-1 border {{ $order->isPaid() ? 'text-emerald-800 bg-emerald-50 border-emerald-200 dark:text-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800' : 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800' }}" style="border-radius: 2px;">
                                 {{ $order->payment_status->label() }}
                             </span>
@@ -55,7 +67,7 @@
                         <td class="px-5 py-3 text-slate-600 dark:text-slate-400">{{ $order->created_at->format('M d, Y') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-5 py-8 text-center text-slate-500 dark:text-slate-400">No orders yet.</td></tr>
+                    <tr><td colspan="8" class="px-5 py-8 text-center text-slate-500 dark:text-slate-400">No orders yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

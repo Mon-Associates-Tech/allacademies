@@ -8,15 +8,19 @@ use App\BookShop\Http\Controllers\Controller;
 use App\BookShop\Models\Order;
 use App\BookShop\Models\Staff;
 use App\BookShop\Services\OrderFulfillmentService;
+use App\BookShop\Services\OrderPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly OrderFulfillmentService $fulfillment)
-    {
+    public function __construct(
+        private readonly OrderFulfillmentService $fulfillment,
+        private readonly OrderPdfService $pdfService,
+    ) {
     }
 
     public function index(Request $request): View
@@ -29,6 +33,7 @@ class OrderController extends Controller
             ->visibleTo($staff)
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('payment_status'), fn ($q) => $q->where('payment_status', $request->string('payment_status')))
+            ->when($request->filled('fulfillment_method'), fn ($q) => $q->where('fulfillment_method', $request->string('fulfillment_method')))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -64,6 +69,13 @@ class OrderController extends Controller
         }
 
         return back()->with('status', "Order {$order->order_number} moved to \"{$target->label()}\".");
+    }
+
+    public function packingSlip(Order $order): Response
+    {
+        $this->authorizeVisible($order);
+
+        return $this->pdfService->packingSlip($order)->stream("packing-slip-{$order->order_number}.pdf");
     }
 
     private function authorizeVisible(Order $order): void
