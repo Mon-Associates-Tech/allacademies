@@ -285,7 +285,7 @@ class GeneralExamSubmission extends Model
 
     public function getResponse(int $questionId): mixed
     {
-        return $this->responses[$questionId]['response'] ?? null;
+        return $this->responses[(string) $questionId]['response'] ?? null;
     }
 
     public function hasAnswered(int $questionId): bool

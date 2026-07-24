@@ -54,7 +54,7 @@ class GeneralExamGradingService
                 }
 
                 $gradedResponses[$questionId] = array_merge(
-                    $submission->responses[$questionId] ?? [],
+                    $submission->responses[(string) $questionId] ?? [],
                     [
                         'points_earned'         => $awardMarks ? $question->marks : 0,
                         'excluded_from_grading' => true,
@@ -77,7 +77,7 @@ class GeneralExamGradingService
                 }
 
                 $gradedResponses[$questionId] = array_merge(
-                    $submission->responses[$questionId] ?? [],
+                    $submission->responses[(string) $questionId] ?? [],
                     $gradeResult
                 );
             } else {
