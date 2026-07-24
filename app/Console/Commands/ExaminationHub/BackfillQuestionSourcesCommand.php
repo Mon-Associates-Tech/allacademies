@@ -38,9 +38,10 @@ use Illuminate\Console\Command;
 class BackfillQuestionSourcesCommand extends Command
 {
     protected $signature = 'exam:backfill-question-sources
-                            {--dry-run   : Show what would be updated without writing to DB}
-                            {--regrade   : Sync content + regrade submissions for all matched exam questions}
-                            {--chunk=200 : Number of source questions to load per batch}';
+                            {--dry-run    : Show what would be updated without writing to DB}
+                            {--regrade    : Sync content + regrade submissions for all matched exam questions}
+                            {--force-sync : Dispatch SyncSourceQuestionJob for all already-linked exam questions (re-syncs content + regrades)}
+                            {--chunk=200  : Number of source questions to load per batch}';
 
     protected $description = 'Back-fill source_question_id on existing exam questions (MCQ, T/F, Essay) and optionally regrade affected submissions.';
 
@@ -49,6 +50,11 @@ class BackfillQuestionSourcesCommand extends Command
         $dryRun    = (bool) $this->option('dry-run');
         $regrade   = (bool) $this->option('regrade');
         $chunkSize = (int) $this->option('chunk');
+
+        if ($this->option('force-sync')) {
+            $this->dispatchSyncs();
+            return self::SUCCESS;
+        }
 
         $this->info($dryRun ? '--- DRY RUN — no changes will be written ---' : 'Back-filling source_question_id...');
 
