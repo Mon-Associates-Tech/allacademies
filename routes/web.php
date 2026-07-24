@@ -479,3 +479,10 @@ include_once 'examination-hub-participant-groups.php';
 include_once 'debug.php';
 
 include_once 'mock-exams.php';
+
+// Log Viewer (owner only)
+Route::middleware(['auth', 'verified', 'role:owner'])->prefix('system')->name('log-viewer.')->group(function () {
+    Route::get('/logs', [\App\Http\Controllers\LogViewerController::class, 'index'])->name('index');
+    Route::post('/logs/clear', [\App\Http\Controllers\LogViewerController::class, 'clear'])->name('clear');
+    Route::get('/logs/download', [\App\Http\Controllers\LogViewerController::class, 'download'])->name('download');
+});
