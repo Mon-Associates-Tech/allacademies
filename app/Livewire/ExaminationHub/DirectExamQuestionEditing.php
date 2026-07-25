@@ -1,10 +1,11 @@
 <?php
-// NEW_FILE_CODE
+
 namespace App\Livewire\ExaminationHub;
 
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Services\DirectExamQuestionEditingService;
+use App\Models\AcademicSubject;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -13,7 +14,7 @@ use Livewire\Component;
  * Direct Exam Question Editing
  * ─────────────────────────────
  * Allows administrators to:
- *   1. Select an exam from the list of available exams
+ *   1. Select a subject and then choose an exam from that subject
  *   2. Review all questions in that exam (MCQ, T/F, etc.)
  *   3. Edit question text, option text and the correct answer directly
  *   4. Save all changes in a single action, which:
@@ -35,6 +36,9 @@ class DirectExamQuestionEditing extends Component
 {
     // ─── Filters ─────────────────────────────────────────────────────────────
 
+    #[Url(as: 'subject')]
+    public ?int $subjectId = null;
+
     #[Url(as: 'exam')]
     public ?int $examId = null;
 
@@ -44,21 +48,46 @@ class DirectExamQuestionEditing extends Component
     public ?string $saveMessage = null;
     public bool    $saveSuccess = false;
 
-    // ─── Exams list (loaded once on mount) ───────────────────────────────────
+    // ─── Subjects list (loaded once on mount) ────────────────────────────────
 
-    public array $exams = [];
+    public array $subjects = [];
 
     // ─── Lifecycle ────────────────────────────────────────────────────────────
 
     public function mount(): void
     {
-        $this->exams = GeneralExam::orderBy('title')
+        $this->subjects = AcademicSubject::with('academicLevel')
+            ->orderBy('name')
             ->get()
-            ->map(fn ($exam) => ['id' => $exam->id, 'title' => $exam->title])
+            ->groupBy(fn ($s) => $s->academicLevel?->name ?? 'Uncategorised')
+            ->map(fn ($group) => $group->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values()->all())
             ->all();
     }
 
     // ─── Computed ─────────────────────────────────────────────────────────────
+
+    /**
+     * Exams for the currently selected subject.
+     *
+     * @return array<int, array{id: int, title: string}>
+     */
+    #[Computed]
+    public function exams(): array
+    {
+        if (!$this->subjectId) {
+            return [];
+        }
+
+        return GeneralExam::whereHas('sections.questions', function ($query) {
+            $query->whereHas('assignment', function ($subQuery) {
+                $subQuery->where('academic_subject_id', $this->subjectId);
+            });
+        })
+        ->orderBy('title')
+        ->get(['id', 'title'])
+        ->map(fn ($exam) => ['id' => $exam->id, 'title' => $exam->title])
+        ->all();
+    }
 
     /**
      * Questions for the currently selected exam.
@@ -122,6 +151,14 @@ class DirectExamQuestionEditing extends Component
     }
 
     // ─── Watchers ─────────────────────────────────────────────────────────────
+
+    public function updatedSubjectId(): void
+    {
+        $this->examId = null;
+        $this->saveMessage = null;
+        unset($this->exams);       // clear computed cache
+        unset($this->questionData);
+    }
 
     public function updatedExamId(): void
     {

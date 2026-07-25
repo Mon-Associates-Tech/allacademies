@@ -1,4 +1,4 @@
-<!-- NEW_FILE_CODE -->
+|CODE_EDIT_BLOCK|/home/me/phpp/allacademies/resources/views/livewire/examination-hub/direct-exam-question-editing.blade.php
 <div>
     <style>
         @media print {
@@ -47,16 +47,36 @@
                 @endif
             </div>
 
-            {{-- ── Exam selector ──────────────────────────────────────────── --}}
+            {{-- ── Subject / Exam selectors ──────────────────────────────────── --}}
             <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {{-- Subject --}}
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Exam</label>
-                    <select wire:model.live="examId"
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Subject</label>
+                    <select wire:model.live="subjectId"
                             class="w-full bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded px-3 py-2
                                    focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
                                    appearance-none">
+                        <option value="">— Select subject —</option>
+                        @foreach($subjects as $levelName => $levelSubjects)
+                            <optgroup label="{{ $levelName }}">
+                                @foreach($levelSubjects as $subject)
+                                    <option value="{{ $subject['id'] }}">{{ $subject['name'] }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Exam (cascades from subject) --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Exam</label>
+                    <select wire:model.live="examId"
+                            @disabled(!$subjectId)
+                            class="w-full bg-gray-700 border border-gray-600 text-gray-200 text-sm rounded px-3 py-2
+                                   focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+                                   appearance-none disabled:opacity-40 disabled:cursor-not-allowed">
                         <option value="">— Select exam —</option>
-                        @foreach($exams as $exam)
+                        @foreach($this->exams as $exam)
                             <option value="{{ $exam['id'] }}">{{ $exam['title'] }}</option>
                         @endforeach
                     </select>
@@ -69,8 +89,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {{-- Skeleton while Livewire is loading --}}
-        <div wire:loading.block wire:target="examId" class="space-y-4">
-            @foreach(range(1, 3) as $_)
+        <div wire:loading.block wire:target="subjectId,examId"
+             class="space-y-4">
+            @foreach(range(1,3) as $_)
                 <div class="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-5 animate-pulse">
                     <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
                     <div class="space-y-2">
@@ -83,10 +104,10 @@
         </div>
 
         {{-- Content (hidden while loading) --}}
-        <div wire:loading.remove wire:target="examId">
+        <div wire:loading.remove wire:target="subjectId,examId">
 
-            @if(!$examId)
-                {{-- ── Empty state: no exam selected ─────────────────────── --}}
+            @if(!$subjectId)
+                {{-- ── Empty state: no subject selected ─────────────────────── --}}
                 <div class="flex flex-col items-center justify-center py-24 text-center">
                     <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
                         <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,11 +115,41 @@
                                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
-                    <h3 class="text-base font-medium text-gray-700 dark:text-gray-300">Select an exam</h3>
+                    <h3 class="text-base font-medium text-gray-700 dark:text-gray-300">Select a subject</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Choose an exam above to load the questions for that exam.
+                        Choose a subject above to load the exams for that subject.
                     </p>
                 </div>
+
+            @elseif(!$examId)
+                {{-- ── Empty state: subject selected but no exam selected ─── --}}
+                @if(empty($this->exams))
+                    <div class="flex flex-col items-center justify-center py-24 text-center">
+                        <div class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
+                            <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-700 dark:text-gray-300">No exams found</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            This subject has no exams with questions yet.
+                        </p>
+                    </div>
+                @else
+                    <div class="flex flex-col items-center justify-center py-24 text-center">
+                        <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
+                            <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-700 dark:text-gray-300">Select an exam</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Choose an exam from the dropdown above to edit its questions.
+                        </p>
+                    </div>
+                @endif
 
             @elseif(empty($this->questionData))
                 {{-- ── Empty state: exam has no questions ─────────────────── --}}
