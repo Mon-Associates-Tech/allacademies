@@ -33,6 +33,12 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
             \App\Livewire\ExaminationHub\AnswerKeyResolution::class
         )->name('examination-hub.answer-key-resolution');
 
+
+             Route::get(
+            '/direct-exam-question-editing',
+            \App\Livewire\ExaminationHub\DirectExamQuestionEditing::class
+        )->name('examination-hub.direct-exam-question-editing');
+
     Route::get('/exams/{exam}', [DashboardController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/edit', [ExamCreationController::class, 'edit'])->name('exams.edit');
     Route::post('/exams/{exam}/send-invitations', [DashboardController::class, 'sendInvitations'])->name('exams.send-invitations');
