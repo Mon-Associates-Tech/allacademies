@@ -159,60 +159,75 @@ class AnswerKeyResolutionService
      *
      * Returns the IDs of updated GeneralExamQuestion rows.
      */
-    protected function syncToExamQuestions(MultipleChoiceQuestion $mcq, array $change): array
-    {
-        // Use getRawOriginal so we compare against the actual DB string, not
-        // whatever the Mark cast returns as an object.
-        $rawQuestionText = $mcq->getRawOriginal('question');
-        $normalised      = $this->normaliseText($rawQuestionText);
-
-        $rows = GeneralExamQuestion::where('type', GeneralExamQuestion::TYPE_MULTIPLE_CHOICE)
-            ->where(function ($q) use ($mcq, $normalised) {
-                $q->where('source_question_id', $mcq->id)
-                  ->orWhereRaw('LOWER(TRIM(question)) = ?', [$normalised]);
-            })
-            ->get();
-
-        if ($rows->isEmpty()) {
-            Log::info('AnswerKeyResolution: no matching exam questions found', [
-                'mcq_id'     => $mcq->id,
-                'normalised' => substr($normalised, 0, 80),
-            ]);
-            return [];
-        }
-
-        $updatedIds = [];
-
-        foreach ($rows as $examQ) {
-            $update = [];
-
-            if (! empty($change['answer'])) {
-                $update['correct_answer'] = strtoupper($change['answer']);
-            }
-
-            // Sync option text when the admin corrected one or more options
-            if ($this->hasOptionChanges($change)) {
-                $update['options'] = $this->mergeOptionChanges(
-                    $examQ->options ?? [],
-                    $change,
-                    $mcq
-                );
-            }
-
-            // Back-fill source_question_id on rows that pre-date the column
-            if ($examQ->source_question_id === null) {
-                $update['source_question_id'] = $mcq->id;
-            }
-
-            if (! empty($update)) {
-                $examQ->update($update);
-            }
-
-            $updatedIds[] = $examQ->id;
-        }
-
-        return $updatedIds;
+protected function syncToExamQuestions(MultipleChoiceQuestion $mcq, array $change): array
+{
+    $rawQuestionText = $mcq->getRawOriginal('question');
+    
+    // FIX: Robustly extract text. Handle Mark JSON or fallback to raw string.
+    $decoded = json_decode($rawQuestionText, true);
+    if (is_array($decoded) && (isset($decoded['up']) || isset($decoded['down']))) {
+        $textToNormalise = $decoded['down'] ?? $decoded['up'] ?? '';
+    } else {
+        $textToNormalise = $rawQuestionText;
     }
+    
+    $normalised = $this->normaliseText($textToNormalise);
+    
+    // Use a partial LIKE match in SQL to avoid loading the entire table,
+    // then filter precisely in PHP to handle any HTML tag discrepancies safely.
+    $searchTerm = substr($normalised, 0, 50);
+    
+    $rows = GeneralExamQuestion::where('type', GeneralExamQuestion::TYPE_MULTIPLE_CHOICE)
+        ->where(function ($q) use ($mcq, $searchTerm) {
+            $q->where('source_question_id', $mcq->id)
+              ->orWhere('question', 'LIKE', "%{$searchTerm}%");
+        })
+        ->get()
+        ->filter(function ($examQ) use ($mcq, $normalised) {
+            // Exact match if source_question_id is already correctly set
+            if ($examQ->source_question_id === $mcq->id) {
+                return true;
+            }
+            // Otherwise, verify with full PHP normalization to safely strip HTML and match
+            return $this->normaliseText($examQ->question ?? '') === $normalised;
+        });
+
+    if ($rows->isEmpty()) {
+        Log::info('AnswerKeyResolution: no matching exam questions found', [
+            'mcq_id'     => $mcq->id,
+            'normalised' => substr($normalised, 0, 80),
+        ]);
+        return [];
+    }
+
+    $updatedIds = [];
+    foreach ($rows as $examQ) {
+        $update = [];
+        if (! empty($change['answer'])) {
+            $update['correct_answer'] = strtoupper($change['answer']);
+        }
+
+        if ($this->hasOptionChanges($change)) {
+            $update['options'] = $this->mergeOptionChanges(
+                $examQ->options ?? [],
+                $change,
+                $mcq
+            );
+        }
+
+        // Back-fill source_question_id on rows that pre-date the column
+        if ($examQ->source_question_id === null) {
+            $update['source_question_id'] = $mcq->id;
+        }
+
+        if (! empty($update)) {
+            $examQ->update($update);
+        }
+        $updatedIds[] = $examQ->id;
+    }
+
+    return $updatedIds;
+}
 
     /**
      * Regrade submissions synchronously for the given exam question IDs.

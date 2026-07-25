@@ -104,26 +104,31 @@ class BackfillQuestionSourcesCommand extends Command
         ];
     }
 
-    private function buildIndex(string $modelClass, int $chunkSize): array
-    {
-        $index = [];
-
-        $modelClass::withTrashed()
-            ->select('id', 'question')
-            ->chunk($chunkSize, function ($rows) use (&$index) {
-                foreach ($rows as $row) {
-                    $raw  = $row->getRawOriginal('question') ?? '';
-                    $mark = Mark::fromString($raw);
-                    $text = $mark->down ?? $mark->up ?? '';
-                    $norm = $this->normalise($text);
-                    if ($norm !== '') {
-                        $index[$norm] = $row->id;
-                    }
+private function buildIndex(string $modelClass, int $chunkSize): array
+{
+    $index = [];
+    $modelClass::withTrashed()
+        ->select('id', 'question')
+        ->chunk($chunkSize, function ($rows) use (&$index) {
+            foreach ($rows as $row) {
+                $raw = $row->getRawOriginal('question') ?? '';
+                
+                // FIX: Robustly extract text. Handle Mark JSON or fallback to raw string.
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded) && (isset($decoded['up']) || isset($decoded['down']))) {
+                    $text = $decoded['down'] ?? $decoded['up'] ?? '';
+                } else {
+                    $text = $raw; // Fallback for plain text or malformed JSON
                 }
-            });
-
-        return $index;
-    }
+                
+                $norm = $this->normalise($text);
+                if ($norm !== '') {
+                    $index[$norm] = $row->id;
+                }
+            }
+        });
+    return $index;
+}
 
     private function backfillType(string $type, array $index, int $chunkSize, bool $dryRun): array
     {
