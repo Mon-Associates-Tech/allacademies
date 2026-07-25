@@ -5,6 +5,7 @@ namespace App\Console\Commands\ExaminationHub;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\Jobs\ExaminationHub\SyncSourceQuestionJob;
+use App\Models\AcademicSubject;
 use App\Models\EssayQuestion;
 use App\Models\MultipleChoiceQuestion;
 use App\Models\TrueOrFalseQuestion;
@@ -38,10 +39,10 @@ use Illuminate\Console\Command;
 class BackfillQuestionSourcesCommand extends Command
 {
     protected $signature = 'exam:backfill-question-sources
-                            {--dry-run    : Show what would be updated without writing to DB}
-                            {--regrade    : Sync content + regrade submissions for all matched exam questions}
-                            {--force-sync : Dispatch SyncSourceQuestionJob for all already-linked exam questions (re-syncs content + regrades)}
-                            {--chunk=200  : Number of source questions to load per batch}';
+                            {--dry-run   : Show what would be updated without writing to DB}
+                            {--regrade   : Sync content + regrade submissions for all matched exam questions}
+                            {--subject=  : Sync+regrade only questions belonging to this academic_subject ID}
+                            {--chunk=200 : Number of source questions to load per batch}';
 
     protected $description = 'Back-fill source_question_id on existing exam questions (MCQ, T/F, Essay) and optionally regrade affected submissions.';
 
@@ -51,9 +52,8 @@ class BackfillQuestionSourcesCommand extends Command
         $regrade   = (bool) $this->option('regrade');
         $chunkSize = (int) $this->option('chunk');
 
-        if ($this->option('force-sync')) {
-            $this->dispatchSyncs();
-            return self::SUCCESS;
+        if ($subjectId = $this->option('subject')) {
+            return $this->syncBySubject((int) $subjectId);
         }
 
         $this->info($dryRun ? '--- DRY RUN — no changes will be written ---' : 'Back-filling source_question_id...');
@@ -155,6 +155,76 @@ class BackfillQuestionSourcesCommand extends Command
         return [$matched, $unmatched, $examIds];
     }
 
+    private function syncBySubject(int $subjectId): int
+    {
+        $subject = AcademicSubject::find($subjectId);
+
+        if (! $subject) {
+            $this->error("Academic subject #{$subjectId} not found.");
+            return self::FAILURE;
+        }
+
+        $this->info("Syncing questions for subject: {$subject->name} (#{$subjectId})");
+
+        $topicIds = $subject->academicTopics()->pluck('id');
+
+        if ($topicIds->isEmpty()) {
+            $this->warn('No topics found for this subject.');
+            return self::SUCCESS;
+        }
+
+        $count = 0;
+
+        // MCQ
+        $mcqIds = MultipleChoiceQuestion::whereIn('academic_topic_id', $topicIds)
+            ->whereIn('id', function ($q) {
+                $q->select('source_question_id')
+                    ->from('general_exam_questions')
+                    ->where('type', GeneralExamQuestion::TYPE_MULTIPLE_CHOICE)
+                    ->whereNotNull('source_question_id');
+            })
+            ->pluck('id');
+
+        foreach ($mcqIds as $id) {
+            SyncSourceQuestionJob::dispatch(GeneralExamQuestion::TYPE_MULTIPLE_CHOICE, $id);
+            $count++;
+        }
+
+        // True/False
+        $tfIds = TrueOrFalseQuestion::whereIn('academic_topic_id', $topicIds)
+            ->whereIn('id', function ($q) {
+                $q->select('source_question_id')
+                    ->from('general_exam_questions')
+                    ->where('type', GeneralExamQuestion::TYPE_TRUE_FALSE)
+                    ->whereNotNull('source_question_id');
+            })
+            ->pluck('id');
+
+        foreach ($tfIds as $id) {
+            SyncSourceQuestionJob::dispatch(GeneralExamQuestion::TYPE_TRUE_FALSE, $id);
+            $count++;
+        }
+
+        // Essay
+        $essayIds = EssayQuestion::whereIn('academic_topic_id', $topicIds)
+            ->whereIn('id', function ($q) {
+                $q->select('source_question_id')
+                    ->from('general_exam_questions')
+                    ->where('type', GeneralExamQuestion::TYPE_ESSAY)
+                    ->whereNotNull('source_question_id');
+            })
+            ->pluck('id');
+
+        foreach ($essayIds as $id) {
+            SyncSourceQuestionJob::dispatch(GeneralExamQuestion::TYPE_ESSAY, $id);
+            $count++;
+        }
+
+        $this->info("Dispatched {$count} sync+regrade job(s) for subject #{$subjectId}.");
+
+        return self::SUCCESS;
+    }
+
     private function dispatchSyncs(): void
     {
         $this->line('Dispatching sync+regrade jobs for all matched exam questions...');
@@ -162,7 +232,6 @@ class BackfillQuestionSourcesCommand extends Command
         $count = 0;
 
         foreach ($this->sourceTypes() as [$type, $modelClass]) {
-            // Find every distinct source_question_id that now has a match
             $sourceIds = GeneralExamQuestion::where('type', $type)
                 ->whereNotNull('source_question_id')
                 ->distinct()

@@ -47,8 +47,8 @@ class RegradeNormalizeCommand extends Command
         $this->info($dryRun ? '--- DRY RUN ---' : 'Queuing regrade jobs…');
 
         // ── Build exam query ─────────────────────────────────────────────────
-        $examQuery = GeneralExam::whereNotNull('target_total_marks')
-                                ->where('target_total_marks', '>', 0);
+        $examQuery = GeneralExam::query();// whereNotNull('target_total_marks')
+                                //->where('target_total_marks', '>', 0);
 
         if ($examId) {
             $examQuery->where('id', $examId);
