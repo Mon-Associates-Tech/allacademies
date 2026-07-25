@@ -4,8 +4,8 @@ namespace App\ExaminationHub\Services;
 
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSubmission;
-use App\Jobs\ExaminationHub\RegradeSubmissionJob;
 use App\Models\MultipleChoiceQuestion;
+use App\Services\GeneralExam\GeneralExamGradingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -30,6 +30,54 @@ class AnswerKeyResolutionService
      *   2. Sync corrections into every matching general_exam_questions row
      *   3. Queue RegradeSubmissionJob for every affected submission
      */
+    public function __construct(
+        private readonly GeneralExamGradingService $gradingService
+    ) {}
+
+    /**
+     * Sync exam questions from their source MCQs and regrade all affected
+     * submissions synchronously — no queue required.
+     *
+     * $mcqIds: array of MultipleChoiceQuestion IDs to sync from.
+     */
+    public function syncAndRegrade(array $mcqIds): array
+    {
+        $affectedExamQIds = [];
+
+        DB::transaction(function () use ($mcqIds, &$affectedExamQIds) {
+            foreach ($mcqIds as $mcqId) {
+                $mcq = MultipleChoiceQuestion::find((int) $mcqId);
+
+                if (! $mcq) {
+                    Log::warning('AnswerKeyResolution: MCQ not found', ['mcq_id' => $mcqId]);
+                    continue;
+                }
+
+                foreach ($this->syncToExamQuestions($mcq, ['answer' => $mcq->answer]) as $id) {
+                    $affectedExamQIds[] = $id;
+                }
+            }
+        });
+
+        $affectedExamQIds = array_unique($affectedExamQIds);
+
+        $results = $this->regradeSync($affectedExamQIds);
+
+        Log::info('AnswerKeyResolution: syncAndRegrade complete', [
+            'mcq_ids'               => $mcqIds,
+            'exam_questions_synced' => count($affectedExamQIds),
+            'submissions_regraded'  => $results['regraded'],
+            'failed'                => $results['failed'],
+        ]);
+
+        return [
+            'exam_questions_synced' => count($affectedExamQIds),
+            'submissions_regraded'  => $results['regraded'],
+            'failed'                => $results['failed'],
+            'errors'                => $results['errors'],
+        ];
+    }
+
     public function applyChanges(array $changes): array
     {
         if (empty($changes)) {
@@ -167,6 +215,47 @@ class AnswerKeyResolutionService
     }
 
     /**
+     * Regrade submissions synchronously for the given exam question IDs.
+     */
+    protected function regradeSync(array $examQuestionIds): array
+    {
+        $results = ['regraded' => 0, 'failed' => 0, 'errors' => []];
+
+        if (empty($examQuestionIds)) {
+            return $results;
+        }
+
+        $examIds = GeneralExamQuestion::whereIn('id', $examQuestionIds)
+            ->distinct()
+            ->pluck('general_exam_id');
+
+        $submissions = GeneralExamSubmission::whereIn('general_exam_id', $examIds)
+            ->whereIn('status', [
+                GeneralExamSubmission::STATUS_SUBMITTED,
+                GeneralExamSubmission::STATUS_AUTO_GRADED,
+                GeneralExamSubmission::STATUS_MANUALLY_REVIEWED,
+            ])
+            ->whereNotNull('submitted_at')
+            ->get();
+
+        foreach ($submissions as $submission) {
+            try {
+                $this->gradingService->gradeSubmission($submission);
+                $results['regraded']++;
+            } catch (\Exception $e) {
+                $results['failed']++;
+                $results['errors'][] = ['submission_id' => $submission->id, 'error' => $e->getMessage()];
+                Log::error('AnswerKeyResolution: regrade failed', [
+                    'submission_id' => $submission->id,
+                    'error'         => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Queue RegradeSubmissionJob for all submitted/graded submissions that
      * belong to exams containing any of the given GeneralExamQuestion IDs.
      */
@@ -185,10 +274,6 @@ class AnswerKeyResolutionService
                 GeneralExamSubmission::STATUS_SUBMITTED,
                 GeneralExamSubmission::STATUS_AUTO_GRADED,
                 GeneralExamSubmission::STATUS_MANUALLY_REVIEWED,
-                // Note: STATUS_FINAL is intentionally excluded.
-                // Finalised submissions have been signed off by a grader —
-                // automatically regrading them would override human decisions.
-                // To regrade FINAL submissions, run: exam:regrade --include-final
             ])
             ->whereNotNull('submitted_at')
             ->pluck('id');
