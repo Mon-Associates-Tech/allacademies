@@ -33,7 +33,7 @@ class RestockBatchRequestedNotification extends BookShopNotification
             $message->line("- {$request->book?->title}: {$request->requested_quantity}");
         }
 
-        $message->action('Review Requests', route('bookshop.staff.restock-requests.index'))
+        $message->action('Review Request', route('bookshop.staff.restock-requests.show', $first->batch_id))
             ->line('Approving each item debits the warehouse pool and credits the branch immediately.');
 
         return $this->applyFrom($message);
@@ -47,7 +47,7 @@ class RestockBatchRequestedNotification extends BookShopNotification
         return [
             'title' => "New restock request ({$count} item".($count > 1 ? 's' : '').')',
             'body' => "{$first->branch?->name} requested {$count} book(s)",
-            'url' => route('bookshop.staff.restock-requests.index'),
+            'url' => route('bookshop.staff.restock-requests.show', $first->batch_id),
         ];
     }
 }

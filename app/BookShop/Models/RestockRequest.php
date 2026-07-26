@@ -14,13 +14,21 @@ class RestockRequest extends Model
     protected $table = 'bookshop_restock_requests';
 
     protected $fillable = [
+        'batch_id',
         'branch_id',
         'book_id',
         'requested_quantity',
+        'confirmed_quantity',
         'status',
         'requested_by_staff_id',
         'reviewed_by_staff_id',
         'reviewed_at',
+        'dispatched_by_staff_id',
+        'dispatched_at',
+        'delivered_by_staff_id',
+        'delivered_at',
+        'confirmed_by_staff_id',
+        'confirmed_at',
         'reason',
         'notes',
     ];
@@ -28,7 +36,11 @@ class RestockRequest extends Model
     protected $casts = [
         'status' => RestockRequestStatus::class,
         'requested_quantity' => 'integer',
+        'confirmed_quantity' => 'integer',
         'reviewed_at' => 'datetime',
+        'dispatched_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'confirmed_at' => 'datetime',
     ];
 
     public function branch(): BelongsTo
@@ -51,9 +63,29 @@ class RestockRequest extends Model
         return $this->belongsTo(Staff::class, 'reviewed_by_staff_id');
     }
 
+    public function dispatchedBy(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'dispatched_by_staff_id');
+    }
+
+    public function deliveredBy(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'delivered_by_staff_id');
+    }
+
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class, 'confirmed_by_staff_id');
+    }
+
     public function isPending(): bool
     {
         return $this->status === RestockRequestStatus::PENDING;
+    }
+
+    public function scopeInBatch($query, string $batchId)
+    {
+        return $query->where('batch_id', $batchId);
     }
 
     /**

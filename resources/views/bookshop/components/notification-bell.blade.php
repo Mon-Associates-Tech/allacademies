@@ -21,7 +21,7 @@
         @endif
     </button>
 
-    <div data-bell-dropdown class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 z-20"
+    <div data-bell-dropdown class="hidden absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 z-20"
          style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
             <span class="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Notifications</span>

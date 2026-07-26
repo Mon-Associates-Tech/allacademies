@@ -30,7 +30,7 @@ class RestockReviewedNotification extends BookShopNotification
                 ->action('View Stock', route('bookshop.staff.stock.index'));
         } else {
             $message->line('Reason: '.($this->request->reason ?: 'No reason given.'))
-                ->action('View Requests', route('bookshop.staff.restock-requests.index'));
+                ->action('View Request', route('bookshop.staff.restock-requests.show', $this->request->batch_id));
         }
 
         return $this->applyFrom($message);
@@ -46,7 +46,7 @@ class RestockReviewedNotification extends BookShopNotification
                 .($approved ? '' : ' - '.($this->request->reason ?: 'No reason given')),
             'url' => $approved
                 ? route('bookshop.staff.stock.index')
-                : route('bookshop.staff.restock-requests.index'),
+                : route('bookshop.staff.restock-requests.show', $this->request->batch_id),
         ];
     }
 }

@@ -97,6 +97,9 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
             Route::get('restock-requests', [RestockRequestController::class, 'index'])->name('restock-requests.index');
             Route::get('restock-requests/create', [RestockRequestController::class, 'create'])->name('restock-requests.create');
             Route::post('restock-requests', [RestockRequestController::class, 'store'])->name('restock-requests.store');
+            Route::get('restock-requests/{batchId}', [RestockRequestController::class, 'show'])->name('restock-requests.show');
+            Route::patch('restock-requests/{restockRequest}/deliver', [RestockRequestController::class, 'markDelivered'])->name('restock-requests.deliver');
+            Route::patch('restock-requests/{restockRequest}/confirm', [RestockRequestController::class, 'confirm'])->name('restock-requests.confirm');
 
             Route::get('customers', [StaffCustomerController::class, 'index'])->name('customers.index');
             Route::post('customers/send-email', [StaffCustomerController::class, 'sendEmail'])->name('customers.send-email');
@@ -114,6 +117,9 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
 
                 Route::patch('restock-requests/{restockRequest}/approve', [RestockRequestController::class, 'approve'])->name('restock-requests.approve');
                 Route::patch('restock-requests/{restockRequest}/reject', [RestockRequestController::class, 'reject'])->name('restock-requests.reject');
+                Route::patch('restock-requests/{batchId}/approve-all', [RestockRequestController::class, 'approveAll'])->name('restock-requests.approve-all');
+                Route::patch('restock-requests/{batchId}/reject-all', [RestockRequestController::class, 'rejectAll'])->name('restock-requests.reject-all');
+                Route::patch('restock-requests/{restockRequest}/dispatch', [RestockRequestController::class, 'dispatchRequest'])->name('restock-requests.dispatch');
 
                 Route::get('warehouse', [WarehouseController::class, 'index'])->name('warehouse.index');
                 Route::post('warehouse', [WarehouseController::class, 'store'])->name('warehouse.store');
