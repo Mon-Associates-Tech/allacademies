@@ -23,15 +23,71 @@ class SubmissionController extends Controller
         private readonly GeneralExamGradingService $gradingService,
     ) {}
 
-    public function index(GeneralExam $exam): View
+    public function index(Request $request, GeneralExam $exam): View
     {
         $this->ensureOwnerAccess($exam);
 
-        $submissions = $exam->submissions()->latest('id')->paginate(20);
+        $search = $request->string('search')->toString();
+        $status = $request->string('status')->toString();
+        $sortByCombined = $request->string('sort')->toString() ?: 'submitted_at_desc';
+        
+        // Parse combined sort parameter (e.g., "percentage_desc" -> field: "percentage", direction: "desc")
+        $parts = explode('_', $sortByCombined);
+        $direction = array_pop($parts);
+        $field = implode('_', $parts);
+
+        // Whitelist to prevent SQL injection
+        $allowedSorts = ['submitted_at', 'percentage', 'time_taken_minutes', 'id'];
+        if (!in_array($field, $allowedSorts, true)) {
+            $field = 'submitted_at';
+        }
+        if (!in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
+        $query = $exam->submissions();
+
+        // 1. Calculate Summary Metrics on the FILTERED dataset
+        $summaryQuery = clone $query;
+        if ($search !== '') {
+            $summaryQuery->where(function ($q) use ($search) {
+                $q->where('participant_name', 'like', "%{$search}%")
+                  ->orWhere('participant_email', 'like', "%{$search}%");
+            });
+        }
+        if ($status !== '') {
+            $summaryQuery->where('status', $status);
+        }
+
+        $summary = [
+            'total'     => $summaryQuery->count(),
+            'avg_score' => (float) ($summaryQuery->avg('percentage') ?? 0),
+            'max_score' => (float) ($summaryQuery->max('percentage') ?? 0),
+            'min_score' => (float) ($summaryQuery->min('percentage') ?? 0),
+        ];
+
+        // 2. Apply Filters to Main Paginated Query
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('participant_name', 'like', "%{$search}%")
+                  ->orWhere('participant_email', 'like', "%{$search}%");
+            });
+        }
+        if ($status !== '') {
+            $query->where('status', $status);
+        }
+
+        $submissions = $query->orderBy($field, $direction)->paginate(20)->withQueryString();
 
         return view('examination-hub.submissions.index', [
-            'exam' => $exam,
+            'exam'        => $exam,
             'submissions' => $submissions,
+            'summary'     => $summary,
+            'filters'     => [
+                'search' => $search,
+                'status' => $status,
+                'sort'   => $sortByCombined,
+            ],
         ]);
     }
 
