@@ -24,6 +24,8 @@
     <input type="hidden" name="{{ $name }}" id="{{ $idPrefix }}-value" data-book-picker-value
            value="{{ $value }}" {{ $required ? 'required' : '' }}>
 
+    <p id="{{ $idPrefix }}-stock-info" class="mt-1 text-xs"></p>
+
     <div id="{{ $idPrefix }}-results"
          class="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hidden max-h-60 overflow-y-auto"
          style="border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
@@ -35,6 +37,20 @@
 
 @pushOnce('scripts')
     <script>
+        window.bookPickerStockInfoHtml = function (book) {
+            if (book.warehouse_quantity === undefined) return '';
+
+            const warehouseText = book.warehouse_quantity > 0
+                ? `${book.warehouse_quantity} in warehouse`
+                : 'Out of stock in warehouse — you can still request it, and it will be matched once restocked';
+            const warehouseClass = book.warehouse_quantity > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+            const branchText = (book.branch_quantity !== null && book.branch_quantity !== undefined)
+                ? ` &middot; Your branch: ${book.branch_quantity}`
+                : '';
+
+            return `<span class="${warehouseClass}">${warehouseText}</span><span class="text-slate-400 dark:text-slate-500">${branchText}</span>`;
+        };
+
         (function initBookPickers() {
             const init = (wrapper) => {
                 if (!wrapper || wrapper.dataset.ready) return;
@@ -44,6 +60,7 @@
                 const search = document.getElementById(prefix + '-search');
                 const hidden = document.getElementById(prefix + '-value');
                 const results = document.getElementById(prefix + '-results');
+                const stockInfo = document.getElementById(prefix + '-stock-info');
                 let debounceTimer = null;
                 let currentItems = [];
 
@@ -63,6 +80,7 @@
                                 class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700 last:border-0">
                             <span class="font-semibold text-slate-900 dark:text-white">${escapeHtml(book.title)}</span>
                             ${book.author ? '<span class="text-slate-500 dark:text-slate-400"> — ' + escapeHtml(book.author) + '</span>' : ''}
+                            <span class="block text-xs mt-0.5">${window.bookPickerStockInfoHtml(book)}</span>
                         </button>
                     `).join('');
                     results.classList.remove('hidden');
@@ -72,6 +90,7 @@
                             const book = currentItems[parseInt(btn.dataset.index, 10)];
                             hidden.value = book.id;
                             search.value = book.title;
+                            if (stockInfo) stockInfo.innerHTML = window.bookPickerStockInfoHtml(book);
                             hideResults();
                         });
                     });
@@ -89,6 +108,7 @@
                     // silently submitting a stale ID that no longer
                     // matches what's shown in the box.
                     hidden.value = '';
+                    if (stockInfo) stockInfo.innerHTML = '';
                     clearTimeout(debounceTimer);
 
                     const q = search.value.trim();
@@ -115,6 +135,11 @@
                     if (!wrapper.contains(e.target)) hideResults();
                 });
             };
+
+            // Exposed globally so pages with their own dynamic row-cloning
+            // (e.g. the restock request form) can initialize new rows
+            // without duplicating this whole function.
+            window.initBookPicker = init;
 
             const hydrate = () => document.querySelectorAll('[data-book-picker="true"]').forEach(init);
             document.addEventListener('DOMContentLoaded', hydrate);

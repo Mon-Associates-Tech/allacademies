@@ -1,3 +1,0 @@
-"Participant Name","Participant Email",Score,"Total Marks",Percentage,Grade,"Question Count","Correct Count","Incorrect Count","Unanswered Count","Section Scores","Time Allowed (minutes)","Time Taken (minutes)",Status,"Submitted At"
-"Sam Pete",sm@email.com,2.00,10.00,20%,F,10,2,8,0,"Section A: 2",0,-5,Auto_graded,"2026-05-08 17:19:45"
-"Dan Kim",k@email.com,5.00,10.00,50%,D,10,5,5,0,"Section A: 5",0,-32,Auto_graded,"2026-05-08 18:11:28"

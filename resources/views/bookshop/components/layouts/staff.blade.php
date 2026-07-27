@@ -17,20 +17,28 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center gap-8">
             <span class="text-white font-bold" style="font-family: 'Georgia', serif; letter-spacing: -0.02em;">BookShop</span>
-            <nav class="hidden md:flex items-center gap-5 text-sm flex-wrap">
+            <nav class="hidden md:flex items-center gap-5 text-sm">
                 <x-bookshop::nav-link route="bookshop.staff.dashboard">Dashboard</x-bookshop::nav-link>
                 <x-bookshop::nav-link route="bookshop.staff.orders.index" :active="['bookshop.staff.orders.*']">Orders</x-bookshop::nav-link>
-                <x-bookshop::nav-link route="bookshop.staff.books.index" :active="['bookshop.staff.books.*']">Books</x-bookshop::nav-link>
-                <x-bookshop::nav-link route="bookshop.staff.stock.index" :active="['bookshop.staff.stock.*']">Stock</x-bookshop::nav-link>
                 <x-bookshop::nav-link route="bookshop.staff.restock-requests.index" :active="['bookshop.staff.restock-requests.*']">Restock</x-bookshop::nav-link>
-                <x-bookshop::nav-link route="bookshop.staff.customers.index" :active="['bookshop.staff.customers.*']">Customers</x-bookshop::nav-link>
-                <x-bookshop::nav-link route="bookshop.staff.reports.index" :active="['bookshop.staff.reports.*']">Reports</x-bookshop::nav-link>
-                @if($staff?->isSuperAdmin())
-                    <x-bookshop::nav-link route="bookshop.staff.warehouse.index" :active="['bookshop.staff.warehouse.*']">Warehouse</x-bookshop::nav-link>
-                    <x-bookshop::nav-link route="bookshop.staff.branches.index" :active="['bookshop.staff.branches.*']">Branches</x-bookshop::nav-link>
-                    <x-bookshop::nav-link route="bookshop.staff.team.index" :active="['bookshop.staff.team.*']">Team</x-bookshop::nav-link>
-                    <x-bookshop::nav-link route="bookshop.staff.categories.index" :active="['bookshop.staff.categories.*']">Categories</x-bookshop::nav-link>
-                @endif
+
+                <x-bookshop::nav-dropdown label="Catalog" :active="['bookshop.staff.books.*', 'bookshop.staff.stock.*', 'bookshop.staff.warehouse.*', 'bookshop.staff.categories.*']">
+                    <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.books.index" :active="['bookshop.staff.books.*']">Books</x-bookshop::nav-link>
+                    <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.stock.index" :active="['bookshop.staff.stock.*']">Stock</x-bookshop::nav-link>
+                    @if($staff?->isSuperAdmin())
+                        <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.warehouse.index" :active="['bookshop.staff.warehouse.*']">Warehouse</x-bookshop::nav-link>
+                        <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.categories.index" :active="['bookshop.staff.categories.*']">Categories</x-bookshop::nav-link>
+                    @endif
+                </x-bookshop::nav-dropdown>
+
+                <x-bookshop::nav-dropdown label="Manage" :active="['bookshop.staff.customers.*', 'bookshop.staff.reports.*', 'bookshop.staff.branches.*', 'bookshop.staff.team.*']">
+                    <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.customers.index" :active="['bookshop.staff.customers.*']">Customers</x-bookshop::nav-link>
+                    <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.reports.index" :active="['bookshop.staff.reports.*']">Reports</x-bookshop::nav-link>
+                    @if($staff?->isSuperAdmin())
+                        <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.branches.index" :active="['bookshop.staff.branches.*']">Branches</x-bookshop::nav-link>
+                        <x-bookshop::nav-link variant="dropdown" route="bookshop.staff.team.index" :active="['bookshop.staff.team.*']">Team</x-bookshop::nav-link>
+                    @endif
+                </x-bookshop::nav-dropdown>
             </nav>
         </div>
         <div class="flex items-center gap-3">

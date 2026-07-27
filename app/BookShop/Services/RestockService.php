@@ -317,6 +317,51 @@ class RestockService
     }
 
     /**
+     * "Their fulfillment is matched when items are in stock" — called
+     * from WarehouseController::store() every time a book's warehouse
+     * quantity is set. Attempts to approve pending requests for that
+     * book, oldest first (first-come-first-served across branches, not
+     * grouped by branch), stopping as soon as the warehouse runs out.
+     * Reuses approve() as-is rather than duplicating its warehouse-check
+     * -and-decrement logic — each call re-checks the (by-then-updated)
+     * warehouse quantity itself, so this naturally stops at the right
+     * point without this method needing to track running totals.
+     *
+     * Deliberately automatic, not a "here's what you could approve"
+     * prompt: a branch manager who requested an out-of-stock book
+     * shouldn't need the superadmin to remember to come back and approve
+     * it manually the moment stock exists again.
+     *
+     * @return array{approved: Collection<int, RestockRequest>, failed: Collection<int, array{request: RestockRequest, error: string}>}
+     */
+    public function autoFulfillPendingForBook(Book $book, Staff $actingStaff): array
+    {
+        $pending = RestockRequest::query()
+            ->where('book_id', $book->id)
+            ->where('status', RestockRequestStatus::PENDING)
+            ->oldest('created_at')
+            ->get();
+
+        $approved = collect();
+        $failed = collect();
+
+        foreach ($pending as $request) {
+            try {
+                $approved->push($this->approve($actingStaff, $request));
+            } catch (OrderPlacementException $e) {
+                // Expected once the warehouse runs out mid-loop - later
+                // pending requests for the same book simply stay pending
+                // until the next restock, not treated as an error to
+                // surface to the superadmin who just set the quantity.
+                $failed->push(['request' => $request, 'error' => $e->getMessage()]);
+                break;
+            }
+        }
+
+        return ['approved' => $approved, 'failed' => $failed];
+    }
+
+    /**
      * Rejects every still-pending item in a batch with one shared reason.
      * Unlike approve, rejection has no external failure mode (no
      * warehouse check), so this is a straightforward bulk update rather

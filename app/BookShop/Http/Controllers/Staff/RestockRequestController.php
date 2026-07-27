@@ -214,7 +214,7 @@ class RestockRequestController extends Controller
      * Superadmin-only (route middleware, same group as approve/reject) -
      * marks an approved item as physically sent from the warehouse.
      */
-    public function dispatchRequest(RestockRequest $restockRequest)
+    public function dispatchRequest(RestockRequest $restockRequest): RedirectResponse
     {
         /** @var Staff $staff */
         $staff = Auth::guard('bookshop_staff')->user();

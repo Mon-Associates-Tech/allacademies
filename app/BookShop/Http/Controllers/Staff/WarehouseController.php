@@ -6,6 +6,7 @@ use App\BookShop\Http\Controllers\Controller;
 use App\BookShop\Models\Book;
 use App\BookShop\Models\Staff;
 use App\BookShop\Models\WarehouseStock;
+use App\BookShop\Services\RestockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,10 @@ use Illuminate\View\View;
 
 class WarehouseController extends Controller
 {
+    public function __construct(private readonly RestockService $restockService)
+    {
+    }
+
     public function index(Request $request): View
     {
         $stock = WarehouseStock::query()
@@ -48,6 +53,23 @@ class WarehouseController extends Controller
 
         $book = Book::find($data['book_id']);
 
-        return back()->with('status', "Warehouse stock for \"{$book?->title}\" set to {$stock->quantity}.");
+        $status = "Warehouse stock for \"{$book?->title}\" set to {$stock->quantity}.";
+
+        // "Their fulfillment is matched when items are in stock" - every
+        // time warehouse quantity is set, sweep for pending requests on
+        // this specific book and auto-approve as many as the new
+        // quantity supports, oldest first. Harmless to run even when
+        // quantity went down or nothing changed: with nothing available,
+        // the first attempt just fails immediately and the loop stops.
+        if ($book) {
+            $result = $this->restockService->autoFulfillPendingForBook($book, $staff);
+            $approvedCount = $result['approved']->count();
+
+            if ($approvedCount > 0) {
+                $status .= " Also auto-approved {$approvedCount} pending request(s) for this book that were waiting on stock.";
+            }
+        }
+
+        return back()->with('status', $status);
     }
 }
