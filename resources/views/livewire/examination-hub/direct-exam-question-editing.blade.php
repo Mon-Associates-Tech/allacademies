@@ -1,4 +1,3 @@
-|CODE_EDIT_BLOCK|/home/me/phpp/allacademies/resources/views/livewire/examination-hub/direct-exam-question-editing.blade.php
 <div>
     <style>
         @media print {

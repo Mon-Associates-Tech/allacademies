@@ -37,7 +37,7 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
              Route::get(
             '/direct-exam-question-editing',
             \App\Livewire\ExaminationHub\DirectExamQuestionEditing::class
-        )->name('examination-hub.direct-exam-question-editing');
+        )->name('direct-exam-question-editing');
 
     Route::get('/exams/{exam}', [DashboardController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/edit', [ExamCreationController::class, 'edit'])->name('exams.edit');
