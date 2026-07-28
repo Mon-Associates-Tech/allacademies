@@ -278,7 +278,7 @@
                                         <div class="flex-1 min-w-0">
                                             <p class="font-semibold text-slate-900 dark:text-white">Question {{ $loop->iteration }}</p>
                                             <div class="text-slate-700 dark:text-slate-300 mt-2 text-sm">
-                                                <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" style="font-size:0.875rem;"/>
+                                                <x-form.markdown-with-math :content="$question->question->down ?? $question->question" class="prose dark:prose-invert max-w-none" style="font-size:0.875rem;"/>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-2 flex-shrink-0">
@@ -337,7 +337,7 @@
                                                     @endphp
                                                     <div class="flex items-center gap-2 p-2.5 border text-sm {{ $optClass }}" style="border-radius: 2px;">
                                                         <span class="font-medium text-slate-700 dark:text-slate-300">{{ $optionKey }}.</span>
-                                                        <x-form.markdown-with-math :content="$optionText" class="inline text-slate-700 dark:text-slate-300" style="font-size:0.875rem;"/>
+                                                        <x-form.markdown-with-math :content="$optionText['down'] ?? $optionText" class="inline text-slate-700 dark:text-slate-300" style="font-size:0.875rem;"/>
                                                         @if($isStudentAnswer)
                                                             <span class="ml-auto text-xs text-slate-500 dark:text-slate-400">(Your answer)</span>
                                                         @endif
