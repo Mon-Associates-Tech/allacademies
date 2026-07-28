@@ -45,6 +45,8 @@ class GeneralExamQuestion extends Model
     protected function casts(): array
     {
         return [
+            // 🌟 CRITICAL FIX: Add the Mark cast to preserve HTML/images
+            'question'               => \App\Support\Mark::class,
             'options'            => 'array',
             'keywords'           => 'array',
             'ai_generated'          => 'boolean',

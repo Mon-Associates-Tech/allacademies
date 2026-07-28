@@ -38,7 +38,7 @@ class ExamQuestionPreviewService
         })->all();
     }
 
-    private function generateFromDatabase(array $section): array
+     private function generateFromDatabase(array $section): array
     {
         $count = (int) ($section['question_count'] ?? 0);
         $subjectId = $section['academic_subject_id'] ?? null;
@@ -66,7 +66,6 @@ class ExamQuestionPreviewService
             default => [],
         };
     }
-
     private function generateFromAi(array $section): array
     {
         $questionType = $section['question_type'] ?? 'multiple_choice';
@@ -272,36 +271,53 @@ class ExamQuestionPreviewService
         ];
     }
 
+
     private function fetchMcq(int $subjectId, array $topicIds, array $subtopicIds, int $count): array
     {
         $query = MultipleChoiceQuestion::query();
         $this->applyHierarchyFilters($query, $subjectId, $topicIds, $subtopicIds);
 
         return $query->inRandomOrder()->limit($count)->get()->map(function ($q) {
+            $options = array_values(array_filter([
+                $this->asMarkArray($q->option_a),
+                $this->asMarkArray($q->option_b),
+                $this->asMarkArray($q->option_c),
+                $this->asMarkArray($q->option_d),
+                $this->asMarkArray($q->option_e),
+            ], fn($opt) => !empty($opt['up']) || !empty($opt['down'])));
+
             return [
                 'type'               => 'multiple_choice',
                 'source_question_id' => $q->id,
-                'question'           => $this->asText($q->question),
-                'options'            => array_values(array_filter([$this->asText($q->option_a), $this->asText($q->option_b), $this->asText($q->option_c), $this->asText($q->option_d), $this->asText($q->option_e)])),
-                'answer'             => strtoupper((string) $q->answer),
+                'question'           => $this->asMarkArray($q->question), // 🌟 PRESERVES IMAGES
+                'options'            => $options,                         // 🌟 PRESERVES IMAGES
+                'answer'             => strtoupper($this->getAnswerString($q->answer)),
+                'correct_answer'     => strtoupper($this->getAnswerString($q->answer)),
                 'points'             => (float) ($q->score ?? 1),
+                'marks'              => (float) ($q->score ?? 1),
             ];
         })->all();
     }
 
     private function fetchTof(int $subjectId, array $topicIds, array $subtopicIds, int $count): array
     {
-        $query = TrueOrFalseQuestion::query();
+         $query = TrueOrFalseQuestion::query();
         $this->applyHierarchyFilters($query, $subjectId, $topicIds, $subtopicIds);
 
         return $query->inRandomOrder()->limit($count)->get()->map(function ($q) {
+            $answerStr = $this->getAnswerString($q->answer);
             return [
                 'type'               => 'true_false',
                 'source_question_id' => $q->id,
-                'question'           => $this->asText($q->question),
-                'options'            => ['True', 'False'],
-                'answer'             => $q->answer ? 'True' : 'False',
+                'question'           => $this->asMarkArray($q->question), // 🌟 PRESERVES IMAGES
+                'options'            => [
+                    ['up' => 'True', 'down' => 'True'],
+                    ['up' => 'False', 'down' => 'False']
+                ],
+                'answer'             => strtolower($answerStr) === 'true' ? 'True' : 'False',
+                'correct_answer'     => strtolower($answerStr) === 'true' ? 'True' : 'False',
                 'points'             => (float) ($q->score ?? 1),
+                'marks'              => (float) ($q->score ?? 1),
             ];
         })->all();
     }
@@ -315,9 +331,10 @@ class ExamQuestionPreviewService
             return [
                 'type'               => 'essay',
                 'source_question_id' => $q->id,
-                'question'           => $this->asText($q->question),
-                'answer'             => $this->asText($q->answer),
+                'question'           => $this->asMarkArray($q->question), // 🌟 PRESERVES IMAGES
+                'answer'             => $this->asMarkArray($q->answer),
                 'points'             => (float) ($q->score ?? 5),
+                'marks'              => (float) ($q->score ?? 5),
             ];
         })->all();
     }
@@ -337,13 +354,41 @@ class ExamQuestionPreviewService
         }
     }
 
-    private function asText(mixed $value): string
+    /**
+     * 🌟 REPLACES asText(): Preserves the full Mark array structure instead of stripping HTML.
+     */
+    private function asMarkArray(mixed $value): array
     {
         if ($value instanceof Mark) {
-            return trim(strip_tags((string) ($value->down ?? '')));
+            return $value->toArray(); // Returns ['up' => '...', 'down' => '<img...>']
         }
 
-        return trim(strip_tags((string) $value));
+        // Handle raw JSON strings from DB if cast failed
+        if (is_string($value) && str_starts_with(trim($value), '{')) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded) && isset($decoded['up'], $decoded['down'])) {
+                return $decoded;
+            }
+        }
+
+        // Fallback for plain strings
+        return ['up' => (string) $value, 'down' => (string) $value];
+    }
+
+        /**
+     * Safely extracts a plain string from an answer field.
+     */
+    private function getAnswerString(mixed $value): string
+    {
+        if ($value instanceof Mark) {
+            return (string) ($value->down ?? $value->up ?? '');
+        }
+
+        if (is_array($value)) {
+            return $value['down'] ?? $value['up'] ?? '';
+        }
+
+        return (string) $value;
     }
 }
 

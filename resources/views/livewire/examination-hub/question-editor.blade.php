@@ -96,45 +96,62 @@
                                             </div>
 
                                             <div class="space-y-3">
+                                                {{-- Question Text --}}
                                                 <div>
                                                     <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Question Text</label>
+                                                    @php
+                                                        $qContent = $question['question'] ?? ['up' => '', 'down' => ''];
+                                                        if (!is_array($qContent)) {
+                                                            $qContent = ['up' => $qContent, 'down' => $qContent];
+                                                        }
+                                                        $displayContent = $qContent['down'] ?: $qContent['up'];
+                                                        $textareaContent = $qContent['up'] ?: $qContent['down'];
+                                                    @endphp
+
+                                                    {{-- Display HTML with images --}}
                                                     <div class="mb-2 py-1 prose prose-sm dark:prose-invert max-w-none">
-                                                        <x-form.markdown-with-math :content="$question['question'] ?? ''" />
+                                                        {!! $displayContent !!}
                                                     </div>
-                                                    <textarea 
-                                                        wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.question"
+
+                                                    {{-- Editable textarea - binds ONLY to .up --}}
+                                                    <textarea
+                                                        wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.question.up"
                                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white text-sm"
                                                         rows="2"
                                                         placeholder="Edit question text..."
-                                                    >{{ $question['question'] ?? '' }}</textarea>
+                                                    >{{ $textareaContent }}</textarea>
                                                 </div>
 
+                                                {{-- Multiple Choice Options --}}
                                                 @if(($question['type'] ?? '') === 'multiple_choice' && !empty($question['options']))
                                                     <div>
                                                         <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Options</label>
                                                         <div class="space-y-2">
                                                             @foreach($question['options'] as $optIndex => $option)
                                                                 @php
-                                                                    // Handle both string options and key/value array options
-                                                                    $optionValue = is_array($option) ? ($option['value'] ?? '') : $option;
-                                                                    $optionKey = is_array($option) ? ($option['key'] ?? chr(65 + $optIndex)) : chr(65 + $optIndex);
+                                                                    // Handle Mark array structure
+                                                                    $optArray = is_array($option) ? $option : ['up' => $option, 'down' => $option];
+                                                                    $optionDisplay = $optArray['down'] ?: $optArray['up'];
+                                                                    $optionText = $optArray['up'] ?: $optArray['down'];
+                                                                    $optionKey = chr(65 + $optIndex);
                                                                 @endphp
+
                                                                 <div class="space-y-2">
-                                                                    {{-- Readonly display --}}
+                                                                    {{-- Readonly display with HTML/images --}}
                                                                     <div class="flex gap-2 py-1">
                                                                         <span class="text-sm font-medium w-6 flex-shrink-0 pt-0.5">{{ $optionKey }}.</span>
-                                                                        <div class="flex-1 pt-0.5">
-                                                                            <x-form.markdown-with-math :content="$optionValue" class="m-0" />
+                                                                        <div class="flex-1 pt-0.5 prose prose-sm dark:prose-invert max-w-none">
+                                                                            {!! $optionDisplay !!}
                                                                         </div>
                                                                     </div>
-                                                                    
-                                                                    {{-- Editable input --}}
+
+                                                                    {{-- Editable input - binds ONLY to .up --}}
                                                                     <div class="flex gap-2">
                                                                         <span class="text-xs font-medium w-6 text-gray-500 flex-shrink-0 pt-0.5">{{ $optionKey }}.</span>
-                                                                        <input 
+                                                                        <input
                                                                             type="text"
-                                                                            wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.options.{{ $optIndex }}"
-                                                                            value="{{ $optionValue }}"
+                                                                            wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.options.{{ $optIndex }}.up"
+                                                                            value="{{ $optionText }}"
                                                                             class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
                                                                             placeholder="Edit option..."
                                                                         >
@@ -144,10 +161,11 @@
                                                         </div>
                                                     </div>
 
+                                                    {{-- Correct Answer & Marks --}}
                                                     <div class="grid grid-cols-2 gap-3">
                                                         <div>
                                                             <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Correct Answer</label>
-                                                            <select 
+                                                            <select
                                                                 wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.correct_answer"
                                                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
                                                             >
@@ -159,7 +177,7 @@
                                                         </div>
                                                         <div>
                                                             <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Marks</label>
-                                                            <input 
+                                                            <input
                                                                 type="number"
                                                                 min="1"
                                                                 wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.marks"
@@ -168,11 +186,13 @@
                                                             >
                                                         </div>
                                                     </div>
+
+                                                {{-- True/False Options --}}
                                                 @elseif(($question['type'] ?? '') === 'true_false')
                                                     <div class="grid grid-cols-2 gap-3">
                                                         <div>
                                                             <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Correct Answer</label>
-                                                            <select 
+                                                            <select
                                                                 wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.correct_answer"
                                                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
                                                             >
@@ -183,7 +203,7 @@
                                                         </div>
                                                         <div>
                                                             <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Marks</label>
-                                                            <input 
+                                                            <input
                                                                 type="number"
                                                                 min="1"
                                                                 wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.marks"
@@ -192,10 +212,12 @@
                                                             >
                                                         </div>
                                                     </div>
+
+                                                {{-- Other question types --}}
                                                 @else
                                                     <div>
                                                         <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Marks</label>
-                                                        <input 
+                                                        <input
                                                             type="number"
                                                             min="1"
                                                             wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.marks"
@@ -205,10 +227,11 @@
                                                     </div>
                                                 @endif
 
+                                                {{-- Explanation --}}
                                                 @if(!empty($question['explanation']))
                                                     <div>
                                                         <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Explanation (Optional)</label>
-                                                        <textarea 
+                                                        <textarea
                                                             wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.explanation"
                                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
                                                             rows="2"

@@ -359,7 +359,7 @@
                                                         <div
                                                             class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed mb-3">
                                                             <x-form.markdown-with-math
-                                                                content="{{ $question->question }}" />
+                                                                content="{{ $question->question->down ?? $question->question }}" />
                                                         </div>
 
                                                         {{-- Options/Answers --}}
@@ -371,7 +371,7 @@
                                                                         style="border-radius: 2px;">
                                                                         <span
                                                                             class="font-bold flex-shrink-0">{{ $key }}.</span>
-                                                                        <span>{!! $value !!}</span>
+                                                                        <span>{!! $value['down'] ?? $value !!}</span>
                                                                     </div>
                                                                 @endforeach
                                                             </div>

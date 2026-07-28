@@ -459,7 +459,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                         <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 font-serif"
                              :style="`font-size: ${fontSize}px; line-height: 1.75;`"
                             wire:key="question-text-{{ $question->id }}">
-                            <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none"/>
+                            <x-form.markdown-with-math :content="$question->question->down ?? $question->question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none"/>
                         </div>
 
                         {{-- ── MULTIPLE CHOICE ── --}}
@@ -485,7 +485,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                                                 {{ $key }}
                                             </span>
                                             <div class="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
-                                                <x-form.markdown-with-math :content="$optionText" class="text-slate-800 dark:text-slate-200"/>
+                                                <x-form.markdown-with-math :content="$optionText['down'] ?? $optionText" class="text-slate-800 dark:text-slate-200"/>
                                             </div>
                                         </div>
                                     </label>

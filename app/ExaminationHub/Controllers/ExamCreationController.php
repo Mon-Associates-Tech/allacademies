@@ -29,9 +29,7 @@ class ExamCreationController extends Controller
         private readonly ExamQuestionPreviewService     $previewService,
         private readonly ExamQuestionPersistenceService $persistenceService,
         private readonly ParticipantGroupService        $groupService
-    )
-    {
-    }
+    ) {}
 
     public function create(): View
     {
@@ -125,10 +123,29 @@ class ExamCreationController extends Controller
             'sections' => $payload['sections'],
         ]);
 
+
+
         $hardenedMode = (bool)($payload['hardened_mode'] ?? false);
         $examId = $payload['exam_id'] ?? null;
 
-// If editing an existing exam, load existing questions OR regenerate if section config changed
+        // 🌟 HELPER: Guarantee Mark structure
+        $getMarkData = function ($value): array {
+            if (!$value) return ['up' => '', 'down' => ''];
+            if (is_object($value) && method_exists($value, 'toArray')) {
+                return $value->toArray();
+            }
+            if (is_string($value) && str_starts_with(trim($value), '{')) {
+                $decoded = json_decode($value, true);
+                if (is_array($decoded) && isset($decoded['up'], $decoded['down'])) {
+                    return $decoded;
+                }
+            }
+            if (is_string($value)) {
+                return ['up' => $value, 'down' => $value]; // Fallback for plain strings
+            }
+            return is_array($value) ? $value : ['up' => '', 'down' => ''];
+        };
+
         if ($examId) {
             $exam = GeneralExam::with(['sections.questions'])->findOrFail((int)$examId);
             $this->ensureOwnerAccess($exam);
@@ -140,7 +157,6 @@ class ExamCreationController extends Controller
                 $sectionId = !empty($sectionData['id']) ? (int)$sectionData['id'] : null;
                 $dbSection = $sectionId ? $dbSectionsById->get($sectionId) : null;
 
-                // Regenerate when: new section (no DB record), config changed, or no questions persisted yet
                 $needsRegeneration = !$dbSection
                     || $dbSection->questions->isEmpty()
                     || (int)$dbSection->question_count !== (int)($sectionData['question_count'] ?? 0)
@@ -151,25 +167,34 @@ class ExamCreationController extends Controller
                     $preview = $this->previewService->generateForSections([$sectionData], $hardenedMode);
                     $generatedQuestions[$sectionIndex] = $preview[0] ?? [];
                 } else {
-                    $generatedQuestions[$sectionIndex] = $dbSection->questions->map(function ($question) {
+                    $generatedQuestions[$sectionIndex] = $dbSection->questions->map(function ($question) use ($getMarkData) {
+                        $options = array_filter([
+                            $getMarkData($question->option_a ?? null),
+                            $getMarkData($question->option_b ?? null),
+                            $getMarkData($question->option_c ?? null),
+                            $getMarkData($question->option_d ?? null),
+                            $getMarkData($question->option_e ?? null),
+                        ], fn($val) => !empty($val['down']) || !empty($val['up']));
+
+                        $correctAnswer = $question->answer ?? $question->correct_answer ?? '';
+                        if (is_object($correctAnswer) && method_exists($correctAnswer, 'down')) {
+                            $correctAnswer = $correctAnswer->down;
+                        }
+
                         return [
                             'id' => $question->id,
-                            'question' => $question->question ?? '',
+                            'source_question_id' => $question->source_question_id ?? null,
+                            'question' => $getMarkData($question->question), // GUARANTEED ARRAY
                             'type' => $question->type ?? 'multiple_choice',
-                            'marks' => $question->marks ?? 1,
-                            'options' => $this->flattenOptionsToStrings($question->options ?? []),
-                            'correct_answer' => $question->correct_answer,
-                            'explanation' => $question->explanation,
-                            'difficulty' => $question->difficulty ?? 'medium',
+                            'marks' => $question->marks ?? ($question->score ?? 1),
+                            'options' => array_values($options), // GUARANTEED ARRAY OF ARRAYS
+                            'correct_answer' => strtoupper($correctAnswer),
+                            'explanation' => $question->explanation ?? '',
+                            'difficulty' => $question->difficulty_level ?? $question->difficulty ?? 'medium',
                         ];
                     })->values()->all();
                 }
             }
-
-            Log::info('Edit mode: questions loaded/generated per section', [
-                'exam_id' => $examId,
-                'sections_count' => count($generatedQuestions),
-            ]);
         } else {
             // Generate new questions for new exam
             $generatedQuestions = $this->previewService->generateForSections(
@@ -191,6 +216,44 @@ class ExamCreationController extends Controller
             'generatedQuestions' => $generatedQuestions,
             'hardenedMode' => $hardenedMode,
         ]);
+    }
+
+    /**
+     * Convert options to simple strings for the question editor.
+     * The editor expects simple string options, not key/value arrays or Mark objects.
+     */
+    private function flattenOptionsToStrings(array $options): array
+    {
+        if (empty($options)) {
+            return [];
+        }
+
+        return array_map(function ($option) {
+            // If already a string, return as-is
+            if (is_string($option)) {
+                return $option;
+            }
+
+            // 🌟 Handle Mark object (from Eloquent cast)
+            if (is_object($option) && method_exists($option, 'toArray')) {
+                $arr = $option->toArray();
+                return $arr['down'] ?? $arr['up'] ?? '';
+            }
+
+            // If it's an array with key/value, extract the value
+            if (is_array($option)) {
+                $value = $option['value'] ?? '';
+
+                // Handle nested values
+                while (is_array($value) && isset($value['value'])) {
+                    $value = $value['value'];
+                }
+
+                return is_string($value) ? $value : '';
+            }
+
+            return '';
+        }, $options);
     }
 
     private function validatedPayload(Request $request): array
@@ -305,37 +368,7 @@ class ExamCreationController extends Controller
         return $data;
     }
 
-    /**
-     * Convert options to simple strings for the question editor.
-     * The editor expects simple string options, not key/value arrays.
-     */
-    private function flattenOptionsToStrings(array $options): array
-    {
-        if (empty($options)) {
-            return [];
-        }
 
-        return array_map(function ($option) {
-            // If already a string, return as-is
-            if (is_string($option)) {
-                return $option;
-            }
-
-            // If it's an array with key/value, extract the value
-            if (is_array($option)) {
-                $value = $option['value'] ?? '';
-
-                // Handle nested values
-                while (is_array($value) && isset($value['value'])) {
-                    $value = $value['value'];
-                }
-
-                return is_string($value) ? $value : '';
-            }
-
-            return '';
-        }, $options);
-    }
 
     public function store(Request $request): RedirectResponse
     {
@@ -380,15 +413,15 @@ class ExamCreationController extends Controller
             $exam = $this->creationService->updateExam($exam, (int)auth()->id(), $payload);
         } else {
             $exam = $this->creationService->createExam((int)auth()->id(), $payload);
-            
+
             // Copy participants from selected group if provided
             if (!empty($payload['participant_group_id'])) {
                 $group = GeneralExamParticipantGroup::find((int)$payload['participant_group_id']);
                 if ($group) {
                     $this->groupService->copyGroupMembersToExam($group, $exam->id);
                     $source = $group->parent
-                        ? 'List: '.$group->parent->name.', Programme: '.$group->name
-                        : 'List: '.$group->name;
+                        ? 'List: ' . $group->parent->name . ', Programme: ' . $group->name
+                        : 'List: ' . $group->name;
                 }
             }
         }
@@ -482,5 +515,19 @@ class ExamCreationController extends Controller
         return redirect()
             ->route('examination-hub.exams.show', $exam)
             ->with('success', 'Examination updated successfully.');
+    }
+
+
+    /**
+     * Convert options to array format preserving Mark structure.
+     */
+    private function flattenOptionsToArray(array $options): array
+    {
+        return array_map(function ($option) {
+            if (is_object($option) && method_exists($option, 'toArray')) {
+                return $option->toArray();
+            }
+            return $option;
+        }, $options);
     }
 }
