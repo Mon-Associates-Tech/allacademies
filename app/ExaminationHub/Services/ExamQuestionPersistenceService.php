@@ -44,10 +44,15 @@ class ExamQuestionPersistenceService
                 continue;
             }
 
+            // 🌟 FIX: We NO LONGER reload from the source_question_id.
+            // The $questionData array coming from the Livewire preview already contains 
+            // the fully edited Mark structure ['up' => '...', 'down' => '...'].
+            // Reloading from the source was destroying the admin's edits.
+
             $attributes = [
                 'general_exam_id'         => $section->general_exam_id,
                 'type'                    => $this->normalizeQuestionType($questionData['type'] ?? 'multiple_choice'),
-                'question'                => $questionData['question'] ?? '',
+                'question'                => $questionData['question'] ?? '', // Passes the edited Mark array directly
                 'explanation'             => $questionData['explanation'] ?? null,
                 'options'                 => $this->formatOptions($questionData),
                 'correct_answer'          => $questionData['correct_answer'] ?? $questionData['answer'] ?? null,
@@ -58,9 +63,6 @@ class ExamQuestionPersistenceService
                 'order'                   => $order + 1,
                 'ai_generated'            => $questionData['ai_generated'] ?? false,
                 'is_edited'               => $questionData['is_edited'] ?? false,
-                // ── Source traceability ──────────────────────────────────────
-                // Populated by ExamQuestionPreviewService when pulling questions
-                // from the question bank.  Null for AI-generated questions.
                 'source_question_id'      => isset($questionData['source_question_id'])
                                                 ? (int) $questionData['source_question_id']
                                                 : null,
@@ -109,8 +111,8 @@ class ExamQuestionPersistenceService
 
         if ($type === 'true_false') {
             return [
-                ['key' => 'True',  'value' => 'True'],
-                ['key' => 'False', 'value' => 'False'],
+                ['key' => 'True',  'value' => ['up' => 'True', 'down' => 'True']],
+                ['key' => 'False', 'value' => ['up' => 'False', 'down' => 'False']],
             ];
         }
 
@@ -118,9 +120,10 @@ class ExamQuestionPersistenceService
             $options   = array_values(array_filter($questionData['options']));
             $formatted = [];
             foreach ($options as $index => $option) {
+                // $option is the Mark array: ['up' => '...', 'down' => '...']
                 $formatted[] = [
                     'key'   => chr(65 + $index),
-                    'value' => $option,
+                    'value' => $option, 
                 ];
             }
 

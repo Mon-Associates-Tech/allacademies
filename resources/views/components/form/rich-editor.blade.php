@@ -35,14 +35,12 @@
                 const editorElement = document.getElementById(this.editorId);
                 if (!editorElement) return;
 
-                // Detect dark mode for TinyMCE configuration
                 const isDark = document.documentElement.classList.contains('dark');
 
                 tinymce.init({
                     selector: '#' + this.editorId,
                     height: {{ $height }},
                     menubar: false,
-                    // 🌟 Use dark skin and content CSS if in dark mode
                     skin: isDark ? 'oxide-dark' : 'oxide',
                     content_css: isDark ? 'dark' : 'default',
                     plugins: 'code lists table link image media paste markdown autoresize',
@@ -50,7 +48,6 @@
                     toolbar_mode: 'floating',
                     content_style: `
                         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; background-color: #ffffff; color: #111827; }
-                        /* 🌟 Force dark mode styles inside the iframe */
                         body.dark { background-color: #1f2937 !important; color: #f3f4f6 !important; }
                         body.dark a { color: #60a5fa; }
                         .mce-content-body p { margin: 0 0 16px; }
@@ -62,8 +59,6 @@
                         editor.on('init', () => {
                             this.initialized = true;
                             editor.setContent(this.down || '');
-
-                            // 🌟 Explicitly add 'dark' class to iframe body/html if parent is dark
                             if (document.documentElement.classList.contains('dark')) {
                                 editor.getBody().classList.add('dark');
                                 editor.getDoc().documentElement.classList.add('dark');
@@ -160,25 +155,28 @@
                 editor.setContent(newValue || '');
             }
             updatePreview();
-
-            // 🌟 LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
-            if (livewireModel && typeof @this !== 'undefined') {
+            
+            {{-- 🌟 FIX: Only compile Livewire sync logic if we are inside a Livewire component --}}
+            @isset($_instance)
+            // LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
+            if (livewireModel) {
                 clearTimeout(window['lw_sync_' + editorId]);
                 window['lw_sync_' + editorId] = setTimeout(() => {
                     @this.set(livewireModel, newValue);
                 }, 500);
             }
+            @endisset
         });
      "
      x-effect="updatePreview()"
-     wire:ignore
+     @if(isset($_instance)) wire:ignore @endif
      :data-editor-id="editorId">
 
     <label class="block text-sm tracking-tighter font-medium text-gray-700 dark:text-gray-300">
         {{ $label ?? ucfirst($name) }}
         @if(!empty($required)) <span class="text-red-500">*</span> @endif
     </label>
-
+    
     @if(!empty($info))
         <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{ $info }}</p>
     @endif
@@ -202,7 +200,7 @@
         </div>
 
         <div x-show="!preview" class="bg-white dark:bg-gray-800">
-            <textarea x-bind:id="editorId" wire:key="{{ $editorId }}" name="{{ $name }}[down]" x-model="down"
+            <textarea x-bind:id="editorId" @if(isset($_instance)) wire:key="{{ $editorId }}" @endif name="{{ $name }}[down]" x-model="down"
                 class="w-full border-0 focus:ring-0 dark:bg-gray-800 dark:text-white"
                 style="min-height: {{ $height }}px; resize: vertical;"></textarea>
         </div>
