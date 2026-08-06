@@ -5,11 +5,12 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "ext-dom": "*",
         "ext-imagick": "*",
         "ext-libxml": "*",
         "ext-zip": "*",
+        "ext-pdo": "*",
         "akaunting/laravel-firewall": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "bigbluebutton/bigbluebutton-api-php": "^2.3",
