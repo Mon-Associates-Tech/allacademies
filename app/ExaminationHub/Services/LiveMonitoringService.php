@@ -6,10 +6,12 @@ use App\ExaminationHub\Events\AdminActionSent;
 use App\ExaminationHub\Events\ParticipantHeartbeatReceived;
 use App\ExaminationHub\Events\ParticipantStatusChanged;
 use App\ExaminationHub\Events\ParticipantViolationRecorded;
+use App\ExaminationHub\Models\ExamAdminMessage;
 use App\ExaminationHub\Models\ExamParticipantHeartbeat;
 use App\ExaminationHub\Models\ExamProctoringLog;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class LiveMonitoringService
@@ -134,8 +136,9 @@ class LiveMonitoringService
         });
 
         $durationMinutes = $exam->duration_in_minutes;
+        $sections        = $exam->sections()->orderBy('order')->get();
 
-        $participants = $heartbeats->map(fn ($h) => $h->toLiveData($durationMinutes));
+        $participants = $heartbeats->map(fn ($h) => $h->toLiveData($durationMinutes, $sections));
 
         // Calculate stats
         $stats = [
@@ -185,8 +188,11 @@ class LiveMonitoringService
             ->limit(50)
             ->get();
 
+        $exam     = $heartbeat->exam;
+        $sections = $exam?->sections()->orderBy('order')->get() ?? collect();
+
         return [
-            'participant' => $heartbeat->toLiveData($heartbeat->exam?->duration_in_minutes),
+            'participant' => $heartbeat->toLiveData($exam?->duration_in_minutes, $sections),
             'violations' => $logs->map(fn ($log) => [
                 'id' => $log->id,
                 'event_type' => $log->event_type,
@@ -210,6 +216,14 @@ class LiveMonitoringService
             return null;
         }
 
+        // Persist the warning message for audit
+        ExamAdminMessage::createMessage(
+            $heartbeat->submission,
+            auth()->user(),
+            ExamAdminMessage::TYPE_WARNING,
+            $message
+        );
+
         $heartbeat->sendWarning($message);
 
         broadcast(new AdminActionSent($heartbeat, 'warning', $message))->toOthers();
@@ -227,6 +241,15 @@ class LiveMonitoringService
         if (! $heartbeat) {
             return null;
         }
+
+        // Persist the termination message for audit
+        ExamAdminMessage::createMessage(
+            $heartbeat->submission,
+            User::find($adminId),
+            ExamAdminMessage::TYPE_TERMINATION,
+            "Your exam has been terminated: {$reason}",
+            ['reason' => $reason, 'admin_id' => $adminId]
+        );
 
         $heartbeat->terminate($adminId, $reason);
 
@@ -251,6 +274,15 @@ class LiveMonitoringService
         if (! $heartbeat) {
             return null;
         }
+
+        // Persist the force submit message for audit
+        ExamAdminMessage::createMessage(
+            $heartbeat->submission,
+            User::find($adminId),
+            ExamAdminMessage::TYPE_FORCE_SUBMIT,
+            "Your exam has been force submitted: {$reason}",
+            ['reason' => $reason, 'admin_id' => $adminId]
+        );
 
         $submission = $heartbeat->submission;
 
@@ -278,12 +310,60 @@ class LiveMonitoringService
             return null;
         }
 
-        // Persist message so it's delivered via next heartbeat poll
+        // Persist message for audit purposes
+        ExamAdminMessage::createMessage(
+            $heartbeat->submission,
+            auth()->user(),
+            ExamAdminMessage::TYPE_INFO,
+            $message
+        );
+
+        // Also update heartbeat for immediate delivery via polling
         $heartbeat->update(['admin_message' => $message]);
 
         broadcast(new AdminActionSent($heartbeat, 'message', $message))->toOthers();
 
         return $heartbeat;
+    }
+
+    /**
+     * Send message to all active participants.
+     */
+    public function sendMessageToAllActiveParticipants(GeneralExam $exam, string $message): array
+    {
+        $heartbeats = ExamParticipantHeartbeat::forExam($exam->id)
+            ->active()
+            ->with('submission')
+            ->get();
+
+        $sentCount = 0;
+        $failedCount = 0;
+
+        foreach ($heartbeats as $heartbeat) {
+            try {
+                // Persist message for audit
+                ExamAdminMessage::createMessage(
+                    $heartbeat->submission,
+                    auth()->user(),
+                    ExamAdminMessage::TYPE_INFO,
+                    $message
+                );
+
+                // Update heartbeat for delivery
+                $heartbeat->update(['admin_message' => $message]);
+
+                broadcast(new AdminActionSent($heartbeat, 'message', $message))->toOthers();
+
+                $sentCount++;
+            } catch (\Exception $e) {
+                $failedCount++;
+            }
+        }
+
+        return [
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+        ];
     }
 
     /**
@@ -297,13 +377,21 @@ class LiveMonitoringService
             return null;
         }
 
-        // You may need to store extended time in submission or a separate field
-        // For now, we'll broadcast the extension
+        $message = "Your exam time has been extended by {$additionalMinutes} minutes.";
+
+        // Persist the time extension message for audit
+        ExamAdminMessage::createMessage(
+            $heartbeat->submission,
+            auth()->user(),
+            ExamAdminMessage::TYPE_TIME_EXTENSION,
+            $message,
+            ['additional_minutes' => $additionalMinutes]
+        );
 
         broadcast(new AdminActionSent(
             $heartbeat,
             'extend_time',
-            "Your exam time has been extended by {$additionalMinutes} minutes.",
+            $message,
             ['additional_minutes' => $additionalMinutes]
         ))->toOthers();
 

@@ -873,7 +873,7 @@
             </div>
         </div>
 
-        @livewire('user-books.user-book-p-d-f-reader', ['bookId' => $userBook->id, 'config' => ['book' => $userBook]])
+        @livewire('user-books.user-book-p-d-f-reader', ['bookId' => $userBook->id, 'config' => ['book' => $userBook, 'bookType' => 'user_book']])
     </div>
     @endif
 </x-layouts.app>

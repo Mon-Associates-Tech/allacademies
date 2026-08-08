@@ -8,7 +8,7 @@ class ExamSessionSync {
         this.examId = examId;
         this.submissionId = submissionId;
         this.userId = userId;
-        this.syncEndpoint = `/examinations-hub/take/${examId}/sync`;
+        this.syncEndpoint = `/examinations/${examId}`;
         this.heartbeatInterval = null;
         this.lastSyncTime = Date.now();
         this.syncDebounceTimer = null;
@@ -55,16 +55,13 @@ class ExamSessionSync {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                 },
                 body: JSON.stringify({
-                    exam_id: this.examId,
-                    submission_id: this.submissionId,
-                    user_id: this.userId,
                     timestamp: Date.now(),
-                    userAgent: navigator.userAgent,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    exam_id: this.examId,
+                    submission_id: this.submissionId
                 })
             });
         } catch (error) {
-            console.warn('Heartbeat failed:', error);
+            console.error('Heartbeat failed:', error);
         }
     }
 
@@ -72,10 +69,11 @@ class ExamSessionSync {
      * Sync data immediately
      */
     async syncImmediate() {
+        // Collect all exam data
+        const examData = this.collectExamData();
         try {
-            // Collect all exam data
-            const examData = this.collectExamData();
-            
+
+
             // Send to server
             await fetch(this.syncEndpoint, {
                 method: 'POST',
@@ -104,7 +102,7 @@ class ExamSessionSync {
     collectExamData() {
         // This would need to integrate with the actual exam component data
         // In a real implementation, this would extract data from the Livewire component
-        const examData = {
+        return {
             responses: this.getCurrentResponses(),
             currentQuestion: this.getCurrentQuestionIndex(),
             flags: this.getFlaggedQuestions(),
@@ -117,8 +115,6 @@ class ExamSessionSync {
                 timestamp: Date.now()
             }
         };
-
-        return examData;
     }
 
     /**
@@ -164,7 +160,7 @@ class ExamSessionSync {
             examId: this.examId,
             submissionId: this.submissionId
         };
-        
+
         localStorage.setItem(key, JSON.stringify(backup));
     }
 
@@ -174,7 +170,7 @@ class ExamSessionSync {
     restoreFromLocalBackup() {
         const key = `exam_backup_${this.examId}_${this.submissionId}`;
         const backup = localStorage.getItem(key);
-        
+
         if (backup) {
             try {
                 const parsed = JSON.parse(backup);
@@ -223,7 +219,7 @@ class ExamSessionSync {
     async syncIncremental() {
         try {
             const examData = this.collectExamData();
-            
+
             await fetch(`${this.syncEndpoint}/incremental`, {
                 method: 'POST',
                 headers: {
@@ -276,7 +272,7 @@ class ExamSessionSync {
     restoreFromSharedStorage() {
         const key = `exam_sync_${this.examId}`;
         const stored = localStorage.getItem(key);
-        
+
         if (stored) {
             try {
                 const data = JSON.parse(stored);
@@ -298,7 +294,7 @@ class ExamSessionSync {
         if (this.heartbeatInterval) {
             clearInterval(this.heartbeatInterval);
         }
-        
+
         if (this.syncDebounceTimer) {
             clearTimeout(this.syncDebounceTimer);
         }

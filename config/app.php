@@ -193,8 +193,9 @@ return [
         App\Providers\RouteServiceProvider::class,
         \Lab404\Impersonate\ImpersonateServiceProvider::class,
         //        App\Providers\MessageServiceProvider::class,
-        App\Providers\AcademicChatServiceProvider::class,
+        \App\Providers\ResearchAssistantServiceProvider::class,
         \App\Providers\ProctoringServiceProvider::class,
+        \App\MockExam\Providers\MockExamServiceProvider::class,
         \App\BookShop\Providers\BookShopServiceProvider::class
 
     ],
@@ -217,5 +218,8 @@ return [
 
     'enable_otp' => env('ENABLE_OTP', false),
     'enable_importers' => env('ENABLE_IMPORTERS', false),
+
+    'license_secret'  => env('LICENSE_HMAC_SECRET'),
+    'license_binary'  => env('LICENSE_BINARY_PATH', '/usr/local/bin/license_guard'),
 
 ];

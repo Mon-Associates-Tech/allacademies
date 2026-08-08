@@ -22,7 +22,7 @@
         <!-- Academic Chat -->
         <li class="mb-0.5 last:mb-0" title="Research Assistant">
            <a class="block px-3 py-2 rounded-lg transition {{ Route::is('academic-chat*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-               href="{{route('academic-chat.index')}}">
+               href="{{route('research-assistant.index')}}">
                 <div class="flex items-center">
                     <!-- Chat bubble with spark -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none"

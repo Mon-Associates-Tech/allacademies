@@ -5,31 +5,31 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^8.1",
+        "php": "^8.4",
         "ext-dom": "*",
         "ext-imagick": "*",
         "ext-libxml": "*",
         "ext-zip": "*",
+        "ext-pdo": "*",
+        "akaunting/laravel-firewall": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "bigbluebutton/bigbluebutton-api-php": "^2.3",
         "blade-ui-kit/blade-heroicons": "^2.7",
-        "brick/money": "^0.7.0",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^3.11",
         "jenssegers/agent": "^2.6",
-        "lab404/laravel-impersonate": "^1.7",
-        "laravel/framework": "^12",
+        "lab404/laravel-impersonate": "*",
+        "laravel/framework": "^12.0",
         "laravel/reverb": "*",
         "laravel/sanctum": "*",
         "laravel/telescope": "^5.7",
         "league/commonmark": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^3.6",
-        "maatwebsite/excel": "^3.1",
-        "openai-php/laravel": "^0.17.1",
+        "maatwebsite/excel": "^4.0@dev",
+        "openai-php/laravel": "^0.20.0",
         "phpoffice/phpword": "^1.3",
-        "prism-php/prism": "^0.87.0",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
         "smalot/pdfparser": "^2.12",
@@ -37,19 +37,17 @@
         "spatie/laravel-activitylog": "^4.10",
         "stevebauman/location": "^7.5",
         "symfony/console": "^7.2.0",
-        "symfony/mailgun-mailer": "^6.3",
+        "symfony/mailgun-mailer": "^7.0",
         "tinymce/tinymce": "^7.8"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.15",
         "barryvdh/laravel-ide-helper": "^3.5",
         "fakerphp/faker": "^1.9.1",
-        "laravel/boost": "^1.1",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^9.5.10"
+        "phpunit/phpunit": "^11.0"
     },
     "autoload": {
         "psr-4": {
@@ -93,6 +91,15 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": false
+        },
+        "policy": {
+            "advisories": {
+                "ignore-id": [
+                    "PKSA-m5cs-t1y6-qpcs",
+                    "PKSA-3r5d-mb8f-1qw9",
+                    "PKSA-mdq4-51ck-6kdq"
+                ]
+            }
         }
     },
     "minimum-stability": "dev",

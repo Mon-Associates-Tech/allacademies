@@ -160,23 +160,29 @@
                                         <span class="text-xs text-gray-500">{{ $question->marks }} marks</span>
                                     </div>
                                     <p class="text-gray-900 dark:text-white"><x-prose-content :content="$question->question" />   </p>
-                                    @if($question->type === 'multiple_choice' && $question->options)
-                                        <div class="mt-2 space-y-1">
-                                            @foreach($question->options as $key => $option)
-                                                <div class="text-sm flex items-center gap-1 {{ $key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400' }}">
-                                                    <span class="flex-shrink-0">{{ $key }}.</span>
-                                                    <div class="flex-1">
-                                                        <x-prose-content 
-                                                            :content="$option" 
-                                                            :textColor="$key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400'" 
-                                                        />
+                                    @if($question->type === 'multiple_choice')
+                                        @php
+                                            $displayOptions = $question->getOptionsForDisplay();
+                                        @endphp
+
+                                        @if(!empty($displayOptions))
+                                            <div class="mt-2 space-y-1">
+                                                @foreach($displayOptions as $key => $option)
+                                                    <div class="text-sm flex items-center gap-2 {{ $key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400' }}">
+                                                        <span class="flex-shrink-0 font-semibold">{{ $key }}.</span>
+                                                        <div class="flex-1">
+                                                            <x-prose-content
+                                                                :content="$option"
+                                                                :textColor="$key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400'"
+                                                            />
+                                                        </div>
+                                                        @if($key === $question->correct_answer)
+                                                            <span class="flex-shrink-0 text-green-600">✓</span>
+                                                        @endif
                                                     </div>
-                                                    @if($key === $question->correct_answer)
-                                                        <span class="flex-shrink-0 text-green-600">✓</span>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     @elseif($question->type === 'true_false')
                                         <div class="mt-2 text-sm text-green-600 font-medium">
                                             Correct: {{ ucfirst($question->correct_answer) }}

@@ -220,6 +220,7 @@
                         'teacher' => 'text-blue-600 dark:text-blue-400',
                         'student' => 'text-green-600 dark:text-green-400',
                         'librarian' => 'text-purple-600 dark:text-purple-400',
+                        'accountant' => 'text-purple-600 dark:text-purple-400',
                         'author' => 'text-yellow-600 dark:text-yellow-400',
                         'parent' => 'text-pink-600 dark:text-pink-400',
                         'guest' => 'text-indigo-600 dark:text-indigo-400',
@@ -368,6 +369,7 @@
                                         'teacher' => 'text-blue-600 dark:text-blue-400',
                                         'student' => 'text-green-600 dark:text-green-400',
                                         'librarian' => 'text-purple-600 dark:text-purple-400',
+                                        'accountant' => 'text-purple-600 dark:text-purple-400',
                                         'author' => 'text-yellow-600 dark:text-yellow-400',
                                         'parent' => 'text-pink-600 dark:text-pink-400',
                                         'guest' => 'text-indigo-600 dark:text-indigo-400',
@@ -600,6 +602,7 @@
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>
                         <option value="librarian">Librarian</option>
+                        <option value="accountant">Accountant</option>
                         <option value="author">Author</option>
                         <option value="parent">Parent</option>
                         <option value="moderator">Moderator</option>
@@ -680,6 +683,7 @@
                     <option value="teacher">Teacher</option>
                     <option value="student">Student</option>
                     <option value="librarian">Librarian</option>
+                    <option value="accountant">Accountant</option>
                     <option value="moderator">Moderator</option>
                     <option value="author">Author</option>
                     <option value="parent">Parent</option>

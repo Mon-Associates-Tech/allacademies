@@ -2,6 +2,7 @@
 
 namespace App\ExaminationHub\Controllers;
 
+use App\ExaminationHub\Models\ExamAdminMessage;
 use App\ExaminationHub\Models\ExamParticipantHeartbeat;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
@@ -44,10 +45,25 @@ class HeartbeatController extends Controller
 
         // Check if terminated by admin
         if ($heartbeat->status === ExamParticipantHeartbeat::STATUS_TERMINATED) {
+            // Get the termination message for display before redirecting
+            $terminationMessage = ExamAdminMessage::forSubmission($submission->id)
+                ->ofType(ExamAdminMessage::TYPE_TERMINATION)
+                ->orderByDesc('created_at')
+                ->first();
+
             return response()->json([
                 'status' => 'terminated',
                 'reason' => $heartbeat->termination_reason,
-                'message' => 'Your exam session has been terminated by the administrator.',
+                'message' => $terminationMessage?->message ?? 'Your exam session has been terminated by the administrator.',
+                'redirect' => route('examination-hub.take.completed', $exam),
+            ]);
+        }
+
+        // Submission already completed by admin force-submit or other server action
+        if ($submission->submitted_at) {
+            return response()->json([
+                'status'   => 'force_submitted',
+                'message'  => $submission->auto_submit_reason ?? 'Your exam has been submitted by the administrator.',
                 'redirect' => route('examination-hub.take.completed', $exam),
             ]);
         }
@@ -88,9 +104,32 @@ class HeartbeatController extends Controller
             ];
         }
 
-        // Include pending admin message (non-warning) if present
-        if (! $heartbeat->has_warning && $heartbeat->admin_message) {
-            $response['admin_message'] = $heartbeat->admin_message;
+        // Check for undelivered admin messages (from audit log)
+        $undeliveredMessages = ExamAdminMessage::forSubmission($submission->id)
+            ->undelivered()
+            ->orderBy('created_at')
+            ->get();
+
+        if ($undeliveredMessages->isNotEmpty()) {
+            // Get the most recent message to display
+            $latestMessage = $undeliveredMessages->last();
+
+            $response['admin_message'] = [
+                'message' => $latestMessage->message,
+                'type' => $latestMessage->message_type,
+                'sent_at' => $latestMessage->created_at->toIso8601String(),
+            ];
+
+            // Mark all undelivered messages as delivered
+            foreach ($undeliveredMessages as $msg) {
+                $msg->markDelivered();
+            }
+        } elseif (! $heartbeat->has_warning && $heartbeat->admin_message) {
+            // Fallback: legacy admin_message from heartbeat table
+            $response['admin_message'] = [
+                'message' => $heartbeat->admin_message,
+                'type' => 'info',
+            ];
             // Clear it after delivery
             $heartbeat->update(['admin_message' => null]);
         }

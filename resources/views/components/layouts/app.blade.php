@@ -26,7 +26,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name') }}{{ $pageName ? ' - ' . $pageName : '' }}</title>
+    <title>{{ config('app.name') }}{{ $pageName ? ' — ' . $pageName : '' }}</title>
+
+    {{-- ── Indexing ─────────────────────────────────────────────────────────────
+         Authenticated pages must never be indexed: they are behind a login wall,
+         contain user-specific data, and would appear as empty redirect pages to
+         any crawler that follows the link.  Explicitly declaring noindex also
+         prevents Googlebot from wasting crawl budget on login redirects.
+    ─────────────────────────────────────────────────────────────────────────── --}}
+    <meta name="robots" content="noindex, nofollow">
+
+    {{-- ── Favicons & Web App Manifest ───────────────────────────────────────── --}}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32"  href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16"  href="{{ asset('favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+
+    {{-- ── Theme colour (mobile browser chrome) ───────────────────────────────
+         Keeps the browser toolbar on-brand.  Two media-query variants so the
+         colour responds to the OS light/dark preference before Alpine loads.
+    ─────────────────────────────────────────────────────────────────────────── --}}
+    <meta name="theme-color" content="{{ config('seo.theme_color',      '#3B82F6') }}"
+          media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="{{ config('seo.theme_color_dark', '#1e293b') }}"
+          media="(prefers-color-scheme: dark)">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,6 +59,7 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
+    @stack('styles')
     @livewireStyles
 
     <style>
@@ -50,7 +74,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ $background ? $background : 'bg-[radial-gradient(73%_147%,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
+<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ $background ? $background : 'bg-[radial-gradient(73%_147%_at_center,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%_at_center,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
     dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
     bg-blend-screen' }}"
             :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
@@ -133,7 +157,6 @@
 </div>
 
 <!-- Scripts -->
-@stack('scripts')
 @livewireScriptConfig
 
 <script>

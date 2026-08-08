@@ -185,7 +185,11 @@
                                 {{-- Progress Bar --}}
                                 <div class="mb-4">
                                     @php
-                                        $usagePercent = ($currentCycle->tokens_used / $currentCycle->tokens_allocated) * 100;
+                                        $used = $currentCycle->tokens_used ?? 0;
+                                        $allocated = $currentCycle->tokens_allocated ?? 0;
+                                        // Prevent division by zero and clamp percentage to [0,100]
+                                        $usagePercent = $allocated > 0 ? ($used / $allocated) * 100 : 0;
+                                        $usagePercent = max(0, min(100, $usagePercent));
                                     @endphp
                                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                                         <span>Token Usage Progress</span>

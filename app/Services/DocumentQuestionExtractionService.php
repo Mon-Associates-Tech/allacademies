@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 class DocumentQuestionExtractionService
 {
     public function __construct(
-        private readonly AcademicChatService $chatService
+        private readonly ResearchAssistantService $chatService
     ) {}
 
     /**

@@ -1,6 +1,26 @@
 @php
     $seed = $formData ?? old();
-    $seedSections = $seed['sections'] ?? [['title'=>'Section A','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+
+    // When editing, use formData sections; when creating new or after validation error, use old() or default
+    if (!empty($seed['sections']) && is_array($seed['sections'])) {
+        // Filter out completely empty sections that might come from old() or defaults
+        $seedSections = array_values(array_filter($seed['sections'], function($section) {
+            // Keep sections with IDs (existing sections)
+            if (!empty($section['id'])) {
+                return true;
+            }
+            // For new sections, require at least a title
+            return !empty($section['title']);
+        }));
+
+        // If filtering resulted in no sections, add one default
+        if (empty($seedSections)) {
+            $seedSections = [['title'=>'','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+        }
+    } else {
+        // No sections in seed, use default
+        $seedSections = [['title'=>'','description'=>'','instructions'=>'','time_limit_minutes'=>'','source_type'=>'database','question_type'=>'multiple_choice','question_count'=>10,'database_count'=>0,'ai_count'=>0,'manual_count'=>0,'is_randomized'=>false,'topic_ids'=>[],'subtopic_ids'=>[],'has_document'=>false]];
+    }
 
     // Set default dates if not provided
     $defaultStartsAt = $seed['starts_at'] ?? now()->format('Y-m-d\TH:i');
@@ -54,7 +74,7 @@
                     <div>
                         <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Warning: Editing Active Examination</p>
                         <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                            This exam has {{ $hasStarted ? 'already started' : '' }}{{ $hasStarted && $hasSubmissions ? ' and has ' : '' }}{{ $hasSubmissions ? $editingExam->submissions_count . ' submission(s)' : '' }}. 
+                            This exam has {{ $hasStarted ? 'already started' : '' }}{{ $hasStarted && $hasSubmissions ? ' and has ' : '' }}{{ $hasSubmissions ? $editingExam->submissions_count . ' submission(s)' : '' }}.
                             Changes may affect participants or invalidate existing results. Proceed with caution.
                         </p>
                     </div>
@@ -175,7 +195,7 @@
         </div>
 
         {{-- ── ACADEMIC CLASSIFICATION ── --}}
-        <div class="bg-white dark:bg-slate-900 overflow-hidden"
+        <div class="bg-white dark:bg-slate-900"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                 <div class="w-1 h-5" style="background: linear-gradient(180deg, #059669, #10b981); border-radius: 1px;"></div>
@@ -319,15 +339,31 @@
                 </svg>
                 Cancel
             </a>
-            <button type="submit"
-                    class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-all"
-                    style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                {{ isset($editingExam) && $editingExam ? 'Preview Updates' : 'Preview Examination' }}
-            </button>
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                @if(isset($editingExam) && $editingExam)
+                    <div class="flex flex-col items-end gap-1">
+                        <button type="submit"
+                                formaction="{{ route('examination-hub.create.quick-save') }}"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all border"
+                                style="border-radius: 2px; color:#166534; border-color:rgba(22,101,52,0.2); background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                            </svg>
+                            Save Without Preview
+                        </button>
+                        <p class="text-xs text-slate-400 dark:text-slate-500">Saves settings only — questions unchanged</p>
+                    </div>
+                @endif
+                <button type="submit"
+                        class="inline-flex mb-5 items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-all"
+                        style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    {{ isset($editingExam) && $editingExam ? 'Preview Updates' : 'Preview Examination' }}
+                </button>
+            </div>
         </div>
     </form>
 

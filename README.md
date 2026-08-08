@@ -1,6 +1,6 @@
 # All Academies
 
-A comprehensive multi-tenant school management and educational platform built with Laravel 12, providing AI-powered learning tools, digital library management, and complete academic operations.
+A comprehensive multi-tenant school management and educational platform built with Laravel 13, providing AI-powered learning tools, digital library management, and complete academic operations.
 
 ## About All Academies
 
@@ -61,8 +61,8 @@ All Academies is a SaaS platform designed to streamline educational institution 
 
 ## Tech Stack
 
-- **Backend**: Laravel 12, PHP 8.2
-- **Frontend**: Livewire 3, Alpine.js 3, Tailwind CSS 3
+- **Backend**: Laravel 13, PHP 8.2+
+- **Frontend**: Livewire 4, Alpine.js 3, Tailwind CSS 4
 - **Database**: MySQL/PostgreSQL
 - **AI Integration**: OpenAI PHP Laravel
 - **Payment**: Paystack

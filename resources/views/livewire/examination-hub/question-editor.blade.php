@@ -98,8 +98,8 @@
                                             <div class="space-y-3">
                                                 <div>
                                                     <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Question Text</label>
-                                                    <div class="mb-2 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                                                        <x-form.markdown-with-math :content="$question['question'] ?? ''" class="prose prose-sm dark:prose-invert max-w-none" />
+                                                    <div class="mb-2 py-1 prose prose-sm dark:prose-invert max-w-none">
+                                                        <x-form.markdown-with-math :content="$question['question'] ?? ''" />
                                                     </div>
                                                     <textarea 
                                                         wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.question"
@@ -114,19 +114,27 @@
                                                         <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Options</label>
                                                         <div class="space-y-2">
                                                             @foreach($question['options'] as $optIndex => $option)
-                                                                <div class="space-y-1">
-                                                                    <div class="flex items-start gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded">
-                                                                        <span class="text-sm font-medium w-6 flex-shrink-0 mt-1">{{ chr(65 + $optIndex) }}.</span>
-                                                                        <div class="flex-1">
-                                                                            <x-form.markdown-with-math :content="$option" class="prose prose-sm dark:prose-invert max-w-none" />
+                                                                @php
+                                                                    // Handle both string options and key/value array options
+                                                                    $optionValue = is_array($option) ? ($option['value'] ?? '') : $option;
+                                                                    $optionKey = is_array($option) ? ($option['key'] ?? chr(65 + $optIndex)) : chr(65 + $optIndex);
+                                                                @endphp
+                                                                <div class="space-y-2">
+                                                                    {{-- Readonly display --}}
+                                                                    <div class="flex gap-2 py-1">
+                                                                        <span class="text-sm font-medium w-6 flex-shrink-0 pt-0.5">{{ $optionKey }}.</span>
+                                                                        <div class="flex-1 pt-0.5">
+                                                                            <x-form.markdown-with-math :content="$optionValue" class="m-0" />
                                                                         </div>
                                                                     </div>
-                                                                    <div class="flex items-center gap-2">
-                                                                        <span class="text-xs font-medium w-6 text-gray-500">{{ chr(65 + $optIndex) }}.</span>
+                                                                    
+                                                                    {{-- Editable input --}}
+                                                                    <div class="flex gap-2">
+                                                                        <span class="text-xs font-medium w-6 text-gray-500 flex-shrink-0 pt-0.5">{{ $optionKey }}.</span>
                                                                         <input 
                                                                             type="text"
                                                                             wire:model.blur="questions.{{ $sectionIndex }}.{{ $qIndex }}.options.{{ $optIndex }}"
-                                                                            value="{{ $option }}"
+                                                                            value="{{ $optionValue }}"
                                                                             class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
                                                                             placeholder="Edit option..."
                                                                         >

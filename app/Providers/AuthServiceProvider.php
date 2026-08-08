@@ -5,18 +5,46 @@ namespace App\Providers;
 use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Models\AcademicSubject;
+use App\Models\AcademicTopic;
+use App\Models\Administrator;
+use App\Models\Assessment;
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\BookApproval;
+use App\Models\BookBorrowing;
+use App\Models\BookCategory;
+use App\Models\BookSubscription;
 use App\Models\Chat\UserTokenSubscription;
+use App\Models\GroupBookSubscription;
+use App\Models\Lesson;
+use App\Models\LessonNote;
+use App\Models\Librarian;
 use App\Models\Lms\Course;
 use App\Models\Role;
+use App\Models\Student;
+use App\Models\StudentGroup;
+use App\Models\Teacher;
 use App\Models\Team;
 use App\Models\User;
-use App\Models\Student;
-use App\Models\Teacher;
-use App\Models\Librarian;
-use App\Models\Administrator;
+use App\Policies\AdministratorPolicy;
+use App\Policies\AssessmentPolicy;
+use App\Policies\AuthorPolicy;
+use App\Policies\BookApprovalPolicy;
+use App\Policies\BookBorrowingPolicy;
+use App\Policies\BookCategoryPolicy;
+use App\Policies\BookPolicy;
+use App\Policies\BookSubscriptionPolicy;
 use App\Policies\CoursePolicy;
+use App\Policies\GroupBookSubscriptionPolicy;
+use App\Policies\LessonNotePolicy;
+use App\Policies\LessonPolicy;
+use App\Policies\LibrarianPolicy;
 use App\Policies\RolePolicy;
+use App\Policies\StudentGroupPolicy;
 use App\Policies\StudentPolicy;
+use App\Policies\SubjectPolicy;
+use App\Policies\TeacherPolicy;
+use App\Policies\TopicPolicy;
 use App\Policies\UserTokenSubscriptionPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -31,24 +59,24 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         //        Role::class => RolePolicy::class,
         Student::class => StudentPolicy::class,
-        Teacher::class => \App\Policies\TeacherPolicy::class,
-        Librarian::class => \App\Policies\LibrarianPolicy::class,
-        Administrator::class => \App\Policies\AdministratorPolicy::class,
-        \App\Models\Author::class => \App\Policies\AuthorPolicy::class,
-        \App\Models\Book::class => \App\Policies\BookPolicy::class,
-        \App\Models\BookCategory::class => \App\Policies\BookCategoryPolicy::class,
-        \App\Models\BookBorrowing::class => \App\Policies\BookBorrowingPolicy::class,
-        \App\Models\BookSubscription::class => \App\Policies\BookSubscriptionPolicy::class,
-        \App\Models\GroupBookSubscription::class => \App\Policies\GroupBookSubscriptionPolicy::class,
-        \App\Models\BookApproval::class => \App\Policies\BookApprovalPolicy::class,
-        \App\Models\Assessment::class => \App\Policies\AssessmentPolicy::class,
-        \App\Models\StudentGroup::class => \App\Policies\StudentGroupPolicy::class,
-        \App\Models\Lesson::class => \App\Policies\LessonPolicy::class,
-        \App\Models\LessonNote::class => \App\Policies\LessonNotePolicy::class,
-        \App\Models\AcademicSubject::class => \App\Policies\SubjectPolicy::class,
-        \App\Models\AcademicTopic::class => \App\Policies\TopicPolicy::class,
-        \App\Models\Chat\UserTokenSubscription::class => \App\Policies\UserTokenSubscriptionPolicy::class,
-        \App\Models\Lms\Course::class => CoursePolicy::class,
+        Teacher::class => TeacherPolicy::class,
+        Librarian::class => LibrarianPolicy::class,
+        Administrator::class => AdministratorPolicy::class,
+        Author::class => AuthorPolicy::class,
+        Book::class => BookPolicy::class,
+        BookCategory::class => BookCategoryPolicy::class,
+        BookBorrowing::class => BookBorrowingPolicy::class,
+        BookSubscription::class => BookSubscriptionPolicy::class,
+        GroupBookSubscription::class => GroupBookSubscriptionPolicy::class,
+        BookApproval::class => BookApprovalPolicy::class,
+        Assessment::class => AssessmentPolicy::class,
+        StudentGroup::class => StudentGroupPolicy::class,
+        Lesson::class => LessonPolicy::class,
+        LessonNote::class => LessonNotePolicy::class,
+        AcademicSubject::class => SubjectPolicy::class,
+        AcademicTopic::class => TopicPolicy::class,
+        UserTokenSubscription::class => UserTokenSubscriptionPolicy::class,
+        Course::class => CoursePolicy::class,
 
     ];
 

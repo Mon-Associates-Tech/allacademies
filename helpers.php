@@ -125,6 +125,142 @@ function parsedMarkdown($markdown): string
     }
 }
 
+/**
+ * Strip markdown formatting and convert math notation for PDF rendering.
+ * This removes markdown syntax and converts LaTeX math to readable text.
+ */
+if (! function_exists('stripMarkdownForPdf')) {
+    function stripMarkdownForPdf(string $text): string
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        // Convert display math first: $$...$$ or \[...\]
+        $text = preg_replace('/\\\\\[(.*?)\\\\\]/s', '$1', $text);
+        $text = preg_replace('/\$\$(.+?)\$\$/s', '$1', $text);
+        
+        // Convert inline math: $...$ or \(...\)
+        $text = preg_replace('/\\\\\((.*?)\\\\\)/s', '$1', $text);
+        $text = preg_replace('/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/s', '$1', $text);
+        
+        // Remove markdown headers
+        $text = preg_replace('/^#{1,6}\s+/m', '', $text);
+        
+        // Remove bold/italic markers
+        $text = preg_replace('/\*{1,3}(.+?)\*{1,3}/', '$1', $text);
+        $text = preg_replace('/_{1,3}(.+?)_{1,3}/', '$1', $text);
+        
+        // Remove code blocks and inline code
+        $text = preg_replace('/`{3}[^`]*`{3}/s', '', $text);
+        $text = preg_replace('/`([^`]+)`/', '$1', $text);
+        
+        // Remove image syntax but keep alt text
+        $text = preg_replace('/!\[([^\]]*)\]\([^)]*\)/', '$1', $text);
+        
+        // Remove link syntax but keep link text
+        $text = preg_replace('/\[([^\]]*)\]\([^)]*\)/', '$1', $text);
+        
+        // Remove blockquotes
+        $text = preg_replace('/^>\s+/m', '', $text);
+        
+        // Remove horizontal rules
+        $text = preg_replace('/^[-*_]{3,}$/m', '', $text);
+        
+        // Remove list markers
+        $text = preg_replace('/^[\s-]*[-*+]\s+/m', '', $text);
+        $text = preg_replace('/^\d+\.\s+/m', '', $text);
+        
+        // Clean up extra whitespace
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+        $text = trim($text);
+        
+        // Escape HTML entities for safe rendering
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+/**
+ * Render markdown with math for PDF using server-side processing.
+ * Converts markdown to HTML and preserves math notation as plain text.
+ * This is a PDF-safe alternative to the JavaScript-based markdown-with-math component.
+ */
+if (! function_exists('renderMarkdownForPdf')) {
+    function renderMarkdownForPdf(string $text): string
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        // First, protect math expressions by replacing them with placeholders
+        $mathExpressions = [];
+        $placeholderIndex = 0;
+        
+        // Protect display math: $$...$$
+        $text = preg_replace_callback('/\$\$(.+?)\$\$/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+            $placeholder = "__MATH_DISPLAY_{$placeholderIndex}__";
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $placeholderIndex++;
+            return $placeholder;
+        }, $text);
+        
+        // Protect display math: \[...\]
+        $text = preg_replace_callback('/\\\\\[(.+?)\\\\\]/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+            $placeholder = "__MATH_DISPLAY_{$placeholderIndex}__";
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $placeholderIndex++;
+            return $placeholder;
+        }, $text);
+        
+        // Protect inline math: $...$
+        $text = preg_replace_callback('/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+            $placeholder = "__MATH_INLINE_{$placeholderIndex}__";
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $placeholderIndex++;
+            return $placeholder;
+        }, $text);
+        
+        // Protect inline math: \(...\)
+        $text = preg_replace_callback('/\\\\\((.+?)\\\\\)/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+            $placeholder = "__MATH_INLINE_{$placeholderIndex}__";
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $placeholderIndex++;
+            return $placeholder;
+        }, $text);
+        
+        // Now convert markdown to HTML using CommonMark
+        $config = [
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+            'max_nesting_level' => 100,
+            'renderer' => [
+                'block_separator' => "\n",
+                'inner_separator' => "\n",
+                'soft_break' => " ",  // Use space instead of newline for inline flow
+            ],
+        ];
+        
+        $converter = new \League\CommonMark\CommonMarkConverter($config);
+        try {
+            $html = $converter->convertToHtml($text);
+            
+            // Strip paragraph tags for inline content
+            $html = preg_replace('/^<p>/', '', $html);
+            $html = preg_replace('/<\/p>$/', '', $html);
+            
+            // Restore math expressions
+            foreach ($mathExpressions as $placeholder => $replacement) {
+                $html = str_replace($placeholder, $replacement, $html);
+            }
+            
+            return $html;
+        } catch (\Exception $e) {
+            // Fallback to plain text with math
+            return stripMarkdownForPdf($text);
+        }
+    }
+}
+
 use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
