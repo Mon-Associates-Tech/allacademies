@@ -9,14 +9,14 @@
                 </p>
             </div>
             <div class="mt-4 md:mt-0 flex gap-3">
-                <a href="{{ route('admin.payments.setup') }}" 
+                <a href="{{ route('admin.payments.setup') }}"
                    class="px-4 py-2 bg-violet-600 text-white rounded-md hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500">
                     <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
                     Setup Payments
                 </a>
-                <button wire:click="toggleViewMode" 
+                <button wire:click="toggleViewMode"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
@@ -174,9 +174,11 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Type</label>
                 <select wire:model.live="filterPaymentType" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">All Types</option>
+                    @isset($filterOptions['payment_types'])
                     @foreach($filterOptions['payment_types'] as $key => $label)
                         <option value="{{ $key }}">{{ $label }}</option>
                     @endforeach
+                    @endisset
                 </select>
             </div>
 
@@ -204,9 +206,11 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Group</label>
                 <select wire:model.live="filterAcademicGroup" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">All Groups</option>
-                    @foreach($filterOptions['academic_groups'] as $group)
-                        <option value="{{ $group->id }}">{{ $group->name }}</option>
-                    @endforeach
+                    @isset($filterOptions['academic_groups'])
+                        @foreach($filterOptions['academic_groups'] as $group)
+                            <option value="{{ $group->id }}">{{ $group->name }}</option>
+                        @endforeach
+                    @endisset
                 </select>
             </div>
 
@@ -215,9 +219,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Level</label>
                 <select wire:model.live="filterAcademicLevel" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">All Levels</option>
-                    @foreach($filterOptions['academic_levels'] as $level)
-                        <option value="{{ $level->id }}">{{ $level->name }}</option>
-                    @endforeach
+                    @isset($filterOptions['academic_levels'])
+                        @foreach($filterOptions['academic_levels'] as $level)
+                            <option value="{{ $level->id }}">{{ $level->name }}</option>
+                        @endforeach
+                    @endisset
+
                 </select>
             </div>
 
@@ -226,9 +233,11 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Year</label>
                 <select wire:model.live="filterAcademicYear" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">All Years</option>
-                    @foreach($filterOptions['academic_years'] as $year)
-                        <option value="{{ $year->id }}">{{ $year->getDisplayName() }}</option>
-                    @endforeach
+                    @isset($filterOptions['academic_years'])
+                        @foreach($filterOptions['academic_years'] as $year)
+                            <option value="{{ $year->id }}">{{ $year->getDisplayName() }}</option>
+                        @endforeach
+                    @endisset
                 </select>
             </div>
 
@@ -237,9 +246,11 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academic Period</label>
                 <select wire:model.live="filterAcademicPeriod" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">All Periods</option>
-                    @foreach($filterOptions['academic_periods'] as $period)
-                        <option value="{{ $period->id }}">{{ $period->name }}</option>
-                    @endforeach
+                    @isset($filterOptions['academic_periods'])
+                        @foreach($filterOptions['academic_periods'] as $period)
+                            <option value="{{ $period->id }}">{{ $period->name }}</option>
+                        @endforeach
+                    @endisset
                 </select>
             </div>
 
