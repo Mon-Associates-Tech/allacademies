@@ -272,7 +272,7 @@
                 <!-- Database Question Generation Section -->
                 <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                     <h3 class="font-medium text-emerald-800 dark:text-emerald-300 mb-3">📚 Generate from Question Bank</h3>
-                    <p class="text-sm text-emerald-600 dark:text-emerald-400 mb-4">Select academic criteria to pull questions from the existing question bank.</p>
+                    <p class="text-sm text-emerald-600 dark:text-emerald-400 mb-4">Optionally select academic criteria to pull questions from the existing question bank. This is optional—you can also add questions manually.</p>
 
                     @error('academicSelection') <p class="mb-3 text-sm text-red-600">{{ $message }}</p> @enderror
                     @error('generation') <p class="mb-3 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -281,7 +281,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <!-- Academic Group -->
                         <div>
-                            <label class="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Academic Group *</label>
+                            <label class="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Academic Group <span class="text-gray-400">(Optional)</span></label>
                             <select wire:model.live="selectedAcademicGroupId" class="w-full px-3 py-2 text-sm border border-emerald-300 dark:border-emerald-700 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500">
                                 <option value="">Select Group...</option>
                                 @foreach($this->academicGroups as $group)
@@ -292,7 +292,7 @@
 
                         <!-- Academic Level -->
                         <div>
-                            <label class="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Academic Level *</label>
+                            <label class="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Academic Level <span class="text-gray-400">(Optional)</span></label>
                             <select wire:model.live="selectedAcademicLevelId" class="w-full px-3 py-2 text-sm border border-emerald-300 dark:border-emerald-700 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500" {{ !$selectedAcademicGroupId ? 'disabled' : '' }}>
                                 <option value="">Select Level...</option>
                                 @foreach($this->academicLevels as $level)
@@ -303,7 +303,7 @@
 
                         <!-- Academic Subject -->
                         <div>
-                            <label class="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Subject *</label>
+                            <label class="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Subject <span class="text-gray-400">(Optional)</span></label>
                             <select wire:model.live="selectedAcademicSubjectId" class="w-full px-3 py-2 text-sm border border-emerald-300 dark:border-emerald-700 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-emerald-500 focus:border-emerald-500" {{ !$selectedAcademicLevelId ? 'disabled' : '' }}>
                                 <option value="">Select Subject...</option>
                                 @foreach($this->academicSubjects as $subject)
@@ -385,6 +385,9 @@
                             Fetching...
                         </span>
                     </button>
+                    @if(!$selectedAcademicSubjectId)
+                        <p class="mt-2 text-xs text-emerald-600 dark:text-emerald-400">Select a subject above to generate questions from the database</p>
+                    @endif
                 </div>
 
                 <!-- Questions List -->
