@@ -434,7 +434,7 @@ Route::redirect('/volta', '/volta/');
 
 Route::get('/volta/{any?}', function () {
     return response()->file(public_path('volta/index.html'));
-})->where('any', '.*');
+})->where('any', '.*')->name('volta');
 
 /*
 |--------------------------------------------------------------------------

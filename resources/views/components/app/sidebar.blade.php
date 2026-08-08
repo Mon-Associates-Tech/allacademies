@@ -575,6 +575,33 @@
 
                                     <span class="text-sm ml-2 sidebar-text duration-200">Visual Activities</span>
                                 </div>
+                             </a>
+                        </li>
+                                        </x-app.nav-section>
+
+                    {{-- Simulations Section --}}
+                    <x-app.nav-section
+                        id="sidebar-nav-simulations"
+                        label="Simulations"
+                        :open="true"
+                    >
+                        <li class="mb-0.5 last:mb-2" title="Circuit Simulator">
+                            <a
+                                class="block pl-3 rounded-lg transition {{ Route::is('volta') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                href="{{ route('volta') }}"
+                            >
+                                <div class="flex items-center">
+                                    <svg
+                                        class="shrink-0 fill-current {{ Route::is('volta') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h2V7zm0 8h-2v2h2v-2z"/>
+                                    </svg>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Circuit Simulator</span>
+                                </div>
                             </a>
                         </li>
                     </x-app.nav-section>
