@@ -430,6 +430,11 @@ Route::get('/license-expired', fn() => view('license.expired'))
 
 Route::get('/status', StatusPage::class)->name('status');
 
+Route::redirect('/volta', '/volta/');
+
+Route::get('/volta/{any?}', function () {
+    return response()->file(public_path('volta/index.html'));
+})->where('any', '.*');
 
 /*
 |--------------------------------------------------------------------------
