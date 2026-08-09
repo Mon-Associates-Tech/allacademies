@@ -27,13 +27,13 @@ class NotificationController extends Controller
      * email): click it, it opens, it happens to also mark itself read.
      * Bookmarkable/shareable as a side effect of being a real GET route.
      */
-    public function open(Notification $notification): RedirectResponse
+    public function open(Notification $alerts): RedirectResponse
     {
-        $this->authorizeOwnership($notification);
+        $this->authorizeOwnership($alerts);
 
-        $notification->markAsRead();
+        $alerts->markAsRead();
 
-        return redirect($notification->data['url'] ?? route('bookshop.shop.notifications.index'));
+        return redirect($this->resolveTargetUrl($alerts));
     }
 
     public function markAllAsRead(): RedirectResponse
@@ -51,9 +51,45 @@ class NotificationController extends Controller
         /** @var Customer $customer */
         $customer = Auth::guard('bookshop_customer')->user();
 
+        $expectedTypes = array_unique([
+            Customer::class,
+            (new Customer())->getMorphClass(),
+        ]);
+
         abort_unless(
-            $notification->notifiable_type === Customer::class && $notification->notifiable_id === $customer->id,
+            $customer !== null
+            && $notification->notifiable_id === $customer->id
+            && in_array($notification->notifiable_type, $expectedTypes, true),
             404
         );
+    }
+
+    private function resolveTargetUrl(Notification $notification): string
+    {
+        $url = $notification->data['url'] ?? route('bookshop.shop.notifications.index');
+
+        if (! is_string($url) || $url === '') {
+            return route('bookshop.shop.notifications.index');
+        }
+
+        if (! str_contains($url, '://')) {
+            return $url;
+        }
+
+        $parts = parse_url($url);
+
+        $path = $parts['path'] ?? '/';
+        $query = $parts['query'] ?? '';
+        $fragment = $parts['fragment'] ?? '';
+
+        $target = $path;
+        if ($query !== '') {
+            $target .= '?'.$query;
+        }
+        if ($fragment !== '') {
+            $target .= '#'.$fragment;
+        }
+
+        return $target;
     }
 }

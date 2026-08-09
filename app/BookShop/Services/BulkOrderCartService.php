@@ -3,20 +3,16 @@
 namespace App\BookShop\Services;
 
 /**
- * Session-backed, not database-backed - a cart is inherently transient
- * pre-checkout state, and every other piece of BookShop already leans on
- * plain server-rendered forms rather than persisted client state, so this
- * stays consistent with that rather than introducing a new pattern.
- *
- * Deliberately single-branch: stock, and therefore what's orderable, is
- * branch-specific. Switching branches while the cart has items clears it
- * (see BranchSwitchController) rather than trying to merge or split into
- * multiple orders - simpler to reason about, and switching branches
- * mid-cart is an edge case, not the common path.
+ * Sibling to CartService, not a reuse of it - a bulk order request is a
+ * fundamentally different lifecycle (submit -> staff reviews & quotes ->
+ * customer accepts -> becomes a real Order) rather than immediate
+ * purchase, and deliberately uses its own session key so building a
+ * bulk request doesn't touch or get touched by whatever's sitting in
+ * the customer's normal shopping cart at the same time.
  */
-class CartService implements ShoppingCartContract
+class BulkOrderCartService implements ShoppingCartContract
 {
-    private const SESSION_KEY = 'bookshop_cart';
+    private const SESSION_KEY = 'bookshop_bulk_order_cart';
 
     private function state(): array
     {
@@ -77,7 +73,7 @@ class CartService implements ShoppingCartContract
         session()->forget(self::SESSION_KEY);
     }
 
-    public function count(): int
+    public function totalQuantity(): int
     {
         return array_sum($this->items());
     }

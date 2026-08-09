@@ -5,12 +5,14 @@ use App\BookShop\Http\Controllers\Customer\Auth\CustomerSignInController;
 use App\BookShop\Http\Controllers\Customer\Auth\CustomerSignOutController;
 use App\BookShop\Http\Controllers\Customer\BookShowController;
 use App\BookShop\Http\Controllers\Customer\BranchSwitchController;
+use App\BookShop\Http\Controllers\Customer\BulkOrderController as CustomerBulkOrderController;
 use App\BookShop\Http\Controllers\Customer\CartController;
 use App\BookShop\Http\Controllers\Customer\CatalogController;
 use App\BookShop\Http\Controllers\Customer\CustomerHomeController;
 use App\BookShop\Http\Controllers\Customer\NotificationController as CustomerNotificationController;
 use App\BookShop\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\BookShop\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
+use App\BookShop\Models\Notification as BookShopNotification;
 use App\BookShop\Http\Controllers\Staff\Auth\ChangePasswordController;
 use App\BookShop\Http\Controllers\Staff\Auth\StaffSignInController;
 use App\BookShop\Http\Controllers\Staff\Auth\StaffSignOutController;
@@ -18,6 +20,7 @@ use App\BookShop\Http\Controllers\Staff\BookController;
 use App\BookShop\Http\Controllers\Staff\BranchController;
 use App\BookShop\Http\Controllers\Staff\BranchPaymentController;
 use App\BookShop\Http\Controllers\Staff\BranchPendingController;
+use App\BookShop\Http\Controllers\Staff\BulkOrderController as StaffBulkOrderController;
 use App\BookShop\Http\Controllers\Staff\CategoryController;
 use App\BookShop\Http\Controllers\Staff\CustomerController as StaffCustomerController;
 use App\BookShop\Http\Controllers\Staff\NotificationController as StaffNotificationController;
@@ -48,7 +51,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('web')->group(function () {
-
+   Route::bind('alerts', function ($value) {
+       return BookShopNotification::query()->findOrFail($value);
+   });
+ 
 Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
     Route::middleware('bookshop.guest:bookshop_staff')->group(function () {
         Route::get('login', [StaffSignInController::class, 'create'])->name('login');
@@ -88,7 +94,7 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
 
             Route::get('notifications', [StaffNotificationController::class, 'index'])->name('notifications.index');
             Route::patch('notifications/mark-all-read', [StaffNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-            Route::get('notifications/{notification}/open', [StaffNotificationController::class, 'open'])->name('notifications.open');
+            Route::get('notifications/{alerts}/open', [StaffNotificationController::class, 'open'])->name('notifications.open');
 
             // Index: both roles. Create/store: branch admins only (enforced
             // in the controller, since a superadmin has no branch of their
@@ -103,6 +109,14 @@ Route::prefix('bookshop/staff')->name('bookshop.staff.')->group(function () {
 
             Route::get('customers', [StaffCustomerController::class, 'index'])->name('customers.index');
             Route::post('customers/send-email', [StaffCustomerController::class, 'sendEmail'])->name('customers.send-email');
+
+            // Visible to both roles, branch-scoped like Orders (not
+            // superadmin-only like restock approval - quoting is a
+            // per-branch operational call, not a shared-warehouse one).
+            Route::get('bulk-orders', [StaffBulkOrderController::class, 'index'])->name('bulk-orders.index');
+            Route::get('bulk-orders/{bulkOrderRequest}', [StaffBulkOrderController::class, 'show'])->name('bulk-orders.show');
+            Route::patch('bulk-orders/{bulkOrderRequest}/quote', [StaffBulkOrderController::class, 'quote'])->name('bulk-orders.quote');
+            Route::patch('bulk-orders/{bulkOrderRequest}/reject', [StaffBulkOrderController::class, 'reject'])->name('bulk-orders.reject');
 
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
@@ -194,9 +208,26 @@ Route::prefix('bookshop/shop')->name('bookshop.shop.')->group(function () {
         Route::get('payments/callback', [CustomerPaymentController::class, 'callback'])->name('payments.callback');
         Route::get('payments/{order}/initialize', [CustomerPaymentController::class, 'initialize'])->name('payments.initialize');
 
+        // All bulk-order routes require an account throughout (unlike the
+        // regular catalog/cart above, which stay public) - see the
+        // docblock on Customer\BulkOrderController for why. Literal
+        // segments (catalog/add/review/submit/index) declared before the
+        // {bulkOrderRequest} wildcard, or e.g. "catalog" would be
+        // swallowed as an attempted bulkOrderRequest ID.
+        Route::get('bulk-orders/catalog', [CustomerBulkOrderController::class, 'catalog'])->name('bulk-orders.catalog');
+        Route::post('bulk-orders/add', [CustomerBulkOrderController::class, 'addItem'])->name('bulk-orders.add');
+        Route::get('bulk-orders/review', [CustomerBulkOrderController::class, 'review'])->name('bulk-orders.review');
+        Route::put('bulk-orders/review', [CustomerBulkOrderController::class, 'updateItems'])->name('bulk-orders.update');
+        Route::delete('bulk-orders/remove/{book}', [CustomerBulkOrderController::class, 'removeItem'])->name('bulk-orders.remove');
+        Route::post('bulk-orders/submit', [CustomerBulkOrderController::class, 'submit'])->name('bulk-orders.submit');
+        Route::get('bulk-orders', [CustomerBulkOrderController::class, 'index'])->name('bulk-orders.index');
+        Route::get('bulk-orders/{bulkOrderRequest}', [CustomerBulkOrderController::class, 'show'])->name('bulk-orders.show');
+        Route::post('bulk-orders/{bulkOrderRequest}/accept', [CustomerBulkOrderController::class, 'acceptQuote'])->name('bulk-orders.accept');
+        Route::post('bulk-orders/{bulkOrderRequest}/cancel', [CustomerBulkOrderController::class, 'cancel'])->name('bulk-orders.cancel');
+
         Route::get('notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');
         Route::patch('notifications/mark-all-read', [CustomerNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-        Route::get('notifications/{notification}/open', [CustomerNotificationController::class, 'open'])->name('notifications.open');
+        Route::get('notifications/{alerts}/open', [CustomerNotificationController::class, 'open'])->name('notifications.open');
     });
 });
 

@@ -22,6 +22,7 @@
                 <x-bookshop::nav-link route="bookshop.shop.catalog" :active="['bookshop.shop.catalog', 'bookshop.shop.books.show']">Catalog</x-bookshop::nav-link>
                 @auth('bookshop_customer')
                     <x-bookshop::nav-link route="bookshop.shop.orders.index" :active="['bookshop.shop.orders.*']">My Orders</x-bookshop::nav-link>
+                    <x-bookshop::nav-link route="bookshop.shop.bulk-orders.index" :active="['bookshop.shop.bulk-orders.*']">Bulk Order</x-bookshop::nav-link>
                 @endauth
             </nav>
         </div>
@@ -65,6 +66,7 @@
         <x-bookshop::nav-link route="bookshop.shop.catalog" :active="['bookshop.shop.catalog', 'bookshop.shop.books.show']">Catalog</x-bookshop::nav-link>
         @auth('bookshop_customer')
             <x-bookshop::nav-link route="bookshop.shop.orders.index" :active="['bookshop.shop.orders.*']">My Orders</x-bookshop::nav-link>
+            <x-bookshop::nav-link route="bookshop.shop.bulk-orders.index" :active="['bookshop.shop.bulk-orders.*']">Bulk Order</x-bookshop::nav-link>
             <div class="pt-2 border-t border-white/10 mt-1">
                 <x-bookshop::notification-bell guard="bookshop_customer" route-prefix="bookshop.shop." />
             </div>

@@ -70,6 +70,11 @@ class Customer extends Model implements AuthenticatableContract, MustVerifyEmail
         return $this->hasMany(Order::class);
     }
 
+    public function bulkOrderRequests(): HasMany
+    {
+        return $this->hasMany(BulkOrderRequest::class);
+    }
+
     /**
      * See Staff::notifications() for why this override exists - same
      * reasoning, points at bookshop_notifications instead of the

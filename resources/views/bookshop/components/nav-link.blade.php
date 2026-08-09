@@ -4,8 +4,7 @@
                          // Pass an array for links that should stay highlighted across
                          // several routes, e.g. :active="['bookshop.staff.books.*']"
                          // so editing a book still shows "Books" as active.
-    'variant' => 'pill', // 'pill' (horizontal top-nav underline style, default)
-                        
+    'variant' => 'pill', // 'pill' (horizontal top-nav underline style, default) or 'dropdown'
 ])
 
 @php

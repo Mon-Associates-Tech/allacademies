@@ -47,17 +47,21 @@ class BranchResolutionService
      * explicit choice (persisted in both the cart session and, for a
      * logged-in customer, preferred_branch_id) if they've picked one and
      * it's still active, otherwise the region-based default from
-     * resolveForCustomer(). This is what CatalogController/
-     * BookShowController/CartController use; resolveForCustomer() stays
-     * reserved for the initial/default case.
+     * resolveForCustomer(). Used by CatalogController/BookShowController/
+     * CartController (with CartService) and BulkOrderController (with
+     * BulkOrderCartService) - accepts either via ShoppingCartContract
+     * rather than being hard-typed to one, since branch resolution works
+     * identically for both; resolveForCustomer() stays reserved for the
+     * initial/default case.
      *
-     * $customer is nullable to support guest browsing - a guest has no
-     * region on file, so they only ever get a branch once they've
-     * explicitly picked one via BranchSwitchController. A logged-in
-     * customer without an explicit choice yet still gets the region-based
-     * default, same as before.
+     * $customer is nullable to support guest browsing (regular
+     * catalog/cart only - bulk ordering always requires an account) - a
+     * guest has no region on file, so they only ever get a branch once
+     * they've explicitly picked one via BranchSwitchController. A
+     * logged-in customer without an explicit choice yet still gets the
+     * region-based default, same as before.
      */
-    public function resolveCurrentShoppingBranch(?Customer $customer, CartService $cart): ?Branch
+    public function resolveCurrentShoppingBranch(?Customer $customer, ShoppingCartContract $cart): ?Branch
     {
         if ($branchId = $cart->branchId()) {
             $branch = Branch::query()->active()->find($branchId);

@@ -81,6 +81,11 @@ class Branch extends Model
         return $this->hasMany(RestockRequest::class);
     }
 
+    public function bulkOrderRequests(): HasMany
+    {
+        return $this->hasMany(BulkOrderRequest::class);
+    }
+
     public function paymentAccount(): HasOne
     {
         return $this->hasOne(BranchPaymentAccount::class);

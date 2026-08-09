@@ -1,0 +1,30 @@
+<?php
+
+namespace App\BookShop\Enums;
+
+enum BulkOrderRequestStatus: string
+{
+    case PENDING = 'pending';
+    case QUOTED = 'quoted';
+    case ACCEPTED = 'accepted';
+    case REJECTED = 'rejected';
+    case CANCELLED = 'cancelled';
+    case CONVERTED = 'converted';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::PENDING => 'Pending Review',
+            self::QUOTED => 'Quote Sent',
+            self::ACCEPTED => 'Accepted',
+            self::REJECTED => 'Rejected',
+            self::CANCELLED => 'Cancelled',
+            self::CONVERTED => 'Converted to Order',
+        };
+    }
+
+    public function isTerminal(): bool
+    {
+        return in_array($this, [self::REJECTED, self::CANCELLED, self::CONVERTED], true);
+    }
+}
