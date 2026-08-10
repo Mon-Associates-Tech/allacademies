@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'BookShop' }}</title>
+    <title>{{ $title ?? 'BestBrain' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- Standalone module: uses the Tailwind CDN build rather than the host
          app's compiled asset pipeline, so this page renders correctly even
@@ -18,7 +18,7 @@
                 <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
                 <div class="px-7 py-6">
                     <h1 class="text-xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
-                        {{ $heading ?? 'BookShop' }}
+                        {{ $heading ?? 'BestBrain' }}
                     </h1>
                     @if(isset($subheading))
                         <p class="text-slate-400 mt-2 text-sm">{{ $subheading }}</p>

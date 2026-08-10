@@ -577,6 +577,28 @@
                                 </div>
                              </a>
                         </li>
+
+                        <li class="mb-0.5 last:mb-2" title="Customer Bookshop Catalog">
+                            <a
+                                :class="$store.sidebar.expanded ? 'py-2' : ''"
+                                class="block pl-3 rounded-lg transition {{ Route::is('bookshop.shop.catalog') || Route::is('bookshop.shop.books.show') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                href="{{ route('bookshop.shop.catalog') }}"
+                            >
+                                <div class="flex items-center">
+                                    <svg
+                                        class="shrink-0 fill-current {{ Route::is('bookshop.shop.catalog') || Route::is('bookshop.shop.books.show') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H6Zm0 2h5v4H6V4Zm7 0h2v2h-2V4Zm0 4h2v2h-2V8Zm-7 2h5v4H6v-4Zm7 0h2v2h-2v-2Zm-7 6h5v4H6v-4Zm7 0h2v2h-2v-2Z"/>
+                                    </svg>
+
+                                    <span class="text-sm ml-2 sidebar-text duration-200">BestBrain Catalog</span>
+                                </div>
+                            </a>
+                        </li>
                                         </x-app.nav-section>
 
                     {{-- Simulations Section --}}
