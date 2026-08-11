@@ -17,7 +17,7 @@
     <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center gap-8">
-            <span class="text-white font-bold" style="font-family: 'Georgia', serif; letter-spacing: -0.02em;">BestBrain</span>
+            <span class="text-white font-bold" style="font-family: 'Georgia', serif; letter-spacing: -0.02em;">Publishers</span>
             <nav class="hidden md:flex items-center gap-5 text-sm">
                 <x-bookshop::nav-link route="bookshop.shop.catalog" :active="['bookshop.shop.catalog', 'bookshop.shop.books.show']">Catalog</x-bookshop::nav-link>
                 @auth('bookshop_customer')

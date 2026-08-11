@@ -71,10 +71,28 @@
                 style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
             Create Account
         </button>
-
-        <p class="text-center text-sm text-slate-500 dark:text-slate-400">
-            Already have an account?
-            <a href="{{ route('bookshop.shop.login') }}" class="text-purple-600 dark:text-purple-400 font-medium">Sign in</a>
-        </p>
     </form>
+
+    <div class="relative py-4">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400">OR</span>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ route('bookshop.shop.auth.register-from-default') }}" class="space-y-5">
+        @csrf
+        <button type="submit" @disabled(true)
+                class="w-full disabled disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                style="border-radius: 2px;">
+            Register with Allacademies
+        </button>
+    </form>
+
+    <p class="text-center text-sm mt-4 text-slate-500 dark:text-slate-400">
+        Already have an account?
+        <a href="{{ route('bookshop.shop.login') }}" class="text-purple-600 dark:text-purple-400 font-medium">Sign in</a>
+    </p>
 </x-bookshop::layouts.guest>

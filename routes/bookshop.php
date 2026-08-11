@@ -1,5 +1,6 @@
 <?php
 
+use App\BookShop\Http\Controllers\Customer\Auth\CrossAuthController;
 use App\BookShop\Http\Controllers\Customer\Auth\CustomerRegisterController;
 use App\BookShop\Http\Controllers\Customer\Auth\CustomerSignInController;
 use App\BookShop\Http\Controllers\Customer\Auth\CustomerSignOutController;
@@ -174,6 +175,13 @@ Route::prefix('bookshop/shop')->name('bookshop.shop.')->group(function () {
         Route::post('register', [CustomerRegisterController::class, 'store']);
         Route::get('login', [CustomerSignInController::class, 'create'])->name('login');
         Route::post('login', [CustomerSignInController::class, 'store']);
+    });
+
+    // Cross-auth routes - allow access to both authenticated and guest users
+    Route::middleware('web')->group(function () {
+        Route::post('auth/redirect-to-default-login', [CrossAuthController::class, 'redirectToDefaultLogin'])->name('auth.redirect-to-default-login');
+        Route::get('auth/from-default-auth', [CrossAuthController::class, 'handleDefaultAuthCompletion'])->name('auth.from-default-auth');
+        Route::post('auth/register-from-default', [CrossAuthController::class, 'registerFromDefaultAuth'])->name('auth.register-from-default');
     });
 
     // Public - no account required. A guest can browse the catalog, view

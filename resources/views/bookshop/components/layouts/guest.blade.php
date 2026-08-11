@@ -18,7 +18,7 @@
                 <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
                 <div class="px-7 py-6">
                     <h1 class="text-xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
-                        {{ $heading ?? 'BestBrain' }}
+                        {{ $heading ?? 'Publishers' }}
                     </h1>
                     @if(isset($subheading))
                         <p class="text-slate-400 mt-2 text-sm">{{ $subheading }}</p>

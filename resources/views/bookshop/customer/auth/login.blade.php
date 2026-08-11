@@ -1,4 +1,4 @@
-<x-bookshop::layouts.guest :heading="'Welcome back'" :subheading="'Sign in to your BookShop account'">
+<x-bookshop::layouts.guest :heading="'Welcome back'" :subheading="'Sign in to your Publisher account'">
     @if($errors->any())
         <div class="mb-5 px-4 py-3 text-sm text-red-700 bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300" style="border-radius: 2px;">
             {{ $errors->first() }}
@@ -32,10 +32,28 @@
                 style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
             Sign In
         </button>
-
-        <p class="text-center text-sm text-slate-500 dark:text-slate-400">
-            Don't have an account?
-            <a href="{{ route('bookshop.shop.register') }}" class="text-purple-600 dark:text-purple-400 font-medium">Create one</a>
-        </p>
     </form>
+
+    <div class="relative py-4">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400">OR</span>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ route('bookshop.shop.auth.redirect-to-default-login') }}" class="space-y-5">
+        @csrf
+        <button type="submit" @disabled(true)
+                class="w-full disabled disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                style="border-radius: 2px;">
+            Sign In with Allacademies
+        </button>
+    </form>
+
+    <p class="text-center text-sm mt-4 text-slate-500 dark:text-slate-400">
+        Don't have an account?
+        <a href="{{ route('bookshop.shop.register') }}" class="text-purple-600 dark:text-purple-400 font-medium">Create one</a>
+    </p>
 </x-bookshop::layouts.guest>

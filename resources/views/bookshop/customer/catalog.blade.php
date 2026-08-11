@@ -1,4 +1,4 @@
-<x-bookshop::layouts.customer :title="'Catalog - BestBrain'">
+<x-bookshop::layouts.customer :title="'Catalog - Publishers'">
     <h1 class="text-xl font-bold text-slate-900 dark:text-white" style="font-family: 'Georgia', serif;">Catalog</h1>
 
     @if(! $branch)

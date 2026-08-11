@@ -147,7 +147,7 @@
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-                            BestBrain  Catalog
+                            Publishers
                         </a></li>
                     <li><a href="#" class="text-gray-300 hover:text-blue-400 transition-colors duration-200 flex items-center group py-1">
                             <svg class="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

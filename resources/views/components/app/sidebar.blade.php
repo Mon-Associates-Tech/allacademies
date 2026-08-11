@@ -595,7 +595,7 @@
                                         <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H6Zm0 2h5v4H6V4Zm7 0h2v2h-2V4Zm0 4h2v2h-2V8Zm-7 2h5v4H6v-4Zm7 0h2v2h-2v-2Zm-7 6h5v4H6v-4Zm7 0h2v2h-2v-2Z"/>
                                     </svg>
 
-                                    <span class="text-sm ml-2 sidebar-text duration-200">BestBrain Catalog</span>
+                                    <span class="text-sm ml-2 sidebar-text duration-200">Publishers</span>
                                 </div>
                             </a>
                         </li>
