@@ -963,6 +963,13 @@
                                 </div>
                             </div>
 
+                            <div class="mb-2">
+                                <a href="{{ route('school.download-template', 'students') }}" target="_blank" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                                    Download CSV template
+                                </a>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Use this template to format your CSV. The create_login column controls user creation.</p>
+                            </div>
+
                             <div x-show="isUploading" class="mb-4">
                                 <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
                                     <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
