@@ -166,8 +166,27 @@ class SubscriptionController extends Controller
             }
         }
 
-        // Sort by created_at descending
-        $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+        // Determine type filter (regular/content or book)
+        $filterType = request()->query('type');
+
+        // If user is student, they only see book subscriptions; apply type filter accordingly
+        if ($isStudent) {
+           if ($filterType === 'regular') {
+               // students cannot view regular subscriptions
+               $combinedSubscriptions = collect();
+           } else {
+               $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+           }
+        } else {
+           // For non-students, apply type filters if provided
+           if ($filterType === 'regular') {
+               $combinedSubscriptions = $combinedSubscriptions->where('type', 'regular')->sortByDesc('created_at')->values();
+           } elseif ($filterType === 'book') {
+               $combinedSubscriptions = $combinedSubscriptions->where('type', 'book')->sortByDesc('created_at')->values();
+           } else {
+               $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+           }
+        }
 
         // Paginate the combined results
         $currentPage = request()->get('page', 1);

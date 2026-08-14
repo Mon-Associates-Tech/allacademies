@@ -244,6 +244,15 @@
                                         </div>
                                     @endif
 
+                                    <div>
+                                        <label class="text-xs text-gray-500">Type</label>
+                                        <select name="type" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                                            <option value="">All</option>
+                                            <option value="regular" {{ request('type') == 'regular' ? 'selected' : '' }}>Content Subscriptions</option>
+                                            <option value="book" {{ request('type') == 'book' ? 'selected' : '' }}>Book Subscriptions</option>
+                                        </select>
+                                    </div>
+
                                     @if(!empty($filterTeams))
                                         <div>
                                             <label class="text-xs text-gray-500">Team</label>
