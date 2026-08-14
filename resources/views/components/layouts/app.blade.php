@@ -160,6 +160,39 @@
 @livewireScriptConfig
 
 <script>
+    // Initialize a global initSubscriptions function so Alpine can call it during component parsing
+    window.initSubscriptions = function(el){
+        try {
+            const teams = el.dataset.teams ? JSON.parse(el.dataset.teams) : [];
+            const selectedTeam = el.dataset.selectedTeam ?? '';
+            return {
+                open: false,
+                teams,
+                selectedTeam,
+                async fetchTeams(schoolId){
+                    if (!schoolId) { this.teams = []; this.selectedTeam = ''; return; }
+                    try {
+                        const res = await fetch(`/schools/${schoolId}/teams`);
+                        if (!res.ok) throw new Error('Failed to load teams');
+                        const json = await res.json();
+                        this.teams = json;
+                        if (Array.isArray(json) && json.length) {
+                            const exists = json.find(t => String(t.id) === String(this.selectedTeam));
+                            if (!exists) { this.selectedTeam = String(json[0].id); }
+                        } else {
+                            this.selectedTeam = '';
+                        }
+                    } catch (e) { console.error('initSubscriptions.fetchTeams error', e); }
+                }
+            };
+        } catch(e) {
+            console.error('initSubscriptions init error', e);
+            return { open: false, teams: [], selectedTeam: '' };
+        }
+    };
+</script>
+
+<script>
     // Check for dark mode preference and apply immediately to prevent flash
     if (localStorage.getItem('dark-mode') === 'true' ||
         (localStorage.getItem('dark-mode') === null &&

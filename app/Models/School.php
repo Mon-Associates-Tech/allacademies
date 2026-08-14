@@ -328,6 +328,7 @@ class School extends Model
     public function activeContentSubscriptions()
     {
         // Get subscriptions for teams owned by users in this school
+        // Use the Subscription::active scope to correctly check for paid subscriptions
         return Subscription::query()
             ->whereIn('team_id', function ($query) {
                 $query->select('teams.id')
@@ -335,8 +336,7 @@ class School extends Model
                     ->join('users', 'users.id', '=', 'teams.owner_id')
                     ->where('users.school_id', $this->id);
             })
-            ->where('status', 'active')
-            ->where('expires_at', '>', now());
+            ->active();
     }
 
     /**

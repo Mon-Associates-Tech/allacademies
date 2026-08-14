@@ -202,27 +202,7 @@
 
                     {{-- Filters: School / Team --}}
                     @if(!empty($filterSchools) || !empty($filterTeams))
-                        <div x-data="{
-                                open: false,
-                                teams: @json(($filterTeams ?? collect())->map(fn($t) => ['id' => $t->id, 'name' => $t->name])->values()),
-                                selectedTeam: '{{ request('team_id', '') }}',
-                                async fetchTeams(schoolId) {
-                                    if (!schoolId) {
-                                        this.teams = [];
-                                        this.selectedTeam = '';
-                                        return;
-                                    }
-                                    try {
-                                        const res = await fetch(`/schools/${schoolId}/teams`);
-                                        if (!res.ok) throw new Error('Failed to load teams');
-                                        const json = await res.json();
-                                        this.teams = json;
-                                        this.selectedTeam = '';
-                                    } catch (e) {
-                                        console.error(e);
-                                    }
-                                }
-                            }" class="relative">
+                        <div x-data="initSubscriptions($el)" data-teams='@json(($filterTeams ?? collect())->map(fn($t) => ["id" => $t->id, "name" => $t->name])->values(), JSON_HEX_APOS)' data-selected-team='{{ request('team_id', '') }}' class="relative">
                             <button type="button" @click="open = !open" class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md shadow-sm text-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2"></path>
@@ -285,6 +265,7 @@
                             New Course Subscription
                         </x-link.primary>
                     @endif
+
 
                     @if(in_array(Auth::user()->email, special_access_emails()))
                         <button

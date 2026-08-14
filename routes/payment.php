@@ -47,6 +47,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('payments', PaymentController::class)->only(['index', 'create', 'store']);
     Route::post('/subscriptions/toggle-test-mode', [\App\Http\Controllers\SubscriptionController::class, 'toggleTestMode'])->name('subscriptions.toggle-test-mode');
 
+    // Admin payment actions: manual creation and status updates
+    Route::post('/admin/payments/manual', [\App\Http\Controllers\AdminPaymentController::class, 'store'])->name('admin.payments.manual');
+    Route::post('/admin/payments/{id}/status', [\App\Http\Controllers\AdminPaymentController::class, 'updateStatus'])->name('admin.payments.update-status');
+
     // Token Payment Routes
     Route::prefix('token-payments')->name('token-payments.')->group(function () {
         Route::get('/token/initialize', [TokenPaymentController::class, 'initialize'])->name('initialize');

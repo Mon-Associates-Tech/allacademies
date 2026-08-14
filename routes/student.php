@@ -30,6 +30,8 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
         Route::post('/initialize', [\App\Http\Controllers\StudentFeeController::class, 'initializePayment'])->name('initialize');
         Route::get('/callback', [\App\Http\Controllers\StudentFeeController::class, 'callback'])->name('callback');
         Route::get('/receipt/{payment}', [\App\Http\Controllers\StudentFeeController::class, 'receipt'])->name('receipt');
+        // Receipt for portal/one-off SchoolPayment entries
+        Route::get('/receipt/payment/{payment}', [\App\Http\Controllers\StudentFeeController::class, 'receiptPayment'])->name('receipt.payment');
     });
 
     // Alias route for convenience

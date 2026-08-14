@@ -192,11 +192,7 @@ class TeamController extends Controller
      */
     public function teamsForSchool(School $school)
     {
-        $user = Auth::user();
-        if (! ($user->isSuperAdmin() || $user->hasRole('owner') || $user->hasRole('admin'))) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
+        // Allow any authenticated user to fetch teams for a school (used by subscriptions filters)
         $teams = Team::whereHas('owner', function ($q) use ($school) {
             $q->where('school_id', $school->id);
         })->orderBy('name')->get(['id', 'name']);

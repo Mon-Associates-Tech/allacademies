@@ -67,8 +67,8 @@ class StudentPaymentDetails extends Component
 
         $schoolId = getSchoolId();
 
-        DB::transaction(function () use ($schoolId) {
-            StudentPaymentRecord::create([
+        DB::transaction(function () use ($schoolId, &$createdRecord, &$schoolPayment) {
+            $createdRecord = StudentPaymentRecord::create([
                 'school_id' => $schoolId,
                 'student_id' => $this->student->id,
                 'academic_year_id' => $this->oneOffAcademicYear ?: null,
@@ -83,10 +83,36 @@ class StudentPaymentDetails extends Component
                 'status' => 'unpaid',
                 'is_custom' => true,
             ]);
+
+            // Also create a SchoolPayment record so the student sees the pending payment and can pay
+            $schoolPayment = \App\Models\SchoolPayment::create([
+                'school_id' => $schoolId,
+                'student_id' => $this->student->id,
+                'payment_type' => $this->oneOffPaymentType ?: 'other',
+                'amount' => $this->oneOffAmount,
+                'currency' => 'GHS',
+                'payer_type' => 'other',
+                'payer_name' => auth()->user()->name ?? 'Administrator',
+                'payer_email' => auth()->user()->email ?? null,
+                'status' => 'pending',
+                'description' => $this->oneOffDescription,
+                'student_payment_record_id' => $createdRecord->id,
+                'created_by' => auth()->id(),
+            ]);
         });
 
         $this->showOneOffPaymentModal = false;
         $this->resetOneOffForm();
+
+        // Notify the student user about the new one-off payment
+        try {
+            if ($this->student->user) {
+                $this->student->user->notify(new \App\Notifications\SchoolPaymentCreatedNotification($schoolPayment));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to notify student about one-off payment: '.$e->getMessage());
+        }
+
         session()->flash('message', 'One-off payment created successfully!');
         $this->dispatch('$refresh');
     }

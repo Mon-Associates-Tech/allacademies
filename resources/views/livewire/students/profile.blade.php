@@ -159,6 +159,11 @@
     @endif
     {{-- school fees payement details --}}
     <div class="w-full bg-white shadow-md rounded-xl p-6 mt-6">
+        @if(isset($debugCounts))
+            <div class="mb-4 p-3 rounded text-sm bg-yellow-50 border border-yellow-200 text-yellow-800">
+                Debug: fee_payments={{ $debugCounts['fee_payments'] }}, school_payments={{ $debugCounts['school_payments'] }}, student_payment_records={{ $debugCounts['student_payment_records'] }}, payment_history={{ $debugCounts['payment_history'] }}
+            </div>
+        @endif
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-gray-800">School Fees Payment Details</h3>
 
@@ -228,7 +233,10 @@
             @if($paymentHistory->isNotEmpty())
             <div
                 class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Payment History</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Recent Charges & Payments</h3>
+                    <a href="{{ route('students.payments.index') }}" class="text-sm text-violet-600 hover:underline">More</a>
+                </div>
                 <table
                     class="w-full text-sm text-left text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                     <thead class="bg-gray-100 dark:bg-gray-700">
@@ -236,40 +244,45 @@
                             <th class="px-4 py-2">Amount</th>
                             <th class="px-4 py-2">Currency</th>
                             <th class="px-4 py-2">Status</th>
-                            <th class="px-4 py-2">Payer Name</th>
+                            <th class="px-4 py-2">Payer</th>
                             <th class="px-4 py-2">Term</th>
-                            <th class="px-4 py-2">Academic Group</th>
-                            <th class="px-4 py-2">Academic Level</th>
-                            <th class="px-4 py-2">Date Paid</th>
+                            <th class="px-4 py-2">Group</th>
+                            <th class="px-4 py-2">Level</th>
+                            <th class="px-4 py-2">Date</th>
+                            <th class="px-4 py-2">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($paymentHistory as $payment)
                         <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-                            <td class="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">
-                                ₵{{ number_format($payment->amount, 2) }}
-                            </td>
-                            <td class="px-4 py-2">{{ $payment->currency ?? 'GHS' }}</td>
-                           <td class="px-4 py-2">
-    <span class="px-3 py-1 rounded-full text-xs font-semibold
-        @if(strtolower($payment->status) === 'completed' || strtolower($payment->status) === 'succeeded')
-            bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100
-        @elseif(strtolower($payment->status) === 'pending')
-            bg-orange-100 text-orange-800 dark:bg-orange-700 dark:text-orange-100
-        @else
-            bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100
-        @endif">
-        {{ ucfirst($payment->status ?? 'Pending') }}
-    </span>
-</td>
-
+                            <td class="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">₵{{ number_format($payment->amount, 2) }}</td>
+                            <td class="px-4 py-2">{{ $payment->currency }}</td>
                             <td class="px-4 py-2">
-                                {{ $payment->payer->name ?? 'N/A' }}
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                    @if(in_array(strtolower($payment->status), ['completed','succeeded','paid']))
+                                        bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100
+                                    @elseif(strtolower($payment->status) === 'pending')
+                                        bg-orange-100 text-orange-800 dark:bg-orange-700 dark:text-orange-100
+                                    @else
+                                        bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100
+                                    @endif">{{ ucfirst($payment->status ?? 'Pending') }}</span>
                             </td>
-                            <td class="px-4 py-2">{{ $payment->academicPeriod->name ?? 'N/A' }}</td>
-                            <td class="px-4 py-2">{{ $payment->student->academicGroup->name ?? 'N/A' }}</td>
-                            <td class="px-4 py-2">{{ $payment->student->academicLevel->name ?? 'N/A' }}</td>
-                            <td class="px-4 py-2">{{ $payment->created_at->format('M d, Y') }}</td>
+                            <td class="px-4 py-2">{{ $payment->payer_name }}</td>
+                            <td class="px-4 py-2">{{ $payment->term }}</td>
+                            <td class="px-4 py-2">{{ $payment->academic_group }}</td>
+                            <td class="px-4 py-2">{{ $payment->academic_level }}</td>
+                            <td class="px-4 py-2">{{ \Illuminate\Support\Carbon::parse($payment->created_at)->format('M d, Y') }}</td>
+                            <td class="px-4 py-2">
+                                @if(!in_array(strtolower($payment->status), ['completed','succeeded','paid']))
+                                    @if($payment->type === 'student_record')
+                                        <a href="{{ route('students.fees.payment', ['record' => $payment->id]) }}" class="inline-flex items-center px-3 py-1 bg-violet-600 text-white text-xs rounded">Pay</a>
+                                    @else
+                                        <a href="{{ route('students.payments.index') }}" class="inline-flex items-center px-3 py-1 bg-violet-600 text-white text-xs rounded">Pay</a>
+                                    @endif
+                                @else
+                                    <span class="text-sm text-gray-500">—</span>
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
