@@ -40,6 +40,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('school/comprehensive-view', \App\Livewire\School\ComprehensiveSchoolDashboard::class)->name('school.comprehensive-view');
         Route::get('school/import-formats', [ImportTemplateController::class, 'viewFormats'])->name('school.import-formats');
         Route::get('school/download-template/{type}', [ImportTemplateController::class, 'download'])->name('school.download-template');
+
+        // AJAX: get teams for a school
+        Route::get('schools/{school}/teams', [\App\Http\Controllers\TeamController::class, 'teamsForSchool'])->name('schools.teams');
     });
 
     // School Settings

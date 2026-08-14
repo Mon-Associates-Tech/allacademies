@@ -195,35 +195,74 @@
 
 
         <!-- Subscriptions Table -->
-        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-visible">
             <div class="px-6 flex justify-between py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <div class="flex items-center space-x-4">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Subscription History</h3>
 
                     {{-- Filters: School / Team --}}
                     @if(!empty($filterSchools) || !empty($filterTeams))
-                        <form method="GET" action="{{ route('subscriptions.index') }}" class="flex items-center space-x-2">
-                            @if(!empty($filterSchools))
-                                <select name="school_id" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-                                    <option value="">All Schools</option>
-                                    @foreach($filterSchools as $s)
-                                        <option value="{{ $s->id }}" {{ request('school_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
-                                    @endforeach
-                                </select>
-                            @endif
+                        <div x-data="{
+                                open: false,
+                                teams: @json(($filterTeams ?? collect())->map(fn($t) => ['id' => $t->id, 'name' => $t->name])->values()),
+                                selectedTeam: '{{ request('team_id', '') }}',
+                                async fetchTeams(schoolId) {
+                                    if (!schoolId) {
+                                        this.teams = [];
+                                        this.selectedTeam = '';
+                                        return;
+                                    }
+                                    try {
+                                        const res = await fetch(`/schools/${schoolId}/teams`);
+                                        if (!res.ok) throw new Error('Failed to load teams');
+                                        const json = await res.json();
+                                        this.teams = json;
+                                        this.selectedTeam = '';
+                                    } catch (e) {
+                                        console.error(e);
+                                    }
+                                }
+                            }" class="relative">
+                            <button type="button" @click="open = !open" class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md shadow-sm text-sm">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2"></path>
+                                </svg>
+                                Filters
+                            </button>
 
-                            @if(!empty($filterTeams))
-                                <select name="team_id" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-                                    <option value="">All Teams</option>
-                                    @foreach($filterTeams as $t)
-                                        <option value="{{ $t->id }}" {{ request('team_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                    @endforeach
-                                </select>
-                            @endif
+                            <div x-show="open" @click.outside="open = false" x-cloak class="absolute z-50 mt-2 right-0 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4">
+                                <form method="GET" action="{{ route('subscriptions.index') }}" class="space-y-3">
+                                    @if(!empty($filterSchools))
+                                        <div>
+                                            <label class="text-xs text-gray-500">School</label>
+                                            <select name="school_id" @change="fetchTeams($event.target.value)" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                                                <option value="">All Schools</option>
+                                                @foreach($filterSchools as $s)
+                                                    <option value="{{ $s->id }}" {{ request('school_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    @endif
 
-                            <button type="submit" class="px-3 py-2 rounded-lg text-sm bg-indigo-600 text-white">Filter</button>
-                            <a href="{{ route('subscriptions.index') }}" class="px-3 py-2 rounded-lg text-sm bg-gray-200 dark:bg-gray-700">Reset</a>
-                        </form>
+                                    @if(!empty($filterTeams))
+                                        <div>
+                                            <label class="text-xs text-gray-500">Team</label>
+                                            <select name="team_id" x-model="selectedTeam" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                                                <option value="">All Teams</option>
+                                                <template x-for="team in teams" :key="team.id">
+                                                    <option :value="team.id" x-text="team.name" :selected="team.id == selectedTeam"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    @endif
+
+                                    <div class="flex justify-end space-x-2">
+                                        <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded-md text-sm">Apply</button>
+                                        <a href="{{ route('subscriptions.index') }}" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm">Reset</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     @endif
                 </div>
 

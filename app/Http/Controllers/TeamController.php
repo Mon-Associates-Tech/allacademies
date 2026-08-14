@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Models\School;
 
 class TeamController extends Controller
 {
@@ -184,6 +185,23 @@ class TeamController extends Controller
         return view('teams.edit', [
             'team' => $team,
         ]);
+    }
+
+    /**
+     * Return teams belonging to a school's owners (JSON) — used for AJAX in subscriptions filters
+     */
+    public function teamsForSchool(School $school)
+    {
+        $user = Auth::user();
+        if (! ($user->isSuperAdmin() || $user->hasRole('owner') || $user->hasRole('admin'))) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $teams = Team::whereHas('owner', function ($q) use ($school) {
+            $q->where('school_id', $school->id);
+        })->orderBy('name')->get(['id', 'name']);
+
+        return response()->json($teams);
     }
 
     /**
