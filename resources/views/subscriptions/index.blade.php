@@ -197,7 +197,36 @@
         <!-- Subscriptions Table -->
         <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-6 flex justify-between py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Subscription History</h3>
+                <div class="flex items-center space-x-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Subscription History</h3>
+
+                    {{-- Filters: School / Team --}}
+                    @if(!empty($filterSchools) || !empty($filterTeams))
+                        <form method="GET" action="{{ route('subscriptions.index') }}" class="flex items-center space-x-2">
+                            @if(!empty($filterSchools))
+                                <select name="school_id" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                                    <option value="">All Schools</option>
+                                    @foreach($filterSchools as $s)
+                                        <option value="{{ $s->id }}" {{ request('school_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+
+                            @if(!empty($filterTeams))
+                                <select name="team_id" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                                    <option value="">All Teams</option>
+                                    @foreach($filterTeams as $t)
+                                        <option value="{{ $t->id }}" {{ request('team_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+
+                            <button type="submit" class="px-3 py-2 rounded-lg text-sm bg-indigo-600 text-white">Filter</button>
+                            <a href="{{ route('subscriptions.index') }}" class="px-3 py-2 rounded-lg text-sm bg-gray-200 dark:bg-gray-700">Reset</a>
+                        </form>
+                    @endif
+                </div>
+
                 <div class="flex space-x-3">
                     @if(!auth()->user()->hasAnyRole(['student']))
                         <x-link.primary :to="route('subscriptions.create')">
