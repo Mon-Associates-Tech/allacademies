@@ -43,10 +43,14 @@ class Message extends Model
 
     protected $fillable = [
         'sender_id',
+        'template_id',
         'subject',
         'body',
         'target_type',
         'target_criteria',
+        'channels',
+        'context_type',
+        'context_data',
         'is_urgent',
         'scheduled_at',
         'sent_at',
@@ -55,14 +59,21 @@ class Message extends Model
 
     protected $casts = [
         'target_criteria' => 'array',
-        'is_urgent' => 'boolean',
-        'scheduled_at' => 'datetime',
-        'sent_at' => 'datetime',
+        'channels'        => 'array',
+        'context_data'    => 'array',
+        'is_urgent'       => 'boolean',
+        'scheduled_at'    => 'datetime',
+        'sent_at'         => 'datetime',
     ];
 
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(MessageTemplate::class);
     }
 
     public function attachments(): MorphMany

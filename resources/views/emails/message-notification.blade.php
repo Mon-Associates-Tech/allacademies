@@ -1,444 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Message</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <title>{{ $renderedSubject ?? $userMessage->subject }}</title>
+    <!--[if mso]>
+    <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+    <![endif]-->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #1a1a1a;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px 10px;
-        }
-
-        .email-container {
-            max-width: 640px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.08);
-            animation: slideIn 0.6s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .email-header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            padding: 32px 28px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .email-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M20 20c0 11.046-8.954 20-20 20s-20-8.954-20-20 8.954-20 20-20 20 8.954 20 20zm10 0c0-16.569-13.431-30-30-30s-30 13.431-30 30 13.431 30 30 30 30-13.431 30-30z'/%3E%3C/g%3E%3C/svg%3E") repeat;
-            animation: float 20s linear infinite;
-        }
-
-        @keyframes float {
-            0% { transform: translateX(0) translateY(0); }
-            100% { transform: translateX(-40px) translateY(-40px); }
-        }
-
-        .urgent-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255, 59, 48, 0.9);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            backdrop-filter: blur(10px);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-
-        .urgent-badge::before {
-            content: '⚡';
-            font-size: 14px;
-        }
-
-        .email-title {
-            color: white;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .email-body {
-            padding: 32px 28px;
-        }
-
-        .meta-info {
-            display: grid;
-            gap: 16px;
-            margin-bottom: 32px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 12px;
-            border-left: 4px solid #4f46e5;
-        }
-
-        .meta-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .meta-icon {
-            width: 18px;
-            height: 18px;
-            color: #6b7280;
-            flex-shrink: 0;
-        }
-
-        .meta-label {
-            font-weight: 600;
-            color: #374151;
-            min-width: 60px;
-        }
-
-        .meta-value {
-            color: #1f2937;
-            font-weight: 500;
-        }
-
-        .message-content {
-            font-size: 16px;
-            line-height: 1.7;
-            color: #1f2937;
-            margin-bottom: 32px;
-        }
-
-        .message-content p {
-            margin-bottom: 16px;
-        }
-
-        .attachments {
-            background: #f9fafb;
-            border: 2px dashed #d1d5db;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 32px;
-            transition: all 0.3s ease;
-        }
-
-        .attachments:hover {
-            background: #f3f4f6;
-            border-color: #9ca3af;
-        }
-
-        .attachments-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .attachments-icon {
-            width: 20px;
-            height: 20px;
-            color: #6b7280;
-        }
-
-        .attachments-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .attachment-list {
-            display: grid;
-            gap: 12px;
-        }
-
-        .attachment-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-
-        .attachment-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .attachment-icon {
-            width: 16px;
-            height: 16px;
-            color: #6b7280;
-        }
-
-        .attachment-name {
-            flex: 1;
-            font-weight: 500;
-            color: #1f2937;
-        }
-
-        .attachment-size {
-            font-size: 14px;
-            color: #6b7280;
-        }
-
-        .action-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-
-        .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
-        }
-
-        .urgent-alert {
-            background: linear-gradient(135deg, #ff3b30 0%, #ff6b47 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 24px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .urgent-alert-icon {
-            font-size: 20px;
-            margin-top: 2px;
-        }
-
-        .urgent-alert-content strong {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 700;
-        }
-
-        .footer {
-            background: #f8fafc;
-            padding: 24px 28px;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .footer-logo {
-            color: #4f46e5;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .footer-logo:hover {
-            text-decoration: underline;
-        }
-
-        .footer-divider {
-            height: 1px;
-            background: #e5e7eb;
-            margin: 16px 0;
-        }
-
-        .footer a {
-            color: #4f46e5;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 10px 5px;
-            }
-
-            .email-header {
-                padding: 24px 20px;
-            }
-
-            .email-title {
-                font-size: 20px;
-            }
-
-            .email-body {
-                padding: 24px 20px;
-            }
-
-            .meta-info {
-                padding: 16px;
-            }
-
-            .meta-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 4px;
-            }
-
-            .attachments {
-                padding: 16px;
-            }
-
-            .footer {
-                padding: 20px 16px;
-            }
+        @media only screen and (max-width: 620px) {
+            .wrapper { padding: 12px !important; }
+            .card { border-radius: 0 !important; }
+            .header-cell { padding: 28px 24px !important; }
+            .meta-cell { padding: 12px 24px !important; }
+            .body-cell { padding: 28px 24px !important; }
+            .footer-cell { padding: 18px 24px !important; }
+            .btn-cell { padding: 0 24px 28px 24px !important; }
+            .attach-cell { padding: 0 24px 28px 24px !important; }
+            .subject-text { font-size: 20px !important; }
+            .meta-text { font-size: 12px !important; }
+            .body-text { font-size: 15px !important; }
+            .btn-link { padding: 13px 24px !important; font-size: 14px !important; }
         }
     </style>
 </head>
-<body>
-<div class="email-container">
-    <!-- Header -->
-    <div class="email-header">
-        @if($userMessage->is_urgent)
-            <div class="urgent-badge">Urgent Message</div>
-        @endif
-        <h1 class="email-title">{{ $userMessage->subject }}</h1>
-    </div>
+<body style="margin:0;padding:0;background-color:#eef2f7;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 
-    <!-- Body -->
-    <div class="email-body">
-        <!-- Sender Info -->
-        <div class="meta-info">
-            <div class="meta-row">
-                <svg class="meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-                <span class="meta-label">From:</span>
-                <span class="meta-value">{{ $userMessage->sender->name }}</span>
-            </div>
-            <div class="meta-row">
-                <svg class="meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="meta-label">Sent:</span>
-                <span class="meta-value">
-                        {{ $userMessage->sent_at ? $userMessage->sent_at->format('F j, Y \a\t g:i A') : $userMessage->created_at->format('F j, Y \a\t g:i A') }}
-                    </span>
-            </div>
-            <div class="meta-row">
-                <svg class="meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                <span class="meta-label">To:</span>
-                <span class="meta-value">{{ $recipient->name }}</span>
-            </div>
-        </div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef2f7;">
+    <tr>
+        <td class="wrapper" align="center" style="padding:40px 16px;">
 
-        <!-- Message Content -->
-        <div class="message-content">
-            {!! $userMessage->body !!}
-        </div>
+            <!-- Card -->
+            <table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
-        <!-- Attachments -->
-        @if($userMessage->attachments && $userMessage->attachments->count() > 0)
-            <div class="attachments">
-                <div class="attachments-header">
-                    <svg class="attachments-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                    </svg>
-                    <h3 class="attachments-title">Attachments ({{ $userMessage->attachments->count() }})</h3>
-                </div>
-                <div class="attachment-list">
-                    @foreach($userMessage->attachments as $attachment)
-                        <div class="attachment-item">
-                            <svg class="attachment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <span class="attachment-name">{{ $attachment->original_filename }}</span>
-                            <span class="attachment-size">
-                                    @if(method_exists($attachment, 'human_readable_size'))
-                                    ({{ $attachment->human_readable_size }})
-                                @else
-                                    ({{ number_format($attachment->size / 1024, 1) }} KB)
-                                @endif
-                                </span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+                <!-- Top border accent -->
+                <tr>
+                    <td style="background-color:{{ $userMessage->is_urgent ? '#b91c1c' : '#1d4ed8' }};height:5px;font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
 
-        <!-- View Online Button -->
-        <div style="text-align: center;">
-            <a href="{{ $messageUrl }}" class="action-button">
-                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
-                View Full Message Online
-            </a>
-        </div>
+                <!-- Header -->
+                <tr>
+                    <td class="header-cell" style="background-color:{{ $userMessage->is_urgent ? '#b91c1c' : '#1d4ed8' }};padding:36px 48px 32px;">
 
-        <!-- Urgent Alert -->
-        @if($userMessage->is_urgent)
-            <div class="urgent-alert">
-                <span class="urgent-alert-icon">⚠️</span>
-                <div class="urgent-alert-content">
-                    <strong>This is an urgent message.</strong>
-                    Please read and respond promptly if required.
-                </div>
-            </div>
-        @endif
-    </div>
+                        <!-- School name -->
+                        <p style="margin:0 0 16px 0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);font-family:Arial,Helvetica,sans-serif;">
+                            {{ config('app.name') }}
+                        </p>
 
-    <!-- Footer -->
-    <div class="footer">
-        <p>
-            This message was sent through the school management system.<br>
-            <a href="{{ config('app.url') }}" class="footer-logo">{{ config('app.name') }}</a>
-        </p>
-        <div class="footer-divider"></div>
-        <p>
-            If you have trouble viewing this message, <a href="{{ $messageUrl }}">click here to view it online</a>.
-        </p>
-    </div>
-</div>
+                        @if($userMessage->is_urgent)
+                            <!-- Urgent pill -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+                                <tr>
+                                    <td style="background-color:rgba(255,255,255,0.2);border-radius:20px;padding:4px 14px;">
+                                        <span style="font-size:11px;font-weight:700;color:#ffffff;letter-spacing:1px;font-family:Arial,Helvetica,sans-serif;">⚠&nbsp; URGENT MESSAGE</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        @endif
+
+                        <!-- Subject -->
+                        <h1 class="subject-text" style="margin:0;font-size:24px;font-weight:700;color:#ffffff;line-height:1.35;font-family:Arial,Helvetica,sans-serif;">
+                            {{ $renderedSubject ?? $userMessage->subject }}
+                        </h1>
+
+                    </td>
+                </tr>
+
+                <!-- Meta strip -->
+                <tr>
+                    <td class="meta-cell" style="background-color:#f8fafc;border-bottom:1px solid #e8edf3;padding:14px 48px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td>
+                                    <p class="meta-text" style="margin:0;font-size:13px;color:#64748b;font-family:Arial,Helvetica,sans-serif;line-height:1.5;">
+                                        <span style="color:#94a3b8;">From</span>&ensp;<strong style="color:#334155;">{{ $userMessage->sender->name }}</strong>
+                                        &ensp;<span style="color:#cbd5e1;">|</span>&ensp;
+                                        <span style="color:#94a3b8;">To</span>&ensp;<strong style="color:#334155;">{{ $recipient->name }}</strong>
+                                        &ensp;<span style="color:#cbd5e1;">|</span>&ensp;
+                                        <span style="color:#94a3b8;">
+                                            {{ $userMessage->sent_at
+                                                ? $userMessage->sent_at->format('M j, Y · g:i A')
+                                                : $userMessage->created_at->format('M j, Y · g:i A') }}
+                                        </span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td class="body-cell" style="padding:36px 48px 32px;">
+                        <p class="body-text" style="margin:0;font-size:15px;line-height:1.8;color:#334155;font-family:Georgia,'Times New Roman',serif;white-space:pre-line;">{{ $renderedBody ?? $userMessage->body }}</p>
+                    </td>
+                </tr>
+
+                <!-- Attachments -->
+                @if($userMessage->attachments && $userMessage->attachments->count() > 0)
+                    <tr>
+                        <td class="attach-cell" style="padding:0 48px 32px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+                                <tr>
+                                    <td style="background-color:#f8fafc;padding:10px 16px;border-bottom:1px solid #e2e8f0;">
+                                        <span style="font-size:12px;font-weight:700;color:#475569;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase;">📎&nbsp; Attachments</span>
+                                    </td>
+                                </tr>
+                                @foreach($userMessage->attachments as $attachment)
+                                    <tr>
+                                        <td style="padding:10px 16px;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                <tr>
+                                                    <td style="font-size:13px;color:#334155;font-family:Arial,Helvetica,sans-serif;">
+                                                        {{ $attachment->original_filename }}
+                                                    </td>
+                                                    <td align="right" style="font-size:12px;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;white-space:nowrap;">
+                                                        @if(isset($attachment->size))
+                                                            {{ number_format($attachment->size / 1024, 1) }} KB
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        </td>
+                    </tr>
+                @endif
+
+                <!-- CTA -->
+                <tr>
+                    <td class="btn-cell" align="center" style="padding:0 48px 40px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <!--[if mso]>
+                                <td style="background-color:#1d4ed8;border-radius:6px;">
+                                <![endif]-->
+                                <td style="background-color:#1d4ed8;border-radius:6px;">
+                                    <a class="btn-link" href="{{ $messageUrl }}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.2px;">
+                                        View Message Online &rarr;
+                                    </a>
+                                </td>
+                                <!--[if mso]>
+                                </td>
+                                <![endif]-->
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                    <td style="padding:0 48px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="border-top:1px solid #e8edf3;font-size:0;line-height:0;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td class="footer-cell" style="padding:20px 48px 28px;text-align:center;">
+                        <p style="margin:0 0 6px 0;font-size:12px;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;line-height:1.6;">
+                            You received this message via <strong style="color:#64748b;">{{ config('app.name') }}</strong>.
+                        </p>
+                        <p style="margin:0;font-size:12px;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;">
+                            Can't view this email properly?
+                            <a href="{{ $messageUrl }}" style="color:#1d4ed8;text-decoration:none;font-weight:600;">View it online</a>.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+            <!-- /Card -->
+
+            <!-- Below-card note -->
+            <p style="margin:20px 0 0 0;font-size:11px;color:#94a3b8;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+                &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+            </p>
+
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>

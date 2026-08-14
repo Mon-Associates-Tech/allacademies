@@ -20,17 +20,29 @@ class MessageNotificationMail extends Mailable implements ShouldQueue
 
     public User $recipient;
 
-    public function __construct(ModelMessage $user_message, User $recipient)
-    {
-        $this->userMessage = $user_message;
-        $this->recipient = $recipient;
+    public ?string $renderedSubject;
+
+    public ?string $renderedBody;
+
+    public function __construct(
+        ModelMessage $user_message,
+        User $recipient,
+        ?string $renderedSubject = null,
+        ?string $renderedBody = null
+    ) {
+        $this->userMessage     = $user_message;
+        $this->recipient       = $recipient;
+        $this->renderedSubject = $renderedSubject;
+        $this->renderedBody    = $renderedBody;
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->renderedSubject ?? $this->userMessage->subject;
+
         return new Envelope(
             from: config('mail.from.address'),
-            subject: ($this->userMessage->is_urgent ? '[URGENT] ' : '').$this->userMessage->subject,
+            subject: ($this->userMessage->is_urgent ? '[URGENT] ' : '').$subject,
         );
     }
 
@@ -39,9 +51,10 @@ class MessageNotificationMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'emails.message-notification',
             with: [
-                'userMessage' => $this->userMessage,
-                'recipient' => $this->recipient,
-                'messageUrl' => route('admin.messages.show', $this->userMessage),
+                'userMessage'  => $this->userMessage,
+                'recipient'    => $this->recipient,
+                'renderedBody' => $this->renderedBody,
+                'messageUrl'   => route('admin.messages.show', $this->userMessage),
             ]
         );
     }

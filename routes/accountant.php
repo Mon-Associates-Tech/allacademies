@@ -6,6 +6,7 @@ use App\Http\Controllers\Accountants\ReportController;
 use App\Http\Controllers\Accountants\StudentController;
 use App\Http\Controllers\Accountants\TransactionController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->name('accountant.')->group(function () {
     // Dashboard
@@ -42,4 +43,10 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->n
     Route::get('/students/api', [StudentController::class, 'api'])->name('students.api');
     Route::get('/students/{studentId}', [StudentController::class, 'show'])->name('students.show');
     Route::get('/students/{studentId}/payments/index', [StudentController::class, 'payments'])->name('students.payments');
+
+    // Notifications & Messaging
+    Route::get('/notifications', fn () => view('accountant.notifications.index'))->name('notifications.index');
+    Route::get('/notifications/compose', fn () => view('accountant.notifications.compose'))->name('notifications.compose');
+    Route::get('/notifications/templates', fn () => view('accountant.notifications.templates'))->name('notifications.templates');
+    Route::get('/notifications/{message}', fn (\App\Models\Message $message) => view('accountant.notifications.show', compact('message')))->name('notifications.show');
 });

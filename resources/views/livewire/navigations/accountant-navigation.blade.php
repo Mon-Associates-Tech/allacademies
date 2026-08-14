@@ -115,6 +115,45 @@
             </ul>
         </li>
 
+        <!-- Notifications & Messaging -->
+        <li class="mb-0.5 last:mb-0" title="Notifications & Messaging" x-data="{ open: false }">
+            <button @click="open = !open" :class="sidebarExpanded ? 'py-2' : ''"
+                    class="w-full text-left pl-3 rounded-lg transition {{ Route::is('accountant.notifications*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="shrink-0 fill-current {{ Route::is('accountant.notifications*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                             xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                        <span class="text-sm ml-2 sidebar-text duration-200">Notifications</span>
+                    </div>
+                    <svg :class="open ? 'rotate-90' : ''" class="w-4 h-4 transition-transform duration-200 {{ Route::is('accountant.notifications*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </button>
+            <ul x-show="open" x-cloak x-transition class="ml-6 mt-1 space-y-1">
+                <li>
+                    <a href="{{ route('accountant.notifications.index') }}"
+                       class="block py-1 px-3 text-sm rounded transition {{ Route::is('accountant.notifications.index') ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        All Notifications
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('accountant.notifications.compose') }}"
+                       class="block py-1 px-3 text-sm rounded transition {{ Route::is('accountant.notifications.compose') ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        Compose
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('accountant.notifications.templates') }}"
+                       class="block py-1 px-3 text-sm rounded transition {{ Route::is('accountant.notifications.templates') ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        Templates
+                    </a>
+                </li>
+            </ul>
+        </li>
+
         <!-- School Settings -->
         <li class="mb-0.5 last:mb-0" title="School Settings & Configuration" x-data="{ open: false }">
             <button @click="open = !open" :class="sidebarExpanded ? 'py-2' : ''"
