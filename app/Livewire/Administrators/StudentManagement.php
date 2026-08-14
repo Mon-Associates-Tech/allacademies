@@ -57,6 +57,9 @@ class StudentManagement extends Component
 
     public $isActive = true;
 
+    // Whether a user/login should be created when creating this student (manual form)
+    public $createLogin = true;
+
     // Extended student profile fields
     public $dateOfBirth;
 
@@ -314,6 +317,7 @@ class StudentManagement extends Component
         $this->coverImage = '';
         $this->userStatus = 'active';
         $this->isActive = true;
+        $this->createLogin = true;
         $this->dateOfBirth = null;
         $this->bloodGroup = '';
         $this->address = '';
@@ -681,36 +685,41 @@ class StudentManagement extends Component
 
         DB::transaction(function () use ($schoolId) {
 
-            // Create user with username login type; email optional
-            $user = User::create([
-                'role' => 'student',
-                'name' => trim("{$this->firstName} {$this->lastName}"),
-                'first_name' => $this->firstName,
-                'last_name' => $this->lastName,
-                'other_names' => $this->otherNames,
-                'email' => $this->email ?: null,
-                'login_type' => $this->email ? 'email' : 'username',
-                'email_verified_at' => $this->email ? null : now(),
-                'password' => Hash::make($this->password),
-                'phone' => $this->phone,
-                'gender' => $this->gender,
-                'country_code' => $this->countryCode,
-                'country' => $this->country,
-                'region' => $this->region,
-                'city' => $this->city,
-                'avatar' => $this->profileImageUrl,
-                'cover_image' => $this->coverImage,
-                'status' => $this->userStatus,
-                'is_active' => (bool) $this->isActive,
-            ]);
+            $user = null;
 
-            // Assign student role
-            $studentRole = Role::where('name', 'student')->first();
-            $user->roles()->attach($studentRole);
+            // Only create a user/login if the createLogin flag is true
+            if ($this->createLogin) {
+                // Create user with username login type; email optional
+                $user = User::create([
+                    'role' => 'student',
+                    'name' => trim("{$this->firstName} {$this->lastName}"),
+                    'first_name' => $this->firstName,
+                    'last_name' => $this->lastName,
+                    'other_names' => $this->otherNames,
+                    'email' => $this->email ?: null,
+                    'login_type' => $this->email ? 'email' : 'username',
+                    'email_verified_at' => $this->email ? null : now(),
+                    'password' => Hash::make($this->password),
+                    'phone' => $this->phone,
+                    'gender' => $this->gender,
+                    'country_code' => $this->countryCode,
+                    'country' => $this->country,
+                    'region' => $this->region,
+                    'city' => $this->city,
+                    'avatar' => $this->profileImageUrl,
+                    'cover_image' => $this->coverImage,
+                    'status' => $this->userStatus,
+                    'is_active' => (bool) $this->isActive,
+                ]);
 
-            // Create student record
+                // Assign student role
+                $studentRole = Role::where('name', 'student')->first();
+                $user->roles()->attach($studentRole);
+            }
+
+            // Create student record (user_id nullable when createLogin is false)
             $student = Student::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'school_id' => $schoolId, // Explicitly set school_id
                 'student_group_id' => $this->studentGroupId,
                 'academic_group_id' => $this->academicGroupId,
@@ -736,7 +745,7 @@ class StudentManagement extends Component
             // Initialize username variable to avoid undefined variable error
             $generatedUsername = $user->username ?? '';
 
-            if (! $user->username || ! $this->email) {
+            if ($user && (! $user->username || ! $this->email)) {
                 // Generate and persist username now that student has an ID
                 $generatedUsername = app(StudentUsernameService::class)->generate($student);
                 $user->update([

@@ -48,6 +48,8 @@ class ImportTemplateController extends Controller
                     'admission_date', 'blood_group', 'address', 'city', 'region', 'country',
                     'parent_name', 'parent_phone', 'parent_email', 'emergency_contact',
                     'bio', 'favorite_subjects', 'learning_goals', 'school_name', 'student_group_name',
+                    // New: control whether a login/user is created for the imported student. Defaults to 1 when missing.
+                    'create_login',
                 ],
             ],
             'teachers' => [
@@ -154,6 +156,8 @@ class ImportTemplateController extends Controller
             'learning_goals',
             'school_name',
             'student_group_name',
+            // When set to 0 or false, import will not create a user account for the student. Defaults to 1 when missing.
+            'create_login',
         ];
 
         $example = [
@@ -184,6 +188,8 @@ class ImportTemplateController extends Controller
             'Improve coding skills.',
             'Springfield Academy',
             'Year 10A',
+            // create_login example: 1 = create user (default), 0 = skip user creation
+            '1',
         ];
 
         return $this->generateCsv($headers, [$example]);
