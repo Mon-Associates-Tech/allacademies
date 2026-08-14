@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bookshop_orders', function (Blueprint $table) {
-            $table->string('fulfillment_method')->default('pickup')->after('branch_id'); // FulfillmentMethod enum
-            $table->text('delivery_address')->nullable()->after('fulfillment_method');
+          //  $table->string('fulfillment_method')->default('pickup')->after('branch_id'); // FulfillmentMethod enum
+          //  $table->text('delivery_address')->nullable()->after('fulfillment_method');
         });
     }
 

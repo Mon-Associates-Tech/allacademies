@@ -8,28 +8,30 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('bookshop_books', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('category_id')->nullable()
+        if (! Schema::hasTable('bookshop_books')) {
+            Schema::create('bookshop_books', function (Blueprint $table) {
+                $table->id();
+ 
+                $table->foreignId('category_id')->nullable()
                 ->constrained('bookshop_categories')->nullOnDelete();
-
-            $table->string('title');
-            $table->string('author')->nullable();
-            $table->string('isbn')->nullable();
-            $table->text('description')->nullable();
-            $table->string('cover_image_path')->nullable();
-            $table->decimal('price', 10, 2)->default(0);
-            $table->boolean('is_active')->default(true);
-
-            $table->foreignId('created_by_staff_id')->nullable()
+ 
+                $table->string('title');
+                $table->string('author')->nullable();
+                $table->string('isbn')->nullable();
+                $table->text('description')->nullable();
+                $table->string('cover_image_path')->nullable();
+                $table->decimal('price', 10, 2)->default(0);
+                $table->boolean('is_active')->default(true);
+ 
+                $table->foreignId('created_by_staff_id')->nullable()
                 ->constrained('bookshop_staff')->nullOnDelete();
-
-            $table->timestamps();
-
-            $table->index('title');
-            $table->index('isbn');
-        });
+ 
+                $table->timestamps();
+ 
+                $table->index('title');
+                $table->index('isbn');
+            });
+        }
     }
 
     public function down(): void
