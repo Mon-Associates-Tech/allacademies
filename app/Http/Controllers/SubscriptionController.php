@@ -192,7 +192,28 @@ class SubscriptionController extends Controller
 
         if ($userCanFilterAcross) {
             $schools = \App\Models\School::orderBy('name')->get();
-            $teams = \App\Models\Team::orderBy('name')->get();
+
+            // If a school is selected, load teams belonging to that school's owners. If a team is selected without a school, infer the school from the team.
+            if ($filterSchoolId) {
+                $teams = \App\Models\Team::whereHas('owner', function ($q) use ($filterSchoolId) {
+                    $q->where('school_id', $filterSchoolId);
+                })->orderBy('name')->get();
+            } elseif ($filterTeamId) {
+                $team = \App\Models\Team::with('owner')->find($filterTeamId);
+                if ($team && $team->owner && $team->owner->school_id) {
+                    $inferredSchoolId = $team->owner->school_id;
+                    // ensure the school select shows the inferred school as selected by setting request param (used in view)
+                    request()->merge(['school_id' => $inferredSchoolId]);
+                    $teams = \App\Models\Team::whereHas('owner', function ($q) use ($inferredSchoolId) {
+                        $q->where('school_id', $inferredSchoolId);
+                    })->orderBy('name')->get();
+                } else {
+                    $teams = collect();
+                }
+            } else {
+                // No school selected — keep teams empty so users must pick a school first
+                $teams = collect();
+            }
         }
 
         return view('subscriptions.index', [
