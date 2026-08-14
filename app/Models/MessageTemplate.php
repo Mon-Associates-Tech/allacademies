@@ -61,8 +61,12 @@ class MessageTemplate extends Model
 
     protected function replacePlaceholders(string $text, array $variables): string
     {
-        foreach ($variables as $key => $value) {
-            $text = str_replace('{{'.$key.'}}', $value ?? '', $text);
+        // Two passes: first resolves top-level vars (e.g. {{message_body}}),
+        // second resolves any vars embedded inside those values.
+        for ($i = 0; $i < 2; $i++) {
+            foreach ($variables as $key => $value) {
+                $text = str_replace('{{'.$key.'}}', $value ?? '', $text);
+            }
         }
 
         return $text;

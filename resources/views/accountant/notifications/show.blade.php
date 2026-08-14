@@ -9,7 +9,7 @@
             'student_name' => '…', 'recipient_name' => '…', 'term_name' => '…',
             'balance' => '…', 'due_date' => '…', 'total_amount' => '…',
             'amount_paid' => '…', 'event_title' => '…', 'event_date' => '…',
-            'event_venue' => '…', 'message_body' => $message->body ?? '…',
+            'event_venue' => '…', 'message_body' => $message->context_data['message_body'] ?? $message->body ?? '…',
         ];
         $subject = $message->template ? $message->template->renderSubject($baseVars) : $message->subject;
         $body    = $message->template ? $message->template->renderBody($baseVars) : $message->body;

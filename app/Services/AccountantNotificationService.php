@@ -297,13 +297,13 @@ class AccountantNotificationService
                         'type'            => 'App\Notifications\MessageNotification',
                         'notifiable_type' => User::class,
                         'notifiable_id'   => $recipient->id,
-                        'data'            => json_encode([
+                        'data'            => [
                             'message_id' => $message->id,
                             'subject'    => $renderedSubject,
                             'body'       => $renderedBody,
                             'sender'     => $message->sender?->name,
                             'is_urgent'  => $message->is_urgent,
-                        ]),
+                        ],
                     ]);
                     $recipientRecord->update(['in_app_sent' => true]);
                 }
