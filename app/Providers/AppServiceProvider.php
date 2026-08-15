@@ -159,6 +159,9 @@ class AppServiceProvider extends ServiceProvider
             'grade_scale' => \App\MockExam\Models\GradeScale::class,
             'staff' => \App\BookShop\Models\Staff::class,
             'customer' => \App\BookShop\Models\Customer::class,
+            'timeslot' => \App\Timetable\Models\Timeslot::class,
+            'room' => \App\Timetable\Models\Room::class,
+            'timetable_entry' => \App\Timetable\Models\TimetableEntry::class
         ]);
     }
 }

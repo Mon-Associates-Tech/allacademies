@@ -196,7 +196,8 @@ return [
         \App\Providers\ResearchAssistantServiceProvider::class,
         \App\Providers\ProctoringServiceProvider::class,
         \App\MockExam\Providers\MockExamServiceProvider::class,
-        \App\BookShop\Providers\BookShopServiceProvider::class
+        \App\BookShop\Providers\BookShopServiceProvider::class,
+        \App\Timetable\Providers\TimetableServiceProvider::class
 
     ],
 
