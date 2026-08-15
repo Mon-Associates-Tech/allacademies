@@ -129,6 +129,14 @@
             </x-app.nav-item>
         @endif
 
+            {{-- Timetable --}}
+            <x-app.nav-item
+                href="{{ route('timetable.index') }}"
+                :active="Route::is('timetable.*')"
+                icon="heroicon-o-calendar-days"
+            >Timetable
+            </x-app.nav-item>
+
         {{-- Report Cards --}}
         <x-app.nav-item
             href="{{ route('admin.report-cards') }}"
@@ -137,6 +145,47 @@
         >Report Cards
         </x-app.nav-item>
     </x-app.nav-section>
+
+
+    {{-- ═══════════════════════════════════════════════════════════
+         SECTION: Settings & Configuration
+     ═══════════════════════════════════════════════════════════ --}}
+    <x-app.nav-section
+        id="admin-nav-settings"
+        label="Settings"
+        :open="true"
+    >
+        <x-app.nav-item
+            href="{{ route('school-settings.index') }}"
+            :active="Route::is('school-settings*')"
+            icon="heroicon-o-cog-6-tooth"
+        >Academic Settings
+        </x-app.nav-item>
+
+        <x-app.nav-item
+            href="{{ route('admin.settings.certificate-templates') }}"
+            :active="Route::is('admin.settings.certificate-templates')"
+            icon="heroicon-o-document-duplicate"
+        >Certificate Templates
+        </x-app.nav-item>
+
+        {{-- Hidden: ID Card Templates --}}
+        <x-app.nav-item
+            href="{{ route('admin.settings.id-card-templates') }}"
+            :active="Route::is('admin.settings.id-card-templates')"
+            icon="heroicon-o-identification"
+            class="hidden"
+        >ID Card Templates
+        </x-app.nav-item>
+
+        <x-app.nav-item
+            href="{{ route('onboarding.school-setup') }}"
+            :active="Route::is('onboarding.*')"
+            icon="heroicon-o-wrench-screwdriver"
+        >School Setup
+        </x-app.nav-item>
+    </x-app.nav-section>
+
 
     {{-- ═══════════════════════════════════════════════════════════
          SECTION: Library & Books
@@ -285,45 +334,6 @@
             icon="heroicon-o-envelope"
             class="hidden"
         >Message Center
-        </x-app.nav-item>
-    </x-app.nav-section>
-
-    {{-- ═══════════════════════════════════════════════════════════
-         SECTION: Settings & Configuration
-     ═══════════════════════════════════════════════════════════ --}}
-    <x-app.nav-section
-        id="admin-nav-settings"
-        label="Settings"
-        :open="true"
-    >
-        <x-app.nav-item
-            href="{{ route('school-settings.index') }}"
-            :active="Route::is('school-settings*')"
-            icon="heroicon-o-cog-6-tooth"
-        >Academic Settings
-        </x-app.nav-item>
-
-        <x-app.nav-item
-            href="{{ route('admin.settings.certificate-templates') }}"
-            :active="Route::is('admin.settings.certificate-templates')"
-            icon="heroicon-o-document-duplicate"
-        >Certificate Templates
-        </x-app.nav-item>
-
-        {{-- Hidden: ID Card Templates --}}
-        <x-app.nav-item
-            href="{{ route('admin.settings.id-card-templates') }}"
-            :active="Route::is('admin.settings.id-card-templates')"
-            icon="heroicon-o-identification"
-            class="hidden"
-        >ID Card Templates
-        </x-app.nav-item>
-
-        <x-app.nav-item
-            href="{{ route('onboarding.school-setup') }}"
-            :active="Route::is('onboarding.*')"
-            icon="heroicon-o-wrench-screwdriver"
-        >School Setup
         </x-app.nav-item>
     </x-app.nav-section>
 
