@@ -17,6 +17,7 @@ class ReportCardTemplate extends Model
         'custom_columns',
         'header_config',
         'footer_config',
+        'sections',
         'is_default',
     ];
 
@@ -24,6 +25,7 @@ class ReportCardTemplate extends Model
         'custom_columns' => 'array',
         'header_config' => 'array',
         'footer_config' => 'array',
+        'sections' => 'array',
         'is_default' => 'boolean',
     ];
 
@@ -32,18 +34,63 @@ class ReportCardTemplate extends Model
         return $this->belongsTo(AcademicLevel::class);
     }
 
-    public function getColumns(): array
+    /**
+     * The sensible starting point for a new template — every section
+     * present and enabled with defaults, so the builder UI never has to
+     * special-case a null section.
+     */
+    public static function defaultSections(): array
     {
-        $default = [
-            ['name' => 'subject', 'label' => 'Subject', 'type' => 'text', 'required' => true],
-            ['name' => 'class_score', 'label' => 'Class Score', 'type' => 'number', 'required' => true],
-            ['name' => 'test_score', 'label' => 'Test Score', 'type' => 'number', 'required' => true],
-            ['name' => 'exam_score', 'label' => 'Exam Score', 'type' => 'number', 'required' => true],
-            ['name' => 'total_score', 'label' => 'Total Score', 'type' => 'number', 'required' => true],
-            ['name' => 'grade', 'label' => 'Grade', 'type' => 'text', 'required' => true],
-            ['name' => 'remarks', 'label' => 'Remarks', 'type' => 'text', 'required' => true],
+        return [
+            'header' => [
+                'show_logo' => true,
+                'show_school_name' => true,
+                'show_tagline' => true,
+                'show_contact' => true,
+                'tagline' => null,
+            ],
+            'student_info' => [
+                'fields' => ['name', 'student_id', 'class', 'academic_year', 'term', 'report_date'],
+            ],
+            'grades_table' => [
+                'enabled' => true,
+                // Weighting columns are resolved at render time from
+                // ScoreWeighting for the template's academic_level_id —
+                // not duplicated here, so a single edit to weightings
+                // stays in sync with every template that uses that level.
+            ],
+            'attendance' => [
+                'enabled' => true,
+                'label' => 'Attendance',
+            ],
+            'remarks' => [
+                'enabled' => true,
+                'label' => "Class Teacher's Remarks",
+            ],
+            'signatures' => [
+                'slots' => [
+                    ['key' => 'class_teacher', 'label' => 'Class Teacher'],
+                    ['key' => 'principal', 'label' => 'Head of School'],
+                ],
+            ],
+            'footer' => [
+                'enabled' => true,
+                'text' => null, // null = falls back to "official document of {school}" default at render time
+            ],
         ];
+    }
 
-        return array_merge($default, $this->custom_columns ?? []);
+    /**
+     * Merge stored sections onto the defaults, so adding a new section key
+     * in a future release doesn't break templates saved before it existed.
+     */
+    public function resolvedSections(): array
+    {
+        return array_replace_recursive(self::defaultSections(), $this->sections ?? []);
+    }
+
+    public function section(string $key, mixed $default = null): mixed
+    {
+        return $this->resolvedSections()[$key] ?? $default;
     }
 }

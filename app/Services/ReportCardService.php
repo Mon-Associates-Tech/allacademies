@@ -8,6 +8,7 @@ use App\Models\ReportCardGrade;
 use App\Models\ScoreWeighting;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ReportCardService
@@ -82,7 +83,21 @@ class ReportCardService
             $config = \App\Models\ReportCardConfiguration::findOrFail($configurationId);
             $subjects = $this->getAssignedSubjectsForStudent($student);
 
+            Log::info('ReportCardService: assigned subjects found', [
+                'student_id' => $student->id,
+                'configuration_id' => $configurationId,
+                'subject_count' => $subjects->count(),
+                'subject_ids' => $subjects->pluck('id')->toArray(),
+                'min_subjects' => $config->min_subjects,
+                'max_subjects' => $config->max_subjects,
+            ]);
+
             if ($subjects->isEmpty()) {
+                Log::warning('ReportCardService: no subjects assigned for student', [
+                    'student_id' => $student->id,
+                    'configuration_id' => $configurationId,
+                ]);
+
                 throw new \RuntimeException("No subjects assigned for student {$student->id}. Assign subjects before generating report cards.");
             }
 
@@ -154,13 +169,31 @@ class ReportCardService
     {
         $config = \App\Models\ReportCardConfiguration::with('academicLevel')->findOrFail($configurationId);
 
-        $students = Student::where('academic_level_id', $config->academic_level_id)
+        $students = Student::where('school_id', $config->school_id)
+            ->where('academic_level_id', $config->academic_level_id)
             ->where('status', 'active')
             ->get();
 
+        Log::info('ReportCardService: bulkGenerateForLevel started', [
+            'configuration_id' => $configurationId,
+            'school_id' => $config->school_id,
+            'academic_level_id' => $config->academic_level_id,
+            'students_found' => $students->count(),
+            'student_ids' => $students->pluck('id')->toArray(),
+        ]);
+
+        if ($students->isEmpty()) {
+            Log::warning('ReportCardService: no active students found for level', [
+                'configuration_id' => $configurationId,
+                'school_id' => $config->school_id,
+                'academic_level_id' => $config->academic_level_id,
+            ]);
+
+            return 0;
+        }
+
         return $this->generateForStudents($students, $configurationId, $config->preparation_mode);
     }
-
     public function generateForGroup($groupId, $configurationId): int
     {
         $config = \App\Models\ReportCardConfiguration::findOrFail($configurationId);
@@ -181,46 +214,120 @@ class ReportCardService
             ->where('report_card_configuration_id', $configurationId)
             ->exists();
 
-        if (! $exists) {
-            $this->generateReportCard($student, $configurationId, $config->preparation_mode);
+        if ($exists) {
+            Log::info('ReportCardService: report card already exists, skipping student', [
+                'student_id' => $student->id,
+                'configuration_id' => $configurationId,
+            ]);
 
-            return 1;
+            return 0;
         }
 
-        return 0;
-    }
+        try {
+            $this->generateReportCard($student, $configurationId, $config->preparation_mode);
 
+            Log::info('ReportCardService: report card generated for student', [
+                'student_id' => $student->id,
+                'configuration_id' => $configurationId,
+            ]);
+
+            return 1;
+        } catch (\Throwable $e) {
+            Log::error('ReportCardService: generateForStudent failed', [
+                'student_id' => $student->id,
+                'configuration_id' => $configurationId,
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+            ]);
+
+            throw $e;
+        }
+    }
     protected function generateForStudents($students, $configurationId, $mode): int
     {
         $count = 0;
+
         foreach ($students as $student) {
-            // Check if already exists
             $exists = ReportCard::where('student_id', $student->id)
                 ->where('report_card_configuration_id', $configurationId)
                 ->exists();
 
-            if (! $exists) {
-                try {
-                    $this->generateReportCard($student, $configurationId, $mode);
-                    $count++;
-                } catch (\RuntimeException $exception) {
-                    // Skip students without eligible/assigned subjects or outside configured limits.
-                    continue;
-                }
+            if ($exists) {
+                Log::info('ReportCardService: skipping student because report card already exists', [
+                    'student_id' => $student->id,
+                    'configuration_id' => $configurationId,
+                ]);
+
+                continue;
+            }
+
+            try {
+                Log::info('ReportCardService: attempting to generate report card', [
+                    'student_id' => $student->id,
+                    'configuration_id' => $configurationId,
+                    'mode' => $mode,
+                ]);
+
+                $this->generateReportCard($student, $configurationId, $mode);
+
+                $count++;
+
+                Log::info('ReportCardService: successfully generated report card', [
+                    'student_id' => $student->id,
+                    'configuration_id' => $configurationId,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('ReportCardService: skipping student due to generation failure', [
+                    'student_id' => $student->id,
+                    'configuration_id' => $configurationId,
+                    'mode' => $mode,
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e),
+                ]);
+
+                continue;
             }
         }
 
+        Log::info('ReportCardService: bulk generation completed', [
+            'configuration_id' => $configurationId,
+            'generated_count' => $count,
+        ]);
+
         return $count;
     }
-
     public function getAssignedSubjectsForStudent(Student $student)
     {
-        return $student->individualSubjects()
+        // 1. Try individual subjects first (your current logic)
+        $individualSubjects = $student->individualSubjects()
             ->wherePivot('is_active', true)
+            ->get();
+
+        if ($individualSubjects->isNotEmpty()) {
+            return $individualSubjects->sortBy('name')->values();
+        }
+
+        // 2. Fallback: Check if subjects are assigned to the student's Group/Class
+        if ($student->academic_group_id && method_exists($student->academicGroup, 'subjects')) {
+            $groupSubjects = $student->academicGroup->subjects;
+            if ($groupSubjects && $groupSubjects->isNotEmpty()) {
+                return $groupSubjects->sortBy('name')->values();
+            }
+        }
+
+        // 3. Fallback: Check if subjects are assigned to the student's Academic Level
+        if ($student->academic_level_id && method_exists($student->academicLevel, 'subjects')) {
+            $levelSubjects = $student->academicLevel->subjects;
+            if ($levelSubjects && $levelSubjects->isNotEmpty()) {
+                return $levelSubjects->sortBy('name')->values();
+            }
+        }
+
+        // 4. Last Resort: If no assignments exist anywhere, grab all active subjects for the school
+        return \App\Models\AcademicSubject::where('school_id', $student->school_id)
             ->orderBy('name')
             ->get();
     }
-
     private function assertSubjectLimits(int $count, ?int $min, ?int $max): void
     {
         if ($min !== null && $count < $min) {

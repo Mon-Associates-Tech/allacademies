@@ -8,11 +8,14 @@ use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
 use App\Models\GradeScale;
 use App\Models\ReportCard;
+use App\Models\ReportCardChangeLog;
 use App\Models\ReportCardConfiguration;
 use App\Models\ReportCardGrade;
+use App\Models\ReportCardTemplate;
 use App\Models\ScoreWeighting;
 use App\Models\Student;
 use App\Services\ReportCardService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -118,6 +121,24 @@ class ReportCardManagement extends Component
 
     protected $queryString = ['activeTab', 'selectedYearId', 'selectedPeriodId', 'selectedLevelId', 'selectedGroupId', 'selectedStudentId'];
 
+    /**
+     * @var array<int, array<string, float|null>> gradeId => [score_key => value]
+     */
+    public array $subjectGradeInputs = [];
+
+    public $teacherRemarks;
+    public $attendanceTotalDays;
+    public $attendanceDaysPresent;
+
+    public $templateId;
+    public $templateName;
+    public $templateLevelId;
+    public $templateSections = [];
+    public $showTemplateModal = false;
+
+    public $configPeriodId;
+    public $configLevelId;
+
     public function mount()
     {
         $currentYear = AcademicYear::where('school_id', getSchoolId())
@@ -128,8 +149,192 @@ class ReportCardManagement extends Component
 
         $this->selectedPeriodId = AcademicPeriod::where('school_id', getSchoolId())
             ->where('status', 'active')
-            ->when($this->selectedYearId, fn ($q) => $q->where('academic_year_id', $this->selectedYearId))
+            ->when($this->selectedYearId, fn($q) => $q->where('academic_year_id', $this->selectedYearId))
             ->first()?->id;
+    }
+
+    public function openTemplateModal($id = null)
+    {
+        if ($id) {
+            $template = ReportCardTemplate::findOrFail($id);
+            $this->templateId = $template->id;
+            $this->templateName = $template->name;
+            $this->templateLevelId = $template->academic_level_id;
+            $this->templateSections = $template->resolvedSections();
+        } else {
+            $this->reset(['templateId', 'templateName', 'templateLevelId']);
+            $this->templateSections = ReportCardTemplate::defaultSections();
+        }
+
+        $this->dispatch('open-modal', name: 'templateModal');
+    }
+
+    public function saveTemplate()
+    {
+
+        $this->validate([
+            'templateName' => 'required|string|max:255',
+            'templateSections.signatures.slots' => 'array|max:6',
+        ]);
+
+        $report = ReportCardTemplate::updateOrCreate(
+            ['id' => $this->templateId],
+            [
+                'school_id' => getSchoolId(),
+                'academic_level_id' => $this->templateLevelId,
+                'name' => $this->templateName,
+                'sections' => $this->templateSections,
+            ]
+        );
+
+        $this->dispatch('close-modal', name: 'templateModal');
+        session()->flash('success', 'Template saved successfully');
+    }
+
+    public function addSignatureSlot()
+    {
+        $this->templateSections['signatures']['slots'][] = ['key' => 'signature_' . uniqid(), 'label' => ''];
+    }
+
+    public function removeSignatureSlot($index)
+    {
+        unset($this->templateSections['signatures']['slots'][$index]);
+        $this->templateSections['signatures']['slots'] = array_values($this->templateSections['signatures']['slots']);
+    }
+
+    public function saveReportCard()
+    {
+        $this->validate([
+            'status' => 'required|in:draft,submitted,approved,rejected,published',
+            'teacherRemarks' => 'nullable|string|max:2000',
+            'attendanceTotalDays' => 'nullable|integer|min:0|max:365',
+            'attendanceDaysPresent' => 'nullable|integer|min:0|lte:attendanceTotalDays',
+        ]);
+
+        $reportCard = ReportCard::findOrFail($this->reportCardId);
+        $reportCard->status = $this->status;
+        $reportCard->teacher_remarks = $this->teacherRemarks;
+        $reportCard->attendance_total_days = $this->attendanceTotalDays;
+        $reportCard->attendance_days_present = $this->attendanceDaysPresent;
+        $reportCard->save();
+
+        $this->dispatch('close-modal', name: 'reportCardModal');
+        session()->flash('success', 'Report card updated successfully');
+    }
+
+    public function openReportCardModal($reportCardId)
+    {
+        $this->reportCardId = $reportCardId;
+        $this->reportCard = ReportCard::with(['student.user', 'configuration.academicLevel', 'grades.subject'])->findOrFail($reportCardId);
+        $this->status = $this->reportCard->status;
+        $this->teacherRemarks = $this->reportCard->teacher_remarks;
+        $this->attendanceTotalDays = $this->reportCard->attendance_total_days;
+        $this->attendanceDaysPresent = $this->reportCard->attendance_days_present;
+
+        $this->subjectGradeInputs = [];
+        foreach ($this->reportCard->grades as $grade) {
+            $weightings = $this->weightingsForGrade($grade);
+            $scores = (array)($grade->scores ?? []);
+
+            foreach ($weightings as $weighting) {
+                $key = $weighting->score_key ?: \Illuminate\Support\Str::slug($weighting->name, '_');
+                $this->subjectGradeInputs[$grade->id][$key] = $scores[$key] ?? null;
+            }
+        }
+
+        $this->dispatch('open-modal', name: 'reportCardModal');
+    }
+
+    /**
+     * Resolves the weighting columns that apply to a given grade's subject —
+     * subject-specific weighting first, falling back to the level-default set.
+     * Centralized here so the entry form, the save logic, and (via the same
+     * approach) the PDF all resolve columns identically.
+     */
+    public function weightingsForGrade(ReportCardGrade $grade)
+    {
+        $level = $grade->reportCard->student->academic_level_id;
+
+        $subjectSpecific = ScoreWeighting::where('school_id', getSchoolId())
+            ->where('academic_level_id', $level)
+            ->where('academic_subject_id', $grade->subject_id)
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($subjectSpecific->isNotEmpty()) {
+            return $subjectSpecific;
+        }
+
+        return ScoreWeighting::where('school_id', getSchoolId())
+            ->where(function ($q) use ($level) {
+                $q->where('academic_level_id', $level)
+                    ->orWhere(fn($q2) => $q2->whereNull('academic_level_id')->where('is_default', true));
+            })
+            ->whereNull('academic_subject_id')
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    public function saveSubjectGrade($gradeId)
+    {
+        $grade = ReportCardGrade::where('report_card_id', $this->reportCardId)->findOrFail($gradeId);
+
+        if ($grade->is_locked && !(auth()->user()->isSuperAdmin() || auth()->user()->hasRole('admin'))) {
+            session()->flash('error', 'This grade is locked and can only be edited by an admin.');
+            return;
+        }
+
+        $weightings = $this->weightingsForGrade($grade);
+        $inputs = $this->subjectGradeInputs[$gradeId] ?? [];
+
+        $rules = [];
+        foreach ($weightings as $weighting) {
+            $key = $weighting->score_key ?: \Illuminate\Support\Str::slug($weighting->name, '_');
+            $max = $weighting->max_score ?: 100;
+            $rules["subjectGradeInputs.{$gradeId}.{$key}"] = "nullable|numeric|min:0|max:{$max}";
+        }
+        $this->validate($rules);
+
+        $before = [
+            'scores' => $grade->scores,
+            'total_score' => $grade->total_score,
+            'grade_label' => $grade->grade_label,
+        ];
+
+        $scores = [];
+        $total = 0.0;
+        foreach ($weightings as $weighting) {
+            $key = $weighting->score_key ?: \Illuminate\Support\Str::slug($weighting->name, '_');
+            $raw = (float)($inputs[$key] ?? 0);
+            $max = (float)($weighting->max_score ?: 100);
+            $weight = (float)$weighting->weight_percentage;
+
+            $scores[$key] = $raw;
+            // Confirmed formula: (component_score ÷ component_max_score) × weight_percentage
+            $total += $max > 0 ? ($raw / $max) * $weight : 0;
+        }
+
+        $grade->scores = $scores;
+        $grade->total_score = round($total, 2);
+        $grade->last_modified_by = auth()->id();
+        $grade->last_modified_at = now();
+        $grade->assignGrade();
+        $grade->save();
+
+        ReportCardChangeLog::create([
+            'report_card_id' => $this->reportCardId,
+            'report_card_grade_id' => $grade->id,
+            'user_id' => auth()->id(),
+            'action' => 'grade_updated',
+            'old_values' => $before,
+            'new_values' => [
+                'scores' => $grade->scores,
+                'total_score' => $grade->total_score,
+                'grade_label' => $grade->grade_label,
+            ],
+        ]);
+
+        session()->flash('success', 'Subject grade updated successfully');
     }
 
     public function openConfigModal($configId = null)
@@ -137,10 +342,13 @@ class ReportCardManagement extends Component
         if ($configId) {
             $config = ReportCardConfiguration::findOrFail($configId);
             $this->configId = $config->id;
-            $this->selectedPeriodId = $config->academic_period_id;
-            $this->selectedLevelId = $config->academic_level_id;
-            $this->requiresApproval = $config->requires_approval;
-            $this->isPublished = $config->is_published;
+
+            // Cast to string to ensure the <select> binds correctly to the <option value="...">
+            $this->configPeriodId = $config->academic_period_id ? (string) $config->academic_period_id : '';
+            $this->configLevelId = $config->academic_level_id ? (string) $config->academic_level_id : '';
+
+            $this->requiresApproval = (bool) $config->requires_approval;
+            $this->isPublished = (bool) $config->is_published;
             $this->availableFrom = $config->available_from?->format('Y-m-d\TH:i');
             $this->availableUntil = $config->available_until?->format('Y-m-d\TH:i');
             $this->preparationMode = $config->preparation_mode;
@@ -152,9 +360,12 @@ class ReportCardManagement extends Component
             $this->classTeacherSignatureUpload = null;
             $this->minSubjects = $config->min_subjects;
             $this->maxSubjects = $config->max_subjects;
+            $this->templateId = $config->report_card_template_id ? (string) $config->report_card_template_id : '';
         } else {
             $this->reset([
                 'configId',
+                'configPeriodId',
+                'configLevelId',
                 'requiresApproval',
                 'isPublished',
                 'availableFrom',
@@ -168,19 +379,22 @@ class ReportCardManagement extends Component
                 'classTeacherSignatureUpload',
                 'minSubjects',
                 'maxSubjects',
+                'templateId',
             ]);
             $this->requiresApproval = true;
             $this->preparationMode = 'hybrid';
+            $this->configPeriodId = '';
+            $this->configLevelId = '';
         }
 
         $this->dispatch('open-modal', name: 'configModal');
     }
-
     public function saveConfiguration()
     {
+        $this->templateId = $this->templateId ?: null;
         $this->validate([
-            'selectedPeriodId' => 'required|exists:academic_periods,id',
-            'selectedLevelId' => 'required|exists:academic_levels,id',
+            'configPeriodId' => 'required|exists:academic_periods,id',
+            'configLevelId' => 'required|exists:academic_levels,id',
             'preparationMode' => 'required|in:manual,automated,hybrid',
             'principalName' => 'nullable|string|max:255',
             'classTeacherName' => 'nullable|string|max:255',
@@ -188,6 +402,7 @@ class ReportCardManagement extends Component
             'classTeacherSignatureUpload' => 'nullable|image|max:2048',
             'minSubjects' => 'nullable|integer|min:1|max:30',
             'maxSubjects' => 'nullable|integer|min:1|max:30|gte:minSubjects',
+            'templateId' => 'nullable|exists:report_card_templates,id',
         ]);
 
         $principalSignaturePath = $this->principalSignaturePath;
@@ -211,8 +426,8 @@ class ReportCardManagement extends Component
             ['id' => $this->configId],
             [
                 'school_id' => getSchoolId(),
-                'academic_period_id' => $this->selectedPeriodId,
-                'academic_level_id' => $this->selectedLevelId,
+                'academic_period_id' => $this->configPeriodId, // Use new property
+                'academic_level_id' => $this->configLevelId,   // Use new property
                 'requires_approval' => $this->requiresApproval,
                 'is_published' => $this->isPublished,
                 'available_from' => $this->availableFrom,
@@ -224,6 +439,7 @@ class ReportCardManagement extends Component
                 'class_teacher_signature_path' => $classTeacherSignaturePath,
                 'min_subjects' => $this->minSubjects,
                 'max_subjects' => $this->maxSubjects,
+                'report_card_template_id' => $this->templateId,
             ]
         );
 
@@ -266,6 +482,14 @@ class ReportCardManagement extends Component
 
     public function generateReportCards($configId)
     {
+        Log::info('Report card generation requested', [
+            'config_id' => $configId,
+            'selected_student_id' => $this->selectedStudentId,
+            'selected_group_id' => $this->selectedGroupId,
+            'selected_level_id' => $this->selectedLevelId,
+            'selected_period_id' => $this->selectedPeriodId,
+        ]);
+
         $service = app(ReportCardService::class);
 
         try {
@@ -278,12 +502,33 @@ class ReportCardManagement extends Component
                 $count = $service->bulkGenerateForLevel($configId);
             }
 
-            session()->flash('success', "Generated {$count} report cards");
-        } catch (\RuntimeException $exception) {
-            session()->flash('error', $exception->getMessage());
+            if ($count === 0) {
+                Log::warning('Report card generation completed with 0 report cards', [
+                    'config_id' => $configId,
+                    'selected_student_id' => $this->selectedStudentId,
+                    'selected_group_id' => $this->selectedGroupId,
+                ]);
+
+                session()->flash(
+                    'warning',
+                    'Generated 0 report cards. Check logs. Possible causes: report already exists, no active students, no assigned subjects, or subject limit validation failed.'
+                );
+            } else {
+                session()->flash('success', "Generated {$count} report cards");
+            }
+        } catch (\Throwable $e) {
+            Log::error('Report card generation failed', [
+                'config_id' => $configId,
+                'selected_student_id' => $this->selectedStudentId,
+                'selected_group_id' => $this->selectedGroupId,
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            session()->flash('error', 'Report card generation failed: ' . $e->getMessage());
         }
     }
-
     public function approveReportCard($reportCardId)
     {
         $reportCard = ReportCard::findOrFail($reportCardId);
@@ -300,69 +545,14 @@ class ReportCardManagement extends Component
         session()->flash('success', 'Report card rejected');
     }
 
-    public function openReportCardModal($reportCardId)
-    {
-        $this->reportCardId = $reportCardId;
-        $this->reportCard = ReportCard::with(['student.user', 'configuration.academicLevel', 'grades.subject'])->findOrFail($reportCardId);
-        $this->status = $this->reportCard->status;
-        $this->availableFrom = $this->reportCard->available_from?->format('Y-m-d\TH:i');
-        $this->availableUntil = $this->reportCard->available_until?->format('Y-m-d\TH:i');
-        $this->isPublished = (bool) ($this->reportCard->is_published ?? false);
-        $this->requiresApproval = (bool) ($this->reportCard->requires_approval ?? true);
-        $this->subjectGrades = [];
-        foreach ($this->reportCard->grades as $grade) {
-            $this->subjectGrades[$grade->id] = $grade->total_score;
-        }
-        $this->dispatch('open-modal', name: 'reportCardModal');
-    }
 
     public function togglePublishConfig($configId)
     {
         $config = ReportCardConfiguration::findOrFail($configId);
-        $config->is_published = ! $config->is_published;
+        $config->is_published = !$config->is_published;
         $config->save();
 
         session()->flash('success', $config->is_published ? 'Configuration published' : 'Configuration unpublished');
-    }
-
-    public function saveReportCard()
-    {
-        $this->validate([
-            'status' => 'required|in:draft,published,approved',
-            'availableFrom' => 'nullable|date_format:Y-m-d\TH:i',
-            'availableUntil' => 'nullable|date_format:Y-m-d\TH:i',
-            'isPublished' => 'boolean',
-            'requiresApproval' => 'boolean',
-        ]);
-
-        $reportCard = ReportCard::findOrFail($this->reportCardId);
-        $reportCard->status = $this->status;
-        $reportCard->available_from = $this->availableFrom;
-        $reportCard->available_until = $this->availableUntil;
-        $reportCard->is_published = $this->isPublished;
-        $reportCard->requires_approval = $this->requiresApproval;
-        $reportCard->save();
-
-        $this->dispatch('close-modal', name: 'reportCardModal');
-        session()->flash('success', 'Report card updated successfully');
-    }
-
-    public function saveSubjectGrade($gradeId)
-    {
-        $this->validate([
-            'subjectGrades.'.$gradeId => 'required|numeric|min:0|max:100',
-        ]);
-
-        $grade = ReportCardGrade::where('report_card_id', $this->reportCardId)
-            ->findOrFail($gradeId);
-
-        $grade->total_score = $this->subjectGrades[$gradeId];
-        $grade->assignGrade();
-        $grade->last_modified_by = auth()->id();
-        $grade->last_modified_at = now();
-        $grade->save();
-
-        session()->flash('success', 'Subject grade updated successfully');
     }
 
     public function openGradeScaleModal($id = null)
@@ -462,8 +652,8 @@ class ReportCardManagement extends Component
             $scopeQuery->where('id', '!=', $this->weightingId);
         }
 
-        $scopeTotal = (float) $scopeQuery->sum('weight_percentage');
-        if (($scopeTotal + (float) $this->weightPercentage) > 100.0001) {
+        $scopeTotal = (float)$scopeQuery->sum('weight_percentage');
+        if (($scopeTotal + (float)$this->weightPercentage) > 100.0001) {
             $this->addError('weightPercentage', 'Total weighting percentage for this scope cannot exceed 100%.');
 
             return;
@@ -472,7 +662,7 @@ class ReportCardManagement extends Component
         $scoreKey = $this->weightingScoreKey ?: Str::slug($this->weightingName, '_');
         $scoreKeyExists = ScoreWeighting::where('school_id', getSchoolId())
             ->where('score_key', $scoreKey)
-            ->when($this->weightingId, fn ($q) => $q->where('id', '!=', $this->weightingId))
+            ->when($this->weightingId, fn($q) => $q->where('id', '!=', $this->weightingId))
             ->exists();
 
         if ($scoreKeyExists) {
@@ -505,7 +695,7 @@ class ReportCardManagement extends Component
         $years = AcademicYear::where('school_id', getSchoolId())->latest()->get();
 
         $periods = AcademicPeriod::where('school_id', getSchoolId())
-            ->when($this->selectedYearId, fn ($q) => $q->where('academic_year_id', $this->selectedYearId))
+            ->when($this->selectedYearId, fn($q) => $q->where('academic_year_id', $this->selectedYearId))
             ->latest()
             ->get();
 
@@ -518,7 +708,7 @@ class ReportCardManagement extends Component
         $students = [];
         if ($this->selectedLevelId) {
             $students = Student::where('academic_level_id', $this->selectedLevelId)
-                ->when($this->selectedGroupId, fn ($q) => $q->where('academic_group_id', $this->selectedGroupId))
+                ->when($this->selectedGroupId, fn($q) => $q->where('academic_group_id', $this->selectedGroupId))
                 ->where('status', 'active')
                 ->with('user')
                 ->get();
@@ -526,42 +716,48 @@ class ReportCardManagement extends Component
 
         $configurations = ReportCardConfiguration::with(['academicPeriod', 'academicLevel'])
             ->where('school_id', getSchoolId())
-            ->when($this->selectedPeriodId, fn ($q) => $q->where('academic_period_id', $this->selectedPeriodId))
-            ->when($this->selectedLevelId, fn ($q) => $q->where('academic_level_id', $this->selectedLevelId))
+            ->when($this->selectedPeriodId, fn($q) => $q->where('academic_period_id', $this->selectedPeriodId))
+            ->when($this->selectedLevelId, fn($q) => $q->where('academic_level_id', $this->selectedLevelId))
             ->latest()
             ->get();
 
         $reportCards = ReportCard::with(['student.user', 'configuration.academicLevel'])
             ->where('school_id', getSchoolId())
-            ->when($this->selectedLevelId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_level_id', $this->selectedLevelId)))
-            ->when($this->selectedGroupId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_group_id', $this->selectedGroupId)))
-            ->when($this->selectedStudentId, fn ($q) => $q->where('student_id', $this->selectedStudentId))
+            ->when($this->selectedLevelId, fn($q) => $q->whereHas('student', fn($sq) => $sq->where('academic_level_id', $this->selectedLevelId)))
+            ->when($this->selectedGroupId, fn($q) => $q->whereHas('student', fn($sq) => $sq->where('academic_group_id', $this->selectedGroupId)))
+            ->when($this->selectedStudentId, fn($q) => $q->where('student_id', $this->selectedStudentId))
             ->latest()
             ->paginate(20);
 
         $pendingApprovals = ReportCard::with(['student.user', 'configuration.academicLevel'])
             ->where('school_id', getSchoolId())
             ->where('status', 'submitted')
-            ->when($this->selectedLevelId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_level_id', $this->selectedLevelId)))
-            ->when($this->selectedGroupId, fn ($q) => $q->whereHas('student', fn ($sq) => $sq->where('academic_group_id', $this->selectedGroupId)))
-            ->when($this->selectedStudentId, fn ($q) => $q->where('student_id', $this->selectedStudentId))
+            ->when($this->selectedLevelId, fn($q) => $q->whereHas('student', fn($sq) => $sq->where('academic_level_id', $this->selectedLevelId)))
+            ->when($this->selectedGroupId, fn($q) => $q->whereHas('student', fn($sq) => $sq->where('academic_group_id', $this->selectedGroupId)))
+            ->when($this->selectedStudentId, fn($q) => $q->where('student_id', $this->selectedStudentId))
             ->latest()
             ->paginate(20, ['*'], 'pendingPage');
 
         $gradeScales = GradeScale::where('school_id', getSchoolId())
-            ->when($this->selectedLevelId, fn ($q) => $q->where(function ($q2) {
+            ->when($this->selectedLevelId, fn($q) => $q->where(function ($q2) {
                 $q2->where('academic_level_id', $this->selectedLevelId)
-                    ->orWhere(fn ($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
+                    ->orWhere(fn($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
             }))
             ->orderBy('min_score')
             ->get();
 
         $weightings = ScoreWeighting::where('school_id', getSchoolId())
-            ->when($this->selectedLevelId, fn ($q) => $q->where(function ($q2) {
+            ->when($this->selectedLevelId, fn($q) => $q->where(function ($q2) {
                 $q2->where('academic_level_id', $this->selectedLevelId)
-                    ->orWhere(fn ($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
+                    ->orWhere(fn($q3) => $q3->whereNull('academic_level_id')->where('is_default', true));
             }))
             ->orderBy('sort_order')
+            ->get();
+
+        $templates = ReportCardTemplate::with('academicLevel')
+            ->where('school_id', getSchoolId())
+            ->when($this->selectedLevelId, fn($q) => $q->where('academic_level_id', $this->selectedLevelId))
+            ->latest()
             ->get();
 
         return view('livewire.administrator.report-card-management', compact(
@@ -574,7 +770,8 @@ class ReportCardManagement extends Component
             'reportCards',
             'pendingApprovals',
             'gradeScales',
-            'weightings'
+            'weightings',
+            'templates'
         ));
     }
 }
