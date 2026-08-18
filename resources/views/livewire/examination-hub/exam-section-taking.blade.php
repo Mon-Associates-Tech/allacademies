@@ -15,9 +15,27 @@ $wire is available here and refers to this component instance.
 ────────────────────────────────────────────────────────────────────────── --}}
 @script
 <script>
-// ── Initialize component reference for vanilla JS ──────────────────────
-// Make the Livewire component available to section.blade.php timer code
-window.examSectionComponent = $wire;
+    // ── Initialize component reference for vanilla JS ──────────────────────
+    // Make the Livewire component available to section.blade.php timer code
+    window.examSectionComponent = $wire;
+
+    // ── Seed answered-responses from the server ───────────────────────────
+    // On every page load (including after a disconnect/reconnect), populate
+    // window.currentResponses from the PHP $responses property, which
+    // loadResponses() fills from the database on mount() and hydrate().
+    // Without this, window.currentResponses is empty after a reconnect and
+    // the submit-modal answered count shows 0 even though all answers are saved.
+    window.currentResponses = @js(array_filter($responses, fn($r) => !empty($r) && $r !== null));
+
+    // Keep window.currentResponses in sync as the student answers questions
+    // during the current session.
+    $wire.on('responseUpdated', ({ questionId, response }) => {
+        if (response !== null && response !== '' && response !== undefined) {
+            window.currentResponses[questionId] = response;
+        } else {
+            delete window.currentResponses[questionId];
+        }
+    });
 
 // ── Auto-submit redirect ─────────────────────────────────────────────────
 // Fired by ExamSectionTaking::performAutoSubmit() after the submission has
@@ -583,7 +601,7 @@ $wire.on('examAutoSubmitted', (payload) => {
         {{-- ── BOTTOM NAVIGATION BAR ── --}}
         <div x-data="{
                 showSubmitModal: false,
-                answeredCount: 0,
+                answeredCount: {{ $this->getAnsweredCount() }},
                 totalCount: {{ $this->questions->count() }},
                 openModal() {
                     this.answeredCount = Object.keys(window.currentResponses || {}).length;
@@ -625,9 +643,11 @@ $wire.on('examAutoSubmitted', (payload) => {
                               style="display: contents;">
                             @csrf
                             <button type="button"
-                                   @click="openModal()"
-                                   class="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white transition-all"
-                                   style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 12px rgba(5,150,105,0.35);">
+                                    @click="openModal()"
+                                    :disabled="answeredCount < totalCount"
+                                    :title="answeredCount < totalCount ? `${totalCount - answeredCount} question(s) still unanswered` : 'Submit your exam'"
+                                    class="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 12px rgba(5,150,105,0.35);">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
