@@ -1,4 +1,13 @@
 <x-layouts.app>
+    <style>
+        @media print {
+            html, body { overflow: visible !important; height: auto !important; }
+            .relative.flex.flex-col.flex-1 { overflow: visible !important; }
+            .no-print { display: none !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+
     {{-- ═══════════════════════════════════════════════════════════
          PAGE SHELL
     ═══════════════════════════════════════════════════════════ --}}
@@ -10,13 +19,23 @@
              style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
             <div class="h-1 w-full" style="background: linear-gradient(90deg, #0369a1, #38bdf8, #7dd3fc);"></div>
             <div class="px-7 py-6">
-                <a href="{{ route('examination-hub.submissions.index', $exam) }}"
-                   class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors mb-3">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                    Back to Submissions
-                </a>
+                <div class="flex items-center justify-between mb-3">
+                    <a href="{{ route('examination-hub.submissions.index', $exam) }}"
+                       class="no-print inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-amber-400 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Submissions
+                    </a>
+                    <button onclick="window.print()"
+                            class="no-print inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-400 transition-colors"
+                            style="border-radius: 2px;">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Export / Print
+                    </button>
+                </div>
                 <h1 class="text-2xl font-bold text-white leading-snug" style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
                     Submission Details
                 </h1>
@@ -81,6 +100,56 @@
                               style="border-radius: 2px; {{ $gradeStyle }}">
                             {{ $grade }}
                         </span>
+                    </div>
+                    @if(($submission->bonus_points ?? 0) > 0)
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Bonus Applied</p>
+                        <p class="text-base font-semibold text-amber-600 dark:text-amber-400 mt-1">+{{ number_format($submission->bonus_points, 1) }} pts</p>
+                        @if($submission->bonus_reason)
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ $submission->bonus_reason }}</p>
+                        @endif
+                        <form method="POST" action="{{ route('examination-hub.submissions.bonus.remove', [$exam, $submission]) }}" class="mt-1.5"
+                              onsubmit="return confirm('Remove bonus from this submission?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline">Remove bonus</button>
+                        </form>
+                    </div>
+                    @endif
+
+                    {{-- Individual bonus form --}}
+                    <div class="no-print pt-2 border-t border-slate-100 dark:border-slate-800" x-data="{ open: false }">
+                        <button @click="open = !open"
+                                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            {{ ($submission->bonus_points ?? 0) > 0 ? 'Update bonus' : 'Apply bonus' }}
+                        </button>
+                        <div x-show="open" x-cloak class="mt-3">
+                            <form method="POST" action="{{ route('examination-hub.submissions.bonus', [$exam, $submission]) }}">
+                                @csrf
+                                <div class="flex items-end gap-2 flex-wrap">
+                                    <div>
+                                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Bonus pts (max 100)</label>
+                                        <input type="number" name="bonus_points" step="0.5" min="0" max="100"
+                                               value="{{ $submission->bonus_points ?? 0 }}"
+                                               class="w-24 px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                               style="border-radius: 2px;" required>
+                                    </div>
+                                    <div class="flex-1 min-w-36">
+                                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Reason (optional)</label>
+                                        <input type="text" name="bonus_reason"
+                                               value="{{ $submission->bonus_reason ?? '' }}"
+                                               placeholder="Reason for bonus"
+                                               class="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                               style="border-radius: 2px;">
+                                    </div>
+                                    <button type="submit"
+                                            class="px-3 py-1.5 text-xs font-semibold text-white"
+                                            style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706);">
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -154,6 +223,25 @@
             $questionsBySection = $exam->questions->groupBy(fn($q) => $q->section?->title ?? 'Unsectioned');
         @endphp
 
+        {{-- ── MANUAL GRADING BANNER ── --}}
+        @if($submission->isGraded())
+        <div class="no-print flex items-center justify-between gap-4 px-5 py-4 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30" style="border-radius: 2px;">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <div>
+                    <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Manual Grading Available</p>
+                    <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">You can override individual question scores below, or use the full grading interface.</p>
+                </div>
+            </div>
+            <a href="{{ route('examination-hub.submissions.grade', [$exam, $submission]) }}"
+               class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white transition-all"
+               style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706); box-shadow: 0 2px 8px rgba(180,83,9,0.25);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Full Grading Interface
+            </a>
+        </div>
+        @endif
+
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
@@ -172,6 +260,8 @@
                             @foreach($questions as $index => $question)
                                 @php
                                     $response     = $responses[$question->id] ?? null;
+                                    // Skip questions excluded from grading — they don't appear in the submission
+                                    if ($response['excluded_from_grading'] ?? $question->excluded_from_grading) continue;
                                     $isCorrect    = $response['is_correct'] ?? null;
                                     $studentAnswer = $response['response'] ?? null;
                                     $pointsEarned = $response['points_earned'] ?? 0;
@@ -188,7 +278,7 @@
                                         <div class="flex-1 min-w-0">
                                             <p class="font-semibold text-slate-900 dark:text-white">Question {{ $loop->iteration }}</p>
                                             <div class="text-slate-700 dark:text-slate-300 mt-2 text-sm">
-                                                <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none" style="font-size:0.875rem;"/>
+                                                <x-form.markdown-with-math :content="$question->question->down ?? $question->question" class="prose dark:prose-invert max-w-none" style="font-size:0.875rem;"/>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-2 flex-shrink-0">
@@ -247,7 +337,7 @@
                                                     @endphp
                                                     <div class="flex items-center gap-2 p-2.5 border text-sm {{ $optClass }}" style="border-radius: 2px;">
                                                         <span class="font-medium text-slate-700 dark:text-slate-300">{{ $optionKey }}.</span>
-                                                        <x-form.markdown-with-math :content="$optionText" class="inline text-slate-700 dark:text-slate-300" style="font-size:0.875rem;"/>
+                                                        <x-form.markdown-with-math :content="$optionText['down'] ?? $optionText" class="inline text-slate-700 dark:text-slate-300" style="font-size:0.875rem;"/>
                                                         @if($isStudentAnswer)
                                                             <span class="ml-auto text-xs text-slate-500 dark:text-slate-400">(Your answer)</span>
                                                         @endif
@@ -311,6 +401,43 @@
                                             <p class="font-semibold">Feedback:</p>
                                             <p class="mt-1">{{ $response['feedback'] }}</p>
                                         </div>
+                                    @endif
+
+                                    {{-- Inline manual grade override --}}
+                                    @if($submission->isGraded() && !($response['excluded_from_grading'] ?? false))
+                                    <div class="no-print mt-4" x-data="{ open: false }">
+                                        <button @click="open = !open"
+                                                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            Override score
+                                        </button>
+                                        <div x-show="open" x-cloak class="mt-2">
+                                            <form method="POST" action="{{ route('examination-hub.submissions.manual-grade', [$exam, $submission]) }}"
+                                                  class="flex items-end gap-2 flex-wrap">
+                                                @csrf
+                                                <input type="hidden" name="question_id" value="{{ $question->id }}">
+                                                <div>
+                                                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Points (max {{ $question->marks }})</label>
+                                                    <input type="number" name="points" step="0.5" min="0" max="{{ $question->marks }}"
+                                                           value="{{ $pointsEarned }}"
+                                                           class="w-24 px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                                           style="border-radius: 2px;" required>
+                                                </div>
+                                                <div class="flex-1 min-w-40">
+                                                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Feedback (optional)</label>
+                                                    <input type="text" name="feedback" placeholder="Reason for override"
+                                                           value="{{ $response['manual_feedback'] ?? '' }}"
+                                                           class="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                                           style="border-radius: 2px;">
+                                                </div>
+                                                <button type="submit"
+                                                        class="px-3 py-1.5 text-xs font-semibold text-white transition-all"
+                                                        style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706);">
+                                                    Save
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                     @endif
                                 </div>
                             @endforeach

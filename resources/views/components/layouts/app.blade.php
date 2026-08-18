@@ -6,7 +6,7 @@
     'pageName' => null,
     'action_link' => '',
     'actionLinkText' => '',
-    'showTitleArea' => true,
+    'showTitleArea' => false,
     'fullWidth' => false,
     // background allows callers to set additional body background classes, e.g. 'bg-white dark:bg-gray-900'
     'background' => '',
@@ -20,7 +20,7 @@
 @endphp
 
     <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" :class="{ 'dark': $store.darkMode.on }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,9 +52,9 @@
           media="(prefers-color-scheme: dark)">
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> -->
 
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -116,7 +116,7 @@
         <main class="flex-1 animate-fade-in">
             <!-- Breadcrumb -->
             @if($breadcrumb)
-                <div class="max-w-5xl px-4 lg:px-8 py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
+                <div class="max-w-7xl px-4 lg:px-6 w-full py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>
             @endif
 
             <!-- Alerts -->
@@ -144,7 +144,7 @@
             @endif
 
             <!-- Page content - NO OVERFLOW HERE -->
-            <div class="pb-12 mb-8 w-full">
+            <div class="pb-12 mb-8 w-full {{ $showTitleArea ? 'mt-0' : 'mt-1' }} print:mt-0">
                 <div class="w-full {{ $fullWidth ? '' : 'sm:px-4 lg:px-4' }}">
                     {{ $slot }}
                 </div>

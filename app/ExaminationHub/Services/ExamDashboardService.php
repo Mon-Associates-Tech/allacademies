@@ -6,23 +6,51 @@ use App\ExaminationHub\Contracts\ExamDashboardServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSubmission;
+use App\Models\AcademicSubject;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ExamDashboardService implements ExamDashboardServiceInterface
 {
     public function listForOwner(int $userId, array $filters = []): LengthAwarePaginator
     {
-        $search = (string) ($filters['search'] ?? '');
-        $status = (string) ($filters['status'] ?? '');
+        $search         = (string) ($filters['search'] ?? '');
+        $status         = (string) ($filters['status'] ?? '');
+        $subjectId      = (string) ($filters['subject'] ?? '');
+        $sortBy         = $filters['sort_by'] ?? 'created_at';
+        $sortDirection  = strtolower($filters['sort_direction'] ?? 'desc');
+
+        // Whitelist to prevent SQL injection
+        $allowedSorts = ['title', 'created_at', 'status', 'access_code', 'submissions_count', 'subject'];
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'created_at';
+        }
+        if (!in_array($sortDirection, ['asc', 'desc'], true)) {
+            $sortDirection = 'desc';
+        }
 
         $query = GeneralExam::where('user_id', $userId)
-            ->withCount(['sections', 'questions', 'submissions'])
-            ->orderByDesc('created_at');
+            ->with('academicSubject') // Eager load to prevent N+1 queries in Blade
+            ->withCount(['sections', 'questions', 'submissions']);
+
+        // Safe sorting by relationship name using a subquery
+        if ($sortBy === 'subject') {
+            $query->orderBy(
+                AcademicSubject::select('name')
+                    ->whereColumn('academic_subjects.id', 'general_exams.academic_subject_id')
+                    ->limit(1),
+                $sortDirection
+            );
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('access_code', 'like', "%{$search}%");
+                  ->orWhere('access_code', 'like', "%{$search}%")
+                  ->orWhereHas('academicSubject', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -30,7 +58,11 @@ class ExamDashboardService implements ExamDashboardServiceInterface
             $query->where('status', $status);
         }
 
-        return $query->paginate(12);
+        if ($subjectId !== '') {
+            $query->where('academic_subject_id', $subjectId);
+        }
+
+        return $query->paginate(12)->withQueryString();
     }
 
     public function summaryForOwner(int $userId): array
@@ -56,7 +88,6 @@ class ExamDashboardService implements ExamDashboardServiceInterface
             ->selectRaw("SUM(CASE WHEN type IN ('short_answer','essay') THEN 1 ELSE 0 END) as manual_review")
             ->first();
 
-        // Submission trend over last 30 days
         $submissionTrend = GeneralExamSubmission::whereIn('general_exam_id', $examIds)
             ->whereNotNull('submitted_at')
             ->where('submitted_at', '>=', now()->subDays(30))
@@ -65,7 +96,6 @@ class ExamDashboardService implements ExamDashboardServiceInterface
             ->orderBy('date')
             ->pluck('count', 'date');
 
-        // Exam status distribution
         $examStatusDistribution = GeneralExam::where('user_id', $userId)
             ->selectRaw("SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft")
             ->selectRaw("SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published")
@@ -102,4 +132,3 @@ class ExamDashboardService implements ExamDashboardServiceInterface
         })->all();
     }
 }
-

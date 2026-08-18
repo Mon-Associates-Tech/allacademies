@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 class Mark implements Castable
 {
     public ?string $summary;
-
     public ?HtmlString $html;
 
     public function __construct(public ?string $up, public ?string $down)
@@ -36,11 +35,14 @@ class Mark implements Castable
         
         $decoded = json_decode($string, true);
         
-        if (is_null($decoded)) {
-            return new static(null, null);
+        // If it decodes to a valid array, use it
+        if (is_array($decoded)) {
+            return static::fromArray($decoded);
         }
         
-        return static::fromArray($decoded);
+        // Otherwise, treat the plain string as the 'down' (HTML) value
+        // and automatically generate the 'up' (plain text summary) value
+        return new static(Str::words(strip_tags($string), 20), $string);
     }
 
     public function toArray(): array
@@ -67,23 +69,40 @@ class Mark implements Castable
 
             public function set($model, string $key, $value, array $attributes)
             {
-                if (is_string($value)) {
-                    $value = Mark::fromString($value);
+                // 1. Already a Mark instance (e.g., preserving existing model value)
+                if ($value instanceof Mark) {
+                    return $value->toString();
                 }
 
+                // 2. Array submitted (e.g., from a rich text component)
                 if (is_array($value)) {
-                    $value = Mark::fromArray($value);
+                    return Mark::fromArray($value)->toString();
                 }
 
-                if (! $value instanceof Mark) {
-                    if (is_null($value)) {
-                        return (new static(null, null))->toString();
+                // 3. String submitted (e.g., from a plain textarea or rich text)
+                if (is_string($value)) {
+                    if ($value === '') {
+                        // FIX: Use 'Mark' explicitly, not 'static', to avoid anonymous class resolution
+                        return (new Mark(null, null))->toString();
                     }
                     
-                    throw new \InvalidArgumentException('Expected an instanceof of App\Support\Mark');
+                    $decoded = json_decode($value, true);
+                    if (is_array($decoded)) {
+                        return Mark::fromArray($decoded)->toString();
+                    }
+                    
+                    // Treat plain string as the 'down' (HTML) value
+                    // FIX: Use 'Mark' explicitly
+                    return (new Mark(Str::words(strip_tags($value), 20), $value))->toString();
                 }
 
-                return $value->toString();
+                // 4. Null submitted
+                if (is_null($value)) {
+                    // FIX: Use 'Mark' explicitly
+                    return (new Mark(null, null))->toString();
+                }
+
+                throw new \InvalidArgumentException('Expected an instance of App\Support\Mark, array, string, or null.');
             }
         };
     }

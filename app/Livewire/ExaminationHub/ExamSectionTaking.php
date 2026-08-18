@@ -33,6 +33,8 @@ class ExamSectionTaking extends Component
 
     public string|int|null $start_time = '';
 
+    public bool $isSingleSection = false;
+
     public function mount(GeneralExam $exam, GeneralExamSubmission $submission, $section, int $sectionIndex, $questions): void
     {
         $this->examId = $exam->id;
@@ -49,27 +51,11 @@ class ExamSectionTaking extends Component
             $this->currentQuestionIndex = (int) ($lastPos['question'] ?? 0);
         }
 
-        // Determine time remaining for this view: prefer section-level limits
-        $sectionStartTimes = $submission->section_start_times ?? [];
-        $sectionKey = (string) $section->id;
-
-        if ($section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
-            $startedAt      = \Carbon\Carbon::createFromTimestamp($sectionStartTimes[$sectionKey]);
-            $endsAt         = $startedAt->copy()->addMinutes((int) $section->time_limit_minutes);
-            $sectionSeconds = max(0, now()->diffInSeconds($endsAt, false));
-
-            // Exam duration is the hard ceiling — cap the displayed timer to whatever is left on the exam clock
-            if ($exam->duration_in_minutes && $submission->started_at) {
-                $examEndsAt  = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
-                $examSeconds = max(0, now()->diffInSeconds($examEndsAt, false));
-                $sectionSeconds = min($sectionSeconds, $examSeconds);
-            }
-
-            $this->timeRemaining = $sectionSeconds;
-        } elseif ($exam->duration_in_minutes && $submission->started_at) {
-            $examEndsAt          = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
-            $this->timeRemaining = max(0, now()->diffInSeconds($examEndsAt, false));
-        }
+        // Don't recalculate timeRemaining here — it's already been calculated correctly
+        // by the controller and passed through the Livewire directive. Recalculating here
+        // causes timer jumps when the component re-mounts (e.g., after fullscreen toggle,
+        // page reload, or rejoining the exam).
+        // The timer will be synchronized periodically by the heartbeat system.
     }
 
     protected function loadResponses(): void
@@ -165,7 +151,8 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             if ($submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->performAutoSubmit(
                         $submission,
@@ -180,7 +167,8 @@ class ExamSectionTaking extends Component
 
             // Exam-level hard ceiling applies even in multi-section exams
             if ($exam->duration_in_minutes && $submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->performAutoSubmit($submission, 'Exam duration exceeded (server-side auto-submit)', $exam);
                     return;
@@ -237,8 +225,8 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             $examEndsAt = $submission->started_at
-                ? $submission->started_at->copy()->addMinutes($exam->duration_in_minutes)
-                : now()->subSecond(); // treat as expired when no start time
+                ? $submission->started_at->copy()->addSeconds($submission->getTotalAllowedSeconds() ?? 0)
+                : now()->subSecond();
             if (now()->greaterThanOrEqualTo($examEndsAt)) {
                 $this->performAutoSubmit(
                     $submission,
@@ -250,7 +238,8 @@ class ExamSectionTaking extends Component
         } elseif ($this->section->time_limit_minutes) {
             // Exam-level ceiling check first
             if ($exam->duration_in_minutes && $submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->performAutoSubmit($submission, 'Exam duration exceeded (client timer, server-verified)', $exam);
                     return;
@@ -359,7 +348,8 @@ class ExamSectionTaking extends Component
 
         if ($isSingleSection && $exam->duration_in_minutes) {
             if ($submission->started_at) {
-                $examEndsAt = $submission->started_at->copy()->addMinutes($exam->duration_in_minutes);
+                $totalSeconds = $submission->getTotalAllowedSeconds();
+                $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
                 if (now()->greaterThanOrEqualTo($examEndsAt)) {
                     $this->addError('general', 'Exam time limit has expired.');
                     return false;
@@ -368,7 +358,8 @@ class ExamSectionTaking extends Component
         } elseif ($this->section->time_limit_minutes && isset($sectionStartTimes[$sectionKey])) {
         } elseif ($exam->duration_in_minutes && $submission->started_at) {
             // Multi-section: always enforce exam-level ceiling
-            $examEndsAt = $submission->started_at->copy()->addMinutes((int) $exam->duration_in_minutes);
+            $totalSeconds = $submission->getTotalAllowedSeconds();
+            $examEndsAt = $submission->started_at->copy()->addSeconds($totalSeconds);
             if (now()->greaterThanOrEqualTo($examEndsAt)) {
                 $this->addError('general', 'Exam time limit has expired.');
                 return false;
@@ -437,10 +428,22 @@ class ExamSectionTaking extends Component
             return;
         }
 
-        // Record start time
-        $this->start_time = now();
+        // Record start time — only set started_at on the very first section click.
+        // This is the authoritative moment the exam clock begins for both the
+        // participant timer and the admin live-monitoring dashboard.
+        $submission = $this->submission;
+        if (! $submission->started_at) {
+            $submission->update(['started_at' => now()]);
+            $submission->refresh();
 
-        // Mark section as started
+            // Sync the heartbeat record so the admin monitoring clock starts
+            // from the same moment as the participant timer.
+            \App\ExaminationHub\Models\ExamParticipantHeartbeat::where(
+                'general_exam_submission_id', $submission->id
+            )->whereNull('started_at')->update(['started_at' => $submission->started_at]);
+        }
+        $this->start_time = $submission->started_at->timestamp;
+
         $this->updateSectionProgress('started');
 
         // Hide section info to show exam content
@@ -457,6 +460,14 @@ class ExamSectionTaking extends Component
 
         // Also emit an event to show exam content regardless of fullscreen state
         $this->dispatch('show-exam-content');
+
+        // Now that the section is officially starting, calculate the actual remaining time
+        // for the timer to initialize. We couldn't pass this from the controller because
+        // the timer would have started counting down during the preview phase.
+        $exam = $this->exam;
+        if ($exam->duration_in_minutes) {
+            $this->timeRemaining = $this->submission->getRemainingTime();
+        }
     }
 
     public function isQuestionAnswered(int $questionId): bool

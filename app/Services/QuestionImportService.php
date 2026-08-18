@@ -29,7 +29,8 @@ class QuestionImportService
     ];
     
     public function __construct(
-        private ResearchAssistantService $academicChatService
+        private ResearchAssistantService $academicChatService,
+        private DocumentContentExtractionService $documentExtractor
     ) {}
 
     /**
@@ -152,14 +153,26 @@ class QuestionImportService
                         case 'multiple_choice':
                         case 'mcq':
                         case 'multiple choice':
-                            $commonData['option_a'] = $previewItem['option_a'] ?? '';
-                            $commonData['option_b'] = $previewItem['option_b'] ?? '';
-                            $commonData['option_c'] = $previewItem['option_c'] ?? '';
-                            $commonData['option_d'] = $previewItem['option_d'] ?? '';
-                            $commonData['option_e'] = $previewItem['option_e'] ?? '';
+                            $optionA = $previewItem['option_a'] ?? '';
+                            $optionB = $previewItem['option_b'] ?? '';
+                            $optionC = $previewItem['option_c'] ?? '';
+                            $optionD = $previewItem['option_d'] ?? '';
+                            $optionE = $previewItem['option_e'] ?? '';
+                            
+                            $optionAHtml = $previewItem['option_a_html'] ?? $optionA;
+                            $optionBHtml = $previewItem['option_b_html'] ?? $optionB;
+                            $optionCHtml = $previewItem['option_c_html'] ?? $optionC;
+                            $optionDHtml = $previewItem['option_d_html'] ?? $optionD;
+                            $optionEHtml = $previewItem['option_e_html'] ?? $optionE;
+                            
+                            $commonData['option_a'] = new Mark($optionA, $optionAHtml);
+                            $commonData['option_b'] = new Mark($optionB, $optionBHtml);
+                            $commonData['option_c'] = new Mark($optionC, $optionCHtml);
+                            $commonData['option_d'] = new Mark($optionD, $optionDHtml);
+                            $commonData['option_e'] = new Mark($optionE, $optionEHtml);
                             $commonData['answer']   = $previewItem['answer'] ?? '';
 
-                            if (empty(trim($questionText)) || empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b']))) {
+                            if (empty(trim($questionText)) || empty(trim($optionA)) || empty(trim($optionB))) {
                                 $importResults['errors'][] = [
                                     'row'     => $previewItem['row_number'] ?? 'unknown',
                                     'message' => 'Multiple choice question requires at least options A and B.',
@@ -465,20 +478,27 @@ class QuestionImportService
                     case 'multiple_choice':
                     case 'mcq':
                     case 'multiple choice':
-                        $questionData['option_a'] = $this->getColumnValue($row, $optionACol, '');
-                        $questionData['option_b'] = $this->getColumnValue($row, $optionBCol, '');
-                        $questionData['option_c'] = $this->getColumnValue($row, $optionCCol, '');
-                        $questionData['option_d'] = $this->getColumnValue($row, $optionDCol, '');
-                        $questionData['option_e'] = $this->getColumnValue($row, $optionECol, '');
+                        $optA = $this->getColumnValue($row, $optionACol, '');
+                        $optB = $this->getColumnValue($row, $optionBCol, '');
+                        $optC = $this->getColumnValue($row, $optionCCol, '');
+                        $optD = $this->getColumnValue($row, $optionDCol, '');
+                        $optE = $this->getColumnValue($row, $optionECol, '');
+                        
+                        // For Excel, use plain text for both up and down since formatting is not preserved
+                        $questionData['option_a'] = new Mark($optA, $optA);
+                        $questionData['option_b'] = new Mark($optB, $optB);
+                        $questionData['option_c'] = new Mark($optC, $optC);
+                        $questionData['option_d'] = new Mark($optD, $optD);
+                        $questionData['option_e'] = new Mark($optE, $optE);
 
-                        $previewItem['option_a'] = $questionData['option_a'];
-                        $previewItem['option_b'] = $questionData['option_b'];
-                        $previewItem['option_c'] = $questionData['option_c'];
-                        $previewItem['option_d'] = $questionData['option_d'];
-                        $previewItem['option_e'] = $questionData['option_e'];
+                        $previewItem['option_a'] = $optA;
+                        $previewItem['option_b'] = $optB;
+                        $previewItem['option_c'] = $optC;
+                        $previewItem['option_d'] = $optD;
+                        $previewItem['option_e'] = $optE;
                         
                         // Validate that multiple choice has options
-                        if (empty($questionData['option_a']) || empty($questionData['option_b'])) {
+                        if (empty($optA) || empty($optB)) {
                             $importResults['errors'][] = [
                                 'row' => $rowNumber,
                                 'message' => 'Multiple choice questions require at least options A and B'
@@ -563,13 +583,14 @@ class QuestionImportService
     private function importFromWord(UploadedFile $file, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
         try {
-            // Extract the text content from the Word document
-            $text = $this->academicChatService->extractFileContent($file);
+            // Extract content with HTML formatting preserved
+            $extracted = $this->documentExtractor->extractFromWord($file);
+            $plainText = $extracted['plain'];
+            $htmlText = $extracted['html'];
 
-            // If the extracted text is empty or doesn't contain meaningful content, 
-            // we shouldn't process it as questions
-            $cleanText = trim(preg_replace('/\s+/', ' ', strip_tags($text)));
-            if (empty($cleanText) || strlen($cleanText) < 10) { // At least 10 characters to consider it meaningful
+            // Check if content is meaningful
+            $cleanText = trim(preg_replace('/\s+/', ' ', strip_tags($htmlText)));
+            if (empty($cleanText) || strlen($cleanText) < 10) {
                 return [
                     'multiple_choice' => [],
                     'true_false' => [],
@@ -580,8 +601,8 @@ class QuestionImportService
                 ];
             }
 
-            // Use AI to parse the content and extract questions
-            return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, true); // Save to DB
+            // Parse questions using AI with plain text, then match HTML formatting
+            return $this->parseQuestionsFromText($plainText, $htmlText, $academicSubject, $topic, $subtopic, $userId, true);
         } catch (\Exception $e) {
             Log::error('Error importing questions from Word', [
                 'error' => $e->getMessage(),
@@ -630,13 +651,13 @@ class QuestionImportService
      */
     private function previewQuestionsFromText(string $text, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId): array
     {
-        return $this->parseQuestionsFromText($text, $academicSubject, $topic, $subtopic, $userId, false); // Don't save to DB
+        return $this->parseQuestionsFromText($text, $text, $academicSubject, $topic, $subtopic, $userId, false);
     }
 
     /**
      * Parse questions from text content using AI
      */
-    private function parseQuestionsFromText(string $text, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, bool $saveToDb = true): array
+    private function parseQuestionsFromText(string $plainText, string $htmlText, AcademicSubject $academicSubject, ?AcademicTopic $topic, ?AcademicSubtopic $subtopic, ?int $userId, bool $saveToDb = true): array
     {
         try {
             // Build a prompt for the AI to extract and format questions from the text
@@ -660,7 +681,7 @@ class QuestionImportService
             $prompt .= "  ]\n";
             $prompt .= "}\n\n";
             $prompt .= "Text to extract questions from:\n";
-            $prompt .= $text;
+            $prompt .= $plainText;
 
             // Call the AcademicChatService to process the request
             $result = $this->academicChatService->chat([
@@ -796,23 +817,41 @@ class QuestionImportService
 
                     switch (strtolower($questionType)) {
                         case 'multiple_choice':
-                            $commonData['option_a'] = $questionData['options'][0] ?? '';
-                            $commonData['option_b'] = $questionData['options'][1] ?? '';
-                            $commonData['option_c'] = $questionData['options'][2] ?? '';
-                            $commonData['option_d'] = $questionData['options'][3] ?? '';
-                            $commonData['option_e'] = $questionData['options'][4] ?? '';
+                            $opt_a = $questionData['options'][0] ?? '';
+                            $opt_b = $questionData['options'][1] ?? '';
+                            $opt_c = $questionData['options'][2] ?? '';
+                            $opt_d = $questionData['options'][3] ?? '';
+                            $opt_e = $questionData['options'][4] ?? '';
+                            
+                            // Find HTML versions from original document
+                            $opt_a_html = $this->findHtmlForText($opt_a, $htmlText);
+                            $opt_b_html = $this->findHtmlForText($opt_b, $htmlText);
+                            $opt_c_html = $this->findHtmlForText($opt_c, $htmlText);
+                            $opt_d_html = $this->findHtmlForText($opt_d, $htmlText);
+                            $opt_e_html = $this->findHtmlForText($opt_e, $htmlText);
+                            
+                            $commonData['option_a'] = new Mark($opt_a, $opt_a_html);
+                            $commonData['option_b'] = new Mark($opt_b, $opt_b_html);
+                            $commonData['option_c'] = new Mark($opt_c, $opt_c_html);
+                            $commonData['option_d'] = new Mark($opt_d, $opt_d_html);
+                            $commonData['option_e'] = new Mark($opt_e, $opt_e_html);
                             $commonData['answer'] = $questionData['answer'] ?? '';
 
-                            $previewItem['option_a'] = $commonData['option_a'];
-                            $previewItem['option_b'] = $commonData['option_b'];
-                            $previewItem['option_c'] = $commonData['option_c'];
-                            $previewItem['option_d'] = $commonData['option_d'];
-                            $previewItem['option_e'] = $commonData['option_e'];
+                            $previewItem['option_a'] = $opt_a;
+                            $previewItem['option_b'] = $opt_b;
+                            $previewItem['option_c'] = $opt_c;
+                            $previewItem['option_d'] = $opt_d;
+                            $previewItem['option_e'] = $opt_e;
+                            $previewItem['option_a_html'] = $opt_a_html;
+                            $previewItem['option_b_html'] = $opt_b_html;
+                            $previewItem['option_c_html'] = $opt_c_html;
+                            $previewItem['option_d_html'] = $opt_d_html;
+                            $previewItem['option_e_html'] = $opt_e_html;
                             $previewItem['answer'] = $commonData['answer'];
 
                             // Validate that multiple choice question has meaningful content
                             if (empty(trim($questionText)) || 
-                                (empty(trim($commonData['option_a'])) || empty(trim($commonData['option_b'])))) {
+                                (empty(trim($opt_a)) || empty(trim($opt_b)))) {
                                 break; // Skip invalid multiple choice questions
                             }
 
@@ -953,5 +992,33 @@ class QuestionImportService
     public function getImportStatistics(): array
     {
         return $this->importedCount;
+    }
+
+    /**
+     * Find HTML formatted version of plain text in the HTML content
+     */
+    private function findHtmlForText(string $plainText, string $htmlText): string
+    {
+        if (empty($plainText)) {
+            return '';
+        }
+
+        // Remove extra whitespace from plain text
+        $cleanPlain = trim(preg_replace('/\s+/', ' ', $plainText));
+        
+        // Try to find the text in the HTML, accounting for HTML tags
+        $htmlLines = explode("\n", $htmlText);
+        
+        foreach ($htmlLines as $line) {
+            $cleanLine = trim(preg_replace('/\s+/', ' ', strip_tags($line)));
+            
+            // Check if this line contains the text we're looking for
+            if (stripos($cleanLine, $cleanPlain) !== false) {
+                return trim($line);
+            }
+        }
+        
+        // If not found, return plain text
+        return htmlspecialchars($plainText);
     }
 }

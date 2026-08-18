@@ -43,6 +43,12 @@ class AcademicClassification extends Component
             $this->academicSubjectId = $value;
         }
 
+        $this->dispatch('exam-hierarchy-changed',
+            academicGroupId: $this->academicGroupId,
+            academicLevelId: $this->academicLevelId,
+            academicSubjectId: $this->academicSubjectId,
+        );
+
         $this->dispatch('$refresh');
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\ExaminationHub\SyncSourceQuestionJob;
 use App\Models\EssayQuestion;
 use App\Support\Mark;
 
@@ -21,6 +22,11 @@ class EssayQuestionObserver
     public function updating(EssayQuestion $question): void
     {
         $this->validateQuestionContent($question);
+    }
+
+    public function updated(EssayQuestion $question): void
+    {
+        SyncSourceQuestionJob::dispatch('essay', $question->id);
     }
 
     /**

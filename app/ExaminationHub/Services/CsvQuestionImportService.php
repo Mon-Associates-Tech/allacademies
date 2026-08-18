@@ -127,7 +127,7 @@ class CsvQuestionImportService
         }
 
         $points    = $this->parsePoints($row['points'] ?? '1');
-        $difficulty = $this->parseDifficulty($row['difficulty_level'] ?? 'medium');
+        $difficulty = $this->parseDifficulty($row['difficulty_level'] ?? 'easy');
 
         return match ($questionType) {
             'multiple_choice' => $this->parseMultipleChoice($row, $questionText, $points, $difficulty),
@@ -144,8 +144,8 @@ class CsvQuestionImportService
     public function getRequiredColumns(string $questionType): array
     {
         return match ($questionType) {
-            'multiple_choice' => ['question', 'option_a', 'option_b', 'correct_answer'],
-            'true_false'      => ['question', 'correct_answer'],
+            'multiple_choice' => ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'answer'],
+            'true_false'      => ['question', 'answer'],
             'essay',
             'short_answer'    => ['question'],
             default           => throw new \InvalidArgumentException("Unknown question type: {$questionType}"),
@@ -167,7 +167,7 @@ class CsvQuestionImportService
             throw new \InvalidArgumentException("Multiple choice question requires at least option_a and option_b.");
         }
 
-        $correctRaw = strtoupper(trim($row['correct_answer'] ?? ''));
+        $correctRaw = strtoupper(trim($row['answer'] ?? ''));
 
         // Accept either 'A', 'B', 'C', 'D' or the actual answer text
         $answerMap  = ['A' => 0, 'B' => 1, 'C' => 2, 'D' => 3];
@@ -178,7 +178,7 @@ class CsvQuestionImportService
             $match = array_search(strtolower($correctRaw), array_map('strtolower', $options));
             if ($match === false) {
                 throw new \InvalidArgumentException(
-                    "correct_answer '{$correctRaw}' is not a valid option letter (A–D) or matching option text."
+                    "answer '{$correctRaw}' is not a valid option letter (A–D) or matching option text."
                 );
             }
             $answerIndex = $match;
@@ -186,7 +186,7 @@ class CsvQuestionImportService
 
         if (!isset($options[$answerIndex])) {
             throw new \InvalidArgumentException(
-                "correct_answer '{$correctRaw}' refers to an option that does not exist."
+                "answer '{$correctRaw}' refers to an option that does not exist."
             );
         }
 
@@ -203,12 +203,12 @@ class CsvQuestionImportService
 
     private function parseTrueFalse(array $row, string $question, float $points, string $difficulty): array
     {
-        $raw    = strtolower(trim($row['correct_answer'] ?? ''));
+        $raw    = strtolower(trim($row['answer'] ?? ''));
         $boolMap = ['true' => true, '1' => true, 'yes' => true, 'false' => false, '0' => false, 'no' => false];
 
         if (!array_key_exists($raw, $boolMap)) {
             throw new \InvalidArgumentException(
-                "correct_answer for true/false must be 'true' or 'false', got '{$raw}'."
+                "answer for true/false must be 'true' or 'false', got '{$raw}'."
             );
         }
 

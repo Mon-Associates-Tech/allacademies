@@ -15,12 +15,26 @@ class SectionBuilder extends Component
 
     public array $uploadedDocuments = [];
 
-    protected $listeners = ['selection-changed' => 'handleSelectionChanged'];
+    public ?int $examAcademicGroupId   = null;
+    public ?int $examAcademicLevelId   = null;
+    public ?int $examAcademicSubjectId = null;
+
+    protected $listeners = [
+        'selection-changed'    => 'handleSelectionChanged',
+        'exam-hierarchy-changed' => 'syncExamHierarchy',
+    ];
 
     public function mount(array $sections = [], array $hierarchyTree = []): void
     {
         $this->sections = ! empty($sections) ? array_values($sections) : [$this->blankSection()];
         $this->hierarchyTree = $hierarchyTree;
+
+        // Seed exam-level hierarchy from the first section (used when editing)
+        if (!empty($this->sections[0]['academic_subject_id'])) {
+            $this->examAcademicGroupId   = $this->sections[0]['academic_group_id'] ?? null;
+            $this->examAcademicLevelId   = $this->sections[0]['academic_level_id'] ?? null;
+            $this->examAcademicSubjectId = $this->sections[0]['academic_subject_id'] ?? null;
+        }
     }
 
     public function updatedUploadedDocuments($value, $key): void
@@ -77,9 +91,29 @@ class SectionBuilder extends Component
         }
     }
 
+    public function syncExamHierarchy(int|null $academicGroupId, int|null $academicLevelId, int|null $academicSubjectId): void
+    {
+        $this->examAcademicGroupId   = $academicGroupId;
+        $this->examAcademicLevelId   = $academicLevelId;
+        $this->examAcademicSubjectId = $academicSubjectId;
+
+        foreach ($this->sections as $i => $section) {
+            $this->sections[$i]['academic_group_id']   = $academicGroupId;
+            $this->sections[$i]['academic_level_id']   = $academicLevelId;
+            $this->sections[$i]['academic_subject_id'] = $academicSubjectId;
+            $this->sections[$i]['topic_ids']           = [];
+            $this->sections[$i]['subtopic_ids']        = [];
+        }
+        $this->dispatch('$refresh');
+    }
+
     public function addSection(): void
     {
-        $this->sections[] = $this->blankSection();
+        $blank = $this->blankSection();
+        $blank['academic_group_id']   = $this->examAcademicGroupId;
+        $blank['academic_level_id']   = $this->examAcademicLevelId;
+        $blank['academic_subject_id'] = $this->examAcademicSubjectId;
+        $this->sections[] = $blank;
     }
 
     public function removeSection(int $index): void

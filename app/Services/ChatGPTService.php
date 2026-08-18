@@ -12,6 +12,7 @@ class ChatGPTService
     use ResponseExtraction;
 
     protected mixed $apiKey;
+    protected $model = 'gpt-4.1-nano';
 
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
 
@@ -23,13 +24,14 @@ class ChatGPTService
     {
         $this->apiKey = config('services.openai.key') ?? config('openai.openai.api_key');
         $this->tokenUsageService = $tokenUsageService;
+        $this->model = config('openai.openai.model') ?: 'gpt-4.1-nano';
     }
 
     /**
      * Unified Chat method with retry logic and usage logging
      * Supports both simple message arrays and complex request data
      */
-    public function chat($messages, $model = 'gpt-4.1-nano', array $options = []): array
+    public function chat($messages, $model = '', array $options = []): array
     {
         // Extract internal options
         $requestType = $options['request_type'] ?? 'chat';
@@ -39,13 +41,16 @@ class ChatGPTService
         $formattedMessages = is_string($messages) ? [['role' => 'user', 'content' => $messages]] : $messages;
         
         $requestData = [
-            'model' => $model,
+            'model' => $model ?: $this->model,
             'input' => $formattedMessages,
         ];
 
         // Add supported parameters
         if (isset($options['temperature'])) {
             $requestData['temperature'] = $options['temperature'];
+        }
+        if (isset($options['max_output_tokens'])) {
+            $requestData['max_output_tokens'] = (int) $options['max_output_tokens'];
         }
 
         return $this->sendChatRequest($requestData, ['request_type' => $requestType]);
@@ -58,8 +63,8 @@ class ChatGPTService
     protected function sendChatRequest(array $requestData, array $options = []): array
     {
         $user = auth()->user();
-        $timeout = config('openai.openai.timeout', 90);
-        $maxRetries = 3;
+        $timeout = config('openai.openai.timeout', 60);
+        $maxRetries = 1;
         $retryDelay = 2;
 
         // Extract request_type before sending to API (it's for internal use only)
@@ -71,7 +76,6 @@ class ChatGPTService
                 $response = Http::withToken($this->apiKey)
                     ->timeout($timeout)
                     ->connectTimeout(10)
-                    ->retry(2, 1000)
                     ->post($this->textEndpoint, $requestData);
 
                 if ($response->successful()) {
@@ -116,10 +120,15 @@ class ChatGPTService
                     'attempt' => $attempt,
                 ]);
 
-                return [
-                    'success' => false,
-                    'error' => 'API Error: '.$response->body(),
-                ];
+                $status = $response->status();
+                $error = match(true) {
+                    $status === 401 => 'AI service authentication failed. Please contact support.',
+                    $status === 429 => 'AI service is busy. Please try again in a moment.',
+                    $status >= 500 => 'AI service is temporarily unavailable. Please try again.',
+                    default        => 'AI service error. Please try again.',
+                };
+
+                return ['success' => false, 'error' => $error];
 
             } catch (ConnectionException $e) {
                 Log::error('OpenAI Connection Error', [

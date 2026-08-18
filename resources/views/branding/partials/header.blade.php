@@ -1,3 +1,6 @@
+@php
+    $company = config('company');
+@endphp
 <header
     x-data="{
                 scrolled: false,
@@ -32,11 +35,11 @@
                     <div class="hidden sm:block">
                                 <span class="text-xl lg:text-2xl font-bold transition-colors duration-300"
                                       :class="scrolled ? 'text-gray-900 dark:text-white' : 'text-white'">
-                                    All Academies
+                                    {{ $company['name_short'] }}
                                 </span>
                         <div class="text-xs font-medium tracking-wider transition-colors duration-300"
                              :class="scrolled ? 'text-gray-500 dark:text-gray-400' : 'text-blue-200'">
-                            Educational Excellence
+                            {{$company['tagline']}}
                         </div>
                     </div>
                 </a>

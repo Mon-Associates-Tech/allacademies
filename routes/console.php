@@ -1,5 +1,7 @@
 <?php
 
+use App\Console\Commands\ExaminationHub\RegradeNormalizeCommand;
+use App\Console\Commands\ExaminationHub\BackfillQuestionSourcesCommand;
 use App\Console\Commands\SendScheduledExamReminders;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -21,3 +23,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(SendScheduledExamReminders::class)->everyFiveMinutes();
+
+Schedule::command(BackfillQuestionSourcesCommand::class)->everyFiveMinutes();
+Schedule::command(RegradeNormalizeCommand::class)->everyFiveMinutes();

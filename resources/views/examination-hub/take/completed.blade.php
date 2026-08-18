@@ -37,7 +37,7 @@
                     </p>
 
                     {{-- Results Info --}}
-                    <div class="mt-5 p-4 border border-blue-200/50 rounded-[2px] bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-200">
+                    <div class="mt-5 hidden p-4 border border-blue-200/50 rounded-[2px] bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-200">
                         <p class="text-sm font-medium mb-2">
                             @if($exam->canShowResults())
                                 📧 An email with your results link has been sent to <strong>{{ $participantEmail }}</strong>
@@ -52,12 +52,13 @@
 
                     @if($submission?->auto_submitted)
                     <div class="mt-5 p-4 border border-amber-200/50 rounded-[2px] bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-300">
-                        <p class="text-sm font-medium mb-2">
+                        <p class="text-sm inline-flex font-medium mb-2">
                             <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                                 <path d="M12 8v5l3 3"/>
                             </svg>
-                            This exam was automatically submitted because the time duration for the exam has expired.
+                            <span>This exam was automatically submitted because the time duration for the exam has expired.</span>
+
                         </p>
                         <p class="text-xs opacity-80">
                             @if($submission?->auto_submit_reason)
@@ -68,7 +69,7 @@
                     @endif
 
                     {{-- Action Buttons --}}
-                    <div class="mt-6 space-y-3">
+                    <div class="mt-6 space-y-3 hidden">
                         @if($participantEmail)
                             <x-ui.button
                                 variant="primary"
@@ -107,4 +108,13 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Redirect to join page after 10 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                window.location.href = "{{ route('examination-hub.take.join') }}";
+            }, 10000);
+        });
+    </script>
 </x-layouts.exam>

@@ -26,7 +26,7 @@ class ExamGradingService
      */
     public function grade(GeneralExamSubmission $submission): void
     {
-        $exam = $submission->assignment()->with('questions')->first();
+        $exam = $submission->assignment()->with(['questions' => fn ($q) => $q->where('excluded_from_grading', false)])->first();
 
         if (! $exam) {
             return;

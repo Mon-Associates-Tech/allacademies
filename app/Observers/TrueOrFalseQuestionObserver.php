@@ -2,8 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\EssayQuestion;
-use App\Models\MultipleChoiceQuestion;
+use App\Jobs\ExaminationHub\SyncSourceQuestionJob;
 use App\Models\TrueOrFalseQuestion;
 use App\Support\Mark;
 
@@ -23,6 +22,11 @@ class TrueOrFalseQuestionObserver
     public function updating(TrueOrFalseQuestion $question): void
     {
         $this->validateQuestionContent($question);
+    }
+
+    public function updated(TrueOrFalseQuestion $question): void
+    {
+        SyncSourceQuestionJob::dispatch('true_false', $question->id);
     }
 
     /**

@@ -9,6 +9,9 @@ $wire is available here and refers to this component instance.
 
  ExamSessionSync is already initialised by section.blade.php; no need
  to duplicate it here.
+
+ $isSingleSection is passed from section.blade.php via the @livewire
+ directive and exposed as a Livewire public property on the component.
 ────────────────────────────────────────────────────────────────────────── --}}
 @script
 <script>
@@ -32,12 +35,12 @@ $wire.on('examAutoSubmitted', (payload) => {
     const redirectUrl = payload?.redirectUrl;
     if (!redirectUrl) return;
 
-    // 3.1 s: the parent modal counts down 3 s before navigating, so this
+    // 9.1 s: the parent modal counts down 3 s before navigating, so this
     // fires 100 ms after the modal countdown ends as a safety net.  If the
     // parent already navigated away this is a no-op.
     setTimeout(() => {
         window.location.href = redirectUrl;
-    }, 3100);
+    }, 9100);
 });
 </script>
 @endscript
@@ -129,6 +132,35 @@ $wire.on('examAutoSubmitted', (payload) => {
                         </div>
                     @endif
 
+                    {{-- ── SINGLE-SECTION: show exam-level rules here, integrated ── --}}
+                    @if($isSingleSection)
+                        <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 overflow-hidden" style="border-radius: 2px;">
+                            <div class="px-4 py-2 border-b border-amber-200 dark:border-amber-800" style="background: rgba(180,83,9,0.06);">
+                                <h4 class="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider" style="font-size: 10px; letter-spacing: 0.12em;">Important — Before You Begin</h4>
+                            </div>
+                            <ul class="px-4 py-3 space-y-2">
+                                <li class="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300">
+                                    <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
+                                    </svg>
+                                    <span>This examination must be taken in <strong>full screen</strong> mode. You will be prompted to enter full screen when you click Begin.</span>
+                                </li>
+                                <li class="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300">
+                                    <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Exiting full screen will be logged as a <strong>violation</strong>.</span>
+                                </li>
+                                <li class="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300">
+                                    <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>The timer starts the moment you click <strong>Begin Examination</strong>.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    @endif
+
                     <div class="pt-2 flex justify-end items-center gap-3">
                         @if($this->section->instructions)
                             <label class="inline-flex items-center gap-2 text-sm">
@@ -137,16 +169,35 @@ $wire.on('examAutoSubmitted', (payload) => {
                             </label>
                         @endif
                         <div>
-                            <button wire:click="startSection"
-                                   @if($this->section->instructions) wire:loading.attr="disabled" @endif
-                                   @if($this->section->instructions && !$this->instructionsAcknowledged) disabled @endif
-                                   class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200"
-                                   style="border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                                Begin Section
-                                <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                                </svg>
-                            </button>
+                            @if($isSingleSection)
+                                {{-- Single section: enter fullscreen AND start in one click --}}
+                                <button
+                                    @if($this->section->instructions && !$this->instructionsAcknowledged) disabled @endif
+                                    onclick="
+                                        fullscreenGate.request();
+                                        setTimeout(() => {
+                                            Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id')).call('startSection');
+                                        }, 200);"
+                                    class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style="border-radius: 2px; background: linear-gradient(135deg, #b45309, #d97706); box-shadow: 0 2px 12px rgba(180,83,9,0.35); letter-spacing: 0.02em;">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"/>
+                                    </svg>
+                                    Enter Fullscreen &amp; Begin Examination
+                                </button>
+                            @else
+                                {{-- Multi-section: just start the section (fullscreen already active) --}}
+                                <button wire:click="startSection"
+                                       @if($this->section->instructions) wire:loading.attr="disabled" @endif
+                                       @if($this->section->instructions && !$this->instructionsAcknowledged) disabled @endif
+                                       class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                       style="border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                    Begin Section
+                                    <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                    </svg>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -276,7 +327,9 @@ $wire.on('examAutoSubmitted', (payload) => {
 
                 <div class="flex items-center gap-3 flex-shrink-0">
                     {{-- TIMER (Desktop) --}}
-                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" />
+                    @if($start_time)
+                        <x-examination-hub.timer :timeRemaining="$timeRemaining ?? null" :extraTimeMinutes="$extraTimeMinutes ?? 0" />
+                    @endif
 
                     {{-- Progress pill --}}
                     <div class="flex flex-col items-end gap-1">
@@ -300,7 +353,7 @@ $wire.on('examAutoSubmitted', (payload) => {
 
                     {{-- Section info toggle --}}
                     <button wire:click="toggleSectionInfo"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
+                           class="inline-flexed items-center hidden gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all"
                            style="border-radius: 2px;">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -329,13 +382,15 @@ $wire.on('examAutoSubmitted', (payload) => {
                         </div>
                     </div>
                     {{-- TIMER (Mobile) --}}
-                    <x-examination-hub.timer :timeRemaining="$timeRemaining ?? 0" :isMobile="true" />
+                    @if($start_time)
+                        <x-examination-hub.timer :timeRemaining="$timeRemaining ?? null" :extraTimeMinutes="$extraTimeMinutes ?? 0" :isMobile="true" />
+                    @endif
                 </div>
 
                 {{-- Row 2: Actions --}}
                 <div class="flex items-center justify-end gap-2">
                     <button wire:click="toggleSectionInfo"
-                           class="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
+                           class="inline-flexed hidden items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
                            style="border-radius: 2px;">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -404,7 +459,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                         <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 font-serif"
                              :style="`font-size: ${fontSize}px; line-height: 1.75;`"
                             wire:key="question-text-{{ $question->id }}">
-                            <x-form.markdown-with-math :content="$question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none"/>
+                            <x-form.markdown-with-math :content="$question->question->down ?? $question->question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none"/>
                         </div>
 
                         {{-- ── MULTIPLE CHOICE ── --}}
@@ -430,7 +485,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                                                 {{ $key }}
                                             </span>
                                             <div class="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
-                                                <x-form.markdown-with-math :content="$optionText" class="text-slate-800 dark:text-slate-200"/>
+                                                <x-form.markdown-with-math :content="$optionText['down'] ?? $optionText" class="text-slate-800 dark:text-slate-200"/>
                                             </div>
                                         </div>
                                     </label>
@@ -526,8 +581,18 @@ $wire.on('examAutoSubmitted', (payload) => {
         </div>{{-- /overflow-y-auto --}}
 
         {{-- ── BOTTOM NAVIGATION BAR ── --}}
-        <div class="flex-shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
-            style="box-shadow: 0 -2px 12px rgba(0,0,0,0.06);">
+        <div x-data="{
+                showSubmitModal: false,
+                answeredCount: 0,
+                totalCount: {{ $this->questions->count() }},
+                openModal() {
+                    this.answeredCount = Object.keys(window.currentResponses || {}).length;
+                    this.showSubmitModal = true;
+                }
+             }"
+             class="flex-shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
+             style="box-shadow: 0 -2px 12px rgba(0,0,0,0.06);">
+
             <div class="max-w-3xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3">
 
                 {{-- Previous --}}
@@ -554,15 +619,20 @@ $wire.on('examAutoSubmitted', (payload) => {
                             </svg>
                         </a>
                     @else
-                        <form id="exam-submit-form" method="POST" action="{{ route('examination-hub.take.submit', $this->exam) }}">
+                        {{-- Submit button — opens confirmation modal --}}
+                        <form id="exam-submit-form" method="POST"
+                              action="{{ route('examination-hub.take.submit', $this->exam) }}"
+                              style="display: contents;">
                             @csrf
-                            <button type="submit"
+                            <button type="button"
+                                   @click="openModal()"
                                    class="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white transition-all"
                                    style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 12px rgba(5,150,105,0.35);">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span class="hidden sm:inline">Submit Examination</span> <span class="sm:hidden">Submit</span>
+                                <span class="hidden sm:inline">Submit Examination</span>
+                                <span class="sm:hidden">Submit</span>
                             </button>
                         </form>
                     @endif
@@ -581,7 +651,149 @@ $wire.on('examAutoSubmitted', (payload) => {
                 </button>
 
             </div>
-        </div>
+
+            {{-- ══════════════════════════════════════════════════════════
+                 SUBMISSION CONFIRMATION MODAL
+            ══════════════════════════════════════════════════════════ --}}
+            <div x-show="showSubmitModal"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+                 style="background: rgba(0,0,0,0.7); backdrop-filter: blur(2px);"
+                 @keydown.escape.window="showSubmitModal = false"
+                 x-cloak>
+
+                <div x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     class="w-full max-w-md overflow-hidden bg-white dark:bg-slate-900"
+                     style="border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 24px 64px rgba(0,0,0,0.3);"
+                     @click.stop>
+
+                    {{-- Accent bar --}}
+                    <div class="h-1" style="background: linear-gradient(90deg, #065f46, #059669, #34d399);"></div>
+
+                    {{-- Header --}}
+                    <div class="px-7 pt-6 pb-5 border-b border-slate-100 dark:border-slate-800"
+                         style="font-family: 'system-ui', sans-serif;">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center"
+                                 style="border-radius: 2px; background: rgba(5,150,105,0.1);">
+                                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white" style="letter-spacing: -0.01em;">
+                                    Submit Examination?
+                                </h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                                    This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Progress summary --}}
+                    <div class="px-7 py-5 space-y-4" style="font-family: 'system-ui', sans-serif;">
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="text-center px-3 py-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+                                 style="border-radius: 2px;">
+                                <p class="text-xs text-emerald-700 dark:text-emerald-500 uppercase tracking-wider mb-1" style="font-size: 9px; letter-spacing: 0.1em;">Answered</p>
+                                <p class="text-xl font-bold text-emerald-800 dark:text-emerald-400" x-text="answeredCount"></p>
+                            </div>
+                            <div class="text-center px-3 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700"
+                                 style="border-radius: 2px;">
+                                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 9px; letter-spacing: 0.1em;">Unanswered</p>
+                                <p class="text-xl font-bold text-slate-800 dark:text-slate-200" x-text="totalCount - answeredCount"></p>
+                            </div>
+                            <div class="text-center px-3 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700"
+                                 style="border-radius: 2px;">
+                                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" style="font-size: 9px; letter-spacing: 0.1em;">Total</p>
+                                <p class="text-xl font-bold text-slate-800 dark:text-slate-200" x-text="totalCount"></p>
+                            </div>
+                        </div>
+
+                        {{-- Progress bar --}}
+                        <div>
+                            <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden" style="border-radius: 2px;">
+                                <div class="h-full bg-emerald-500 transition-all duration-300"
+                                     :style="`width: ${totalCount > 0 ? Math.round((answeredCount / totalCount) * 100) : 0}%`"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 text-right"
+                               x-text="`${totalCount > 0 ? Math.round((answeredCount / totalCount) * 100) : 0}% complete`"></p>
+                        </div>
+
+                        {{-- Warning: none answered --}}
+                        <div x-show="answeredCount === 0"
+                             class="flex items-start gap-2.5 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
+                             style="border-radius: 2px;">
+                            <svg class="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-sm text-red-800 dark:text-red-300">
+                                <strong>Warning:</strong> You have not answered any questions. Submitting now will result in a score of zero.
+                            </p>
+                        </div>
+
+                        {{-- Warning: some unanswered --}}
+                        <div x-show="answeredCount > 0 && answeredCount < totalCount"
+                             class="flex items-start gap-2.5 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"
+                             style="border-radius: 2px;">
+                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-sm text-amber-800 dark:text-amber-300">
+                                You still have <strong x-text="totalCount - answeredCount"></strong> unanswered
+                                <span x-text="(totalCount - answeredCount) === 1 ? 'question' : 'questions'"></span>.
+                                Unanswered questions will receive no marks.
+                            </p>
+                        </div>
+
+                        {{-- All answered --}}
+                        <div x-show="answeredCount === totalCount && totalCount > 0"
+                             class="flex items-start gap-2.5 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+                             style="border-radius: 2px;">
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <p class="text-sm text-emerald-800 dark:text-emerald-300">
+                                All questions answered. You're ready to submit.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="px-7 py-5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3"
+                         style="font-family: 'system-ui', sans-serif; background: var(--tw-bg-opacity, rgba(248,250,252,0.5));">
+
+                        <button @click="showSubmitModal = false"
+                                class="flex-1 px-4 py-2.5 text-sm font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Go Back
+                        </button>
+
+                        <button @click="window.hasUnsavedChanges = false; document.getElementById('exam-submit-form').submit()"
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white transition-all"
+                                style="border-radius: 2px; background: linear-gradient(135deg, #065f46, #059669); box-shadow: 0 2px 10px rgba(5,150,105,0.3);">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Confirm &amp; Submit
+                        </button>
+
+                    </div>
+
+                </div>{{-- /modal card --}}
+            </div>{{-- /modal backdrop --}}
+
+        </div>{{-- /bottom nav --}}
 
     </div>{{-- /flex flex-col h-screen --}}
     @endif
