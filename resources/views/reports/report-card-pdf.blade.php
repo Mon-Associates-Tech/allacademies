@@ -4,15 +4,8 @@
     <meta charset="utf-8">
     <title>Report Card - {{ $reportCard->student->user->name }}</title>
     <style>
-        /* Strip PDF engine margins — we control spacing via padding */
         @page {
             margin: 0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
         }
 
         html, body {
@@ -28,22 +21,25 @@
         .accent-bar { width: 100%; height: 6px; background: #0c1f3f; }
         .gold-bar { width: 100%; height: 3px; background: #c9a22a; margin-bottom: 14px; }
 
-        /* Top content flows normally.
-           The large BOTTOM padding reserves space so grades never
-           collide with the fixed bottom block. */
+        /* Horizontal inset via MARGIN (Dompdf-safe). Vertical-only padding. */
         .page-wrapper {
-            width: 100%;
-            padding: 10mm 15mm 80mm 15mm;
+            margin: 0 15mm;
+            padding: 10mm 0 75mm 0; /* bottom reserves space for the fixed block */
         }
 
-        /* Attendance → Signatures → Footer, glued to the physical page bottom */
+        /* Full-width fixed shell: NO horizontal padding here */
         .bottom-fixed {
             position: fixed;
             left: 0;
             bottom: 0;
             width: 100%;
-            padding: 0 15mm 8mm 15mm;
+            padding: 0 0 8mm 0;
             background: #ffffff;
+        }
+
+        /* Horizontal inset for the fixed block via an inner margin wrapper */
+        .bottom-inner {
+            margin: 0 15mm;
         }
 
         .header-table { width: 100%; margin-bottom: 12px; }
@@ -150,7 +146,6 @@
 <div class="accent-bar"></div>
 <div class="gold-bar"></div>
 
-{{-- NORMAL FLOW: header, student info, grades --}}
 <div class="page-wrapper">
 
     {{-- HEADER --}}
@@ -257,81 +252,84 @@
     @endif
 </div>
 
-{{-- FIXED BOTTOM BLOCK: attendance → signatures → footer, always at page bottom --}}
+{{-- FIXED BOTTOM BLOCK --}}
 <div class="bottom-fixed">
+    <div class="bottom-inner">
 
-    {{-- ATTENDANCE + REMARKS --}}
-    <table class="bottom-section-table" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="bottom-left">
-                @if($sections['attendance']['enabled'] ?? true)
-                    <div class="section-label" style="margin-bottom:4px;">{{ $sections['attendance']['label'] ?? 'Attendance' }}</div>
-                    <div class="attendance-box">
-                        <div class="attendance-header">ATTENDANCE</div>
-                        <div class="attendance-body">
-                            @if($reportCard->attendance_total_days)
-                                <div class="attendance-row"><span class="label">Total School Days</span><span class="value">{{ $reportCard->attendance_total_days }}</span></div>
-                                <div class="attendance-row"><span class="label">Days Present</span><span class="value">{{ $reportCard->attendance_days_present }}</span></div>
-                                <div class="attendance-row"><span class="label">Days Absent</span><span class="value">{{ $reportCard->attendanceDaysAbsent() }}</span></div>
-                                <div class="attendance-row"><span class="label">Attendance Rate</span><span class="value">{{ $reportCard->attendancePercentage() }}%</span></div>
-                            @else
-                                <span style="color:#bbb; font-size:8.5px;">Not recorded</span>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-            </td>
-            <td class="bottom-right">
-                @if($sections['remarks']['enabled'] ?? true)
-                    <div class="section-label" style="margin-bottom:4px;">{{ $sections['remarks']['label'] ?? "Class Teacher's Remarks" }}</div>
-                    <div class="remarks-box">
-                        <div class="remarks-header">REMARKS</div>
-                        <div class="remarks-body">{{ $reportCard->teacher_remarks }}</div>
-                    </div>
-                @endif
-            </td>
-        </tr>
-    </table>
-
-    {{-- SIGNATURES --}}
-    @php $slots = $sections['signatures']['slots'] ?? []; @endphp
-    @if(!empty($slots))
-        <table class="signatures-table" cellpadding="0" cellspacing="0">
+        {{-- ATTENDANCE + REMARKS --}}
+        <table class="bottom-section-table" cellpadding="0" cellspacing="0">
             <tr>
-                @foreach($slots as $slot)
-                    @php
-                        $sigPath = match($slot['key']) {
-                            'class_teacher' => $configuration?->class_teacher_signature_path,
-                            'principal' => $configuration?->principal_signature_path,
-                            default => null,
-                        };
-                        $sigName = match($slot['key']) {
-                            'class_teacher' => $configuration?->class_teacher_name,
-                            'principal' => $configuration?->principal_name,
-                            default => null,
-                        };
-                    @endphp
-                    <td style="width: {{ round(100 / count($slots)) }}%;">
-                        <div class="sig-image-wrap">
-                            @if($sigPath)
-                                <img src="{{ public_path('storage/' . $sigPath) }}" alt="{{ $slot['label'] }} Signature">
-                            @endif
+                <td class="bottom-left">
+                    @if($sections['attendance']['enabled'] ?? true)
+                        <div class="section-label" style="margin-bottom:4px;">{{ $sections['attendance']['label'] ?? 'Attendance' }}</div>
+                        <div class="attendance-box">
+                            <div class="attendance-header">ATTENDANCE</div>
+                            <div class="attendance-body">
+                                @if($reportCard->attendance_total_days)
+                                    <div class="attendance-row"><span class="label">Total School Days</span><span class="value">{{ $reportCard->attendance_total_days }}</span></div>
+                                    <div class="attendance-row"><span class="label">Days Present</span><span class="value">{{ $reportCard->attendance_days_present }}</span></div>
+                                    <div class="attendance-row"><span class="label">Days Absent</span><span class="value">{{ $reportCard->attendanceDaysAbsent() }}</span></div>
+                                    <div class="attendance-row"><span class="label">Attendance Rate</span><span class="value">{{ $reportCard->attendancePercentage() }}%</span></div>
+                                @else
+                                    <span style="color:#bbb; font-size:8.5px;">Not recorded</span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="sig-line">{{ $sigName ?: $slot['label'] }}</div>
-                        <div class="sig-role">{{ $slot['label'] }}</div>
-                    </td>
-                @endforeach
+                    @endif
+                </td>
+                <td class="bottom-right">
+                    @if($sections['remarks']['enabled'] ?? true)
+                        <div class="section-label" style="margin-bottom:4px;">{{ $sections['remarks']['label'] ?? "Class Teacher's Remarks" }}</div>
+                        <div class="remarks-box">
+                            <div class="remarks-header">REMARKS</div>
+                            <div class="remarks-body">{{ $reportCard->teacher_remarks }}</div>
+                        </div>
+                    @endif
+                </td>
             </tr>
         </table>
-    @endif
 
-    {{-- FOOTER --}}
-    @if($sections['footer']['enabled'] ?? true)
-        <div class="page-footer">
-            {{ $sections['footer']['text'] ?? ('This is an official document of ' . $school->name . '. Any alteration renders it invalid.') }}
-            &nbsp;&nbsp;|&nbsp;&nbsp; Generated: {{ $reportCard->generated_at->format('d M Y, H:i') }}
-        </div>
-    @endif
+        {{-- SIGNATURES --}}
+        @php $slots = $sections['signatures']['slots'] ?? []; @endphp
+        @if(!empty($slots))
+            <table class="signatures-table" cellpadding="0" cellspacing="0">
+                <tr>
+                    @foreach($slots as $slot)
+                        @php
+                            $sigPath = match($slot['key']) {
+                                'class_teacher' => $configuration?->class_teacher_signature_path,
+                                'principal' => $configuration?->principal_signature_path,
+                                default => null,
+                            };
+                            $sigName = match($slot['key']) {
+                                'class_teacher' => $configuration?->class_teacher_name,
+                                'principal' => $configuration?->principal_name,
+                                default => null,
+                            };
+                        @endphp
+                        <td style="width: {{ round(100 / count($slots)) }}%;">
+                            <div class="sig-image-wrap">
+                                @if($sigPath)
+                                    <img src="{{ public_path('storage/' . $sigPath) }}" alt="{{ $slot['label'] }} Signature">
+                                @endif
+                            </div>
+                            <div class="sig-line">{{ $sigName ?: $slot['label'] }}</div>
+                            <div class="sig-role">{{ $slot['label'] }}</div>
+                        </td>
+                    @endforeach
+                </tr>
+            </table>
+        @endif
+
+        {{-- FOOTER --}}
+        @if($sections['footer']['enabled'] ?? true)
+            <div class="page-footer">
+                {{ $sections['footer']['text'] ?? ('This is an official document of ' . $school->name . '. Any alteration renders it invalid.') }}
+                &nbsp;&nbsp;|&nbsp;&nbsp; Generated: {{ $reportCard->generated_at->format('d M Y, H:i') }}
+            </div>
+        @endif
+
+    </div>
 </div>
 </body>
 </html>
