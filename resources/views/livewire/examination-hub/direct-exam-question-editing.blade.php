@@ -315,7 +315,7 @@
                                                 Modified
                                             </span>
                                         </template>
-                                        
+
                                         {{-- Edited badge --}}
                                         <template x-if="q.is_edited">
                                             <span class="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded px-2 py-0.5 text-xs font-medium">
@@ -342,7 +342,7 @@
                                     <div class="space-y-2">
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Question</label>
                                         <textarea
-                                            x-model="edits[q.id].question.down"
+                                            x-model="edits[q.id].question"
                                             rows="3"
                                             class="w-full text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2
                                                    text-gray-800 dark:text-gray-200 placeholder-gray-400
@@ -355,7 +355,7 @@
                                     <template x-if="q.type === 'multiple_choice' || q.type === 'true_false'">
                                         <div class="space-y-2">
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Options</label>
-                                            
+
                                             <div class="grid grid-cols-1 gap-2">
                                                 <template x-for="letter in optionLetters(q.option_count)" :key="letter">
                                                     <div class="flex items-center gap-2">
@@ -439,7 +439,7 @@
                                             </div>
                                         </template>
                                     </div>
-                                    
+
                                     {{-- Marks info --}}
                                     <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                                         <span>Marks:</span>
