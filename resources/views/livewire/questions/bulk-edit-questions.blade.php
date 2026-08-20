@@ -41,7 +41,7 @@
                 <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 0 5 11a6 6 0 0 0 12 0z"/>
                 </svg>
-                <input type="text" wire:model.live.debounce.500ms="search" placeholder="Search questions…"
+                <input type="text" wire:model.blur="search" placeholder="Search questions…"
                        class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-9 pr-10 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
             </div>
 
@@ -113,7 +113,7 @@
                                                 {{ strtoupper($opt) }}
                                             </span>
 
-                                            <input type="text" wire:model.live.debounce.500ms="states.{{ $q->id }}.option_{{ $opt }}" placeholder="Option {{ strtoupper($opt) }}"
+                                            <input type="text" wire:model.blut="states.{{ $q->id }}.option_{{ $opt }}" placeholder="Option {{ strtoupper($opt) }}"
                                                    class="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 border-0 focus:ring-0 p-0">
                                         </div>
                                     @endforeach
@@ -134,13 +134,14 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Score</label>
-                                            <input type="number" wire:model.live.debounce.500ms="states.{{ $q->id }}.score" min="0.5" step="0.5"
+                                            <input type="number" wire:model.blur="states.{{ $q->id }}.score" min="0.5" step="0.5"
                                                    class="w-20 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 py-1.5 text-center focus:ring-indigo-500 focus:border-indigo-500">
                                         </div>
                                     </div>
 
-                                    <button type="button" wire:click="saveSingle({{ $q->id }})" wire:loading.attr="disabled" wire:target="saveSingle({{ $q->id }})"
-                                            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50">
+                                    <button type="button" wire:click="saveSingle({{ $q->id }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="saveSingle({{ $q->id }}), states.{{ $q->id }}.question, states.{{ $q->id }}.option_a, states.{{ $q->id }}.option_b, states.{{ $q->id }}.option_c, states.{{ $q->id }}.option_d, states.{{ $q->id }}.option_e, states.{{ $q->id }}.score">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                                         <span wire:loading.remove wire:target="saveSingle({{ $q->id }})">Save Question</span>
                                         <span wire:loading wire:target="saveSingle({{ $q->id }})">Saving...</span>

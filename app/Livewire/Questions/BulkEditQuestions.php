@@ -111,19 +111,18 @@ class BulkEditQuestions extends Component
         session()->put($this->getDraftKey(), $this->states);
     }
 
-        public function saveSingle($questionId)
+    public function saveSingle($questionId)
     {
         $saved = $this->saveToDb($questionId);
 
-        // Clear from session draft since it's now synced with DB
-        $draft = session()->get($this->getDraftKey(), []);
-        unset($draft[$questionId]);
-        session()->put($this->getDraftKey(), $draft);
-
         if ($saved) {
+            $draft = session()->get($this->getDraftKey(), []);
+            unset($draft[$questionId]);
+            session()->put($this->getDraftKey(), $draft);
+
             $this->dispatch('show-toast', message: 'Question saved successfully', type: 'success');
         } else {
-            $this->dispatch('show-toast', message: 'No changes to save', type: 'success');
+            $this->dispatch('show-toast', message: 'No changes to save', type: 'info');
         }
     }
 
