@@ -81,11 +81,10 @@
                             // 🌟 NEW: flush the pending Livewire sync immediately on blur,
     // so clicking Save right after typing never races the debounce.
     editor.on('blur', () => {
-        this.down = editor.getContent({format: 'markdown'});
-        if (this.livewireModel) {
-            clearTimeout(window['lw_sync_' + this.editorId]);
-           // @this.set(this.livewireModel, this.down);
-        }
+if (this.livewireModel && window.Livewire) {
+    clearTimeout(window['lw_sync_' + this.editorId]);
+    $wire.set(this.livewireModel, this.down);
+}
     });
                     },
                     formats: {
@@ -168,13 +167,13 @@
 
             {{-- 🌟 FIX: Only compile Livewire sync logic if we are inside a Livewire component --}}
 
-            // LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
-            if (livewireModel) {
-                clearTimeout(window['lw_sync_' + editorId]);
-                window['lw_sync_' + editorId] = setTimeout(() => {
-                    @this.set(livewireModel, newValue);
-                }, 500);
-            }
+        // LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
+if (livewireModel && window.Livewire) {
+    clearTimeout(window['lw_sync_' + editorId]);
+    window['lw_sync_' + editorId] = setTimeout(() => {
+        $wire.set(livewireModel, newValue);
+    }, 500);
+}
 
         });
      "
