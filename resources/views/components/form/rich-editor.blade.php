@@ -179,7 +179,7 @@
         });
      "
      x-effect="updatePreview()"
-     @if($livewire) wire:ignore @endif
+     wire:ignore
      :data-editor-id="editorId">
 
     <label class="block text-sm tracking-tighter font-medium text-gray-700 dark:text-gray-300">
@@ -210,7 +210,7 @@
         </div>
 
         <div x-show="!preview" class="bg-white dark:bg-gray-800">
-            <textarea x-bind:id="editorId" @if($livewire) wire:key="{{ $editorId }}" @endif name="{{ $name }}[down]" x-model="down"
+            <textarea x-bind:id="editorId"  wire:key="{{ $editorId }}" name="{{ $name }}[down]" x-model="down"
                 class="w-full border-0 focus:ring-0 dark:bg-gray-800 dark:text-white"
                 style="min-height: {{ $height }}px; resize: vertical;"></textarea>
         </div>
