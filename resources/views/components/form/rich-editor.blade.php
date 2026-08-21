@@ -84,7 +84,7 @@
         this.down = editor.getContent({format: 'markdown'});
         if (this.livewireModel) {
             clearTimeout(window['lw_sync_' + this.editorId]);
-            @this.set(this.livewireModel, this.down);
+           // @this.set(this.livewireModel, this.down);
         }
     });
                     },
