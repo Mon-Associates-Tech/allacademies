@@ -116,12 +116,12 @@ class DirectExamQuestionEditing extends Component
             ->map(function (GeneralExamQuestion $q) {
                 $options = [];
                 $count = 0;
-                
+
                 if ($q->isMultipleChoice() || $q->isTrueFalse()) {
                     // Format options for display
                     $optionsArray = $q->getOptionsForDisplay();
                     $count = count($optionsArray);
-                    
+
                     // Ensure we have all option columns filled
                     foreach (['a', 'b', 'c', 'd', 'e'] as $letter) {
                         $optionKey = "option_{$letter}";
@@ -137,7 +137,7 @@ class DirectExamQuestionEditing extends Component
 
                 return array_merge([
                     'id'           => $q->id,
-                    'question'     => $q->question ?? '',
+                    'question'     => $q->question->down ?? '',
                     'type'         => $q->type,
                     'answer'       => strtoupper($q->correct_answer ?? ''),
                     'marks'        => $q->marks,

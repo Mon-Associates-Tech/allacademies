@@ -19,39 +19,47 @@ class BookSubscriptionController extends Controller
      */
     public function create(Book $book)
     {
-        $this->checkSubscription($book);
-        $subscription = $book->subscriptions()->where('user_id', auth()->user()->id)->where('book_id', $book->id)->first();
+        $redirectResponse = $this->checkSubscription($book);
+        if ($redirectResponse) {
+            return $redirectResponse;
+        }
+
+        $subscription = $book->subscriptions()->where('user_id', auth()->id())->first();
 
         return view('books.BookSubscriptionForm', [
             'book' => $book,
             'subscription' => $subscription,
-            'student' => auth()->user()->student,
+            'student' => auth()->user()->student ?? null, // Safely handle if student relationship is missing
         ]);
     }
 
+    /**
+     * Check if user already has a subscription. Returns Redirect if true, null otherwise.
+     */
     public function checkSubscription(Book $book)
     {
-        $existingSubscription = BookSubscription::where('user_id', auth()->user()->id)
+        $existingSubscription = BookSubscription::where('user_id', auth()->id())
             ->where('book_id', $book->id)
             ->where(function ($query) {
                 $query->where('status', SubscriptionStatus::PAID)
                     ->orWhere('status', SubscriptionStatus::UNPAID)
-                    ->orWhere('status', SubscriptionStatus::PART_PAID);
+                    ->orWhere('status', SubscriptionStatus::PART_PAID)
+                    ->orWhere('status', 'pending_payment');
             })
             ->first();
 
         if ($existingSubscription) {
-            if ($existingSubscription->status === SubscriptionStatus::PAID) {
+            if ($existingSubscription->status === SubscriptionStatus::PAID || $existingSubscription->status === 'paid') {
                 return redirect()->route('books.show', $book)
                     ->with('info', 'You already have an active subscription to this book.');
             } else {
-                return redirect()->route('books.show', $book)
+                // Redirect to the correct existing payment route
+                return redirect()->route('subscriptions.payment.show', $existingSubscription->id)
                     ->with('info', 'You have a pending subscription for this book. Please complete the payment.');
-
-                //                return redirect()->route('subscriptions.payment.show', $existingSubscription)
-                //                    ->with('info', 'You have a pending subscription for this book. Please complete the payment.');
             }
         }
+
+        return null;
     }
 
     /**
@@ -59,12 +67,15 @@ class BookSubscriptionController extends Controller
      */
     public function store(Request $request, Book $book)
     {
-        // Prevent duplicate subscription for this book
-        $this->checkSubscription($book);
+        // 1. Prevent duplicate subscription by checking the returned redirect
+        $redirectResponse = $this->checkSubscription($book);
+        if ($redirectResponse) {
+            return $redirectResponse;
+        }
 
         try {
             return DB::transaction(function () use ($book) {
-                $reference = 'SUB-'.uniqid();
+                $reference = 'SUB-' . uniqid();
 
                 // Create or fetch existing subscription
                 $subscription = BookSubscription::firstOrCreate(
@@ -73,7 +84,7 @@ class BookSubscriptionController extends Controller
                         'book_id' => $book->id,
                     ],
                     [
-                        'reference' => $book->is_free ? 'FREE_'.uniqid() : $reference,
+                        'reference' => $book->is_free ? 'FREE_' . uniqid() : $reference,
                         'annual_fee' => $book->is_free ? 0 : $book->annual_subscription_fee,
                         'status' => $book->is_free ? 'paid' : 'pending_payment',
                         'start_date' => now(),
@@ -84,46 +95,44 @@ class BookSubscriptionController extends Controller
 
                 if ($book->is_free) {
                     // Mark subscription as completed
-                    $this->payForBookSubscription([
-                        'book' => $book,
-                        'subscription' => $subscription,
-                        'reference' => $subscription->reference,
-                        'amount' => 0.00,
-                    ], $subscription);
+                    if (method_exists($this, 'payForBookSubscription')) {
+                        $this->payForBookSubscription([
+                            'book' => $book,
+                            'subscription' => $subscription,
+                            'reference' => $subscription->reference,
+                            'amount' => 0.00,
+                        ], $subscription);
+                    }
 
-                    $redirectRoute = route('books.show', $book);
+                    // Log the subscription creation (wrapped in function_exists to prevent 500 if Spatie package is missing)
+                    if (function_exists('activity')) {
+                        activity()
+                            ->performedOn($book)
+                            ->causedBy(auth()->user())
+                            ->withProperties([
+                                'action' => 'book_subscription_created',
+                                'book_id' => $book->id,
+                                'subscription_id' => $subscription->id,
+                                'amount' => $subscription->annual_fee,
+                                'reference' => $subscription->reference,
+                            ])
+                            ->log('Student initiated book subscription');
+                    }
+
+                    return redirect()->route('books.show', $book)
+                        ->with('success', 'Subscription created successfully!');
                 } else {
-
-                    // Redirect to Paystack initialize with type=book
-                    // return redirect()->route('payment.initialize', [
-                    //     'id' => $subscription->id,
-                    //     'type' => 'book',
-                    // ]);
-
-                    return redirect()->route('payment.book.initialize', ['subscription' => $subscription->id]);
+                    // 2. FIXED: Redirect to the ACTUAL route defined in your routes file
+                    return redirect()->route('subscriptions.payment.show', $subscription->id)
+                        ->with('info', 'Please complete the payment to access this book.');
                 }
-
-                // Log the subscription creation
-                activity()
-                    ->performedOn($book)
-                    ->causedBy(auth()->user())
-                    ->withProperties([
-                        'action' => 'book_subscription_created',
-                        'book_id' => $book->id,
-                        'subscription_id' => $subscription->id,
-                        'amount' => $subscription->annual_fee,
-                        'reference' => $subscription->reference,
-                    ])
-                    ->log('Student initiated book subscription');
-
-                return redirect($redirectRoute)
-                    ->with('success', 'Subscription created successfully!');
             });
         } catch (\Exception $e) {
             Log::error('Failed to create book subscription', [
                 'error' => $e->getMessage(),
                 'book_id' => $book->id,
                 'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString(), // Added trace for easier debugging
             ]);
 
             return back()->with('error', 'Failed to create subscription. Please try again.');
@@ -135,19 +144,18 @@ class BookSubscriptionController extends Controller
      */
     public function showPayment(BookSubscription $subscription)
     {
-        // Authorize access - only the student who created the subscription can view it
-        if (auth()->user()->student->id !== $subscription->student_id) {
+        // 3. FIXED: Use user_id consistently to prevent "Attempt to read property 'id' on null"
+        if (auth()->id() !== $subscription->user_id) {
             abort(403, 'Unauthorized access to this subscription.');
         }
 
-        // Verify subscription is pending payment
         if ($subscription->status !== 'pending_payment') {
             return redirect()->route('books.show', $subscription->book)
                 ->with('info', 'This subscription is not awaiting payment.');
         }
 
         return view('subscriptions.payment', [
-            'subscription' => $subscription->load('book', 'student'),
+            'subscription' => $subscription->load('book', 'user'), // Changed 'student' to 'user' for consistency
         ]);
     }
 
@@ -156,38 +164,34 @@ class BookSubscriptionController extends Controller
      */
     public function verifyPayment(Request $request, BookSubscription $subscription)
     {
-        // Authorize access
-        if (auth()->user()->student->id !== $subscription->student_id) {
+        // 3. FIXED: Use user_id consistently
+        if (auth()->id() !== $subscription->user_id) {
             abort(403, 'Unauthorized access to this subscription.');
         }
 
-        // Verify subscription status
         if ($subscription->status !== 'pending_payment') {
             return redirect()->route('books.show', $subscription->book)
                 ->with('info', 'This subscription is not awaiting payment verification.');
         }
 
         try {
-            // For now, we'll assume payment is verified manually
-            // In the future, you can integrate with actual payment gateway
-
             DB::transaction(function () use ($subscription) {
-                // Update subscription status
                 $subscription->update([
-                    'status' => 'active',
+                    'status' => 'active', // Ensure this matches your SubscriptionStatus enum if applicable
                     'payment_completed_at' => now(),
                 ]);
 
-                // Log the payment verification
-                activity()
-                    ->performedOn($subscription)
-                    ->causedBy(auth()->user())
-                    ->withProperties([
-                        'action' => 'payment_verified',
-                        'subscription_id' => $subscription->id,
-                        'amount' => $subscription->annual_fee,
-                    ])
-                    ->log('Payment verified for book subscription');
+                if (function_exists('activity')) {
+                    activity()
+                        ->performedOn($subscription)
+                        ->causedBy(auth()->user())
+                        ->withProperties([
+                            'action' => 'payment_verified',
+                            'subscription_id' => $subscription->id,
+                            'amount' => $subscription->annual_fee,
+                        ])
+                        ->log('Payment verified for book subscription');
+                }
             });
 
             return redirect()->route('books.read', $subscription->book)
@@ -207,31 +211,26 @@ class BookSubscriptionController extends Controller
      */
     public function cancel(BookSubscription $subscription)
     {
-        // Authorize access - only the student who created the subscription can cancel it
-        if (auth()->user()->id !== $subscription->user_id) {
+        // 3. FIXED: Use user_id consistently
+        if (auth()->id() !== $subscription->user_id) {
             abort(403, 'Unauthorized access to this subscription.');
-        }
-
-        // Verify subscription can be cancelled
-        if ($subscription->status !== 'pending_payment') {
-            //  return back()->with('error', 'Only pending subscriptions can be cancelled.');
         }
 
         try {
             DB::transaction(function () use ($subscription) {
-                // Log the cancellation before deleting
-                activity()
-                    ->performedOn($subscription)
-                    ->causedBy(auth()->user())
-                    ->withProperties([
-                        'action' => 'subscription_cancelled',
-                        'subscription_id' => $subscription->id,
-                        'book_id' => $subscription->book_id,
-                        'reference' => $subscription->reference,
-                    ])
-                    ->log('Book subscription cancelled and removed');
+                if (function_exists('activity')) {
+                    activity()
+                        ->performedOn($subscription)
+                        ->causedBy(auth()->user())
+                        ->withProperties([
+                            'action' => 'subscription_cancelled',
+                            'subscription_id' => $subscription->id,
+                            'book_id' => $subscription->book_id,
+                            'reference' => $subscription->reference,
+                        ])
+                        ->log('Book subscription cancelled and removed');
+                }
 
-                // Delete the subscription from database
                 $subscription->delete();
             });
 
@@ -245,18 +244,5 @@ class BookSubscriptionController extends Controller
 
             return back()->with('error', 'Failed to cancel subscription. Please try again.');
         }
-    }
-
-    /**
-     * Go back to the book show page from payment instructions.
-     */
-    public function goBack(BookSubscription $subscription)
-    {
-        // Authorize access
-        if (auth()->user()->id !== $subscription->user_id) {
-            abort(403, 'Unauthorized access to this subscription.');
-        }
-
-        return redirect()->route('books.show', $subscription->book);
     }
 }

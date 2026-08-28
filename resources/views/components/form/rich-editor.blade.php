@@ -8,7 +8,7 @@
 
 @php
     $mark = old($name, $value);
-    $editorId = 'rich-editor-' . str_replace(['[', ']', '.'], ['_', '_', '_'], $name) . '_' . uniqid();
+    $editorId = 'rich-editor-' . str_replace(['[', ']', '.'], ['_', '_', '_'], $name);
 
     if (is_array($mark)) {
         $mark = \App\Support\Mark::fromArray($mark);
@@ -77,6 +77,15 @@
                                 this.updatePreview();
                             }, 100);
                         });
+
+                            // 🌟 NEW: flush the pending Livewire sync immediately on blur,
+    // so clicking Save right after typing never races the debounce.
+    editor.on('blur', () => {
+if (this.livewireModel && window.Livewire) {
+    clearTimeout(window['lw_sync_' + this.editorId]);
+    $wire.set(this.livewireModel, this.down);
+}
+    });
                     },
                     formats: {
                         bold: {inline: 'strong'},
@@ -155,28 +164,28 @@
                 editor.setContent(newValue || '');
             }
             updatePreview();
-            
+
             {{-- 🌟 FIX: Only compile Livewire sync logic if we are inside a Livewire component --}}
-            @isset($_instance)
-            // LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
-            if (livewireModel) {
-                clearTimeout(window['lw_sync_' + editorId]);
-                window['lw_sync_' + editorId] = setTimeout(() => {
-                    @this.set(livewireModel, newValue);
-                }, 500);
-            }
-            @endisset
+
+        // LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
+if (livewireModel && window.Livewire) {
+    clearTimeout(window['lw_sync_' + editorId]);
+    window['lw_sync_' + editorId] = setTimeout(() => {
+        $wire.set(livewireModel, newValue);
+    }, 500);
+}
+
         });
      "
      x-effect="updatePreview()"
-     @if(isset($_instance)) wire:ignore @endif
+     wire:ignore
      :data-editor-id="editorId">
 
     <label class="block text-sm tracking-tighter font-medium text-gray-700 dark:text-gray-300">
         {{ $label ?? ucfirst($name) }}
         @if(!empty($required)) <span class="text-red-500">*</span> @endif
     </label>
-    
+
     @if(!empty($info))
         <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{ $info }}</p>
     @endif
@@ -200,7 +209,7 @@
         </div>
 
         <div x-show="!preview" class="bg-white dark:bg-gray-800">
-            <textarea x-bind:id="editorId" @if(isset($_instance)) wire:key="{{ $editorId }}" @endif name="{{ $name }}[down]" x-model="down"
+            <textarea x-bind:id="editorId"  wire:key="{{ $editorId }}" name="{{ $name }}[down]" x-model="down"
                 class="w-full border-0 focus:ring-0 dark:bg-gray-800 dark:text-white"
                 style="min-height: {{ $height }}px; resize: vertical;"></textarea>
         </div>

@@ -1,4 +1,4 @@
-<div wire:poll.30s="refreshBadges">
+<div>
     <ul class="mt-3">
         <!-- Main -->
         <li class="mb-0.5 last:mb-0" title="Dashboard">
