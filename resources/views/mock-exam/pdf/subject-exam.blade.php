@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $subjectExam->getDisplayTitle() }} - {{ $subjectExam->mockExam->title }}</title>
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+    <link rel="stylesheet" href="{{ public_path('vendor/katex/katex.min.css') }}">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -212,6 +212,8 @@
         .page-break {
             page-break-before: always;
         }
+
+        .prose-inline .katex-display { display: inline-block; margin: 0; }
     </style>
 </head>
 <body>
@@ -231,26 +233,26 @@
                 <span class="ig-val">{{ $subjectExam->academicGroup->name }}</span>
             </div>
             @endif
-            
+
             @if($subjectExam->academicLevel)
             <div class="info-item">
                 <span class="ig-lbl">Level</span>
                 <span class="ig-val">{{ $subjectExam->academicLevel->name }}</span>
             </div>
             @endif
-            
+
             <div class="info-item">
                 <span class="ig-lbl">Subject</span>
                 <span class="ig-val">{{ $subjectExam->academicSubject?->name }}</span>
             </div>
-            
+
             @if($subjectExam->duration_in_minutes)
             <div class="info-item">
                 <span class="ig-lbl">Duration</span>
                 <span class="ig-val">{{ $subjectExam->duration_in_minutes }} minutes</span>
             </div>
             @endif
-            
+
             <div class="info-item">
                 <span class="ig-lbl">Total Marks</span>
                 <span class="ig-val">{{ number_format($subjectExam->getTotalMarks(), 1) }}</span>
@@ -277,7 +279,7 @@
             <div class="section-header">
                 <div class="section-title">{{ $section->title }}</div>
                 <div class="section-meta">
-                    {{ $section->questions->count() }} questions • 
+                    {{ $section->questions->count() }} questions •
                     {{ number_format($section->getTotalMarks(), 1) }} marks
                     @if($section->question_type !== 'mixed')
                         • {{ ucwords(str_replace('_', ' ', $section->question_type)) }}
@@ -296,7 +298,8 @@
                 <div class="question-header">
                     <span class="question-number">{{ $loop->parent->iteration }}.{{ $loop->iteration }}</span>
                     <span class="question-text">
-                        <x-form.markdown-with-math :content="$question->question_text" inline="true" />
+{{--                        @dd($question)--}}
+                        <x-markdown-renderer :content="$question->question_text" inline="true" />
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
                 </div>
@@ -305,11 +308,11 @@
                 <div class="options-list">
                     @php $optionIndex = 0; @endphp
                     @foreach($question->options as $option)
-                    
+
                     <div class="option-item">
                         <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
                         <span class="option-text">
-                            <x-form.markdown-with-math :content="$option" inline="true" />
+                            <x-markdown-renderer :content="$option" inline="true" />
                         </span>
                     </div>
                     @php $optionIndex++; @endphp

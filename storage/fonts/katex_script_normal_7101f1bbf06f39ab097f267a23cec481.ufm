@@ -1,0 +1,51 @@
+StartFontMetrics 4.1
+Notice Converted by PHP-font-lib
+Comment https://github.com/dompdf/php-font-lib
+EncodingScheme FontSpecific
+FontName KaTeX_Script
+FontSubfamily Regular
+UniqueID FontForge 2.0 : KaTeX_Script-Regular
+FullName KaTeX_Script-Regular
+Version Version 1.1; ttfautohint (v1.8.3)
+PostScriptName KaTeX_Script-Regular
+LicenseURL http://scripts.sil.org/OFL
+Weight Medium
+ItalicAngle 0
+IsFixedPitch false
+UnderlineThickness 50
+UnderlinePosition -125
+FontHeightOffset 90
+Ascender 735
+Descender -314
+FontBBox -2 -314 1241 735
+StartCharMetrics 31
+U 32 ; WX 250 ; N space ; G 3
+U 65 ; WX 803 ; N A ; G 4
+U 66 ; WX 908 ; N B ; G 5
+U 67 ; WX 666 ; N C ; G 6
+U 68 ; WX 774 ; N D ; G 7
+U 69 ; WX 562 ; N E ; G 8
+U 70 ; WX 895 ; N F ; G 9
+U 71 ; WX 610 ; N G ; G 10
+U 72 ; WX 969 ; N H ; G 11
+U 73 ; WX 809 ; N I ; G 12
+U 74 ; WX 1052 ; N J ; G 13
+U 75 ; WX 914 ; N K ; G 14
+U 76 ; WX 874 ; N L ; G 15
+U 77 ; WX 1080 ; N M ; G 16
+U 78 ; WX 902 ; N N ; G 17
+U 79 ; WX 738 ; N O ; G 18
+U 80 ; WX 1013 ; N P ; G 19
+U 81 ; WX 883 ; N Q ; G 20
+U 82 ; WX 850 ; N R ; G 21
+U 83 ; WX 868 ; N S ; G 22
+U 84 ; WX 747 ; N T ; G 23
+U 85 ; WX 800 ; N U ; G 24
+U 86 ; WX 622 ; N V ; G 25
+U 87 ; WX 805 ; N W ; G 26
+U 88 ; WX 944 ; N X ; G 27
+U 89 ; WX 710 ; N Y ; G 28
+U 90 ; WX 821 ; N Z ; G 29
+U 160 ; WX 250 ; N uni00A0 ; G 30
+EndCharMetrics
+EndFontMetrics
