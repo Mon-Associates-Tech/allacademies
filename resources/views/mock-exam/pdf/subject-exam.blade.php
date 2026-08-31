@@ -296,7 +296,7 @@
             @foreach($section->questions as $qIndex => $question)
             <div class="question-block">
                 <div class="question-header">
-                    <span class="question-number">{{ $loop->parent->iteration }}.{{ $loop->iteration }}</span>
+                    <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
 {{--                        @dd($question)--}}
                         <x-markdown-renderer :content="$question->question_text" inline="true" />

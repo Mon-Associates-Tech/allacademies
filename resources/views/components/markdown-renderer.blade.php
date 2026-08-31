@@ -15,37 +15,37 @@
         'xl' => 'prose-xl', '2xl' => 'prose-2xl', default => 'prose-base'
     };
 
- $staticRender = filter_var($static, FILTER_VALIDATE_BOOLEAN);
+$staticRender = filter_var($static, FILTER_VALIDATE_BOOLEAN);
 
-if($staticRender){
-     $staticHtml = app(\App\Support\StaticProse::class)->render($htmlContent ?? $markdownContent, $htmlContent !== null);
+$htmlContent = null;
+$markdownContent = null;
+
+if ($content instanceof \App\Support\Mark) {
+    $htmlContent = $content->up;
+    $markdownContent = $content->down;
+} elseif (is_string($content)) {
+    if (preg_match('/<(p|div|table|img|iframe|h[1-6]|ul|ol|br)\b/i', $content)) {
+        $htmlContent = $content;
+    } else {
+        $markdownContent = $content;
+    }
 }
 
-    $htmlContent = null;
-    $markdownContent = null;
-
-    if ($content instanceof \App\Support\Mark) {
-        $htmlContent = $content->up;
-        $markdownContent = $content->down;
-    } elseif (is_string($content)) {
-        if (preg_match('/<(p|div|table|img|iframe|h[1-6]|ul|ol|br)\b/i', $content)) {
-            $htmlContent = $content;
-        } else {
-            $markdownContent = $content;
-        }
-    }
-
-    /* 1) SERVER-SIDE MARKDOWN — Laravel ships league/commonmark (Str::markdown) */
+if ($staticRender) {
+    $staticHtml = app(\App\Support\StaticProse::class)->render($htmlContent ?? $markdownContent, $htmlContent !== null);
+} else {
+    /* 1) SERVER-SIDE MARKDOWN */
     if ($markdownContent !== null) {
         $htmlContent = \Illuminate\Support\Str::markdown($markdownContent);
         $markdownContent = null;
     }
 
-    /* 2) SERVER-SIDE KATEX — no-op unless you install the bridge below */
+    /* 2) SERVER-SIDE KATEX */
     $serverMath = class_exists(\App\Support\Katex::class);
     if ($serverMath && $htmlContent !== null) {
         $htmlContent = \App\Support\Katex::render($htmlContent);
     }
+}
 
     if ($inline) {
         $baseProseClasses = 'prose-inline break-words';
