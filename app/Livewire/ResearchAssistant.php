@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Jobs\ProcessResearchAssistantMessageJob;
 use App\Models\AcademicChatMessage;
 use App\Services\ResearchAssistantService;
 use App\Traits\ChecksTokenAvailability;
@@ -85,6 +86,8 @@ class ResearchAssistant extends Component
     public $hasAvailableTokens = true;
 
     public $tokenMessage;
+
+    public ?int $pendingUserMessageId = null;
 
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
@@ -249,8 +252,6 @@ class ResearchAssistant extends Component
     {
         if ($this->messageInputDisabled()) {
             $this->dispatch('tokenCheckFailed');
-            logError('sendMessage input disabled');
-
             return;
         }
 
@@ -259,7 +260,7 @@ class ResearchAssistant extends Component
         if (empty(trim($this->message))) {
             return;
         }
-        $this->isLoading = true;
+
         $this->errors = [];
 
         if (! $this->conversationId) {
@@ -270,88 +271,103 @@ class ResearchAssistant extends Component
         $parameters = $this->getParameters();
         $parameters['input'] = $this->message;
 
-        if (! empty($this->fileContent)) {
-            $parameters['file_content'] = $this->fileContent;
-        }
-
-        $validationErrors = $this->chatService->validateParameters($parameters);
-        if (! empty($validationErrors)) {
-            $this->errors = $validationErrors;
-            $this->isLoading = false;
-
-            return;
-        }
-
         if ($this->uploadedFile) {
             $this->fileContent = $this->chatService->extractFileContent($this->uploadedFile);
             $this->fileName = $this->uploadedFile->getClientOriginalName();
             $this->uploadedFile = null;
         }
 
-        $userMessageContent = $this->message;
         if (! empty($this->fileContent)) {
-            $userMessageContent .= "\n\nFile: ".$this->fileName."\nFile Content:\n".$this->fileContent;
+            $parameters['input'] .= "\n\nFile: ".$this->fileName."\nFile Content:\n".$this->fileContent;
         }
 
-        $userMessage = [
-            'role' => 'user',
-            'content' => $userMessageContent,
-            'timestamp' => now()->toISOString(),
-        ];
-        $this->messages[] = $userMessage;
+        $validationErrors = $this->chatService->validateParameters($parameters);
+        if (! empty($validationErrors)) {
+            $this->errors = $validationErrors;
+            return;
+        }
 
         $title = $this->generateConversationTitle();
         $this->conversationTitle = $title;
 
-        AcademicChatMessage::create([
-            'user_id' => Auth::id(),
-            'conversation_id' => $this->conversationId,
+        $userRow = AcademicChatMessage::create([
+            'user_id'            => Auth::id(),
+            'conversation_id'    => $this->conversationId,
             'conversation_title' => $title,
-            'content' => $this->message,
-            'role' => 'user',
-            'parameters' => $parameters,
+            'content'            => $parameters['input'],
+            'role'               => 'user',
+            'parameters'         => $parameters,
         ]);
 
-        $conversationHistory = $this->getConversationHistory();
-        $response = $this->chatService->processRequest($parameters, $conversationHistory);
-
-    if ($response['success']) {
-        // ✅ NORMALIZE THE CONTENT BEFORE ADDING TO THE UI
-        $normalizedContent = $this->normalizeStoredAssistantContent($response['content']);
-        
-        $aiMessage = [
-            'role' => 'assistant',
-            'content' => $normalizedContent, // Use the clean Markdown string here
+        $this->messages[] = [
+            'role'      => 'user',
+            'content'   => $parameters['input'],
             'timestamp' => now()->toISOString(),
-            'usage' => $response['usage'] ?? null,
-            'images' => $response['images'] ?? null,
-            'model_used' => $response['model_used'] ?? null,
         ];
-        
-        $this->messages[] = $aiMessage;
-        
-        // Save to database (keeps original format if that's your DB schema expectation)
-        AcademicChatMessage::create([
-            'user_id' => Auth::id(),
-            'conversation_id' => $this->conversationId,
-            'conversation_title' => $title,
-            'content' => $response['content'], 
-            'role' => 'assistant',
-            'parameters' => $parameters,
-            'usage' => $response['usage'] ?? null,
-            'model_used' => $response['model_used'] ?? null,
-            'images' => $response['images'] ?? null,
-        ]);
-    } else {
-        $this->errors[] = $response['error'] ?? 'Unknown error occurred';
-    }
 
+        $this->pendingUserMessageId = $userRow->id;
+        $this->isLoading = true;
         $this->message = '';
         $this->fileContent = '';
         $this->fileName = '';
-        $this->isLoading = false;
+
+        ProcessResearchAssistantMessageJob::dispatch(
+            $userRow->id,
+            Auth::id(),
+            $this->conversationId,
+            $title,
+            $parameters,
+            $this->getConversationHistory(),
+        );
 
         $this->loadConversationHistory();
+        $this->dispatch('scroll-to-bottom');
+    }
+
+    public function checkForResponse(): void
+    {
+        if (! $this->isLoading || ! $this->pendingUserMessageId) {
+            return;
+        }
+
+        $userRow = AcademicChatMessage::find($this->pendingUserMessageId);
+        if (! $userRow) {
+            $this->isLoading = false;
+            $this->pendingUserMessageId = null;
+            return;
+        }
+
+        $assistantRow = AcademicChatMessage::where('user_id', Auth::id())
+            ->where('conversation_id', $this->conversationId)
+            ->where('role', 'assistant')
+            ->where('created_at', '>', $userRow->created_at)
+            ->latest('created_at')
+            ->first();
+
+        if (! $assistantRow) {
+            return; // still waiting
+        }
+
+        $content = $this->normalizeStoredAssistantContent($assistantRow->content);
+
+        $isError = str_starts_with($content, '__error__: ');
+        if ($isError) {
+            $this->errors[] = substr($content, strlen('__error__: '));
+        } else {
+            $this->messages[] = [
+                'role'       => 'assistant',
+                'content'    => $content,
+                'timestamp'  => $assistantRow->created_at->toISOString(),
+                'usage'      => $assistantRow->usage,
+                'images'     => $assistantRow->images,
+                'model_used' => $assistantRow->model_used,
+            ];
+        }
+
+        $this->isLoading = false;
+        $this->pendingUserMessageId = null;
+        $this->loadConversationHistory();
+        $this->dispatch('scroll-to-bottom');
     }
 
     #[Computed]

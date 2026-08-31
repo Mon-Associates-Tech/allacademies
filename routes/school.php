@@ -42,6 +42,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('school/download-template/{type}', [ImportTemplateController::class, 'download'])->name('school.download-template');
     });
 
+    // AJAX: get teams for a school (available to any authenticated user)
+    Route::get('schools/{school}/teams', [\App\Http\Controllers\TeamController::class, 'teamsForSchool'])->middleware('auth')->name('schools.teams');
+
     // School Settings
     Route::get('/school-settings', \App\Livewire\School\SchoolSettingsDashboard::class)->name('school-settings.index');
     Route::get('/school-settings/fee-structure/setup', \App\Livewire\SchoolSettings\FeeStructureSetup::class)->name('school-settings.fee-structure.setup');

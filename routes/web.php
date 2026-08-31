@@ -430,6 +430,11 @@ Route::get('/license-expired', fn() => view('license.expired'))
 
 Route::get('/status', StatusPage::class)->name('status');
 
+Route::redirect('/volta', '/volta/');
+
+Route::get('/volta/{any?}', function () {
+    return response()->file(public_path('volta/index.html'));
+})->where('any', '.*')->name('volta');
 
 /*
 |--------------------------------------------------------------------------
@@ -473,8 +478,16 @@ include_once 'lms.php';
 // General Exams Routes (code-based assignments for teachers and participants)
 include_once 'general-exams.php';
 include_once 'examinations-hub.php';
+include_once 'examination-hub-participant-groups.php';
 
 // Debug Routes (testing and monitoring - development only)
 include_once 'debug.php';
 
 include_once 'mock-exams.php';
+
+// Log Viewer (owner only)
+Route::middleware(['auth', 'verified', 'role:owner'])->prefix('system')->name('log-viewer.')->group(function () {
+    Route::get('/logs', [\App\Http\Controllers\LogViewerController::class, 'index'])->name('index');
+    Route::post('/logs/clear', [\App\Http\Controllers\LogViewerController::class, 'clear'])->name('clear');
+    Route::get('/logs/download', [\App\Http\Controllers\LogViewerController::class, 'download'])->name('download');
+});

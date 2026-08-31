@@ -87,15 +87,44 @@ class StudentFeeController extends Controller
             $termTotalAmount = $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0;
             $remainingAmount = max($termTotalAmount - $totalPaid, 0);
 
+            // Filters
+            $typeFilter = request()->get('type'); // 'school_fee' | 'school_payment' | null
+            $statusFilter = request()->get('status'); // 'pending'|'succeeded'|... 
+            $from = request()->get('from');
+            $to = request()->get('to');
+
             // Get payment history from SchoolFee
-            $feePayments = SchoolFee::where('student_id', $student->id)
-                ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel'])
-                ->get();
+            $feeQuery = SchoolFee::where('student_id', $student->id)
+                ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel']);
+
+            if ($statusFilter) {
+                $feeQuery->where('status', $statusFilter);
+            }
+            if ($from) {
+                $feeQuery->whereDate('created_at', '>=', $from);
+            }
+            if ($to) {
+                $feeQuery->whereDate('created_at', '<=', $to);
+            }
+
+            // Only include school fees if no type filter or typeFilter === 'school_fee'
+            $feePayments = (is_null($typeFilter) || $typeFilter === 'school_fee') ? $feeQuery->get() : collect();
 
             // Get payment history from SchoolPayment
-            $schoolPayments = SchoolPayment::where('student_id', $student->id)
-                ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel'])
-                ->get();
+            $spQuery = SchoolPayment::where('student_id', $student->id)
+                ->with(['payer', 'academicPeriod', 'student.academicGroup', 'student.academicLevel']);
+
+            if ($statusFilter) {
+                $spQuery->where('status', $statusFilter);
+            }
+            if ($from) {
+                $spQuery->whereDate('created_at', '>=', $from);
+            }
+            if ($to) {
+                $spQuery->whereDate('created_at', '<=', $to);
+            }
+
+            $schoolPayments = (is_null($typeFilter) || $typeFilter === 'school_payment') ? $spQuery->get() : collect();
 
             // Combine and sort by created_at
             $paymentHistory = $feePayments->concat($schoolPayments)
@@ -153,7 +182,7 @@ class StudentFeeController extends Controller
     /**
      * Show payment form
      */
-    public function payment()
+    public function payment(Request $request)
     {
         $user = Auth::user();
         $schoolId = getSchoolId(); // Get school_id from User
@@ -193,13 +222,25 @@ class StudentFeeController extends Controller
         $termTotalAmount = $feeStructure->term_total_amount ?? $feeStructure->amount ?? 0;
         $remainingAmount = max($termTotalAmount - $totalPaid, 0);
 
+        // Support paying a specific StudentPaymentRecord (via ?record=ID). This replaces the deprecated feepayment/{student} flow.
+        $studentPaymentRecord = null;
+        if ($request->has('record')) {
+            $studentPaymentRecord = \App\Models\StudentPaymentRecord::where('id', $request->get('record'))
+                ->where('student_id', $student->id)
+                ->first();
+            if ($studentPaymentRecord) {
+                $remainingAmount = $studentPaymentRecord->amount_remaining ?? $studentPaymentRecord->total_amount;
+            }
+        }
+
         return view('students.fees.payment', compact(
             'student',
             'feeStructure',
             'totalPaid',
             'termTotalAmount',
             'remainingAmount',
-            'currentTerm'
+            'currentTerm',
+            'studentPaymentRecord'
         ));
     }
 
@@ -210,6 +251,7 @@ class StudentFeeController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
+            'student_payment_record_id' => 'nullable|exists:student_payment_records,id',
         ]);
 
         $user = Auth::user();
@@ -272,6 +314,31 @@ class StudentFeeController extends Controller
 
         $school = School::findOrFail($schoolId);
 
+        // If paying an admin-created StudentPaymentRecord, create a SchoolPayment linked to that record
+        if (! empty($validated['student_payment_record_id'])) {
+            $recordId = $validated['student_payment_record_id'];
+
+            \App\Models\SchoolPayment::create([
+                'school_id' => $schoolId,
+                'student_id' => $student->id,
+                'payment_type' => 'other',
+                'amount' => $validated['amount'],
+                'currency' => 'GHS',
+                'payer_type' => get_class(Auth::user()),
+                'payer_id' => Auth::id(),
+                'payer_name' => Auth::user()->name ?? null,
+                'status' => 'pending',
+                'reference' => $reference,
+                'authorization_url' => $response['data']['authorization_url'],
+                'gateway_response' => json_encode($response),
+                'student_payment_record_id' => $recordId,
+                'created_by' => Auth::id(),
+            ]);
+
+            return redirect($response['data']['authorization_url']);
+        }
+
+        // Default flow: create SchoolFee (term-based payment)
         SchoolFee::create([
             'school_id' => $schoolId,
             'student_id' => $student->id,
@@ -324,6 +391,39 @@ class StudentFeeController extends Controller
             }
         }
 
+        // Not a SchoolFee, try SchoolPayment (used for one-off/student records and portal payments)
+        $schoolPayment = \App\Models\SchoolPayment::where('reference', $reference)->first();
+
+        if ($schoolPayment) {
+            if (! empty($response['status']) && $response['status'] && $response['data']['status'] === 'success') {
+                $schoolPayment->update([
+                    'status' => 'succeeded',
+                    'gateway_response' => json_encode($response),
+                    'paid_at' => now(),
+                ]);
+
+                // If linked to a StudentPaymentRecord, update that record's paid amount
+                if ($schoolPayment->student_payment_record_id) {
+                    $record = \App\Models\StudentPaymentRecord::find($schoolPayment->student_payment_record_id);
+                    if ($record) {
+                        try {
+                            $record->addPayment((float) $schoolPayment->amount);
+                        } catch (\Exception $e) {
+                            \Log::error('Failed to apply SchoolPayment to StudentPaymentRecord: '.$e->getMessage());
+                        }
+                    }
+                }
+
+                return redirect()->route('students.fees.index')
+                    ->with('success', 'Payment successful!');
+            } else {
+                $schoolPayment->update(['status' => 'failed', 'gateway_response' => json_encode($response)]);
+
+                return redirect()->route('students.fees.index')
+                    ->with('error', 'Payment verification failed.');
+            }
+        }
+
         return redirect()->route('students.fees.index')
             ->with('error', 'Payment record not found.');
     }
@@ -340,6 +440,22 @@ class StudentFeeController extends Controller
 
         $payment->load(['student.academicGroup', 'student.academicLevel', 'academicPeriod', 'payer']);
 
+        return view('students.fees.receipt', compact('payment'));
+    }
+
+    /**
+     * Show receipt for SchoolPayment (portal/one-off) entries
+     */
+    public function receiptPayment(\App\Models\SchoolPayment $payment)
+    {
+        // Ensure user can only view their own receipts
+        if ($payment->student->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $payment->load(['student.academicGroup', 'student.academicLevel', 'academicPeriod', 'payer']);
+
+        // Reuse the same receipt view; it references fields that exist on SchoolPayment
         return view('students.fees.receipt', compact('payment'));
     }
 }

@@ -298,6 +298,15 @@
                     @enderror
                 </div>
 
+                <!-- Create Login Checkbox -->
+                <div class="mt-4">
+                    <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <input type="checkbox" wire:model="createLogin" class="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        Create login for this student (allow portal access)
+                    </label>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Uncheck to create the student without creating a user account.</p>
+                </div>
+
             </div>
 
             <!-- Extended Profile -->

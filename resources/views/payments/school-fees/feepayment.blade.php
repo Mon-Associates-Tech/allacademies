@@ -4,15 +4,27 @@
         
         {{-- 🔙 Go Back Button --}}
         <div class="absolute top-6 left-6">
-            <a href="{{ url('/parent/wards') }}"
-               class="inline-flex items-center px-4 py-2 bg-violet-100 text-violet-700 rounded-lg font-medium hover:bg-violet-200 transition duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
-                     stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15 19l-7-7 7-7" />
-                </svg>
-                Go Back
-            </a>
+            @if(auth()->check() && auth()->user()->role === 'student')
+                <a href="{{ route('students.payments.index') }}"
+                   class="inline-flex items-center px-4 py-2 bg-violet-100 text-violet-700 rounded-lg font-medium hover:bg-violet-200 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Go Back
+                </a>
+            @else
+                <a href="{{ url('/parent/wards') }}"
+                   class="inline-flex items-center px-4 py-2 bg-violet-100 text-violet-700 rounded-lg font-medium hover:bg-violet-200 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Go Back
+                </a>
+            @endif
         </div>
 
         <div class="max-w-lg mx-auto bg-white shadow-xl rounded-2xl p-6 mt-8">

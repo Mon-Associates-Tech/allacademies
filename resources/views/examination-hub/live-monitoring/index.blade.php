@@ -31,10 +31,22 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-slate-500" x-text="'Last updated: ' + lastUpdated"></span>
+
+                    {{-- Extend All button --}}
+                    <button @click="openExtendAllModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #059669, #34d399);">
+                        <x-heroicon-o-clock class="w-4 h-4" />
+                        Extend Time (All)
+                    </button>
+
                     <button @click="refreshData()"
                             class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all"
                             style="border-radius: 2px; background: linear-gradient(135deg, #334155, #475569);">
-                        <x-heroicon-o-arrow-path class="w-4 h-4" [class]="{ 'animate-spin': loading }" />
+                                                <span :class="{ 'animate-spin': loading }">
+                            <x-heroicon-o-arrow-path class="w-4 h-4" />
+                        </span>
+
                         Refresh
                     </button>
                 </div>
@@ -107,6 +119,15 @@
                     <span class="text-xs text-slate-400" x-text="'(' + filteredParticipants.length + ')'"></span>
                 </div>
                 <div class="flex items-center gap-2">
+                    {{-- Extend Time for selected group (visible when rows are checked) --}}
+                    <button x-show="selectedSubmissions.length > 0"
+                            @click="openExtendGroupModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #d97706, #fbbf24);">
+                        <x-heroicon-o-clock class="w-4 h-4" />
+                        Extend Time (<span x-text="selectedSubmissions.length"></span>)
+                    </button>
+
                     <button @click="openMessageAllModal()"
                             class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all"
                             style="border-radius: 2px; background: linear-gradient(135deg, #3b82f6, #60a5fa);">
@@ -125,6 +146,13 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                            <th class="px-4 py-3 w-10">
+                                <input type="checkbox"
+                                       @change="toggleSelectAll($event.target.checked)"
+                                       :checked="selectedSubmissions.length > 0 && selectedSubmissions.length === filteredParticipants.length"
+                                       :indeterminate="selectedSubmissions.length > 0 && selectedSubmissions.length < filteredParticipants.length"
+                                       class="h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                            </th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Participant</th>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Progress</th>
@@ -138,6 +166,16 @@
                         <template x-for="participant in filteredParticipants" :key="participant.id">
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
                                 :class="{ 'bg-red-50/30 dark:bg-red-900/10': participant.is_flagged }">
+
+                                {{-- Checkbox --}}
+                                <td class="px-4 py-4">
+                                    <input type="checkbox"
+                                           :value="participant.submission_id"
+                                           :checked="selectedSubmissions.includes(participant.submission_id)"
+                                           @change="toggleSelection(participant.submission_id)"
+                                           class="h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                                </td>
+
                                 {{-- Status --}}
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-2">
@@ -291,6 +329,24 @@
                                                 class="p-1.5 text-slate-500 hover:text-yellow-600 transition-colors" title="Send Warning">
                                             <x-heroicon-o-exclamation-triangle class="w-4 h-4" />
                                         </button>
+
+                                        {{-- Extend Time (active participants only) --}}
+                                        <template x-if="participant.status !== 'completed' && participant.status !== 'terminated'">
+                                            <button @click="openExtendTimeModal(participant)"
+                                                    class="p-1.5 text-slate-500 hover:text-emerald-600 transition-colors"
+                                                    title="Extend Time">
+                                                <x-heroicon-o-clock class="w-4 h-4" />
+                                            </button>
+                                        </template>
+
+                                        {{-- Readmit (completed / terminated only) --}}
+                                        <template x-if="participant.status === 'completed' || participant.status === 'terminated'">
+                                            <button @click="openReadmitModal(participant)"
+                                                    class="p-1.5 text-slate-500 hover:text-violet-600 transition-colors"
+                                                    title="Grant Readmission">
+                                                <x-heroicon-o-arrow-path-rounded-square class="w-4 h-4" />
+                                            </button>
+                                        </template>
 
                                         {{-- Force Submit --}}
                                         <button @click="openForceSubmitModal(participant)"
@@ -559,9 +615,329 @@
             </div>
         </template>
 
-    </div>
+        {{-- ── EXTEND TIME MODAL (single participant) ── --}}
+        <template x-teleport="body">
+            <div x-show="showExtendTimeModal"
+                 x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showExtendTimeModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #059669, #34d399);"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-clock class="w-5 h-5 text-emerald-500" />
+                            Extend Time
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">For: <span class="font-medium text-slate-700 dark:text-slate-200" x-text="selectedParticipant?.participant_name || ''"></span></p>
+                    </div>
+                    <div class="px-6 py-5 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Additional Minutes <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" x-model="extendMinutes" min="1" max="480"
+                                       class="w-28 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-emerald-500 text-center font-mono font-bold"
+                                       style="border-radius: 2px;">
+                                <span class="text-sm text-slate-500">minutes</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <template x-for="preset in [5, 10, 15, 20, 30]" :key="preset">
+                                <button @click="extendMinutes = preset"
+                                        :class="extendMinutes == preset ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'"
+                                        class="px-3 py-1.5 text-xs font-semibold transition-colors"
+                                        style="border-radius: 2px;"
+                                        x-text="'+' + preset + ' min'">
+                                </button>
+                            </template>
+                        </div>
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300"
+                             style="border-radius: 2px;">
+                            <div class="flex items-start gap-2">
+                                <x-heroicon-o-information-circle class="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                <span>The extension is cumulative. If this participant already has extra time, the new minutes are added on top. The timer on their screen updates within seconds.</span>
+                            </div>
+                        </div>
+                        <template x-if="selectedParticipant?.extra_time_minutes > 0">
+                            <p class="text-xs text-slate-500">
+                                Current extra time already granted: <strong x-text="selectedParticipant.extra_time_minutes + ' min'"></strong>
+                            </p>
+                        </template>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showExtendTimeModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="extendTime()"
+                                :disabled="!extendMinutes || extendMinutes < 1 || actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Extend Time</span>
+                            <span x-show="actionLoading">Extending...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
 
-    @push('scripts')
+        {{-- ── EXTEND TIME ALL MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showExtendAllModal"
+                 x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showExtendAllModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #059669, #34d399);"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-clock class="w-5 h-5 text-emerald-500" />
+                            Extend Time — All Active Participants
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">
+                            Applies to all participants currently in progress
+                            (<span class="font-medium text-slate-700 dark:text-slate-200" x-text="stats.active + stats.idle + stats.away + stats.disconnected"></span> candidates).
+                        </p>
+                    </div>
+                    <div class="px-6 py-5 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Additional Minutes <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" x-model="extendAllMinutes" min="1" max="480"
+                                       class="w-28 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-emerald-500 text-center font-mono font-bold"
+                                       style="border-radius: 2px;">
+                                <span class="text-sm text-slate-500">minutes</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <template x-for="preset in [5, 10, 15, 20, 30]" :key="preset">
+                                <button @click="extendAllMinutes = preset"
+                                        :class="extendAllMinutes == preset ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50'"
+                                        class="px-3 py-1.5 text-xs font-semibold transition-colors"
+                                        style="border-radius: 2px;"
+                                        x-text="'+' + preset + ' min'">
+                                </button>
+                            </template>
+                        </div>
+                        <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300"
+                             style="border-radius: 2px;">
+                            <div class="flex items-start gap-2">
+                                <x-heroicon-o-exclamation-triangle class="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                <span>This affects <strong>every participant</strong> who has not yet submitted. This is useful when the exam is interrupted by a system issue or connectivity problem affecting all candidates. Individual participants already on extended time will accumulate further.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showExtendAllModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeExtendAll()"
+                                :disabled="!extendAllMinutes || extendAllMinutes < 1 || actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Extend for All</span>
+                            <span x-show="actionLoading">Extending...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- ── EXTEND TIME GROUP MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showExtendGroupModal"
+                 x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showExtendGroupModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-md overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-clock class="w-5 h-5 text-amber-500" />
+                            Extend Time — Selected Participants
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">
+                            Applying to <span class="font-medium text-slate-700 dark:text-slate-200" x-text="selectedSubmissions.length"></span>
+                            selected participant<span x-text="selectedSubmissions.length === 1 ? '' : 's'"></span>.
+                        </p>
+                    </div>
+                    <div class="px-6 py-5 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Additional Minutes <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" x-model="extendGroupMinutes" min="1" max="480"
+                                       class="w-28 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-amber-500 text-center font-mono font-bold"
+                                       style="border-radius: 2px;">
+                                <span class="text-sm text-slate-500">minutes</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <template x-for="preset in [5, 10, 15, 20, 30]" :key="preset">
+                                <button @click="extendGroupMinutes = preset"
+                                        :class="extendGroupMinutes == preset ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50'"
+                                        class="px-3 py-1.5 text-xs font-semibold transition-colors"
+                                        style="border-radius: 2px;"
+                                        x-text="'+' + preset + ' min'">
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showExtendGroupModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeExtendGroup()"
+                                :disabled="!extendGroupMinutes || extendGroupMinutes < 1 || actionLoading"
+                                class="px-4 py-2 text-sm font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">Extend for Selected</span>
+                            <span x-show="actionLoading">Extending...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- ── READMISSION MODAL ── --}}
+        <template x-teleport="body">
+            <div x-show="showReadmitModal"
+                 x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                 @click.self="showReadmitModal = false">
+                <div class="bg-white dark:bg-slate-900 w-full max-w-lg overflow-hidden"
+                     style="border-radius: 2px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                    <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa);"></div>
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <x-heroicon-o-arrow-path-rounded-square class="w-5 h-5 text-violet-500" />
+                            Grant Readmission
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">
+                            Participant: <span class="font-medium text-slate-700 dark:text-slate-200" x-text="selectedParticipant?.participant_name || ''"></span>
+                        </p>
+                    </div>
+                    <div class="px-6 py-5 space-y-5">
+
+                        {{-- Mode selection --}}
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
+                                Readmission Mode <span class="text-red-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label :class="readmitMode === 'continue'
+                                            ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-violet-300'"
+                                       class="flex flex-col gap-1 p-4 border-2 cursor-pointer transition-colors"
+                                       style="border-radius: 2px;">
+                                    <input type="radio" x-model="readmitMode" value="continue" class="sr-only">
+                                    <div class="flex items-center gap-2">
+                                        <x-heroicon-o-play-pause class="w-4 h-4 text-violet-600" />
+                                        <span class="text-sm font-bold text-slate-900 dark:text-white">Continue</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                        Candidate resumes from where they left off. All previous answers are preserved. The timer continues with any extra time added.
+                                    </p>
+                                </label>
+                                <label :class="readmitMode === 'fresh'
+                                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-orange-300'"
+                                       class="flex flex-col gap-1 p-4 border-2 cursor-pointer transition-colors"
+                                       style="border-radius: 2px;">
+                                    <input type="radio" x-model="readmitMode" value="fresh" class="sr-only">
+                                    <div class="flex items-center gap-2">
+                                        <x-heroicon-o-arrow-path class="w-4 h-4 text-orange-600" />
+                                        <span class="text-sm font-bold text-slate-900 dark:text-white">Fresh Start</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                        A brand-new submission is created. All previous answers are discarded. The timer resets from the full exam duration.
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Optional extra time alongside re-admission --}}
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Additional Time (optional)
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" x-model="readmitExtraMinutes" min="0" max="480" placeholder="0"
+                                       class="w-24 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-violet-500 text-center font-mono"
+                                       style="border-radius: 2px;">
+                                <span class="text-sm text-slate-500">extra minutes (0 = use original duration)</span>
+                            </div>
+                        </div>
+
+                        {{-- Reason --}}
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason / Note</label>
+                            <textarea x-model="readmitReason" rows="2"
+                                      placeholder="e.g. Power outage during exam, candidate to be re-admitted..."
+                                      class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-violet-500"
+                                      style="border-radius: 2px;"></textarea>
+                            <p class="text-xs text-slate-400 mt-1">Stored in the audit trail. Not shown to the candidate.</p>
+                        </div>
+
+                        {{-- Grant expiry --}}
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Grant Expires At (optional)
+                            </label>
+                            <input type="datetime-local" x-model="readmitExpiresAt"
+                                   class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-violet-500"
+                                   style="border-radius: 2px;">
+                            <p class="text-xs text-slate-400 mt-1">If set, the candidate must use the grant before this time. Leave blank for no expiry.</p>
+                        </div>
+
+                        {{-- Fresh-mode warning --}}
+                        <div x-show="readmitMode === 'fresh'"
+                             class="flex items-start gap-2.5 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 text-sm text-orange-800 dark:text-orange-300"
+                             style="border-radius: 2px;">
+                            <x-heroicon-o-exclamation-triangle class="w-4 h-4 flex-shrink-0 mt-0.5 text-orange-500" />
+                            <span><strong>Fresh start</strong> creates a new submission. The candidate's original answers remain in the database as a historical record but will not count toward any score.</span>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                        <button @click="showReadmitModal = false"
+                                class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                style="border-radius: 2px;">
+                            Cancel
+                        </button>
+                        <button @click="executeReadmit()"
+                                :disabled="actionLoading"
+                                :class="readmitMode === 'fresh'
+                                    ? 'bg-orange-500 hover:bg-orange-600'
+                                    : 'bg-violet-600 hover:bg-violet-700'"
+                                class="px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                                style="border-radius: 2px;">
+                            <span x-show="!actionLoading">
+                                Grant <span x-text="readmitMode === 'fresh' ? 'Fresh Start' : 'Readmission'"></span>
+                            </span>
+                            <span x-show="actionLoading">Granting...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </div>{{-- /page wrapper --}}
     <script>
         function liveMonitoring(initialData) {
             return {
@@ -575,18 +951,41 @@
                 searchQuery: '',
                 pollingInterval: null,
 
-                // Modals
+                // ── Row selection ─────────────────────────────────────────────
+                selectedSubmissions: [],
+
+                // ── Modals ────────────────────────────────────────────────────
                 showMessageModal: false,
                 showMessageAllModal: false,
                 showWarningModal: false,
                 showTerminateModal: false,
                 showForceSubmitModal: false,
+                showExtendTimeModal: false,
+                showExtendAllModal: false,
+                showExtendGroupModal: false,
+                showReadmitModal: false,
+
                 selectedParticipant: null,
                 messageText: '',
                 messageAllText: '',
                 warningText: '',
                 terminateReason: '',
                 forceSubmitReason: '',
+
+                // Extend time
+                extendMinutes: 15,
+                extendAllMinutes: 15,
+                extendGroupMinutes: 15,
+
+                // Readmission
+                readmitMode: 'continue',
+                readmitReason: '',
+                readmitExtraMinutes: 0,
+                readmitExpiresAt: '',
+
+                // Toasts
+                toasts: [],
+                toastId: 0,
 
                 get statsCards() {
                     return [
@@ -787,7 +1186,7 @@
 
                 async sendMessageToAll() {
                     if (!this.messageAllText.trim()) return;
-
+                    this.actionLoading = true;
                     try {
                         const response = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/message-all') }}`, {
                             method: 'POST',
@@ -799,19 +1198,14 @@
                         });
 
                         const data = await response.json();
-                        
                         this.showMessageAllModal = false;
                         this.messageAllText = '';
-                        
-                        // Show success message
-                        alert(`Message sent successfully!\n\nDelivered to: ${data.sent_count} participants\nFailed: ${data.failed_count} participants`);
-                        
-                        // Refresh data
+                        this.addToast('success', `Message sent to ${data.sent_count} participant(s)${data.failed_count > 0 ? ` (${data.failed_count} failed)` : ''}`);
                         this.refreshData();
                     } catch (error) {
-                        console.error('Failed to send message to all:', error);
-                        alert('Failed to send message to all participants');
+                        this.addToast('error', 'Failed to send message to all participants');
                     }
+                    this.actionLoading = false;
                 },
 
                 openForceSubmitModal(participant) {
@@ -863,18 +1257,201 @@
                 },
 
                 showViolationToast(data) {
-                    // You can implement a toast notification here
-                    console.log('Violation recorded:', data);
+                    this.addToast('warning', `Violation: ${data.violation?.event_type} — ${data.participant?.participant_name}`);
                 },
 
-                // Cleanup on destroy
-                destroy() {
-                    if (this.pollingInterval) {
-                        clearInterval(this.pollingInterval);
+                // ── Toast Notifications ───────────────────────────────────────
+                addToast(type, message) {
+                    const id = ++this.toastId;
+                    this.toasts.push({ id, type, message, visible: true });
+                    setTimeout(() => this.removeToast(id), 5000);
+                },
+
+                removeToast(id) {
+                    const index = this.toasts.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        this.toasts[index].visible = false;
+                        setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 200);
                     }
+                },
+
+                // ── Row Selection ─────────────────────────────────────────────
+                toggleSelection(submissionId) {
+                    const idx = this.selectedSubmissions.indexOf(submissionId);
+                    if (idx === -1) {
+                        this.selectedSubmissions.push(submissionId);
+                    } else {
+                        this.selectedSubmissions.splice(idx, 1);
+                    }
+                },
+
+                toggleSelectAll(checked) {
+                    if (checked) {
+                        this.selectedSubmissions = this.filteredParticipants.map(p => p.submission_id);
+                    } else {
+                        this.selectedSubmissions = [];
+                    }
+                },
+
+                // ── Extend Time (single) ──────────────────────────────────────
+                openExtendTimeModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.extendMinutes = 15;
+                    this.showExtendTimeModal = true;
+                },
+
+                async extendTime() {
+                    if (!this.extendMinutes || !this.selectedParticipant) return;
+                    this.actionLoading = true;
+                    try {
+                        const res = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/extend-time') }}/${this.selectedParticipant.submission_id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ minutes: parseInt(this.extendMinutes) }),
+                        });
+                        const data = await res.json();
+                        this.showExtendTimeModal = false;
+                        this.addToast('success', `Extended time by ${this.extendMinutes} min for ${this.selectedParticipant.participant_name} (total extra: ${data.total_extra_minutes} min)`);
+                        this.refreshData();
+                    } catch (error) {
+                        this.addToast('error', 'Failed to extend time');
+                    }
+                    this.actionLoading = false;
+                },
+
+                // ── Extend Time (all active) ──────────────────────────────────
+                openExtendAllModal() {
+                    this.extendAllMinutes = 15;
+                    this.showExtendAllModal = true;
+                },
+
+                async executeExtendAll() {
+                    if (!this.extendAllMinutes || this.extendAllMinutes < 1) return;
+                    this.actionLoading = true;
+                    try {
+                        const res = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/extend-time-all') }}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ minutes: parseInt(this.extendAllMinutes) }),
+                        });
+                        const data = await res.json();
+                        this.showExtendAllModal = false;
+                        this.addToast('success', `Extended time by ${this.extendAllMinutes} min for ${data.updated_count} participant(s)`);
+                        this.refreshData();
+                    } catch (error) {
+                        this.addToast('error', 'Failed to extend time for all');
+                    }
+                    this.actionLoading = false;
+                },
+
+                // ── Extend Time (selected group) ──────────────────────────────
+                openExtendGroupModal() {
+                    if (this.selectedSubmissions.length === 0) {
+                        this.addToast('warning', 'Select at least one participant first');
+                        return;
+                    }
+                    this.extendGroupMinutes = 15;
+                    this.showExtendGroupModal = true;
+                },
+
+                async executeExtendGroup() {
+                    if (!this.extendGroupMinutes || this.selectedSubmissions.length === 0) return;
+                    this.actionLoading = true;
+                    try {
+                        const res = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/extend-time-group') }}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({
+                                submission_ids: this.selectedSubmissions,
+                                minutes: parseInt(this.extendGroupMinutes),
+                            }),
+                        });
+                        const data = await res.json();
+                        this.showExtendGroupModal = false;
+                        this.selectedSubmissions = [];
+                        this.addToast('success', `Extended time by ${this.extendGroupMinutes} min for ${data.updated_count} participant(s)`);
+                        this.refreshData();
+                    } catch (error) {
+                        this.addToast('error', 'Failed to extend time for group');
+                    }
+                    this.actionLoading = false;
+                },
+
+                // ── Readmission ───────────────────────────────────────────────
+                openReadmitModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.readmitMode = 'continue';
+                    this.readmitReason = '';
+                    this.readmitExtraMinutes = 0;
+                    this.readmitExpiresAt = '';
+                    this.showReadmitModal = true;
+                },
+
+                async executeReadmit() {
+                    if (!this.selectedParticipant) return;
+                    this.actionLoading = true;
+                    try {
+                        const payload = {
+                            mode:    this.readmitMode,
+                            reason:  this.readmitReason || null,
+                            minutes: this.readmitExtraMinutes > 0 ? parseInt(this.readmitExtraMinutes) : null,
+                            expires_at: this.readmitExpiresAt || null,
+                        };
+                        const res = await fetch(`{{ url('examinations/exams/' . $exam->id . '/live-monitoring/readmit') }}/${this.selectedParticipant.submission_id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify(payload),
+                        });
+                        if (!res.ok) {
+                            const err = await res.json();
+                            this.addToast('error', err.error || 'Failed to grant readmission');
+                            return;
+                        }
+                        const data = await res.json();
+                        this.showReadmitModal = false;
+                        const modeLabel = this.readmitMode === 'fresh' ? 'Fresh Start' : 'Continue';
+                        this.addToast('success', `Readmission granted (${modeLabel}) for ${this.selectedParticipant.participant_name}. The candidate can now re-enter the exam.`);
+                        this.refreshData();
+                    } catch (error) {
+                        this.addToast('error', 'Failed to grant readmission');
+                    }
+                    this.actionLoading = false;
+                },
+
+                // ── Cleanup ───────────────────────────────────────────────────
+                destroy() {
+                    if (this.pollingInterval) clearInterval(this.pollingInterval);
                 },
             };
         }
     </script>
-    @endpush
+
+    {{-- Toast notification renderer --}}
+    <template x-teleport="body" x-if="true">
+        <div class="fixed bottom-4 right-4 z-[200] space-y-2 pointer-events-none">
+            <template x-for="toast in $store?.toasts ?? []" :key="toast.id">
+                <div x-show="toast.visible"
+                     x-transition:enter="transform ease-out duration-300"
+                     x-transition:enter-start="translate-y-2 opacity-0"
+                     x-transition:enter-end="translate-y-0 opacity-100"
+                     class="pointer-events-auto max-w-sm px-4 py-3 shadow-lg flex items-start gap-3 text-white text-sm"
+                     style="border-radius: 2px;"
+                     :class="{
+                         'bg-emerald-700': toast.type === 'success',
+                         'bg-red-700':     toast.type === 'error',
+                         'bg-amber-600':   toast.type === 'warning',
+                         'bg-slate-700':   toast.type === 'info',
+                     }">
+                    <p class="flex-1 font-medium" x-text="toast.message"></p>
+                    <button @click="toast.visible = false" class="text-white/70 hover:text-white flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </template>
+        </div>
+    </template>
+
+ 
 </x-layouts.app>

@@ -8,6 +8,7 @@ use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -285,16 +286,87 @@ class StudentProfile extends Component
                 $feeDetails->payment_method = $paymentMethod;
             }
 
-            // ✅ Fetch payment history (all terms)
-            $paymentHistory = \App\Models\SchoolFee::where('student_id', $this->student->id)
-                ->with([
-                    'payer',
-                    'student.academicGroup',
-                    'student.academicLevel',
-                    'academicPeriod',
-                ])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // Include all payment types: term fees (SchoolFee), portal payments (SchoolPayment) and admin-created charges (StudentPaymentRecord)
+            $feePayments = \App\Models\SchoolFee::where('student_id', $this->student->id)
+                ->with(['payer', 'student.academicGroup', 'student.academicLevel', 'academicPeriod'])
+                ->latest()
+                ->get()
+                ->map(function ($p) {
+                    return (object) [
+                        'type' => 'school_fee',
+                        'id' => $p->id,
+                        'amount' => $p->amount,
+                        'currency' => $p->currency ?? 'GHS',
+                        'status' => $p->status,
+                        'payer_name' => $p->payer?->name ?? ($p->getPayerDisplayName() ?? 'N/A'),
+                        'term' => $p->academicPeriod?->name ?? 'N/A',
+                        'academic_group' => $p->student?->academicGroup?->name ?? 'N/A',
+                        'academic_level' => $p->student?->academicLevel?->name ?? 'N/A',
+                        'created_at' => $p->created_at,
+                    ];
+                });
+
+            $schoolPayments = \App\Models\SchoolPayment::where('student_id', $this->student->id)
+                ->with(['payer', 'student.academicGroup', 'student.academicLevel', 'academicPeriod'])
+                ->latest()
+                ->get()
+                ->map(function ($p) {
+                    return (object) [
+                        'type' => 'school_payment',
+                        'id' => $p->id,
+                        'amount' => $p->amount,
+                        'currency' => $p->currency ?? 'GHS',
+                        'status' => $p->status,
+                        'payer_name' => $p->payer?->name ?? ($p->getPayerDisplayName() ?? 'N/A'),
+                        'term' => $p->academicPeriod?->name ?? 'N/A',
+                        'academic_group' => $p->student?->academicGroup?->name ?? 'N/A',
+                        'academic_level' => $p->student?->academicLevel?->name ?? 'N/A',
+                        'created_at' => $p->created_at,
+                    ];
+                });
+
+            $studentPaymentRecords = \App\Models\StudentPaymentRecord::where('student_id', $this->student->id)
+                ->with(['academicPeriod', 'student.academicGroup', 'student.academicLevel'])
+                ->latest()
+                ->get()
+                ->map(function ($r) {
+                    return (object) [
+                        'type' => 'student_record',
+                        'id' => $r->id,
+                        'amount' => $r->total_amount,
+                        'currency' => $r->currency ?? 'GHS',
+                        'status' => $r->status ?? 'unpaid',
+                        'payer_name' => 'School',
+                        'term' => $r->academicPeriod?->name ?? 'N/A',
+                        'academic_group' => $r->student?->academicGroup?->name ?? 'N/A',
+                        'academic_level' => $r->student?->academicLevel?->name ?? 'N/A',
+                        'created_at' => $r->created_at,
+                    ];
+                });
+
+            // Combine and limit to 5 most recent entries
+            $paymentHistory = $feePayments->concat($schoolPayments)->concat($studentPaymentRecords)
+                ->sortByDesc('created_at')
+                ->values()
+                ->slice(0, 5);
+
+            // Debug log counts
+            Log::info('StudentProfile payment debug', [
+                'auth_id' => Auth::id(),
+                'student_id' => $this->student->id ?? null,
+                'fee_payments' => isset($feePayments) ? count($feePayments) : 0,
+                'school_payments' => isset($schoolPayments) ? count($schoolPayments) : 0,
+                'student_payment_records' => isset($studentPaymentRecords) ? count($studentPaymentRecords) : 0,
+                'payment_history' => is_countable($paymentHistory) ? count($paymentHistory) : 0,
+            ]);
+
+            // Pass debug counts to the view for in-browser visibility
+            $debugCounts = [
+                'fee_payments' => isset($feePayments) ? count($feePayments) : 0,
+                'school_payments' => isset($schoolPayments) ? count($schoolPayments) : 0,
+                'student_payment_records' => isset($studentPaymentRecords) ? count($studentPaymentRecords) : 0,
+                'payment_history' => is_countable($paymentHistory) ? count($paymentHistory) : 0,
+            ];
         }
 
         return view('livewire.students.profile', [

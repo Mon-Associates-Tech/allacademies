@@ -35,6 +35,7 @@ class GeneralExam extends Model
         'participant_mode',
         'participant_required_fields',
         'configured_match_mode',
+        'participant_group_id',
         'duration_in_minutes',
         'starts_at',
         'ends_at',
@@ -108,7 +109,7 @@ class GeneralExam extends Model
     public static function generateUniqueAccessCode(): string
     {
         do {
-            $code = strtoupper(Str::random(6));
+            $code = strtoupper(Str::random(config('exam-branding.access_code_length', 6)));
         } while (self::where('access_code', $code)->exists());
 
         return $code;
@@ -157,6 +158,11 @@ class GeneralExam extends Model
     public function configuredParticipants(): HasMany
     {
         return $this->hasMany(GeneralExamConfiguredParticipant::class);
+    }
+
+    public function participantGroup(): BelongsTo
+    {
+        return $this->belongsTo(GeneralExamParticipantGroup::class, 'participant_group_id');
     }
 
     /**

@@ -1,3 +1,6 @@
+@php
+    $company = config('company');
+@endphp
 <header
     x-data="{
                 scrolled: false,
@@ -32,11 +35,11 @@
                     <div class="hidden sm:block">
                                 <span class="text-xl lg:text-2xl font-bold transition-colors duration-300"
                                       :class="scrolled ? 'text-gray-900 dark:text-white' : 'text-white'">
-                                    All Academies
+                                    {{ $company['name_short'] }}
                                 </span>
                         <div class="text-xs font-medium tracking-wider transition-colors duration-300"
                              :class="scrolled ? 'text-gray-500 dark:text-gray-400' : 'text-blue-200'">
-                            Educational Excellence
+                            {{$company['tagline']}}
                         </div>
                     </div>
                 </a>
@@ -70,7 +73,7 @@
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
                 </a>
-                <a href="{{ route('branding.pricing') }}"
+                <a href="{{ route('bookshop.shop.catalog') }}"
                    class="font-semibold transition-colors duration-300 relative group flex items-center"
                    :class="scrolled ? 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400' : 'text-white/90 hover:text-white'">
                     <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -78,7 +81,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H4.5m-1.5 0H3c.621 0 1.125.504 1.125 1.125v.375m13.5 0h1.125c.621 0 1.125.504 1.125 1.125v.375a.75.75 0 0 1-1.5 0V6h-.75m-1.5-1.5H21A2.25 2.25 0 0 1 23.25 6v12a2.25 2.25 0 0 1-2.25 2.25H3A2.25 2.25 0 0 1 .75 18V6A2.25 2.25 0 0 1 3 3.75h18Z"/>
                     </svg>
-                    Pricing
+                    Publishers
                     <span
                         class="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                         :class="scrolled ? 'bg-blue-600' : 'bg-white'"></span>
@@ -115,12 +118,7 @@
             <div class="flex items-center space-x-3 lg:space-x-4">
                 <!-- Sign In and Register Buttons -->
                 <div class="hidden lg:flex items-center gap-3">
-                    <!-- Register Button (Smaller, Outlined) -->
-                    <a href="{{ route('register') }}"
-                       class="inline-flex items-center px-4 py-2 font-semibold rounded-lg transition-all duration-300 border-2"
-                       :class="scrolled ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950' : 'text-white border-white/40 hover:border-white hover:bg-white/10'">
-                        Register
-                    </a>
+
                     <!-- Sign In Button -->
                     <a href="{{ route('login') }}"
                        class="inline-flex items-center px-6 py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
@@ -186,9 +184,9 @@
                                 <a href="{{ route('library.showcase') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                    x-on:click="open = false">Books</a>
-                                <a href="{{ route('branding.pricing') }}"
+                                <a href="{{ route('bookshop.shop.catalog') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                   x-on:click="open = false">Pricing</a>
+                                   x-on:click="open = false">Publishers</a>
                                 <a href="{{ route('public.financial-aid') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                    x-on:click="open = false">Financial Aid</a>
@@ -197,10 +195,6 @@
                                    x-on:click="open = false">Contact</a>
                             </div>
                             <div class="py-6 space-y-3">
-                                <a href="{{ route('register') }}"
-                                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:border-blue-400 dark:text-blue-400 transition-all">
-                                    Register
-                                </a>
                                 <a href="{{ route('login') }}"
                                    class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg transition-all">
                                     Sign In
@@ -213,7 +207,7 @@
                         </div>
                     </div>
                 </div>
-            </div>  
+            </div>
         </div>
     </div>
 </header>

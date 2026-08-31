@@ -1,0 +1,60 @@
+StartFontMetrics 4.1
+Notice Converted by PHP-font-lib
+Comment https://github.com/dompdf/php-font-lib
+EncodingScheme FontSpecific
+FontName KaTeX_Size2
+FontSubfamily Regular
+UniqueID FontForge 2.0 : KaTeX_Size2-Regular
+FullName KaTeX_Size2-Regular
+Version Version 1.1; ttfautohint (v1.8.3)
+PostScriptName KaTeX_Size2-Regular
+LicenseURL http://scripts.sil.org/OFL
+Weight Medium
+ItalicAngle 0
+IsFixedPitch false
+UnderlineThickness 50
+UnderlinePosition -125
+FontHeightOffset 90
+Ascender 1360
+Descender -862
+FontBBox -1005 -862 1980 1360
+StartCharMetrics 40
+U 32 ; WX 250 ; N space ; G 3
+U 40 ; WX 597 ; N parenleft ; G 4
+U 41 ; WX 597 ; N parenright ; G 5
+U 47 ; WX 811 ; N slash ; G 6
+U 91 ; WX 472 ; N bracketleft ; G 7
+U 92 ; WX 811 ; N backslash ; G 8
+U 93 ; WX 472 ; N bracketright ; G 9
+U 123 ; WX 667 ; N braceleft ; G 10
+U 125 ; WX 667 ; N braceright ; G 11
+U 160 ; WX 250 ; N uni00A0 ; G 12
+U 710 ; WX 1000 ; N circumflex ; G 13
+U 732 ; WX 1000 ; N tilde ; G 14
+U 770 ; WX 0 ; N uni0302 ; G 15
+U 771 ; WX 0 ; N tildecomb ; G 16
+U 8719 ; WX 1278 ; N product ; G 17
+U 8720 ; WX 1278 ; N uni2210 ; G 18
+U 8721 ; WX 1444 ; N summation ; G 19
+U 8730 ; WX 1000 ; N radical ; G 20
+U 8747 ; WX 556 ; N integral ; G 21
+U 8748 ; WX 1084 ; N uni222C ; G 22
+U 8749 ; WX 1592 ; N uni222D ; G 23
+U 8750 ; WX 556 ; N uni222E ; G 24
+U 8896 ; WX 1111 ; N uni22C0 ; G 25
+U 8897 ; WX 1111 ; N uni22C1 ; G 26
+U 8898 ; WX 1111 ; N uni22C2 ; G 27
+U 8899 ; WX 1111 ; N uni22C3 ; G 28
+U 8968 ; WX 528 ; N uni2308 ; G 29
+U 8969 ; WX 528 ; N uni2309 ; G 30
+U 8970 ; WX 528 ; N uni230A ; G 31
+U 8971 ; WX 528 ; N uni230B ; G 32
+U 10216 ; WX 611 ; N uni27E8 ; G 33
+U 10217 ; WX 611 ; N uni27E9 ; G 34
+U 10752 ; WX 1511 ; N uni2A00 ; G 35
+U 10753 ; WX 1511 ; N uni2A01 ; G 36
+U 10754 ; WX 1511 ; N uni2A02 ; G 37
+U 10756 ; WX 1111 ; N uni2A04 ; G 38
+U 10758 ; WX 1111 ; N uni2A06 ; G 39
+EndCharMetrics
+EndFontMetrics

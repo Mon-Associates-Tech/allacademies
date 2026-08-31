@@ -55,8 +55,17 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Enter Payment Amount</h3>
 
-                    <form action="{{ route('students.fees.initialize') }}" method="POST">
+                    <form action="{{ route('students.fees.initialize') }}" method="POST" class="space-y-5">
                         @csrf
+
+                        @if(isset($studentPaymentRecord))
+                            <input type="hidden" name="student_payment_record_id" value="{{ $studentPaymentRecord->id }}">
+                            <div class="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <h4 class="text-sm font-semibold text-yellow-800 mb-1">Charge Details</h4>
+                                <p class="text-sm text-gray-700">{{ $studentPaymentRecord->description ?? 'One-off charge' }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Amount due: ₵{{ number_format($studentPaymentRecord->amount_remaining ?? $studentPaymentRecord->total_amount, 2) }}</p>
+                            </div>
+                        @endif
 
                         <div class="mb-6">
                             <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

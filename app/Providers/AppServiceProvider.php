@@ -63,7 +63,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Register QuestionImportService
         $this->app->singleton(QuestionImportService::class, function ($app) {
-            return new QuestionImportService($app->make(\App\Services\ResearchAssistantService::class));
+            return new QuestionImportService(
+                $app->make(\App\Services\ResearchAssistantService::class),
+                $app->make(\App\Services\DocumentContentExtractionService::class)
+            );
         });
     }
 
@@ -157,6 +160,11 @@ class AppServiceProvider extends ServiceProvider
             'mock_exam_participant' => \App\MockExam\Models\MockExamParticipant::class,
             'mock_exam_submission' => \App\MockExam\Models\MockExamSubmission::class,
             'grade_scale' => \App\MockExam\Models\GradeScale::class,
+            'staff' => \App\BookShop\Models\Staff::class,
+            'customer' => \App\BookShop\Models\Customer::class,
+            'timeslot' => \App\Timetable\Models\Timeslot::class,
+            'room' => \App\Timetable\Models\Room::class,
+            'timetable_entry' => \App\Timetable\Models\TimetableEntry::class
         ]);
     }
 }

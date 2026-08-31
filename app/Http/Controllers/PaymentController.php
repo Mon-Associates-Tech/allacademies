@@ -462,7 +462,7 @@ class PaymentController extends Controller
 
         $totalAmount = $feeStructure->amount ?? 0;
         $paymentMethod = $feeStructure->payment_method ?? 'Momo';
-        $dueDate = $feeStructure->due_date;
+        $dueDate = $feeStructure->due_date ?? null;
 
         return view('payments.school-fees.feepayment', [
             'student' => $student,

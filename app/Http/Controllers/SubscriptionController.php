@@ -83,13 +83,30 @@ class SubscriptionController extends Controller
 
             $regularSubscriptions = collect(); // Empty collection
         } else {
-            // Show both regular and book subscriptions for other roles
+                // Determine optional filters
+            $filterTeamId = request()->query('team_id');
+            $filterSchoolId = request()->query('school_id');
+
+            // Check permission to filter across teams/schools
+            $canFilterAcross = $user->isSuperAdmin() || $user->hasRole('owner') || $user->hasRole('admin');
+
             // Get regular subscriptions - keep as Eloquent collection
-            $regularSubscriptions = Subscription::query()
-                ->where('team_id', $user->current_team_id)
-                ->with(['academicSubjects', 'team', 'subscriber'])
-                ->latest('id')
-                ->get();
+            $regularQuery = Subscription::query()->with(['academicSubjects', 'team', 'subscriber'])->latest('id');
+
+            if ($filterTeamId && $canFilterAcross) {
+                $regularQuery->where('team_id', $filterTeamId);
+            } elseif ($filterSchoolId && $canFilterAcross) {
+                // Find teams whose owner's school_id matches the filter
+                $teamIds = \App\Models\Team::whereHas('owner', function ($q) use ($filterSchoolId) {
+                    $q->where('school_id', $filterSchoolId);
+                })->pluck('id')->toArray();
+
+                $regularQuery->whereIn('team_id', $teamIds ?: [0]);
+            } else {
+                $regularQuery->where('team_id', $user->current_team_id);
+            }
+
+            $regularSubscriptions = $regularQuery->get();
 
             // Get book subscriptions for current user's student - keep as Eloquent collection
             $bookSubscriptions = BookSubscription::query()
@@ -97,6 +114,7 @@ class SubscriptionController extends Controller
                 ->with(['book', 'book.author', 'book.bookCategory', 'student'])
                 ->latest('id')
                 ->get();
+
 
             // Create a combined collection with computed fields
             $combinedSubscriptions = collect();
@@ -148,8 +166,27 @@ class SubscriptionController extends Controller
             }
         }
 
-        // Sort by created_at descending
-        $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+        // Determine type filter (regular/content or book)
+        $filterType = request()->query('type');
+
+        // If user is student, they only see book subscriptions; apply type filter accordingly
+        if ($isStudent) {
+           if ($filterType === 'regular') {
+               // students cannot view regular subscriptions
+               $combinedSubscriptions = collect();
+           } else {
+               $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+           }
+        } else {
+           // For non-students, apply type filters if provided
+           if ($filterType === 'regular') {
+               $combinedSubscriptions = $combinedSubscriptions->where('type', 'regular')->sortByDesc('created_at')->values();
+           } elseif ($filterType === 'book') {
+               $combinedSubscriptions = $combinedSubscriptions->where('type', 'book')->sortByDesc('created_at')->values();
+           } else {
+               $combinedSubscriptions = $combinedSubscriptions->sortByDesc('created_at')->values();
+           }
+        }
 
         // Paginate the combined results
         $currentPage = request()->get('page', 1);
@@ -167,11 +204,42 @@ class SubscriptionController extends Controller
             ]
         );
 
+        // Load helper data for filters (schools and teams) for authorized users
+        $schools = collect();
+        $teams = collect();
+        $userCanFilterAcross = auth()->user()->isSuperAdmin() || auth()->user()->hasRole('owner') || auth()->user()->hasRole('admin');
+
+        $schools = \App\Models\School::orderBy('name')->get();
+
+        // If a school is selected, always load teams belonging to that school's owners so the teams dropdown can be populated on page load.
+        if ($filterSchoolId) {
+            $teams = \App\Models\Team::whereHas('owner', function ($q) use ($filterSchoolId) {
+                $q->where('school_id', $filterSchoolId);
+            })->orderBy('name')->get();
+        } elseif ($userCanFilterAcross && $filterTeamId) {
+            // If only a team is selected, infer the school and populate teams for that school
+            $team = \App\Models\Team::with('owner')->find($filterTeamId);
+            if ($team && $team->owner && $team->owner->school_id) {
+                $inferredSchoolId = $team->owner->school_id;
+                request()->merge(['school_id' => $inferredSchoolId]);
+                $teams = \App\Models\Team::whereHas('owner', function ($q) use ($inferredSchoolId) {
+                    $q->where('school_id', $inferredSchoolId);
+                })->orderBy('name')->get();
+            } else {
+                $teams = collect();
+            }
+        } else {
+            // No school selected — keep teams empty so users must pick a school first
+            $teams = collect();
+        }
+
         return view('subscriptions.index', [
             'subscriptions' => $paginatedSubscriptions,
             'totalSubscriptions' => $combinedSubscriptions->count(),
             'regularSubscriptions' => $regularSubscriptions,
             'bookSubscriptions' => $bookSubscriptions ?? collect(),
+            'filterSchools' => $schools,
+            'filterTeams' => $teams,
         ]);
     }
 

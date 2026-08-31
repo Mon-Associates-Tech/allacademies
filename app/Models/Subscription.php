@@ -98,7 +98,14 @@ class Subscription extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->expires_at > now();
+        // The status field is cast to App\Enums\SubscriptionStatus, so compare to the enum when available
+        if ($this->status instanceof \App\Enums\SubscriptionStatus) {
+            $isPaid = $this->status === \App\Enums\SubscriptionStatus::PAID;
+        } else {
+            $isPaid = (string) $this->status === \App\Enums\SubscriptionStatus::PAID->value;
+        }
+
+        return $isPaid && $this->expires_at > now();
     }
 
     /**
@@ -106,7 +113,7 @@ class Subscription extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 'active')
+        return $query->where('status', \App\Enums\SubscriptionStatus::PAID->value)
             ->where('expires_at', '>', now());
     }
 

@@ -144,8 +144,44 @@
 
             <!-- Payment History Table -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Payment History</h3>
+
+                    <div class="flex items-center space-x-4">
+                        <form method="GET" class="flex items-center space-x-2">
+                            <select name="type" class="rounded-md border-gray-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-2 py-1">
+                                <option value="">All Types</option>
+                                <option value="school_fee" {{ request('type') === 'school_fee' ? 'selected' : '' }}>School Fee</option>
+                                <option value="school_payment" {{ request('type') === 'school_payment' ? 'selected' : '' }}>Portal Payment</option>
+                            </select>
+
+                            <select name="status" class="rounded-md border-gray-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-2 py-1">
+                                <option value="">Any Status</option>
+                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="succeeded" {{ request('status') === 'succeeded' ? 'selected' : '' }}>Succeeded</option>
+                                <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
+                            </select>
+
+                            <input type="date" name="from" value="{{ request('from') }}" class="rounded-md border-gray-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-2 py-1" />
+                            <input type="date" name="to" value="{{ request('to') }}" class="rounded-md border-gray-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-2 py-1" />
+
+                            <button type="submit" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded text-sm">Filter</button>
+                        </form>
+
+                        @if(in_array(auth()->user()->role ?? '', ['admin','accountant']))
+                            <form method="POST" action="{{ route('admin.payments.manual') }}" class="inline-flex items-center space-x-2">
+                                @csrf
+                                <input type="hidden" name="student_id" value="{{ $student->id }}" />
+                                <input name="amount" type="number" step="0.01" placeholder="Amount" class="rounded-md border-gray-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-2 py-1" required />
+                                <select name="status" class="rounded-md border-gray-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm px-2 py-1">
+                                    <option value="pending">Pending</option>
+                                    <option value="succeeded">Succeeded</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                                <button type="submit" class="px-3 py-1 bg-violet-600 text-white rounded text-sm">Create</button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -153,7 +189,9 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reference</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Term</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payer</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
@@ -161,6 +199,11 @@
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($paymentHistory as $payment)
+                            @php
+                                $table = $payment->getTable();
+                                $modelKey = $table === 'school_fees' ? 'school_fee' : 'school_payment';
+                                $payerName = $payment->payer_name ?? ($payment->payer->name ?? 'N/A');
+                            @endphp
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                     {{ $payment->created_at->format('M d, Y') }}
@@ -168,10 +211,19 @@
                                     <span class="text-xs text-gray-500">{{ $payment->created_at->format('h:i A') }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600 dark:text-gray-400">
-                                    {{ substr($payment->reference, 0, 12) }}...
+                                    @php
+                                    $shortRef = \Illuminate\Support\Str::limit($payment->reference ?? 'N/A', 12, '...');
+                                @endphp
+                                <x-copyable-text :text="$payment->reference" :show-text="$shortRef" />
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    {{ ucfirst(str_replace('_', ' ', $modelKey)) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                     {{ $payment->academicPeriod->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                    {{ $payerName }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
                                     ₵{{ number_format($payment->amount, 2) }}
@@ -201,12 +253,33 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    @if($payment->status === 'succeeded')
-                                        <a href="{{ route('students.fees.receipt', $payment) }}"
-                                           class="text-violet-600 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-300">
-                                            View Receipt
-                                        </a>
-                                    @endif
+                                    <div class="flex items-center space-x-2">
+                                        @if($payment->status === 'succeeded')
+                                            @if($modelKey === 'school_fee')
+                                                <a href="{{ route('students.fees.receipt', $payment) }}"
+                                                   class="text-violet-600 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-300">View Receipt</a>
+                                            @else
+                                                <a href="{{ route('students.fees.receipt.payment', $payment) }}"
+                                                   class="text-violet-600 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-300">View Details</a>
+                                            @endif
+                                        @endif
+
+                                        @if(in_array(auth()->user()->role ?? '', ['admin','accountant']))
+                                            <form method="POST" action="{{ route('admin.payments.update-status', ['id' => $payment->id]) }}" style="display:inline-block;margin-right:6px;">
+                                                @csrf
+                                                <input type="hidden" name="model" value="{{ $modelKey }}" />
+                                                <input type="hidden" name="status" value="succeeded" />
+                                                <button type="submit" class="text-green-600 hover:text-green-900">Mark Paid</button>
+                                            </form>
+
+                                            <form method="POST" action="{{ route('admin.payments.update-status', ['id' => $payment->id]) }}" style="display:inline-block;">
+                                                @csrf
+                                                <input type="hidden" name="model" value="{{ $modelKey }}" />
+                                                <input type="hidden" name="status" value="failed" />
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Mark Failed</button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -233,7 +306,7 @@
                     </table>
                 </div>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                    {{ $paymentHistory->links() }}
+                    {{ $paymentHistory->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>

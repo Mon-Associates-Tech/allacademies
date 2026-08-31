@@ -22,6 +22,9 @@ class ExamHeartbeat {
         this.onMessage = options.onMessage || this.defaultMessageHandler;
         this.onForceSubmit = options.onForceSubmit || null;
         this.onTimeExtended = options.onTimeExtended || null;
+        this.onTimeSync = options.onTimeSync || this.defaultTimeSyncHandler.bind(this);
+        // Fired when a second device takes over the session.
+        this.onSessionSuperseded = options.onSessionSuperseded || this.defaultSessionSupersededHandler.bind(this);
 
         this.init();
     }
@@ -45,6 +48,12 @@ class ExamHeartbeat {
 
             if (data.session_token) {
                 this.sessionToken = data.session_token;
+
+                // Immediately sync timer if server returned authoritative time
+                if (data.remaining_seconds !== undefined && data.remaining_seconds !== null) {
+                    this.onTimeSync(data.remaining_seconds, data.extra_time_minutes ?? 0);
+                }
+
                 this.startHeartbeat();
                 this.setupEventListeners();
                 this.setupEchoListener();
@@ -126,10 +135,22 @@ class ExamHeartbeat {
             if (data.status === 'terminated') {
                 this.stop();
                 this.onTerminated(data);
+            } else if (data.status === 'session_superseded') {
+                // A second device authenticated for the same exam.
+                // Stop sending heartbeats and hand off to the superseded handler.
+                this.stop();
+                this.onSessionSuperseded(data);
             } else if (data.warning) {
                 this.onWarning(data.warning);
             } else if (data.admin_message) {
                 this.onMessage(data.admin_message);
+            }
+
+            // Pass null for remaining — the client-side setInterval is the
+            // authority after initial load. Only extra_time_minutes is forwarded
+            // so the timer can still detect admin extensions via polling.
+            if (data.extra_time_minutes !== undefined) {
+                this.onTimeSync(null, data.extra_time_minutes ?? 0);
             }
         } catch (error) {
             console.error('Heartbeat failed:', error.message);
@@ -158,11 +179,14 @@ class ExamHeartbeat {
             .listen('.admin.action', (data) => {
                 switch (data.action) {
                     case 'warning':
-                        this.onWarning({ message: data.message, warned_at: data.timestamp });
+                        this.onWarning({message: data.message, warned_at: data.timestamp});
                         break;
                     case 'terminate':
                         this.stop();
-                        this.onTerminated({ reason: data.message, message: 'Your exam session has been terminated by the administrator.' });
+                        this.onTerminated({
+                            reason: data.message,
+                            message: 'Your exam session has been terminated by the administrator.'
+                        });
                         break;
                     case 'force_submit':
                         if (this.onForceSubmit) {
@@ -173,8 +197,29 @@ class ExamHeartbeat {
                         this.onMessage(data.message);
                         break;
                     case 'extend_time':
+                        // Dispatch CustomEvent so ALL timer instances (desktop +
+                        // mobile) receive the update via their own event listeners.
+                        // No window global — avoids "last writer wins" race.
+                        const addedMinutes = data.data?.additional_minutes ?? 0;
+                        // Never pass remaining_seconds — client countdown is authoritative.
+                        // Route through extra_time_minutes so the timer's lastKnownExtraMinutes
+                        // tracking deduplicates extensions that arrive via both Echo and polling.
+                        if (data.data?.extra_time_minutes !== undefined) {
+                            document.dispatchEvent(new CustomEvent('exam:sync-time', {
+                                detail: {
+                                    remaining: null,
+                                    extraMinutes: data.data.extra_time_minutes,
+                                },
+                            }));
+                        } else if (addedMinutes > 0) {
+                            // Fallback: payload has no extra_time_minutes field
+                            document.dispatchEvent(new CustomEvent('exam:extend-time', {
+                                detail: {minutes: addedMinutes},
+                            }));
+                        }
+
                         if (this.onTimeExtended) {
-                            this.onTimeExtended(data.data.additional_minutes);
+                            this.onTimeExtended(addedMinutes);
                         }
                         break;
                 }
@@ -225,7 +270,7 @@ class ExamHeartbeat {
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 mb-2">Warning from Proctor</h3>
                 <p class="text-slate-600 mb-6">${warning.message}</p>
-                <button onclick="this.closest('.fixed').remove(); window.examHeartbeat?.acknowledgeWarning();" 
+                <button onclick="this.closest('.fixed').remove(); window.examHeartbeat?.acknowledgeWarning();"
                         class="px-6 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600">
                     I Understand
                 </button>
@@ -285,6 +330,58 @@ class ExamHeartbeat {
 
         // Auto remove after 10 seconds
         setTimeout(() => toast.remove(), 10000);
+    }
+
+    defaultSessionSupersededHandler(data) {
+        document.querySelectorAll('.exam-blocking-modal').forEach(el => el.remove());
+
+        const modal = document.createElement('div');
+        modal.className = 'exam-blocking-modal fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:2px;max-width:28rem;width:100%;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);">
+                <div style="height:4px;background:linear-gradient(90deg,#dc2626,#f87171);"></div>
+                <div style="padding:2rem;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+                        <div style="flex-shrink:0;width:2.5rem;height:2.5rem;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;">
+                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 style="margin:0;font-size:1rem;font-weight:700;color:#111;">Session Taken Over</h3>
+                            <p style="margin:.25rem 0 0;font-size:.8125rem;color:#6b7280;">Your exam was opened on another device</p>
+                        </div>
+                    </div>
+                    <p style="font-size:.875rem;color:#374151;margin:0 0 1.5rem;line-height:1.6;">
+                        ${data.message || 'This exam session has been opened on another device.'}
+                    </p>
+                    <p style="font-size:.75rem;color:#9ca3af;margin:0;">Redirecting in <span id="superseded-countdown">5</span> seconds...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        let secs = 5;
+        const tick = setInterval(() => {
+            secs--;
+            const el = document.getElementById('superseded-countdown');
+            if (el) el.textContent = secs;
+            if (secs <= 0) {
+                clearInterval(tick);
+                window.location.href = data.redirect || '/examinations/join';
+            }
+        }, 1000);
+    }
+
+    // Dispatches a CustomEvent so every timer instance on the page receives
+    // the update. Both desktop and mobile timers listen on document.
+    defaultTimeSyncHandler(remainingSeconds, extraTimeMinutes) {
+        document.dispatchEvent(new CustomEvent('exam:sync-time', {
+            detail: {
+                remaining: remainingSeconds,
+                extraMinutes: extraTimeMinutes ?? 0,
+            },
+        }));
     }
 }
 

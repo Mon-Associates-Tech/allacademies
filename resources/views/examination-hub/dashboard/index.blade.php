@@ -150,34 +150,104 @@
         {{-- ── EXAMINATIONS TABLE ── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                <div class="w-1 h-5"
-                     style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
-                <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider"
-                    style="letter-spacing: 0.1em;">Recent Examinations</h2>
+            
+            {{-- Header & Filters --}}
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-5"
+                         style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
+                    <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider"
+                        style="letter-spacing: 0.1em;">Recent Examinations</h2>
+                </div>
+
+                {{-- Filter Form --}}
+                <form method="GET" action="{{ route('examination-hub.dashboard') }}" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <div class="relative flex-1 sm:flex-none">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search title, code, or subject..." 
+                               class="w-full sm:w-64 pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                    </div>
+
+                    <select name="subject" onchange="this.form.submit()" 
+                            class="px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        <option value="">All Subjects</option>
+                        @foreach($availableSubjects as $subj)
+                            <option value="{{ $subj->id }}" {{ ($filters['subject'] ?? '') == $subj->id ? 'selected' : '' }}>
+                                {{ $subj->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <select name="status" onchange="this.form.submit()" 
+                            class="px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        <option value="">All Statuses</option>
+                        <option value="draft" {{ ($filters['status'] ?? '') === 'draft' ? 'selected' : '' }}>Draft</option>
+                        <option value="published" {{ ($filters['status'] ?? '') === 'published' ? 'selected' : '' }}>Published</option>
+                        <option value="archived" {{ ($filters['status'] ?? '') === 'archived' ? 'selected' : '' }}>Archived</option>
+                    </select>
+                    
+                    @if(!empty($filters['search']) || !empty($filters['status']) || !empty($filters['subject']))
+                        <a href="{{ route('examination-hub.dashboard') }}" class="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Clear
+                        </a>
+                    @endif
+                </form>
             </div>
+
             <div class="overflow-x-auto">
+                @php
+                    $sortField = request('sort_by', 'created_at');
+                    $sortDirection = request('sort_direction', 'desc');
+                    
+                    $toggleSort = function($field) use ($sortField, $sortDirection) {
+                        $newDirection = ($sortField === $field && $sortDirection === 'asc') ? 'desc' : 'asc';
+                        return request()->fullUrlWithQuery(['sort_by' => $field, 'sort_direction' => $newDirection]);
+                    };
+                    
+                    $sortIcon = function($field) use ($sortField, $sortDirection) {
+                        if ($sortField !== $field) {
+                            return '<svg class="w-3 h-3 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
+                        }
+                        if ($sortDirection === 'asc') {
+                            return '<svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
+                        }
+                        return '<svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+                    };
+                @endphp
+
                 <table class="w-full text-sm">
                     <thead>
                     <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                            style="letter-spacing: 0.08em;">Title
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" style="letter-spacing: 0.08em;">
+                            <a href="{{ $toggleSort('title') }}" class="flex items-center gap-1">
+                                Title
+                                {!! $sortIcon('title') !!}
+                            </a>
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                            style="letter-spacing: 0.08em;">Code
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" style="letter-spacing: 0.08em;">
+                            <a href="{{ $toggleSort('subject') }}" class="flex items-center gap-1">
+                                Subject
+                                {!! $sortIcon('subject') !!}
+                            </a>
                         </th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                            style="letter-spacing: 0.08em;">Sections
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" style="letter-spacing: 0.08em;">
+                            <a href="{{ $toggleSort('access_code') }}" class="flex items-center gap-1">
+                                Code
+                                {!! $sortIcon('access_code') !!}
+                            </a>
                         </th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                            style="letter-spacing: 0.08em;">Questions
+                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Sections</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Questions</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 transition-colors" style="letter-spacing: 0.08em;">
+                            <a href="{{ $toggleSort('submissions_count') }}" class="flex items-center justify-center gap-1">
+                                Submissions
+                                {!! $sortIcon('submissions_count') !!}
+                            </a>
                         </th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                            style="letter-spacing: 0.08em;">Submissions
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-                            style="letter-spacing: 0.08em;">Actions
-                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Actions</th>
                     </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
@@ -186,15 +256,15 @@
                             <td class="px-6 py-3.5 font-semibold text-slate-800 dark:text-slate-200">
                                 {{ $exam->title }}
                             </td>
+                            <td class="px-6 py-3.5 text-slate-700 dark:text-slate-300">
+                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    {{ $exam->academicSubject->name ?? 'N/A' }}
+                                </span>
+                            </td>
                             <td class="px-6 py-3.5">
-                               <span class="inline-flex items-center justify-center text-xs font-mono font-medium px-2.5 py-1
-             border border-slate-200 dark:border-slate-600
-             bg-gradient-to-br from-slate-50 to-slate-100
-             dark:from-slate-700 dark:to-slate-800
-             text-slate-700 dark:text-slate-300"
-                                     style="border-radius: 2px;">
-    {{ $exam->access_code }}
-</span>
+                               <span class="inline-flex items-center justify-center text-xs font-mono font-medium px-2.5 py-1 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300" style="border-radius: 2px;">
+                                    {{ $exam->access_code }}
+                                </span>
                             </td>
                             <td class="px-6 py-3.5 text-center text-slate-700 dark:text-slate-300 font-medium">
                                 {{ $exam->sections_count }}
@@ -211,8 +281,7 @@
                                        href="{{ route('examination-hub.exams.show', $exam) }}">
                                         Open
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M9 5l7 7-7 7"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                         </svg>
                                     </a>
                                     @if(!$exam->starts_at || now()->lt($exam->starts_at))
@@ -227,8 +296,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
-                                No examinations yet.
+                            <td colspan="7" class="px-6 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+                                No examinations found matching your filters.
                             </td>
                         </tr>
                     @endforelse
@@ -236,7 +305,7 @@
                 </table>
             </div>
             <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
-                {{ $exams->links() }}
+                {{ $exams->withQueryString()->links() }}
             </div>
         </div>
 

@@ -269,7 +269,7 @@
                                     'name' => "sections[{$index}][topic_ids]",
                                     'multiple' => true,
                                     'placeholder' => 'Select topics',
-                                ], key("section-{$index}-topics-".md5(json_encode($section['topic_ids'] ?? [])).'-'.md5(json_encode($section))))
+                                ], key("section-{$index}-topics-".($section['academic_subject_id'] ?? 'none')))
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subtopics
@@ -280,7 +280,7 @@
                                     'name' => "sections[{$index}][subtopic_ids]",
                                     'multiple' => true,
                                     'placeholder' => 'Select subtopics',
-                                ], key("section-{$index}-subtopics-".md5(json_encode($section['subtopic_ids'] ?? [])).'-'.md5(json_encode($section))))
+                                ], key("section-{$index}-subtopics-".($section['academic_subject_id'] ?? 'none').'-'.md5(json_encode($section['topic_ids'] ?? []))))
                             </div>
                         </div>
                     </div>

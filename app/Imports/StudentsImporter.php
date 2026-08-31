@@ -173,7 +173,8 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
         ]);
 
         // If no user exists yet, create a username-based account for optional portal access
-        if (! $user) {
+        // Respect create_login flag: default true when column is missing
+        if (! $user && ($studentData['create_login'] ?? true)) {
             $generatedUsername = $studentData['username'] ?? $usernameService->generate($student);
 
             $user = User::create([
@@ -233,6 +234,10 @@ class StudentsImporter implements ToCollection, WithBatchInserts, WithChunkReadi
             'bio' => $row['bio'] ?? null,
             'favorite_subjects' => $row['favorite_subjects'] ?? null,
             'learning_goals' => $row['learning_goals'] ?? null,
+            // Whether to create a user login for this student. Defaults to true when the column is missing.
+            'create_login' => array_key_exists('create_login', $row)
+                ? !in_array(strtolower(trim((string) ($row['create_login'] ?? ''))), ['0', 'false', 'no', 'n', 'f'], true)
+                : true,
         ];
     }
 

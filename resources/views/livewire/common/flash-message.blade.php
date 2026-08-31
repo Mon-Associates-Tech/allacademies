@@ -18,7 +18,7 @@
                     hideTimeout: null,
                     progressWidth: '100%',
                     startHideTimer() {
-                        const duration = {{ $hideDelay }};
+                        const duration = {{ $hideDelay ?? 5000 }};
                         this.progressWidth = '100%';
 
                         // Trigger reflow to ensure CSS transition works
@@ -124,7 +124,7 @@
                         <div
                             x-ref="progress"
                             class="h-full {{ $colors['icon'] }} dark:opacity-75"
-                            :style="{ width: progressWidth, transition: `width ${$hideDelay}ms linear` }"
+                            :style="{ width: progressWidth, transition: 'width {{ $hideDelay ?? 5000 }}ms linear' }"
                         ></div>
                     </div>
                 @endif

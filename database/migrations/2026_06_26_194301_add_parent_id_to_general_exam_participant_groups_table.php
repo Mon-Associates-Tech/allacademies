@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('general_exam_participant_groups', function (Blueprint $table) {
+            $table->foreignId('parent_id')
+                  ->nullable()
+                  ->after('id')
+                  ->constrained('general_exam_participant_groups')
+                  ->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('general_exam_participant_groups', function (Blueprint $table) {
+            $table->dropForeign(['parent_id']);
+            $table->dropColumn('parent_id');
+        });
+    }
+};

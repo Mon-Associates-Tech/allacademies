@@ -24,6 +24,9 @@ class ReportCard extends Model
         'approved_by',
         'rejection_reason',
         'is_accessible',
+        'teacher_remarks',              // new
+        'attendance_total_days',        // new
+        'attendance_days_present',      // new
     ];
 
     protected $casts = [
@@ -31,6 +34,8 @@ class ReportCard extends Model
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
         'is_accessible' => 'boolean',
+        'attendance_total_days' => 'integer',     // new
+        'attendance_days_present' => 'integer',   // new
     ];
 
     public function student(): BelongsTo
@@ -131,5 +136,23 @@ class ReportCard extends Model
             'action' => 'rejected',
             'notes' => $reason,
         ]);
+    }
+
+    public function attendanceDaysAbsent(): ?int
+    {
+        if ($this->attendance_total_days === null || $this->attendance_days_present === null) {
+            return null;
+        }
+
+        return max(0, $this->attendance_total_days - $this->attendance_days_present);
+    }
+
+    public function attendancePercentage(): ?float
+    {
+        if (! $this->attendance_total_days) {
+            return null;
+        }
+
+        return round(($this->attendance_days_present / $this->attendance_total_days) * 100, 1);
     }
 }

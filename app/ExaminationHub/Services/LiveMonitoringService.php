@@ -119,15 +119,18 @@ class LiveMonitoringService
                 return;
             }
 
-            // No submission started yet (participant never actually entered) → disconnected
-            if (! $heartbeat->submission || ! $heartbeat->submission->started_at) {
-                $heartbeat->update(['status' => ExamParticipantHeartbeat::STATUS_DISCONNECTED]);
-                $heartbeat->status = ExamParticipantHeartbeat::STATUS_DISCONNECTED;
-
-                return;
-            }
-
-            // Normal timing-based status
+            // Timing-based status — the only source of truth for non-terminal participants.
+            //
+            // NOTE: we intentionally do NOT override status based on started_at being null.
+            // The previous check (`! started_at → disconnected`) caused a race condition:
+            // initializeSession() is called in authenticate() before start() sets started_at.
+            // If the monitoring poll fired in that window, the candidate was written as
+            // 'disconnected' and stayed that way because the early `return` bypassed
+            // calculateStatus(), even as heartbeats continued to arrive normally.
+            //
+            // calculateStatus() already returns STATUS_DISCONNECTED after DISCONNECTED_THRESHOLD
+            // seconds with no heartbeat, which correctly handles candidates who authenticated
+            // but never actually entered the exam.
             $currentStatus = $heartbeat->calculateStatus();
             if ($heartbeat->status !== $currentStatus) {
                 $heartbeat->update(['status' => $currentStatus]);
@@ -200,6 +203,75 @@ class LiveMonitoringService
                 'event_data' => $log->event_data,
                 'occurred_at' => $log->occurred_at->toIso8601String(),
             ])->toArray(),
+        ];
+    }
+
+    /**
+     * Get live monitoring data across all exams for a user.
+     */
+    public function getAllExamsMonitoringData(int $userId): array
+    {
+        $exams = GeneralExam::where('user_id', $userId)->get();
+        $examIds = $exams->pluck('id')->toArray();
+
+        $heartbeats = ExamParticipantHeartbeat::whereIn('general_exam_id', $examIds)
+            ->with(['submission', 'exam'])
+            ->get();
+
+        // Sync status for each heartbeat
+        $heartbeats->each(function ($heartbeat) {
+            $terminal = in_array($heartbeat->status, [
+                ExamParticipantHeartbeat::STATUS_COMPLETED,
+                ExamParticipantHeartbeat::STATUS_TERMINATED,
+            ]);
+
+            if ($terminal) {
+                return;
+            }
+
+            if ($heartbeat->submission?->isSubmitted()) {
+                $heartbeat->update(['status' => ExamParticipantHeartbeat::STATUS_COMPLETED]);
+                $heartbeat->status = ExamParticipantHeartbeat::STATUS_COMPLETED;
+                return;
+            }
+
+            $currentStatus = $heartbeat->calculateStatus();
+            if ($heartbeat->status !== $currentStatus) {
+                $heartbeat->update(['status' => $currentStatus]);
+                $heartbeat->status = $currentStatus;
+            }
+        });
+
+        $participants = $heartbeats->map(function ($h) {
+            $exam = $h->exam;
+            $durationMinutes = $exam?->duration_in_minutes;
+            $sections = $exam?->sections()->orderBy('order')->get() ?? collect();
+            $liveData = $h->toLiveData($durationMinutes, $sections);
+
+            return array_merge($liveData, [
+                'exam_id' => $exam?->id,
+                'exam_title' => $exam?->title,
+            ]);
+        });
+
+        // Calculate stats
+        $stats = [
+            'total_participants' => $heartbeats->count(),
+            'active' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_ACTIVE)->count(),
+            'idle' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_IDLE)->count(),
+            'away' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_AWAY)->count(),
+            'disconnected' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_DISCONNECTED)->count(),
+            'completed' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_COMPLETED)->count(),
+            'terminated' => $heartbeats->where('status', ExamParticipantHeartbeat::STATUS_TERMINATED)->count(),
+            'flagged' => $heartbeats->where('is_flagged', true)->count(),
+            'total_violations' => $heartbeats->sum('violation_count'),
+            'high_violations' => $heartbeats->sum('high_severity_count'),
+            'medium_violations' => $heartbeats->sum('medium_severity_count'),
+        ];
+
+        return [
+            'stats' => $stats,
+            'participants' => $participants->values()->toArray(),
         ];
     }
 
@@ -371,7 +443,9 @@ class LiveMonitoringService
      */
     public function extendTime(int $submissionId, int $additionalMinutes): ?ExamParticipantHeartbeat
     {
-        $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)->first();
+        $heartbeat = ExamParticipantHeartbeat::where('general_exam_submission_id', $submissionId)
+            ->with('submission')
+            ->first();
 
         if (! $heartbeat) {
             return null;
@@ -388,11 +462,21 @@ class LiveMonitoringService
             ['additional_minutes' => $additionalMinutes]
         );
 
+        // Include the authoritative remaining time in the broadcast so the candidate's
+        // timer can update immediately via Echo without waiting for the next heartbeat poll.
+        // getRemainingTime() already incorporates extra_time_minutes set by the controller.
+        $remainingSeconds = $heartbeat->submission?->getRemainingTime();
+        $extraMinutes     = $heartbeat->submission?->extra_time_minutes ?? 0;
+
         broadcast(new AdminActionSent(
             $heartbeat,
             'extend_time',
             $message,
-            ['additional_minutes' => $additionalMinutes]
+            [
+                'additional_minutes' => $additionalMinutes,
+                'remaining_seconds'  => $remainingSeconds,
+                'extra_time_minutes' => $extraMinutes,
+            ]
         ))->toOthers();
 
         return $heartbeat;

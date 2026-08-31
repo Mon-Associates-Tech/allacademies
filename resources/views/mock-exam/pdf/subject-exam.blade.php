@@ -5,7 +5,7 @@
     <title>{{ $subjectExam->getDisplayTitle() }} - {{ $subjectExam->mockExam->title }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+    <link rel="stylesheet" href="{{ public_path('vendor/katex/katex.min.css') }}">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -213,72 +213,7 @@
             page-break-before: always;
         }
 
-        /* ─── Front Page Styles ─── */
-        .front-page {
-            page-break-after: always;
-            text-align: center;
-            padding: 40mm 25mm 30mm 25mm;
-            font-family: 'Georgia', 'Times New Roman', serif;
-        }
-        .fp-title {
-            font-size: {{ ($fontSize ?? 11) + 8 }}pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #111;
-            margin-bottom: 25px;
-            line-height: 1.4;
-        }
-        .fp-subtitle {
-            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
-            font-style: italic;
-            color: #666;
-            margin-bottom: 35px;
-            line-height: 1.5;
-        }
-        .fp-divider {
-            width: 100%;
-            height: 1px;
-            background: #ccc;
-            margin: 30px 0;
-            position: relative;
-        }
-        .fp-divider::before {
-            content: "";
-            position: absolute;
-            top: -0.5px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #aaa;
-        }
-        .fp-content {
-            margin: 25px 0;
-            text-align: left;
-            font-size: {{ $fontSize ?? 11 }}pt;
-            line-height: 1.7;
-        }
-        .fp-image {
-            max-width: 100%;
-            margin: 20px auto;
-            display: block;
-        }
-        .fp-info-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 25px 0;
-            text-align: left;
-        }
-        .fp-info-table th {
-            font-weight: bold;
-            padding: 8px 12px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-        }
-        .fp-info-table td {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-        }
+        .prose-inline .katex-display { display: inline-block; margin: 0; }
     </style>
 </head>
 <body>
@@ -441,11 +376,11 @@
 
             @foreach($section->questions as $qIndex => $question)
             <div class="question-block">
-                <div class="question-header" style="display: flex; flex-wrap: nowrap; align-items: center;">
-                    <span class="question-number">{{ $loop->parent->iteration }}.{{ $loop->iteration }}</span>
+                <div class="question-header">
+                    <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
-                        {{-- <x-prose-content :content="$question->question_text" inline="true" /> --}}
-                        <span> {{ $question->question_text }} </span>
+{{--                        @dd($question)--}}
+                        <x-markdown-renderer :content="$question->question_text" inline="true" />
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
                 </div>
@@ -458,7 +393,7 @@
                     <div class="option-item">
                         <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
                         <span class="option-text">
-                            <span>{{ $option }}</span>
+                            <x-markdown-renderer :content="$option" inline="true" />
                         </span>
                     </div>
                     @php $optionIndex++; @endphp

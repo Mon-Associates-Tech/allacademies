@@ -259,6 +259,7 @@ class UnifiedNotifications extends Component
                 'created_at' => $notification->created_at,
                 'read_at' => $notification->read_at,
                 'data' => $notification->data,
+                'action_url' => $this->getNotificationActionUrl($notification),
                 'icon' => $this->getNotificationIcon($category),
                 'color' => $this->getNotificationColor($category),
             ];
@@ -310,7 +311,7 @@ class UnifiedNotifications extends Component
                     $query->where('teacher_id', $user->teacher->id);
                 })
                 ->with(['assignment', 'assignment.academicSubject', 'student.user'])
-                ->whereNotNull('submitted_at');
+                ->whereNotNull('notified_at');
 
             if ($this->filter === 'unread') {
                 $submissionQuery->whereNull('read_at');
@@ -318,23 +319,23 @@ class UnifiedNotifications extends Component
                 $submissionQuery->whereNotNull('read_at');
             }
 
-            $submissionNotifications = $submissionQuery->latest('submitted_at')->get()->map(function ($notification) {
+            $submissionNotifications = $submissionQuery->latest('notified_at')->get()->map(function ($notification) {
                 return [
                     'id' => 'submission_'.$notification->id,
                     'original_id' => $notification->id,
                     'type' => 'submission',
                     'category' => 'submission',
                     'notification_type' => 'submission',
-                    'title' => "Submission: $notification->assignment->title ?? 'Assignment'",
-                    'message' => "$notification->student->user->name ?? 'Student' submitted $notification->assignment->title ?? 'an assignment'.",
-                    'created_at' => $notification->submitted_at,
+                    'title' => 'Submission: ' . ($notification->assignment->title ?? 'Assignment'),
+                    'message' => ($notification->student->user->name ?? 'Student') . ' submitted ' . ($notification->assignment->title ?? 'an assignment') . '.',
+                    'created_at' => $notification->notified_at,
                     'read_at' => $notification->read_at,
                     'data' => [
                         'assignment_id' => $notification->assignment_id,
                         'assignment_title' => $notification->assignment->title ?? 'Unknown Assignment',
                         'subject' => $notification->assignment->academicSubject->name ?? 'Unknown Subject',
                         'student_name' => $notification->student->user->name ?? 'Unknown Student',
-                        'submitted_at' => $notification->submitted_at,
+                        'notified_at' => $notification->notified_at,
                     ],
                     'icon' => 'submission',
                     'color' => 'purple',
@@ -371,6 +372,7 @@ class UnifiedNotifications extends Component
                             'score' => $score,
                             'subject' => $session->subject?->name ?? 'Self Assessment',
                         ],
+                        'action_url' => null,
                         'icon' => 'assessment',
                         'color' => 'purple',
                     ];
@@ -432,12 +434,12 @@ class UnifiedNotifications extends Component
             $submissionTotal = AssignmentNotification::whereHas('assignment', function ($query) use ($user) {
                     $query->where('teacher_id', $user->teacher->id);
                 })
-                ->whereNotNull('submitted_at')
+                ->whereNotNull('notified_at')
                 ->count();
             $submissionUnread = AssignmentNotification::whereHas('assignment', function ($query) use ($user) {
                     $query->where('teacher_id', $user->teacher->id);
                 })
-                ->whereNotNull('submitted_at')
+                ->whereNotNull('notified_at')
                 ->whereNull('read_at')
                 ->count();
             $counts['submission'] = $submissionTotal;
@@ -453,6 +455,20 @@ class UnifiedNotifications extends Component
         $counts['read'] += $assessmentTotal;
 
         return $counts;
+    }
+
+    private function getNotificationActionUrl($notification): ?string
+    {
+        $data = $notification->data;
+        if (is_string($data)) {
+            $data = json_decode($data, true) ?? [];
+        }
+
+        if (str_contains($notification->type, 'MessageNotification') && isset($data['message_id'])) {
+            return route('admin.messages.show', $data['message_id']);
+        }
+
+        return $data['url'] ?? $data['action_url'] ?? null;
     }
 
     private function getNotificationCategory(string $notificationType): string
@@ -513,20 +529,30 @@ class UnifiedNotifications extends Component
     private function getNotificationTitle($notification)
     {
         $data = $notification->data;
+        if (is_string($data)) {
+            $data = json_decode($data, true) ?? [];
+        }
 
-        return match ($notification->type) {
-            'App\\Notifications\\NewAssignmentNotification' => "New {$data['type']}: {$data['title']}",
-            default => $data['title'] ?? 'Notification',
+        return match (true) {
+            str_contains($notification->type, 'MessageNotification') => $data['subject'] ?? $data['title'] ?? 'New Message',
+            isset($data['title'])                                     => $data['title'],
+            isset($data['subject'])                                   => $data['subject'],
+            default                                                   => 'Notification',
         };
     }
 
     private function getNotificationMessage($notification)
     {
         $data = $notification->data;
+        if (is_string($data)) {
+            $data = json_decode($data, true) ?? [];
+        }
 
-        return match ($notification->type) {
-            'App\\Notifications\\NewAssignmentNotification' => $data['message'] ?? 'New assignment has been created.',
-            default => $data['message'] ?? 'You have a new notification.',
+        return match (true) {
+            str_contains($notification->type, 'MessageNotification') => $data['body'] ?? $data['message'] ?? 'You have a new message.',
+            isset($data['message'])                                   => $data['message'],
+            isset($data['body'])                                      => $data['body'],
+            default                                                   => '',
         };
     }
 

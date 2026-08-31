@@ -29,6 +29,7 @@ class ExamCreationService implements ExamCreationServiceInterface
                 'participant_mode' => $payload['participant_mode'],
                 'participant_required_fields' => $payload['participant_required_fields'] ?? [],
                 'configured_match_mode' => $payload['configured_match_mode'] ?? 'any',
+                'participant_group_id' => $payload['participant_group_id'] ?? null,
                 'max_attempts' => 1,
                 'result_visibility' => 'manual_release',
             ]);
@@ -83,6 +84,7 @@ class ExamCreationService implements ExamCreationServiceInterface
                 'participant_mode' => $payload['participant_mode'],
                 'participant_required_fields' => $payload['participant_required_fields'] ?? [],
                 'configured_match_mode' => $payload['configured_match_mode'] ?? 'any',
+                'participant_group_id' => $payload['participant_group_id'] ?? null,
             ]);
 
             // Diff sections: update existing, create new, delete removed

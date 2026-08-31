@@ -1,113 +1,102 @@
 <x-layouts.app>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between print:hidden">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Payment Receipt') }}
             </h2>
             <button onclick="window.print()"
-                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                 </svg>
-                Print Receipt
+                Print receipt
             </button>
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden border-4 border-green-500 dark:border-green-600">
-                <!-- Success Banner -->
-                <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center">
-                    <svg class="w-16 h-16 mx-auto text-white mb-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <h3 class="text-2xl font-bold text-white">Payment Successful!</h3>
-                    <p class="text-green-100 mt-1">Your payment has been processed successfully</p>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&display=swap');
+        .receipt-serif { font-family: 'Source Serif 4', ui-serif, Georgia, 'Times New Roman', serif; }
+        @media print {
+            @page { margin: 1.2cm; }
+            body { background: #fff !important; }
+            #receipt, #receipt * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+
+    <div class="py-12 print:py-0">
+        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
+            <div id="receipt" class="bg-[#F6F7F4] border border-[#D7DED8] rounded-lg">
+
+                <!-- Letterhead -->
+                <div class="px-10 pt-10 pb-6 text-center">
+                    <div aria-hidden="true" class="mx-auto w-12 h-12 rounded-full border-2 border-[#1F5A44] flex items-center justify-center mb-4">
+                        <span class="receipt-serif text-lg font-semibold text-[#1F5A44]">{{ strtoupper(substr($payment->student->school->name ?? 'S', 0, 1)) }}</span>
+                    </div>
+                    <h3 class="receipt-serif text-2xl font-semibold text-[#1B2420] tracking-tight">{{ $payment->student->school->name ?? 'School Name' }}</h3>
+                    <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#1F5A44]">Official receipt · Payment confirmed</p>
                 </div>
 
-                <div class="p-8">
-                    <!-- Receipt Header -->
-                    <div class="text-center mb-8 pb-8 border-b-2 border-gray-200 dark:border-gray-700">
-                        <h4 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Official Receipt</h4>
-                        <p class="text-gray-600 dark:text-gray-400">{{ $payment->student->school->name ?? 'School Name' }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">School Fees Payment</p>
+                <!-- Meta strip -->
+                <dl class="grid grid-cols-3 gap-4 px-10 py-6 text-center border-t border-[#D7DED8]">
+                    <div>
+                        <dt class="text-[10px] uppercase tracking-widest text-[#6B7280]">Receipt no.</dt>
+                        <dd class="mt-1 font-mono text-sm text-[#1B2420]">{{ $payment->reference }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-[10px] uppercase tracking-widest text-[#6B7280]">Date</dt>
+                        <dd class="mt-1 font-mono text-sm text-[#1B2420]">{{ $payment->created_at->format('F d, Y h:i A') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[10px] uppercase tracking-widest text-[#6B7280]">Term</dt>
+                        <dd class="mt-1 font-mono text-sm text-[#1B2420]">{{ $payment->academicPeriod->name ?? 'N/A' }}</dd>
+                    </div>
+                </dl>
 
-                    <!-- Receipt Details -->
-                    <div class="grid grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <h5 class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase mb-3">Student Information</h5>
-                            <dl class="space-y-2">
-                                <div>
-                                    <dt class="text-xs text-gray-500 dark:text-gray-500">Name</dt>
-                                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $payment->student->user->name }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-xs text-gray-500 dark:text-gray-500">Student ID</dt>
-                                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $payment->student->student_id }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-xs text-gray-500 dark:text-gray-500">Class/Level</dt>
-                                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $payment->student->academicLevel->name ?? 'N/A' }}</dd>
-                                </div>
-                            </dl>
+                <!-- Billed to -->
+                <dl class="px-10 py-6 border-t border-[#D7DED8]">
+                    <dt class="text-[10px] uppercase tracking-widest text-[#6B7280] mb-2">Billed to</dt>
+                    <dd class="text-base font-medium text-[#1B2420]">{{ $payment->student->user->name }}</dd>
+                    <dd class="mt-1 text-sm text-[#6B7280]">Student ID {{ $payment->student->student_id }} · {{ $payment->student->academicLevel->name ?? 'N/A' }}</dd>
+                </dl>
+
+                <!-- Line item + total -->
+                <div class="px-10 py-6 border-t border-[#D7DED8]">
+                    <div class="relative rounded-md bg-[#E3ECE6] px-6 py-5">
+                        <div class="flex items-center justify-between text-sm text-[#1B2420]">
+                            <span>School fees payment — {{ $payment->academicPeriod->name ?? 'current term' }}</span>
+                            <span class="font-mono tabular-nums">₵{{ number_format($payment->amount, 2) }}</span>
+                        </div>
+                        <div class="mt-4 pt-4 border-t-4 border-double border-[#1F5A44]/40 flex items-center justify-between">
+                            <span class="text-sm font-semibold uppercase tracking-wide text-[#1B2420]">Total paid</span>
+                            <span class="font-mono text-2xl font-bold text-[#1F5A44] tabular-nums">₵{{ number_format($payment->amount, 2) }}</span>
                         </div>
 
-                        <div>
-                            <h5 class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase mb-3">Payment Details</h5>
-                            <dl class="space-y-2">
-                                <div>
-                                    <dt class="text-xs text-gray-500 dark:text-gray-500">Receipt No.</dt>
-                                    <dd class="text-sm font-mono font-medium text-gray-900 dark:text-white">{{ $payment->reference }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-xs text-gray-500 dark:text-gray-500">Date</dt>
-                                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $payment->created_at->format('F d, Y h:i A') }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-xs text-gray-500 dark:text-gray-500">Term</dt>
-                                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $payment->academicPeriod->name ?? 'N/A' }}</dd>
-                                </div>
-                            </dl>
+                        <div aria-hidden="true" class="pointer-events-none select-none absolute -top-4 -right-4 w-24 h-24 rounded-full border-[3px] border-double border-[#1F5A44] flex flex-col items-center justify-center rotate-[-9deg] opacity-80 mix-blend-multiply">
+                            <span class="receipt-serif text-[13px] font-bold tracking-wider text-[#1F5A44] leading-none">PAID</span>
+                            <span class="text-[7px] tracking-[0.2em] text-[#1F5A44] mt-1">IN FULL</span>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Amount Section -->
-                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 mb-8">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-gray-700 dark:text-gray-300 font-medium">Amount Paid</span>
-                            <span class="text-3xl font-bold text-green-600 dark:text-green-400">₵{{ number_format($payment->amount, 2) }}</span>
-                        </div>
-                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Payment Method</span>
-                                <span class="font-medium text-gray-900 dark:text-white">Paystack</span>
-                            </div>
-                            <div class="flex justify-between text-sm mt-2">
-                                <span class="text-gray-600 dark:text-gray-400">Status</span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Completed
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Method / status -->
+                <div class="px-10 py-6 border-t border-[#D7DED8] flex items-center justify-between text-xs text-[#6B7280]">
+                    <span>Paid via Paystack</span>
+                    <span class="inline-flex items-center gap-1.5 font-medium text-[#1F5A44]">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Completed
+                    </span>
+                </div>
 
-                    <!-- Footer -->
-                    <div class="text-center pt-8 border-t-2 border-gray-200 dark:border-gray-700">
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            This is a computer-generated receipt and does not require a signature
-                        </p>
-                        <div class="flex justify-center space-x-4">
-                            <a href="{{ route('students.fees.index') }}"
-                               class="inline-flex items-center px-4 py-2 bg-violet-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-violet-700">
-                                View All Payments
-                            </a>
-                        </div>
-                    </div>
+                <!-- Footer -->
+                <div class="px-10 py-8 border-t border-[#D7DED8] text-center">
+                    <p class="text-xs text-[#6B7280]">This is a computer-generated receipt and does not require a signature.</p>
+                    <a href="{{ route('students.fees.index') }}"
+                       class="print:hidden mt-5 inline-flex items-center px-5 py-2.5 border border-[#1F5A44] rounded-md text-xs font-semibold uppercase tracking-wider text-[#1F5A44] hover:bg-[#1F5A44] hover:text-white transition">
+                        View all payments
+                    </a>
                 </div>
             </div>
         </div>

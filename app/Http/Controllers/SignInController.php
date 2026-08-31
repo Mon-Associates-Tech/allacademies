@@ -96,6 +96,11 @@ class SignInController extends Controller
                 // OTP is disabled, proceed directly to dashboard
                 $request->session()->regenerate();
 
+                // Check if there's a cross-auth redirect pending
+                if (session()->has('cross_auth_redirect')) {
+                    return redirect()->route('bookshop.shop.auth.from-default-auth');
+                }
+
                 return redirect()->intended('dashboard');
             }
         }
@@ -229,6 +234,11 @@ class SignInController extends Controller
             // Clean up session
             $request->session()->forget(['2fa:user:id', '2fa:user:email', '2fa:attempts', '2fa:last_resend', 'auth.remember']);
             $request->session()->regenerate();
+
+            // Check if there's a cross-auth redirect pending
+            if (session()->has('cross_auth_redirect')) {
+                return redirect()->route('bookshop.shop.auth.from-default-auth');
+            }
 
             return redirect()->intended('dashboard');
         }

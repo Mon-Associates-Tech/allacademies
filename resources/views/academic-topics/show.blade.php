@@ -1,4 +1,4 @@
-<x-layouts.app title="{{ $academicTopic->name }} Topic Details" action-link-text="Add Subtopic"
+<x-layouts.app title="{{ $academicTopic->name }} Topic Details" :show-title-area="false" action-link-text="Add Subtopic"
                :action_link="route('subtopics.create', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
     <x-slot name="breadcrumb">
         <x-breadcrumb :paths="[

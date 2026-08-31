@@ -226,26 +226,28 @@
                             </div>
 
                             {{-- Content --}}
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-start justify-between gap-4 mb-2">
+                            <div class="flex-1 min-w-0" x-data="{ expanded: false }">
+                                <div class="flex items-start justify-between gap-4 mb-1">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-1">
                                             <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
                                                 {{ $notification['title'] }}
                                             </h3>
                                             @if(!$notification['read_at'])
-                                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-300" style="background: rgba(124,58,237,0.1); border-radius: 2px;">
-                                                New
-                                            </span>
+                                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-300" style="background: rgba(124,58,237,0.1); border-radius: 2px;">New</span>
                                             @endif
                                         </div>
-                                        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                                            {{ $notification['message'] }}
-                                        </p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed" x-show="!expanded">{{ Str::limit($notification['message'], 120) }}</p>
+                                        <div x-show="expanded" x-cloak class="mt-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line border border-slate-200 dark:border-slate-700">{{ $notification['message'] }}</div>
                                     </div>
 
                                     {{-- Actions --}}
-                                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <button x-on:click="expanded = !expanded" class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" style="border-radius: 2px;" :title="expanded ? 'Collapse' : 'Expand'">
+                                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
                                         @if(!$notification['read_at'])
                                         <button wire:click="markAsRead('{{ $notification['type'] }}', '{{ $notification['original_id'] }}')" class="p-2 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors" style="border-radius: 2px;" title="Mark as read">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,33 +255,38 @@
                                             </svg>
                                         </button>
                                         @endif
-                                        <button wire:click="deleteNotification('{{ $notification['type'] }}', '{{ $notification['original_id'] }}')" wire:confirm="Are you sure you want to delete this notification?" class="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="border-radius: 2px;" title="Delete">
+                                        <button wire:click="deleteNotification('{{ $notification['type'] }}', '{{ $notification['original_id'] }}')" wire:confirm="Are you sure you want to delete this notification?" class="p-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style="border-radius: 2px;" title="Delete">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
                                         </button>
                                     </div>
                                 </div>
-                                
-                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-500 dark:text-slate-400">
                                     <div class="flex items-center gap-1">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
                                         <span>{{ $notification['created_at']->diffForHumans() }}</span>
                                     </div>
+                                    @if(isset($notification['data']['sender']))
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
+                                        <span>From: {{ $notification['data']['sender'] }}</span>
+                                    @endif
                                     @if(isset($notification['data']['subject']))
-                                    <span class="text-slate-300 dark:text-slate-600">•</span>
-                                    <span>{{ $notification['data']['subject'] }}</span>
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
+                                        <span>{{ $notification['data']['subject'] }}</span>
                                     @endif
                                     @if(isset($notification['data']['teacher']))
-                                    <span class="text-slate-300 dark:text-slate-600">•</span>
-                                    <span>{{ $notification['data']['teacher'] }}</span>
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
+                                        <span>{{ $notification['data']['teacher'] }}</span>
                                     @endif
                                     @if(isset($notification['data']['student_name']))
-                                    <span class="text-slate-300 dark:text-slate-600">•</span>
-                                    <span>{{ $notification['data']['student_name'] }}</span>
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
+                                        <span>{{ $notification['data']['student_name'] }}</span>
                                     @endif
+                                    <button x-on:click="expanded = !expanded" class="text-violet-600 dark:text-violet-400 hover:underline font-medium" x-text="expanded ? 'Show less' : 'Read more'"></button>
                                 </div>
                             </div>
                         </div>

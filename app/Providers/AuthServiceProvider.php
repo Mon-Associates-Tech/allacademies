@@ -46,6 +46,12 @@ use App\Policies\SubjectPolicy;
 use App\Policies\TeacherPolicy;
 use App\Policies\TopicPolicy;
 use App\Policies\UserTokenSubscriptionPolicy;
+use App\Timetable\Models\Room;
+use App\Timetable\Models\TimeSlot;
+use App\Timetable\Models\TimetableEntry;
+use App\Timetable\Policies\RoomPolicy;
+use App\Timetable\Policies\TimeSlotPolicy;
+use App\Timetable\Policies\TimetableEntryPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -77,6 +83,9 @@ class AuthServiceProvider extends ServiceProvider
         AcademicTopic::class => TopicPolicy::class,
         UserTokenSubscription::class => UserTokenSubscriptionPolicy::class,
         Course::class => CoursePolicy::class,
+        TimetableEntry::class => TimetableEntryPolicy::class,
+        Room::class => RoomPolicy::class,
+        TimeSlot::class => TimeSlotPolicy::class,
 
     ];
 

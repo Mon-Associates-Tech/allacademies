@@ -191,12 +191,13 @@ return [
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        //App\Providers\TelescopeServiceProvider::class,
         \Lab404\Impersonate\ImpersonateServiceProvider::class,
         //        App\Providers\MessageServiceProvider::class,
         \App\Providers\ResearchAssistantServiceProvider::class,
         \App\Providers\ProctoringServiceProvider::class,
         \App\MockExam\Providers\MockExamServiceProvider::class,
+        \App\BookShop\Providers\BookShopServiceProvider::class,
+        \App\Timetable\Providers\TimetableServiceProvider::class
 
     ],
 
