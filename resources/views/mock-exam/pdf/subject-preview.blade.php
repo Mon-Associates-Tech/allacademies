@@ -37,7 +37,7 @@
                     </div>
                     <div class="p-4">
                         <div class="grid grid-cols-4 gap-2">
-                            @foreach([8, 9, 10, 10.5, 11, 12, 13, 14] as $sz)
+                            @foreach([8, 9, 10, 10.5, 11, 12, 13, 14, 16, 18, 20, 22] as $sz)
                                 <button onclick="setFontSize({{ $sz }})"
                                         class="font-size-btn flex flex-col items-center justify-center py-2 rounded-sm transition-all duration-150 {{ $fontSize == $sz ? 'ring-2 ring-blue-500' : '' }}"
                                         data-size="{{ $sz }}"

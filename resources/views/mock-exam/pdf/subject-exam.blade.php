@@ -164,7 +164,7 @@
         }
         .question-number {
             font-weight: 600;
-            color: #3b82f6;
+            color: black;
             min-width: 1.5rem;
             flex-shrink: 0;
         }
@@ -197,7 +197,7 @@
         }
         .option-label {
             font-weight: 600;
-            color: #3b82f6;
+            color: black;
             min-width: 1.5rem;
             flex-shrink: 0;
         }
