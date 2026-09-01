@@ -156,15 +156,11 @@
                              ║  RICH TEXT BLOCK     ║
                              ╚══════════════════════╝ --}}
                         @elseif ($block['type'] === 'richtext')
-                            <div wire:ignore>
-                                <div data-richtext-block="{{ $index }}"
-                                     x-data="richTextBridge({{ $index }})">
-                                    <x-form.rich-editor
-                                        :name="'front_page_block_' . $index . '_content'"
-                                        :value="$block['content'] ?? ''"
-                                    />
-                                </div>
-                            </div>
+                            <x-form.livewire-editor
+                                :livewire="'frontPageBlocks.' . $index . '.content'"
+                                :value="$block['content'] ?? ''"
+                                :height="250"
+                            />
 
                         {{-- ╔══════════════════════╗
                              ║  IMAGE BLOCK         ║
@@ -453,25 +449,42 @@
            class="px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
             Cancel
         </a>
-        <button type="button"
-                wire:click="proceed"
-                wire:loading.attr="disabled"
-                class="inline-flex items-center gap-2 px-7 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg disabled:opacity-60"
-                style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #6d28d9);">
-            <span wire:loading.remove wire:target="proceed">
-                Next: Template Details
-                <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </span>
-            <span wire:loading wire:target="proceed" class="flex items-center gap-2">
-                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
-                Saving…
-            </span>
-        </button>
+        <div class="flex items-center gap-3">
+            @if($templateId)
+                <button type="button"
+                        wire:click="saveFrontPage"
+                        wire:loading.attr="disabled"
+                        wire:target="saveFrontPage"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-all hover:shadow-md disabled:opacity-60 border border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                        style="border-radius: 2px;">
+                    <span wire:loading.remove wire:target="saveFrontPage">
+                        <svg class="w-4 h-4 inline -mt-0.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Save Front Page
+                    </span>
+                    <span wire:loading wire:target="saveFrontPage" class="flex items-center gap-2">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        Saving…
+                    </span>
+                </button>
+            @endif
+            <button type="button"
+                    wire:click="proceed"
+                    wire:loading.attr="disabled"
+                    class="inline-flex items-center gap-2 px-7 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg disabled:opacity-60"
+                    style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+                <span>
+                    Next: Template Details
+                    <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </span>
+            </button>
+        </div>
     </div>
 
 </div>
@@ -508,37 +521,6 @@ Alpine.data('imageUpload', (index) => ({
     },
 }));
 
-Alpine.data('richTextBridge', (index) => ({
-    init() {
-        this.$nextTick(() => {
-            const el = this.$el;
-            if (!el) return;
-            
-            const $wire = this.$wire;
-
-            const push = (html) => {
-                $wire.call('updateBlockContent', index, html);
-            };
-
-            const textarea = el.querySelector('textarea');
-            if (textarea) {
-                const obs = new MutationObserver(() => push(textarea.value));
-                obs.observe(textarea, { attributes: true, childList: false, characterData: true });
-                textarea.addEventListener('input',  () => push(textarea.value));
-                textarea.addEventListener('change', () => push(textarea.value));
-            }
-
-            el.addEventListener('input',         (e) => { if (e.target.closest('[contenteditable]')) push(e.target.innerHTML); });
-            el.addEventListener('editor:update', (e) => push(e.detail?.html ?? e.detail?.content ?? ''));
-            el.addEventListener('tiptap:change', (e) => push(e.detail?.html ?? ''));
-            el.addEventListener('quill:change',  (e) => push(e.detail?.html ?? ''));
-
-            const editable = el.querySelector('[contenteditable]');
-            if (editable) {
-                editable.addEventListener('blur', () => push(editable.innerHTML));
-            }
-        });
-    },
-}));
 </script>
 @endassets
+

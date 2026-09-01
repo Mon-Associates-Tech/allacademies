@@ -86,17 +86,6 @@ class FrontPageBuilder extends Component
             [$this->frontPageBlocks[$target], $this->frontPageBlocks[$index]];
     }
 
-    /**
-     * Called from the @script Alpine bridge whenever a rich-text block's
-     * content changes — updates the Livewire property without a full re-render.
-     */
-    public function updateBlockContent(int $index, string $html): void
-    {
-        if (isset($this->frontPageBlocks[$index])) {
-            $this->frontPageBlocks[$index]['content'] = $html;
-        }
-    }
-
     /** Apply the URL typed into an image block's url_input field as its src. */
     public function applyImageUrl(int $index): void
     {
@@ -134,6 +123,26 @@ class FrontPageBuilder extends Component
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
+
+    /**
+     * Persist only the front_page_config on an existing template, then stay on this page.
+     * Only available in the edit flow (templateId is set).
+     */
+    public function saveFrontPage(): void
+    {
+        if (! $this->templateId) {
+            return;
+        }
+
+        $template = MockExamTemplate::findOrFail($this->templateId);
+        abort_unless($template->user_id === \Illuminate\Support\Facades\Auth::id(), 403);
+
+        $template->update(['front_page_config' => ['blocks' => $this->frontPageBlocks]]);
+
+        session()->forget('template_front_page_config');
+
+        session()->flash('success', 'Front page saved.');
+    }
 
     /**
      * Serialise the current blocks to session and hand off to Step 2.

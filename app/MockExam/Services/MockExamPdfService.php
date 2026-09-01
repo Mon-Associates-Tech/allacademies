@@ -12,6 +12,51 @@ use Illuminate\Support\Str;
 class MockExamPdfService
 {
     /**
+     * For subject exams with no template_id, attempt to resolve a template
+     * by matching academic_subject_id (falling back to any template with a
+     * front_page_config that has blocks).
+     */
+    private function resolveTemplates(MockExam $mockExam): void
+    {
+        $subjectIds = $mockExam->subjectExams
+            ->whereNull('template_id')
+            ->pluck('academic_subject_id')
+            ->filter()
+            ->unique();
+
+        if ($subjectIds->isEmpty()) {
+            return;
+        }
+
+        $templates = MockExamTemplate::whereIn('academic_subject_id', $subjectIds)
+            ->whereNotNull('front_page_config')
+            ->get()
+            ->keyBy('academic_subject_id');
+
+        foreach ($mockExam->subjectExams as $se) {
+            if ($se->template_id === null && isset($templates[$se->academic_subject_id])) {
+                $se->setRelation('template', $templates[$se->academic_subject_id]);
+            }
+        }
+    }
+
+    private function resolveSubjectExamTemplate(MockExamSubjectExam $subjectExam): void
+    {
+        if ($subjectExam->template_id !== null || ! $subjectExam->academic_subject_id) {
+            return;
+        }
+
+        $template = MockExamTemplate::where('academic_subject_id', $subjectExam->academic_subject_id)
+            ->whereNotNull('front_page_config')
+            ->latest()
+            ->first();
+
+        if ($template) {
+            $subjectExam->setRelation('template', $template);
+        }
+    }
+
+    /**
      * Generate a downloadable PDF of the exam paper (questions only).
      */
     public function generateExamPdf(MockExam $mockExam, float $fontSize = 10.5): Response
@@ -19,9 +64,11 @@ class MockExamPdfService
         $mockExam->load([
             'subjectExams.academicSubject',
             'subjectExams.sections.questions',
-            'subjectExams.template', // Load template relationship
+            'subjectExams.template',
             'user',
         ]);
+
+        $this->resolveTemplates($mockExam);
 
         $pdf = Pdf::loadView('mock-exam.pdf.exam', [
             'mockExam' => $mockExam,
@@ -46,9 +93,11 @@ class MockExamPdfService
         $mockExam->load([
             'subjectExams.academicSubject',
             'subjectExams.sections.questions',
-            'subjectExams.template', // Load template relationship
+            'subjectExams.template',
             'user',
         ]);
+
+        $this->resolveTemplates($mockExam);
 
         $pdf = Pdf::loadView('mock-exam.pdf.exam', [
             'mockExam' => $mockExam,
@@ -93,8 +142,10 @@ class MockExamPdfService
             'academicLevel',
             'academicGroup',
             'sections.questions',
-            'template', // Load template relationship
+            'template',
         ]);
+
+        $this->resolveSubjectExamTemplate($subjectExam);
 
         $pdf = Pdf::loadView('mock-exam.pdf.subject-exam', [
             'subjectExam' => $subjectExam,
@@ -122,8 +173,10 @@ class MockExamPdfService
             'academicLevel',
             'academicGroup',
             'sections.questions',
-            'template', // Load template relationship
+            'template',
         ]);
+
+        $this->resolveSubjectExamTemplate($subjectExam);
 
         $pdf = Pdf::loadView('mock-exam.pdf.subject-exam', [
             'subjectExam' => $subjectExam,

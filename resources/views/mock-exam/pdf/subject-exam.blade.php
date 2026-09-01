@@ -214,6 +214,62 @@
         }
 
         .prose-inline .katex-display { display: inline-block; margin: 0; }
+
+        /* ─── Front Page ─── */
+        .front-page {
+            page-break-after: always;
+            text-align: center;
+            padding: 40mm 25mm 30mm 25mm;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        .fp-title {
+            font-size: {{ ($fontSize ?? 11) + 8 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #111;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .fp-content {
+            margin: 25px 0;
+            text-align: left;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            line-height: 1.7;
+        }
+        .fp-divider {
+            width: 100%;
+            height: 2px;
+            background: #aaa;
+            margin: 30px 0;
+        }
+        .fp-image {
+            max-width: 100%;
+            margin: 20px auto;
+            display: block;
+        }
+        .fp-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .fp-info-table th {
+            font-weight: bold;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+        .fp-info-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
+        .fp-fill {
+            display: inline-block;
+            width: 100%;
+            border-bottom: 1px solid #444;
+            height: 14px;
+        }
     </style>
 </head>
 <body>
@@ -227,7 +283,7 @@
                             font-size: {{ ($fontSize ?? 11) + ($block['level'] == 'h1' ? 8 : ($block['level'] == 'h2' ? 5 : 2)) }}pt;
                             @if($block['level'] == 'h1') text-transform: uppercase; letter-spacing: 0.05em; @endif
                         ">
-                            {!! $block['content'] !!}
+                            {{ $block['content'] ?? '' }}
                         </div>
                         @break
                     @case('richtext')
@@ -246,47 +302,47 @@
                         <div class="fp-divider"></div>
                         @break
                     @case('info_table')
+                        @php
+                            $fpFieldLabels = [
+                                'candidate_name' => 'Full Name',
+                                'index_number'   => 'Index Number',
+                                'date'           => 'Date',
+                                'duration'       => 'Duration',
+                                'subject'        => 'Subject',
+                                'grade'          => 'Grade / Class',
+                                'signature'      => 'Invigilator Signature',
+                                'score'          => 'Total Score',
+                            ];
+                            $fpFieldValues = [
+                                'date' => $subjectExam->mockExam->starts_at
+                                    ? $subjectExam->mockExam->starts_at->format('d M Y')
+                                    : now()->format('d M Y'),
+                                'duration' => $subjectExam->duration_in_minutes
+                                    ? ($subjectExam->duration_in_minutes >= 60
+                                        ? floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '')
+                                        : $subjectExam->duration_in_minutes . ' mins')
+                                    : null,
+                                'subject' => $subjectExam->academicSubject?->name,
+                            ];
+                            $fpActiveFields = $block['fields'] ?? [];
+                        @endphp
                         <table class="fp-info-table">
                             <thead>
                                 <tr>
-                                    @foreach($block['fields'] as $field)
-                                        <th>{{ $field }}</th>
+                                    @foreach($fpActiveFields as $fieldKey)
+                                        <th>{{ $fpFieldLabels[$fieldKey] ?? $fieldKey }}</th>
                                     @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    @foreach($block['fields'] as $field)
+                                    @foreach($fpActiveFields as $fieldKey)
                                         <td>
-                                            @switch($field)
-                                                @case('School Name')
-                                                    {{ $subjectExam->mockExam->team?->name ?? 'N/A' }}
-                                                    @break
-                                                @case('Exam Title')
-                                                    {{ $subjectExam->mockExam->title }}
-                                                    @break
-                                                @case('Date')
-                                                    {{ $subjectExam->mockExam->starts_at ? $subjectExam->mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}
-                                                    @break
-                                                @case('Time')
-                                                    {{ $subjectExam->mockExam->starts_at ? $subjectExam->mockExam->starts_at->format('h:i A') : 'N/A' }}
-                                                    @break
-                                                @case('Duration')
-                                                    {{ $subjectExam->duration_in_minutes ?
-                                                        ($subjectExam->duration_in_minutes >= 60 ?
-                                                            floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '') :
-                                                            $subjectExam->duration_in_minutes . ' mins')
-                                                        : 'N/A' }}
-                                                    @break
-                                                @case('Subject')
-                                                    {{ $subjectExam->academicSubject?->name ?? 'N/A' }}
-                                                    @break
-                                                @case('Total Marks')
-                                                    {{ number_format($subjectExam->getTotalMarks(), 0) }}
-                                                    @break
-                                                @default
-                                                    N/A
-                                            @endswitch
+                                            @if(!empty($fpFieldValues[$fieldKey]))
+                                                {{ $fpFieldValues[$fieldKey] }}
+                                            @else
+                                                <span class="fp-fill">&nbsp;</span>
+                                            @endif
                                         </td>
                                     @endforeach
                                 </tr>
