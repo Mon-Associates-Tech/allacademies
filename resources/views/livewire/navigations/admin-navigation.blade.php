@@ -245,7 +245,7 @@
 
         <x-app.nav-item
             href="{{ route('mock-exams.index') }}"
-            :active="Route::is('mock-exams.*')"
+            :active="Route::is('mock-exams.*') && !Route::is('mock-exams.templates.*') && !Route::is('mock-exams.grade-scales.*')"
             icon="heroicon-o-clipboard-document-check"
         >Mock Exams
         </x-app.nav-item>
