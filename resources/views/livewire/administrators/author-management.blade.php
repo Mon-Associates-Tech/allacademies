@@ -354,7 +354,7 @@
                                             @if($author->profile_image)
                                                 <img class="h-12 w-12 rounded-full object-cover"
                                                      src="{{ Storage::url($author->profile_image) }}"
-                                                     alt="{{ $author->user->name }}">
+                                                     alt="{{ $author->user?->name }}">
                                             @else
                                                 <div class="h-12 w-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                                                     <svg class="h-6 w-6 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -365,10 +365,10 @@
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                                {{ $author->user->name }}
+                                                {{ $author->name ?? $author->user?->name }}
                                             </div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ $author->user->email }}
+                                                {{ $author->email ?? $author->user?->email }}
                                             </div>
                                         </div>
                                     </div>
@@ -457,7 +457,7 @@
                                 </h3>
                                 <div class="mt-2">
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        Are you sure you want to delete <strong>{{ $authorToDelete->user->name }}</strong>?
+                                        Are you sure you want to delete <strong>{{ $authorToDelete->name ?? $authorToDelete->user?->name }}</strong>?
                                         This action cannot be undone and will also delete their user account.
                                     </p>
                                 </div>
