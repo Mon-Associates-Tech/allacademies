@@ -20,8 +20,6 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-// Add this import
-
 class ForumManagement extends Component
 {
     use WithFileUploads, WithPagination;
@@ -89,8 +87,6 @@ class ForumManagement extends Component
 
     public $books = [];
 
-    public $users = [];
-
     protected $queryString = [
         'currentView' => ['except' => 'categories'],
         'selectedCategory' => ['except' => null],
@@ -113,86 +109,16 @@ class ForumManagement extends Component
     public function mount()
     {
         $this->loadInitialData();
-        $this->ensureForumCategories();
-
-        // Restore navigation state from URL parameters
         $this->restoreNavigationState();
     }
 
     public function loadInitialData()
     {
-        $this->academicLevels = AcademicLevel::all();
-        $this->academicSubjects = AcademicSubject::all();
-        $this->academicTopics = AcademicTopic::all();
-        $this->studyGroups = StudentGroup::where('is_active', true)->get();
-        $this->books = Book::where('status', 'published')->get();
-        $this->users = User::where('is_active', true)->get();
-    }
-
-    public function ensureForumCategories()
-    {
-        // Create forum categories based on academic hierarchy
-        $academicLevels = AcademicLevel::all();
-        foreach ($academicLevels as $level) {
-            ForumCategory::firstOrCreate([
-                'academic_level_id' => $level->id,
-                'academic_subject_id' => null,
-            ], [
-                'name' => $level->name.' Discussion',
-                'slug' => $this->generateUniqueSlug($level->name.' Discussion'),
-                'description' => 'General discussions for '.$level->name.' level students',
-                'color' => 'violet',
-                'is_active' => true,
-                'sort_order' => $level->id + 100,
-            ]);
-
-            // Create subject-specific categories
-            $subjects = AcademicSubject::where('academic_level_id', $level->id)->get();
-            foreach ($subjects as $subject) {
-                ForumCategory::firstOrCreate([
-                    'academic_level_id' => $level->id,
-                    'academic_subject_id' => $subject->id,
-                ], [
-                    'name' => $subject->name.' - '.$level->name,
-                    'slug' => $this->generateUniqueSlug($subject->name.' '.$level->name),
-                    'description' => 'Subject-specific discussions for '.$subject->name.' at '.$level->name.' level',
-                    'color' => 'blue',
-                    'is_active' => true,
-                    'sort_order' => ($level->id * 100) + $subject->id,
-                ]);
-            }
-        }
-
-        // Create general categories
-        $generalCategories = [
-            ['name' => 'General Discussion', 'description' => 'General academic discussions and questions', 'color' => 'green'],
-            ['name' => 'Study Groups', 'description' => 'Find and organize study groups', 'color' => 'purple'],
-            ['name' => 'Book Reviews', 'description' => 'Share your thoughts on books and resources', 'color' => 'yellow'],
-            ['name' => 'Help & Support', 'description' => 'Get help with platform features and technical issues', 'color' => 'red'],
-            ['name' => 'Announcements', 'description' => 'Important announcements and updates', 'color' => 'indigo', 'is_private' => true],
-        ];
-
-        foreach ($generalCategories as $index => $categoryData) {
-            ForumCategory::firstOrCreate([
-                'name' => $categoryData['name'],
-            ], array_merge($categoryData, [
-                'slug' => $this->generateUniqueSlug($categoryData['name']),
-                'is_active' => true,
-                'sort_order' => 1000 + $index,
-            ]));
-        }
-    }
-
-    private function generateUniqueSlug($name, $attempt = 0)
-    {
-        $baseSlug = Str::slug($name);
-        $slug = $attempt > 0 ? $baseSlug.'-'.$attempt : $baseSlug;
-
-        if (ForumCategory::where('slug', $slug)->exists()) {
-            return $this->generateUniqueSlug($name, $attempt + 1);
-        }
-
-        return $slug;
+        $this->academicLevels = AcademicLevel::select('id', 'name')->get();
+        $this->academicSubjects = AcademicSubject::select('id', 'name', 'academic_level_id')->get();
+        $this->academicTopics = AcademicTopic::select('id', 'name')->get();
+        $this->studyGroups = StudentGroup::select('id', 'name')->where('is_active', true)->get();
+        $this->books = Book::select('id', 'title')->where('status', 'published')->get();
     }
 
     public function restoreNavigationState()

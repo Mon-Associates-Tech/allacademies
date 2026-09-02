@@ -31,10 +31,7 @@ class ForumPost extends Model
         'edited_at' => 'datetime',
     ];
 
-    protected $with = [
-        'user',
-
-    ];
+    // Removed global $with to prevent auto-loading user on every query
 
     public function topic()
     {
