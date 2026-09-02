@@ -242,6 +242,21 @@
         >Exam Subscriptions
         </x-app.nav-item>
 
+
+        <x-app.nav-item
+            href="{{ route('mock-exams.index') }}"
+            :active="Route::is('mock-exams.*') && !Route::is('mock-exams.templates.*') && !Route::is('mock-exams.grade-scales.*')"
+            icon="heroicon-o-clipboard-document-check"
+        >Mock Exams
+        </x-app.nav-item>
+
+        <x-app.nav-item
+            href="{{ route('mock-exams.templates.index') }}"
+            :active="Route::is('mock-exams.templates.*')"
+            icon="heroicon-o-document-duplicate"
+        >Mock Exam Templates
+        </x-app.nav-item>
+
         @if(auth()->user()->role === UserRole::OWNER)
             <x-app.nav-item
                 href="{{ route('admin.generate-examination') }}"

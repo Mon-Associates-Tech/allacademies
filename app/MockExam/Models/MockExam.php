@@ -3,6 +3,10 @@
 namespace App\MockExam\Models;
 
 use App\Models\User;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
+use App\Models\AcademicTopic;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -247,5 +251,34 @@ class MockExam extends Model
     public function getViolationLimit(): int
     {
         return (int) $this->tab_switch_limit;
+    }
+
+        /** Build the complete academic hierarchy tree for Alpine.js cascading dropdowns. */
+    public static function hierarchyTree(): array
+    {
+        return AcademicGroup::query()
+            ->with(['academicLevels.academicSubjects.topics.subtopics'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($group) => [
+                'id'     => $group->id,
+                'name'   => $group->name,
+                'levels' => $group->academicLevels->map(fn ($level) => [
+                    'id'       => $level->id,
+                    'name'     => $level->name,
+                    'subjects' => $level->academicSubjects->map(fn ($subject) => [
+                        'id'     => $subject->id,
+                        'name'   => $subject->name,
+                        'topics' => $subject->topics->map(fn ($topic) => [
+                            'id'        => $topic->id,
+                            'name'      => $topic->name,
+                            'subtopics' => $topic->subtopics->map(fn ($sub) => [
+                                'id'   => $sub->id,
+                                'name' => $sub->name,
+                            ])->values()->all(),
+                        ])->values()->all(),
+                    ])->values()->all(),
+                ])->values()->all(),
+            ])->values()->all();
     }
 }

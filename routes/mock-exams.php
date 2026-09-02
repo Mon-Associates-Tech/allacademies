@@ -63,26 +63,50 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/pdf/download',   [MockExamPdfController::class, 'examPdf'])->name('pdf.exam');
         Route::get('/{mockExam}/pdf/preview',    [MockExamPdfController::class, 'previewExamPdf'])->name('pdf.preview');
         Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKeyPdf'])->name('pdf.answer-key');
-        
+
         // Subject exam PDF downloads
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf',        [MockExamPdfController::class, 'previewSubjectExamPdf'])->name('subject-exams.pdf.preview');
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExamPdf'])->name('subject-exams.pdf.download');
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])->name('subject-exams.pdf.page');
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf',             [MockExamPdfController::class, 'previewSubjectExamPdf'])->name('subject-exams.pdf.preview');
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download',    [MockExamPdfController::class, 'subjectExamPdf'])->name('subject-exams.pdf.download');
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page',[MockExamPdfController::class, 'previewSubjectExamPage'])->name('subject-exams.pdf.page');
 
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
     });
 
-// ─── Template Management Routes ──────────────────────────────────────────────
+// ─── Template Management Routes ───────────────────────────────────────────────
+//
+// The template creation flow is a 2-step wizard:
+//
+//   Step 1 – Front Page Designer (Livewire)
+//     GET  /mock-exam-templates/create                 → create()         new template
+//     GET  /mock-exam-templates/{template}/front-page  → editFrontPage()  existing template
+//
+//   Step 2 – Template Details (Alpine.js form)
+//     GET  /mock-exam-templates/configure              → configureCreate() new template
+//     GET  /mock-exam-templates/{template}/edit        → configureEdit()   existing template
+//
+// Static segments (/create, /configure) are declared BEFORE the wildcard
+// segments (/{template}/…) so Laravel never tries to resolve "create" or
+// "configure" as a template model binding.
 
 Route::middleware(['web', 'auth'])
     ->prefix('mock-exam-templates')
     ->name('mock-exams.templates.')
     ->group(function () {
-        Route::get('/',              [MockExamTemplateController::class, 'index'])->name('index');
-        Route::get('/create',        [MockExamTemplateController::class, 'create'])->name('create');
+
+        // List
+        Route::get('/', [MockExamTemplateController::class, 'index'])->name('index');
+
+        // ── Step 1 – Front Page Builder (Livewire) ────────────────────────
+        Route::get('/create',    [MockExamTemplateController::class, 'create'])->name('create');
+        Route::get('/configure', [MockExamTemplateController::class, 'configureCreate'])->name('configure-create');
+
+        // ── Step 2 – Template Details (Alpine.js form) ────────────────────
+        Route::get('/{template}/front-page', [MockExamTemplateController::class, 'editFrontPage'])->name('front-page.edit');
+        Route::get('/{template}/edit',       [MockExamTemplateController::class, 'configureEdit'])->name('edit');
+
+        // ── CRUD ──────────────────────────────────────────────────────────
         Route::post('/',             [MockExamTemplateController::class, 'store'])->name('store');
-        Route::get('/{template}/edit', [MockExamTemplateController::class, 'edit'])->name('edit');
         Route::put('/{template}',    [MockExamTemplateController::class, 'update'])->name('update');
         Route::delete('/{template}', [MockExamTemplateController::class, 'destroy'])->name('destroy');
     });
@@ -119,7 +143,7 @@ Route::middleware('web')
         Route::post('/{mockExam}/submit',                [MockExamTakingController::class, 'submit'])->name('submit');
         Route::get('/{mockExam}/completed',              [MockExamTakingController::class, 'completed'])->name('completed');
         Route::get('/{mockExam}/results',                [MockExamTakingController::class, 'viewResults'])->name('results');
-        
+
         // Proctoring event recording (no auth, validated by session)
-        Route::post('/{mockExam}/proctor-event',         [MockExamProctoringController::class, 'recordEvent'])->name('proctor-event');
+        Route::post('/{mockExam}/proctor-event', [MockExamProctoringController::class, 'recordEvent'])->name('proctor-event');
     });

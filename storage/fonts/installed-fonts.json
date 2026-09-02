@@ -1,0 +1,46 @@
+{
+    "katex_ams": {
+        "normal": "katex_ams_normal_3697d9cc951ac44b2bf68db6a344c768"
+    },
+    "katex_caligraphic": {
+        "bold": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_caligraphic_bold_d119b91ce913679bcba5ece1ae751d2c",
+        "normal": "katex_caligraphic_normal_7a2941064931bb61438aeb92662a91b8"
+    },
+    "katex_fraktur": {
+        "bold": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_fraktur_bold_f7c2ba109efb688e8efd13acc52b80b9",
+        "normal": "katex_fraktur_normal_8d1e51b231da3073249cd3dfa1f6eb65"
+    },
+    "katex_main": {
+        "bold": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_main_bold_c9f8a50d318c3650a8b00aee9af06f95",
+        "bold_italic": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_main_bold_italic_57f3fd3fe8632e04e96cc0981b86e032",
+        "italic": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_main_italic_e3b1e31129e9a88c98c5e8d627f9654d",
+        "normal": "katex_main_normal_c81ecfc4d3b52253ae13d9467a8fd5c5"
+    },
+    "katex_math": {
+        "bold_italic": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_math_bold_italic_861674de689aa421e0c9566839deec13",
+        "italic": "katex_math_italic_a8cb464b2257f95e2c0452c5f54fbffc"
+    },
+    "katex_sansserif": {
+        "bold": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_sansserif_bold_330ae0d120b7302eb261f172a50b093f",
+        "italic": "\/Users\/paps\/mon\/allacademies\/storage\/fonts\/katex_sansserif_italic_d3ef01047a7df206c78931f9309f71f5",
+        "normal": "katex_sansserif_normal_795e210b154685abfab553de906d72fc"
+    },
+    "katex_script": {
+        "normal": "katex_script_normal_7101f1bbf06f39ab097f267a23cec481"
+    },
+    "katex_size1": {
+        "normal": "katex_size1_normal_eeb331c9df45491dfc4f657f30ec52b6"
+    },
+    "katex_size2": {
+        "normal": "katex_size2_normal_1481a71befd0bad268ab693abf38ab58"
+    },
+    "katex_size3": {
+        "normal": "katex_size3_normal_38ca64fb641a4ed70a611a17e243b7e6"
+    },
+    "katex_size4": {
+        "normal": "katex_size4_normal_c2c2eb2d3fcb99bc87b46fdd8e1f077f"
+    },
+    "katex_typewriter": {
+        "normal": "katex_typewriter_normal_4f016620af44b7dc5af330d6a5c6d456"
+    }
+}

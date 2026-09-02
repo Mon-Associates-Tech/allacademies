@@ -1,0 +1,68 @@
+StartFontMetrics 4.1
+Notice Converted by PHP-font-lib
+Comment https://github.com/dompdf/php-font-lib
+EncodingScheme FontSpecific
+FontName KaTeX_Size1
+FontSubfamily Regular
+UniqueID FontForge 2.0 : KaTeX_Size1-Regular
+FullName KaTeX_Size1-Regular
+Version Version 1.1; ttfautohint (v1.8.3)
+PostScriptName KaTeX_Size1-Regular
+LicenseURL http://scripts.sil.org/OFL
+Weight Medium
+ItalicAngle 0
+IsFixedPitch false
+UnderlineThickness 50
+UnderlinePosition -125
+FontHeightOffset 90
+Ascender 850
+Descender -350
+FontBBox -565 -350 1304 850
+StartCharMetrics 48
+U 32 ; WX 250 ; N space ; G 3
+U 40 ; WX 458 ; N parenleft ; G 4
+U 41 ; WX 458 ; N parenright ; G 5
+U 47 ; WX 578 ; N slash ; G 6
+U 91 ; WX 417 ; N bracketleft ; G 7
+U 92 ; WX 578 ; N backslash ; G 8
+U 93 ; WX 417 ; N bracketright ; G 9
+U 123 ; WX 583 ; N braceleft ; G 10
+U 125 ; WX 583 ; N braceright ; G 11
+U 160 ; WX 250 ; N uni00A0 ; G 12
+U 710 ; WX 556 ; N circumflex ; G 13
+U 732 ; WX 556 ; N tilde ; G 14
+U 770 ; WX 0 ; N uni0302 ; G 15
+U 771 ; WX 0 ; N tildecomb ; G 16
+U 8214 ; WX 778 ; N uni2016 ; G 17
+U 8593 ; WX 667 ; N arrowup ; G 18
+U 8595 ; WX 667 ; N arrowdown ; G 19
+U 8657 ; WX 778 ; N arrowdblup ; G 20
+U 8659 ; WX 778 ; N arrowdbldown ; G 21
+U 8719 ; WX 944 ; N product ; G 22
+U 8720 ; WX 944 ; N uni2210 ; G 23
+U 8721 ; WX 1056 ; N summation ; G 24
+U 8730 ; WX 1000 ; N radical ; G 25
+U 8739 ; WX 333 ; N uni2223 ; G 26
+U 8741 ; WX 556 ; N uni2225 ; G 27
+U 8747 ; WX 472 ; N integral ; G 28
+U 8748 ; WX 819 ; N uni222C ; G 29
+U 8749 ; WX 1166 ; N uni222D ; G 30
+U 8750 ; WX 472 ; N uni222E ; G 31
+U 8896 ; WX 833 ; N uni22C0 ; G 32
+U 8897 ; WX 833 ; N uni22C1 ; G 33
+U 8898 ; WX 833 ; N uni22C2 ; G 34
+U 8899 ; WX 833 ; N uni22C3 ; G 35
+U 8968 ; WX 472 ; N uni2308 ; G 36
+U 8969 ; WX 472 ; N uni2309 ; G 37
+U 8970 ; WX 472 ; N uni230A ; G 38
+U 8971 ; WX 472 ; N uni230B ; G 39
+U 9168 ; WX 667 ; N uni23D0 ; G 40
+U 10216 ; WX 472 ; N uni27E8 ; G 41
+U 10217 ; WX 472 ; N uni27E9 ; G 42
+U 10752 ; WX 1111 ; N uni2A00 ; G 43
+U 10753 ; WX 1111 ; N uni2A01 ; G 44
+U 10754 ; WX 1111 ; N uni2A02 ; G 45
+U 10756 ; WX 833 ; N uni2A04 ; G 46
+U 10758 ; WX 833 ; N uni2A06 ; G 47
+EndCharMetrics
+EndFontMetrics

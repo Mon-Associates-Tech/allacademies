@@ -37,12 +37,12 @@
                     </div>
                     <div class="p-4">
                         <div class="grid grid-cols-4 gap-2">
-                            @foreach([8, 9, 10, 10.5, 11, 12, 13, 14] as $sz)
+                            @foreach([8, 9, 10, 10.5, 11, 12, 13, 14, 16, 18, 20, 22] as $sz)
                                 <button onclick="setFontSize({{ $sz }})"
                                         class="font-size-btn flex flex-col items-center justify-center py-2 rounded-sm transition-all duration-150 {{ $fontSize == $sz ? 'ring-2 ring-blue-500' : '' }}"
                                         data-size="{{ $sz }}"
-                                        style="background: {{ $fontSize == $sz ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)' }}; 
-                                               color: {{ $fontSize == $sz ? '#60a5fa' : '#94a3b8' }}; 
+                                        style="background: {{ $fontSize == $sz ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)' }};
+                                               color: {{ $fontSize == $sz ? '#60a5fa' : '#94a3b8' }};
                                                border: 1px solid {{ $fontSize == $sz ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)' }};">
                                     <span class="text-sm font-semibold">{{ $sz }}</span>
                                     <span class="block text-[10px] font-normal opacity-70">{{ $sz }}pt</span>
@@ -51,6 +51,7 @@
                         </div>
                     </div>
                 </div>
+            
 
                 {{-- Actions Card --}}
                 <div class="overflow-hidden rounded-sm shadow-lg"
@@ -179,7 +180,7 @@
 
         function setFontSize(size) {
             currentFontSize = size;
-            
+
             // Update button styles
             document.querySelectorAll('.font-size-btn').forEach(btn => {
                 const btnSize = parseFloat(btn.dataset.size);
@@ -203,7 +204,7 @@
             const iframe = document.getElementById('pdfPreview');
             const downloadBtn = document.getElementById('downloadBtn');
             const status = document.getElementById('previewStatus');
-            
+
             // Show loading status
             status.innerHTML = `
                 <svg class="animate-spin w-3 h-3 text-blue-400" fill="none" viewBox="0 0 24 24">
@@ -216,7 +217,7 @@
             // Update iframe and download URL
             const newUrl = '{{ route('mock-exams.subject-exams.pdf.preview', [$mockExam, $subjectExam]) }}?font_size=' + currentFontSize;
             iframe.src = newUrl;
-            
+
             downloadBtn.href = '{{ route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) }}?font_size=' + currentFontSize;
 
             // Reset status after load

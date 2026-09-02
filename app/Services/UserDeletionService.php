@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Team;
 
 class UserDeletionService
 {
@@ -57,7 +58,11 @@ class UserDeletionService
             $this->detachJoinedTeams($user);
 
             // Delete teams owned by user
-            $this->safeDelete($user, 'ownedTeams');
+            //$this->safeDelete($user, 'ownedTeams');
+          
+            $user->current_team_id = null;
+            $user->save();
+            Team::where('owner_id', $user->id)->delete();
 
             // Delete role-specific profile records (HasOne relationships)
             $this->deleteRoleProfiles($user);

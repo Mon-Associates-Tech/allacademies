@@ -276,7 +276,7 @@
                             @php
                                 $response = $viewingSubmission->responses[$question->id] ?? null;
                                 $isCorrect = $response['is_correct'] ?? null;
-                                $question = Str::limit($question->question, 50)
+                                $question = Str::limit($question->question?->down, 50)
                             @endphp
                             <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                                 <div class="flex items-center justify-between">

@@ -1,3 +1,5 @@
+@props(['name', 'value' => null, 'label' => null, 'height' => 400, 'info' => null, 'required' => false])
+
 @once
     @push('head')
         <script src="{{ asset('js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script>
@@ -18,6 +20,7 @@
     $up = $mark instanceof \App\Support\Mark ? ($mark->up ?? '') : '';
 @endphp
 
+<section>
 <div class="space-y-1"
      x-data="{
         preview: false,
@@ -233,3 +236,4 @@ if (livewireModel && window.Livewire) {
     .dark .katex .mord { color: #e5e7eb; }
     .dark .katex .mbin, .dark .katex .mrel, .dark .katex .mop { color: #9ca3af; }
 </style>
+</section>

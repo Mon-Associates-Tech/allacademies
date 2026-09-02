@@ -75,6 +75,8 @@ class MockExamCreationService
             $order = $mockExam->subjectExams()->count() + 1;
 
             $subjectExam = $mockExam->subjectExams()->create([
+                'mock_exam_id'        => $mockExam->id,
+                'template_id'         => $payload['template_id'] ?? null, // Include template_id if provided
                 'academic_group_id'   => $payload['academic_group_id'],
                 'academic_level_id'   => $payload['academic_level_id'],
                 'academic_subject_id' => $payload['academic_subject_id'],
@@ -145,6 +147,7 @@ class MockExamCreationService
                 'duration_in_minutes' => $payload['duration_in_minutes'] ?? null,
                 'topic_ids'           => $payload['topic_ids'] ?? [],
                 'subtopic_ids'        => $payload['subtopic_ids'] ?? [],
+                'template_id'         => $payload['template_id'] ?? null, // Update template_id if provided
             ]);
 
             // Drop and rebuild sections + questions
@@ -179,6 +182,12 @@ class MockExamCreationService
                     $warnings[] = "Section \"{$sectionData['title']}\": requested {$requested} question(s), found {$created}.";
                 }
             }
+
+            Log::info('MockExamCreationService: subject exam updated', [
+                'subject_exam_id'    => $subjectExam->id,
+                'questions_created'  => $totalCreated,
+                'warnings'           => $warnings,
+            ]);
 
             return [
                 'subject_exam'      => $subjectExam->fresh(['sections.questions', 'academicSubject']),
@@ -220,6 +229,9 @@ class MockExamCreationService
         if (isset($overrides['subtopic_ids'])) {
             $payload['subtopic_ids'] = $overrides['subtopic_ids'];
         }
+        
+        // Add template_id to the payload
+        $payload['template_id'] = $template->id;
 
         // Delegate to existing createSubjectExam method
         return $this->createSubjectExam($mockExam, $payload);

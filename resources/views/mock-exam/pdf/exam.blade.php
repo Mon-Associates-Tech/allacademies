@@ -52,7 +52,7 @@
             font-size: {{ ($fontSize ?? 11) + 2 }}pt;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             color: #111;
             margin-bottom: 2px;
         }
@@ -270,9 +270,203 @@
 
         /* ─── Page Break ─── */
         .pg-break { page-break-before: always; }
+
+        /* ─── Front Page Styles ─── */
+        .front-page {
+            page-break-after: always;
+            text-align: center;
+            padding: 40mm 25mm 30mm 25mm;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        .fp-title {
+            font-size: {{ ($fontSize ?? 11) + 8 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #111;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .fp-subtitle {
+            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
+            font-style: italic;
+            color: #666;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
+        .fp-divider {
+            width: 100%;
+            height: 1px;
+            background: #ccc;
+            margin: 30px 0;
+            position: relative;
+        }
+        .fp-divider::before {
+            content: "";
+            position: absolute;
+            top: -0.5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #aaa;
+        }
+        .fp-content {
+            margin: 25px 0;
+            text-align: left;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            line-height: 1.7;
+        }
+        .fp-image {
+            max-width: 100%;
+            margin: 20px auto;
+            display: block;
+        }
+        .fp-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .fp-info-table th {
+            font-weight: bold;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+        }
+        .fp-info-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
+        .fp-info-table .fp-fill {
+            display: inline-block;
+            width: 100%;
+            border-bottom: 1px solid #444;
+            height: 14px;
+        }
     </style>
 </head>
 <body>
+
+{{--
+    Front Page / Cover:
+    A subject exam's template may carry a designed front_page_config
+    (blocks: heading, richtext, image, divider, info_table). If any subject
+    exam on this MockExam has one configured, that designed cover page
+    REPLACES the hardcoded document header / info table / candidate section
+    / general instructions below. If none exists, the hardcoded header is
+    used as-is (unchanged legacy behaviour).
+--}}
+@php
+    $hasFrontPage = false;
+    $frontPageConfig = null;
+
+    foreach ($mockExam->subjectExams as $se) {
+        if ($se->template && !empty($se->template->front_page_config['blocks'])) {
+            $hasFrontPage = true;
+            $frontPageConfig = $se->template->front_page_config;
+            break;
+        }
+    }
+
+    $totalMarksForCover    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
+    $totalDurationForCover = $mockExam->subjectExams->sum('duration_in_minutes');
+    $subjectNamesForCover  = $mockExam->subjectExams->map(fn($se) => $se->getDisplayTitle())->implode(', ');
+@endphp
+
+@if($hasFrontPage)
+    <div class="front-page">
+        @foreach($frontPageConfig['blocks'] ?? [] as $block)
+            @switch($block['type'])
+
+                @case('heading')
+                    <div class="fp-title" style="
+                        font-size: {{ ($fontSize ?? 11) + ($block['level'] == 'h1' ? 8 : ($block['level'] == 'h2' ? 5 : 2)) }}pt;
+                        @if($block['level'] == 'h1') text-transform: uppercase; letter-spacing: 0.05em; @endif
+                    ">
+                        {{ $block['content'] ?? '' }}
+                    </div>
+                    @break
+
+                @case('richtext')
+                    <div class="fp-content">
+                        {!! $block['content'] ?? '' !!}
+                    </div>
+                    @break
+
+                @case('image')
+                    @if(!empty($block['src']))
+                        @php
+                            $imgSrc = $block['source_type'] === 'upload'
+                                ? \Illuminate\Support\Facades\Storage::disk('public')->url($block['src'])
+                                : $block['src'];
+                        @endphp
+                        <img src="{{ $imgSrc }}" class="fp-image" style="width: {{ $block['width'] ?? 300 }}px;" alt="{{ $block['alt'] ?? '' }}">
+                    @endif
+                    @break
+
+                @case('divider')
+                    <div class="fp-divider"></div>
+                    @break
+
+                @case('info_table')
+                    @php
+                        // Keys mirror those produced by the Front Page Builder's info_table
+                        // block (see front-page-builder.blade.php $infoFields array).
+                        $fpFieldLabels = [
+                            'candidate_name' => 'Full Name',
+                            'index_number'   => 'Index Number',
+                            'date'           => 'Date',
+                            'duration'       => 'Duration',
+                            'subject'        => 'Subject',
+                            'grade'          => 'Grade / Class',
+                            'signature'      => 'Invigilator Signature',
+                            'score'          => 'Total Score',
+                        ];
+
+                        // Only fields we can actually compute from exam data get a value;
+                        // everything else (name, index no., signature, score, grade) is
+                        // left as a fillable blank line for the candidate/invigilator.
+                        $fpFieldValues = [
+                            'date' => $mockExam->starts_at
+                                ? $mockExam->starts_at->format('d M Y')
+                                : now()->format('d M Y'),
+                            'duration' => $totalDurationForCover > 0
+                                ? ($totalDurationForCover >= 60
+                                    ? floor($totalDurationForCover / 60) . 'hr' . ($totalDurationForCover % 60 > 0 ? ' ' . ($totalDurationForCover % 60) . 'min' : '')
+                                    : $totalDurationForCover . ' mins')
+                                : null,
+                            'subject' => $subjectNamesForCover ?: null,
+                        ];
+
+                        $fpActiveFields = $block['fields'] ?? [];
+                    @endphp
+                    <table class="fp-info-table">
+                        <thead>
+                            <tr>
+                                @foreach($fpActiveFields as $fieldKey)
+                                    <th>{{ $fpFieldLabels[$fieldKey] ?? $fieldKey }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                @foreach($fpActiveFields as $fieldKey)
+                                    <td>
+                                        @if(!empty($fpFieldValues[$fieldKey]))
+                                            {{ $fpFieldValues[$fieldKey] }}
+                                        @else
+                                            <span class="fp-fill">&nbsp;</span>
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </tbody>
+                    </table>
+                    @break
+            @endswitch
+        @endforeach
+    </div>
+@endif
 
 {{-- Fixed Footer --}}
 <div class="pg-footer">
@@ -284,113 +478,115 @@
     </table>
 </div>
 
-{{-- Document Header --}}
-@php
-    $schoolName = null;
-    try { $schoolName = $mockExam->team?->name; } catch (\Throwable $e) {}
-@endphp
+@unless($hasFrontPage)
+    {{-- Document Header --}}
+    @php
+        $schoolName = null;
+        try { $schoolName = $mockExam->team?->name; } catch (\Throwable $e) {}
+    @endphp
 
-<div class="doc-header">
-    <div class="rule-heavy"></div>
-    <div class="rule-light"></div>
-    <div class="header-body">
-        @if($schoolName)
-            <div class="school-name">{{ $schoolName }}</div>
-            <div class="school-tagline">Mock Examination Series</div>
-        @endif
-        <div class="exam-main-title">{{ $mockExam->title }}</div>
-        @if($mockExam->starts_at)
-            <div class="exam-sub-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
-        @endif
+    <div class="doc-header">
+        <div class="rule-heavy"></div>
+        <div class="rule-light"></div>
+        <div class="header-body">
+            @if($schoolName)
+                <div class="school-name">{{ $schoolName }}</div>
+                <div class="school-tagline">Mock Examination Series</div>
+            @endif
+            <div class="exam-main-title">{{ $mockExam->title }}</div>
+            @if($mockExam->starts_at)
+                <div class="exam-sub-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
+            @endif
+        </div>
+        <div class="rule-light"></div>
+        <div class="rule-heavy"></div>
     </div>
-    <div class="rule-light"></div>
-    <div class="rule-heavy"></div>
-</div>
 
-{{-- Info Table --}}
-@php
-    $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
-    $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
-    $subjectCount  = $mockExam->subjectExams->count();
-@endphp
+    {{-- Info Table --}}
+    @php
+        $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
+        $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
+        $subjectCount  = $mockExam->subjectExams->count();
+    @endphp
 
-<table class="info-tbl">
-    <tr>
-        <td>
-            <span class="ig-lbl">Exam Date</span>
-            <span class="ig-val">{{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}</span>
-        </td>
-        <td>
-            <span class="ig-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
-            <span class="ig-val">
-                @if($subjectCount === 1)
-                    {{ Str::limit($mockExam->subjectExams->first()->getDisplayTitle(), 26) }}
-                @else
-                    {{ $subjectCount }} Papers
-                @endif
-            </span>
-        </td>
-        @if($totalDuration > 0)
+    <table class="info-tbl">
+        <tr>
             <td>
-                <span class="ig-lbl">Duration</span>
+                <span class="ig-lbl">Exam Date</span>
+                <span class="ig-val">{{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}</span>
+            </td>
+            <td>
+                <span class="ig-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
                 <span class="ig-val">
-                @if($totalDuration >= 60)
-                        {{ floor($totalDuration / 60) }}hr{{ floor($totalDuration / 60) > 1 ? 's' : '' }}{{ $totalDuration % 60 > 0 ? ' '.($totalDuration % 60).'min' : '' }}
+                    @if($subjectCount === 1)
+                        {{ Str::limit($mockExam->subjectExams->first()->getDisplayTitle(), 26) }}
                     @else
-                        {{ $totalDuration }} mins
+                        {{ $subjectCount }} Papers
                     @endif
-            </span>
+                </span>
             </td>
-        @endif
-        @if($totalMarks > 0)
-            <td>
-                <span class="ig-lbl">Total Marks</span>
-                <span class="ig-val">{{ number_format($totalMarks, 0) }}</span>
-            </td>
-        @endif
-    </tr>
-</table>
+            @if($totalDuration > 0)
+                <td>
+                    <span class="ig-lbl">Duration</span>
+                    <span class="ig-val">
+                    @if($totalDuration >= 60)
+                            {{ floor($totalDuration / 60) }}hr{{ floor($totalDuration / 60) > 1 ? 's' : '' }}{{ $totalDuration % 60 > 0 ? ' '.($totalDuration % 60).'min' : '' }}
+                        @else
+                            {{ $totalDuration }} mins
+                        @endif
+                </span>
+                </td>
+            @endif
+            @if($totalMarks > 0)
+                <td>
+                    <span class="ig-lbl">Total Marks</span>
+                    <span class="ig-val">{{ number_format($totalMarks, 0) }}</span>
+                </td>
+            @endif
+        </tr>
+    </table>
 
-{{-- Candidate Information --}}
-<div class="cand-section">
-    <div class="section-label">Candidate Information</div>
-    <hr class="section-rule">
-    <div class="field-row">
-        <div class="field-cell" style="width:100%;">
-            <span class="field-lbl">Full Name</span>
-            <div class="field-line"></div>
-        </div>
-    </div>
-    <div class="field-row" style="margin-top:10px;">
-        <div class="field-cell" style="width:50%;">
-            <span class="field-lbl">Index No.</span>
-            <div class="field-line"></div>
-        </div>
-        <div class="field-cell" style="width:50%;">
-            <span class="field-lbl">Class / Form</span>
-            <div class="field-line"></div>
-        </div>
-    </div>
-    <div class="field-row" style="margin-top:10px;">
-        <div class="field-cell" style="width:65%;">
-            <span class="field-lbl">Signature</span>
-            <div class="field-line"></div>
-        </div>
-        <div class="field-cell" style="width:35%;">
-            <span class="field-lbl">Date</span>
-            <div class="field-line"></div>
-        </div>
-    </div>
-</div>
-
-{{-- General Instructions --}}
-@if($mockExam->instructions)
-    <div class="inst-section">
-        <div class="section-label">General Instructions to Candidates</div>
+    {{-- Candidate Information --}}
+    <div class="cand-section">
+        <div class="section-label">Candidate Information</div>
         <hr class="section-rule">
-        <div class="inst-body">{!! $mockExam->instructions !!}</div>
+        <div class="field-row">
+            <div class="field-cell" style="width:100%;">
+                <span class="field-lbl">Full Name</span>
+                <div class="field-line"></div>
+            </div>
+        </div>
+        <div class="field-row" style="margin-top:10px;">
+            <div class="field-cell" style="width:50%;">
+                <span class="field-lbl">Index No.</span>
+                <div class="field-line"></div>
+            </div>
+            <div class="field-cell" style="width:50%;">
+                <span class="field-lbl">Class / Form</span>
+                <div class="field-line"></div>
+            </div>
+        </div>
+        <div class="field-row" style="margin-top:10px;">
+            <div class="field-cell" style="width:65%;">
+                <span class="field-lbl">Signature</span>
+                <div class="field-line"></div>
+            </div>
+            <div class="field-cell" style="width:35%;">
+                <span class="field-lbl">Date</span>
+                <div class="field-line"></div>
+            </div>
+        </div>
     </div>
-@endif
+
+    {{-- General Instructions --}}
+    @if($mockExam->instructions)
+        <div class="inst-section">
+            <div class="section-label">General Instructions to Candidates</div>
+            <hr class="section-rule">
+            <div class="inst-body">{!! $mockExam->instructions !!}</div>
+        </div>
+    @endif
+@endunless
 
 {{-- Subject Exams --}}
 @foreach($mockExam->subjectExams as $seIdx => $se)

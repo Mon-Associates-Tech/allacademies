@@ -27,6 +27,7 @@ class MockExamTemplate extends Model
         'topic_ids',
         'subtopic_ids',
         'sections_config',
+        'front_page_config',
     ];
 
     protected function casts(): array
@@ -37,6 +38,7 @@ class MockExamTemplate extends Model
             'subtopic_ids'             => 'array',
             'sections_config'          => 'array',
             'default_duration_minutes' => 'integer',
+            'front_page_config'       => 'array',
         ];
     }
 
@@ -103,7 +105,7 @@ class MockExamTemplate extends Model
      */
     public function getDisplayName(): string
     {
-        return $this->name ?? ($this->academicSubject?->name . ' Template');
+        return $this->name ?: $this->academicSubject?->name ?: 'Untitled Template';
     }
 
     /**
@@ -163,9 +165,7 @@ class MockExamTemplate extends Model
     }
 
     /**
-     * Convert template to payload format compatible with MockExamCreationService.
-     * 
-     * @return array Payload for creating a subject exam
+     * Convert this template to a payload suitable for creating a subject exam.
      */
     public function toSubjectExamPayload(): array
     {
@@ -173,12 +173,12 @@ class MockExamTemplate extends Model
             'academic_group_id'   => $this->academic_group_id,
             'academic_level_id'   => $this->academic_level_id,
             'academic_subject_id' => $this->academic_subject_id,
-            'title'               => null, // Will be set by caller
-            'instructions'        => null, // Will be set by caller
+            'title'               => $this->name,
+            'instructions'        => $this->description,
             'duration_in_minutes' => $this->default_duration_minutes,
             'topic_ids'           => $this->topic_ids ?? [],
             'subtopic_ids'        => $this->subtopic_ids ?? [],
-            'sections'            => $this->getSectionsConfig(),
+            'sections'            => $this->sections_config ?? [],
         ];
     }
 }

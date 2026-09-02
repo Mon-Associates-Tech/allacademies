@@ -14,7 +14,8 @@ class ViewGeneralExamResults extends Component
 {
     use WithPagination;
 
-    public GeneralExam $assignment;
+    // ✅ Store only the ID to prevent Livewire from serializing complex model relations
+    public int $assignmentId;
 
     public string $search = '';
 
@@ -25,10 +26,6 @@ class ViewGeneralExamResults extends Component
     public string $sortDirection = 'desc';
 
     public ?int $viewingSubmissionId = null;
-
-    public ?array $submissionDetails = null;
-
-    public ?GeneralExamSubmission $viewingSubmission = null;
 
     public ?array $gradingSummary = null;
 
@@ -55,7 +52,6 @@ class ViewGeneralExamResults extends Component
 
     public function mount(GeneralExam $assignment): void
     {
-        // Verify ownership by creator, fallback to legacy teacher link
         $user = Auth::user();
         $ownsByUser = $assignment->user_id === $user->id;
         $ownsByTeacher = $user?->teacher && $assignment->teacher_id === $user->teacher->id;
@@ -64,8 +60,27 @@ class ViewGeneralExamResults extends Component
             abort(403, 'Unauthorized access to assignment results.');
         }
 
-        $this->assignment = $assignment;
+        // ✅ Assign only the ID
+        $this->assignmentId = $assignment->id;
         $this->loadGradingSummary();
+    }
+
+    // ✅ Computed property: Fetches the model fresh, bypassing Livewire serialization
+    public function getAssignmentProperty(): GeneralExam
+    {
+        return GeneralExam::with('questions')->find($this->assignmentId);
+    }
+
+    // ✅ Computed property: Fetches the submission fresh, bypassing Livewire serialization
+    public function getViewingSubmissionProperty(): ?GeneralExamSubmission
+    {
+        if (! $this->viewingSubmissionId) {
+            return null;
+        }
+
+        return GeneralExamSubmission::with(['participant', 'proctoringSession'])
+            ->where('general_exam_id', $this->assignmentId)
+            ->find($this->viewingSubmissionId);
     }
 
     public function loadGradingSummary(): void
@@ -95,33 +110,21 @@ class ViewGeneralExamResults extends Component
 
     public function viewSubmission(int $submissionId): void
     {
-        $submission = GeneralExamSubmission::with(['participant', 'proctoringSession'])
-            ->where('general_exam_id', $this->assignment->id)
-            ->find($submissionId);
+        $exists = GeneralExamSubmission::where('general_exam_id', $this->assignmentId)
+            ->where('id', $submissionId)
+            ->exists();
 
-        if (! $submission) {
+        if (! $exists) {
             session()->flash('error', 'Submission not found.');
-
             return;
         }
 
         $this->viewingSubmissionId = $submissionId;
-        $this->viewingSubmission = $submission;
-        $this->submissionDetails = [
-            'submission' => $submission,
-            'participant_name' => $submission->getParticipantName(),
-            'participant_email' => $submission->getParticipantEmail(),
-            'responses' => $submission->responses ?? [],
-            'questions' => $this->assignment->questions->keyBy('id')->toArray(),
-            'proctoring' => $submission->proctoringSession?->getViolationSummary() ?? null,
-        ];
     }
 
     public function closeSubmissionView(): void
     {
         $this->viewingSubmissionId = null;
-        $this->viewingSubmission = null;
-        $this->submissionDetails = null;
     }
 
     public function toggleGradingSummary(): void
@@ -133,9 +136,7 @@ class ViewGeneralExamResults extends Component
     {
         try {
             $results = $this->gradingService->bulkGradeAssignment($this->assignment);
-
             session()->flash('success', "Graded {$results['graded']} submissions. {$results['failed']} failed.");
-
             $this->loadGradingSummary();
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to grade submissions: '.$e->getMessage());
@@ -146,12 +147,8 @@ class ViewGeneralExamResults extends Component
     {
         try {
             $this->assignment->releaseResults();
-
-            // Send notifications to participants
             $notificationResults = $this->verificationService->sendBulkResultNotifications($this->assignment);
-
             session()->flash('success', "Results released! Notifications sent to {$notificationResults['sent']} participants.");
-
             $this->assignment->refresh();
             $this->loadGradingSummary();
         } catch (\Exception $e) {
@@ -171,40 +168,33 @@ class ViewGeneralExamResults extends Component
 
     public function exportResults(): void
     {
-        // This would typically generate a CSV/Excel file
-        // For now, we'll dispatch an event that can be handled by JavaScript
-        $this->dispatch('export-results', assignmentId: $this->assignment->id);
+        $this->dispatch('export-results', assignmentId: $this->assignmentId);
     }
 
     public function getSubmissionsProperty()
     {
-        $query = GeneralExamSubmission::where('general_exam_id', $this->assignment->id)
-            ->with(['participant', 'proctoringSession']);
+        $query = GeneralExamSubmission::where('general_exam_id', $this->assignmentId)
+            ->with(['generalExamParticipant', 'proctoringSession']);
 
-        // Search filter - search by participant name/email
         if (! empty($this->search)) {
             $query->where(function ($q) {
-                // For GeneralExamParticipant
-                $q->whereHasMorph('participant', ['App\ExaminationHub\Models\GeneralExamParticipant'], function ($query) {
+                $q->whereHasMorph('generalExamParticipant', ['App\ExaminationHub\Models\GeneralExamParticipant'], function ($query) {
                     $query->where('name', 'like', '%'.$this->search.'%')
                         ->orWhere('email', 'like', '%'.$this->search.'%');
                 })
-                // For Student
-                    ->orWhereHasMorph('participant', ['App\Models\Student'], function ($query) {
-                        $query->whereHas('user', function ($q) {
-                            $q->where('name', 'like', '%'.$this->search.'%')
-                                ->orWhere('email', 'like', '%'.$this->search.'%');
-                        });
+                ->orWhereHasMorph('generalExamParticipant', ['App\Models\Student'], function ($query) {
+                    $query->whereHas('user', function ($q) {
+                        $q->where('name', 'like', '%'.$this->search.'%')
+                            ->orWhere('email', 'like', '%'.$this->search.'%');
                     });
+                });
             });
         }
 
-        // Status filter
         if (! empty($this->statusFilter)) {
             $query->where('status', $this->statusFilter);
         }
 
-        // Sorting
         $query->orderBy($this->sortBy, $this->sortDirection);
 
         return $query->paginate(15);
@@ -285,6 +275,10 @@ class ViewGeneralExamResults extends Component
     public function render()
     {
         return view('livewire.teachers.view-general-exam-results', [
+            // ✅ EXPLICITLY PASS COMPUTED PROPERTIES TO THE BLADE VIEW
+            'assignment' => $this->assignment,
+            'viewingSubmission' => $this->viewingSubmission,
+            
             'submissions' => $this->submissions,
             'statusOptions' => $this->statusOptions,
             'submissionCounts' => $this->submissionCounts,

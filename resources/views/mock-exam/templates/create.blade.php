@@ -229,7 +229,7 @@
 
                         <div class="p-5 space-y-4">
                             {{-- Title & Instructions --}}
-                            <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="space-y-4">
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Section Title <span class="text-red-500">*</span></label>
                                     <input type="text" :name="'sections_config[' + idx + '][title]'"
@@ -238,13 +238,17 @@
                                            class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                            style="border-radius: 2px;">
                                 </div>
-                                <div>
+                                <div
+                                    x-data="sectionRichEditor(section, idx)"
+                                    x-init="init()"
+                                    x-effect="syncName(idx)"
+                                >
                                     <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Instructions</label>
-                                    <input type="text" :name="'sections_config[' + idx + '][instructions]'"
-                                           x-model="section.instructions"
-                                           placeholder="Optional instructions for this section"
-                                           class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                                           style="border-radius: 2px;">
+                                    <div class="border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                                        <textarea :id="editorId" class="w-full border-0 focus:ring-0 dark:bg-slate-800 dark:text-white" style="min-height: 150px;"></textarea>
+                                    </div>
+                                    {{-- Carries the value on form submit --}}
+                                    <textarea :name="'sections_config[' + idx + '][instructions]'" x-model="section.instructions" class="hidden"></textarea>
                                 </div>
                             </div>
 
@@ -320,7 +324,63 @@
     </form>
 </div>
 
+@once
+@push('head')
+<script src="{{ asset('js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script>
+@endpush
+@endonce
+
 <script>
+function sectionRichEditor(section, idx) {
+    return {
+        section,
+        editorId: 'section-instructions-' + idx,
+        editor: null,
+
+        init() {
+            this.$nextTick(() => {
+                const el = document.getElementById(this.editorId);
+                if (!el) return;
+
+                const isDark = document.documentElement.classList.contains('dark');
+
+                tinymce.init({
+                    selector: '#' + this.editorId,
+                    height: 150,
+                    menubar: false,
+                    skin: isDark ? 'oxide-dark' : 'oxide',
+                    content_css: isDark ? 'dark' : 'default',
+                    plugins: 'code lists table link image media paste markdown autoresize',
+                    toolbar: 'undo redo | bold italic strikethrough | h1 h2 h3 | bullist numlist | link image table code | formatselect',
+                    toolbar_mode: 'floating',
+                    content_style: `body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; } img { max-width: 100%; height: auto; }`,
+                    paste_as_text: false,
+                    formats: { bold: {inline: 'strong'}, italic: {inline: 'em'}, strikethrough: {inline: 'del'} },
+                    markdown: { output: 'markdown' },
+                    statusbar: false,
+                    branding: false,
+                    setup: (editor) => {
+                        this.editor = editor;
+                        editor.on('init', () => {
+                            editor.setContent(this.section.instructions || '');
+                        });
+                        editor.on('change keyup', () => {
+                            this.section.instructions = editor.getContent();
+                        });
+                        editor.on('blur', () => {
+                            this.section.instructions = editor.getContent();
+                        });
+                    },
+                });
+            });
+        },
+
+        syncName(idx) {
+            this.editorId = 'section-instructions-' + idx;
+        },
+    };
+}
+
 function templateForm() {
     const tree = @json($hierarchyTree);
 

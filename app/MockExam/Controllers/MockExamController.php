@@ -108,30 +108,8 @@ class MockExamController extends Controller
     /** Build the complete academic hierarchy tree for Alpine.js cascading dropdowns. */
     public static function hierarchyTree(): array
     {
-        return AcademicGroup::query()
-            ->with(['academicLevels.academicSubjects.topics.subtopics'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($group) => [
-                'id'     => $group->id,
-                'name'   => $group->name,
-                'levels' => $group->academicLevels->map(fn ($level) => [
-                    'id'       => $level->id,
-                    'name'     => $level->name,
-                    'subjects' => $level->academicSubjects->map(fn ($subject) => [
-                        'id'     => $subject->id,
-                        'name'   => $subject->name,
-                        'topics' => $subject->topics->map(fn ($topic) => [
-                            'id'        => $topic->id,
-                            'name'      => $topic->name,
-                            'subtopics' => $topic->subtopics->map(fn ($sub) => [
-                                'id'   => $sub->id,
-                                'name' => $sub->name,
-                            ])->values()->all(),
-                        ])->values()->all(),
-                    ])->values()->all(),
-                ])->values()->all(),
-            ])->values()->all();
+        return MockExam::hierarchyTree();
+        
     }
 
     private function validateExamPayload(Request $request): array

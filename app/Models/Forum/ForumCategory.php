@@ -37,9 +37,7 @@ class ForumCategory extends Model
         'moderator_ids' => 'array',
     ];
 
-    protected $with = [
-        'latestPost',
-    ];
+    // Removed global $with to prevent auto-loading on every query (memory/perf issue)
 
     public function parent()
     {

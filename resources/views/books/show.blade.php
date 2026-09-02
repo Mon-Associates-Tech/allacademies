@@ -283,7 +283,7 @@
                                 </button>
                             </div>
                             <!-- Open in Paint -->
-                            @if(false && $book->has_softcopy && $canRead)
+                            @if( $book->has_softcopy && $canRead)
                                 <div x-data="paintLauncher({{ $book->id }}, {{ $book->pages ?? 1 }})">
                                     <button @click="launch()"
                                             class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">

@@ -91,11 +91,7 @@ class DeleteUserModal extends Component
         $deletionService->deleteUser($user);
 
         // Log activity
-        User::logActivityForModel('delete', 'User Account Deleted', 'user', [
-            'user_name' => $userName,
-            'user_email' => $userEmail,
-            'deleted_by' => auth()->user()?->name ?? 'Unknown',
-        ]);
+        User::logModelActivity( $user, 'delete', 'User Account Deleted');
 
         $this->showModal = false;
 
