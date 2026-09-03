@@ -139,7 +139,7 @@
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $offer->title }}</div>
                                 <div
                                     class="text-xs text-gray-500 dark:text-gray-400">
-                                    <x-prose-content :content="\Illuminate\Support\Str::limit($offer->description, 80)"
+                                    <x-ui.latex :content="\Illuminate\Support\Str::limit($offer->description, 80)"
                                                      class="text-xs text-gray-500
                                         dark:text-gray-400"/>
                                 </div>

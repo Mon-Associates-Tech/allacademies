@@ -162,7 +162,7 @@
                                             : 'text-lg';
                                     @endphp
                                     <div class="{{ $questionTextClasses }} text-gray-900 dark:text-white mb-6 prose dark:prose-invert max-w-none">
-                                        <x-prose-content :content="($currentQuestion->content ?? null) ?: ($currentQuestion->question ?? '')" />
+                                        <x-ui.latex :content="($currentQuestion->content ?? null) ?: ($currentQuestion->question ?? '')" />
                                     </div>
 
                                                                         <!-- Answer Options -->
@@ -183,7 +183,7 @@
                                                         <span class="flex items-start gap-2">
                                                             <span class="font-semibold flex-shrink-0 pt-0.5 leading-tight">{{ $key }}.</span>
                                                             <span class="flex-1">
-                                                                <x-prose-content :content="$option"
+                                                                <x-ui.latex :content="$option"
                                                                                  class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0 leading-tight" />
                                                             </span>
                                                         </span>

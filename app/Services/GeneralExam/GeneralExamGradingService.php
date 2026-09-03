@@ -555,7 +555,7 @@ class GeneralExamGradingService
             }
 
             $questionAnalysis[$question->id] = [
-                'question'      => $question->question,
+                'question'      => $question->question?->down,
                 'type'          => $question->type,
                 'total_attempts' => $totalAttempts,
                 'correct_count' => $correctCount,

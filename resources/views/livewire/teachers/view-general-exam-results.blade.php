@@ -283,7 +283,7 @@
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-start gap-2">
                                         <span class="flex-shrink-0 mt-0.5">Q{{ $index + 1 }}:</span>
                                         <span class="flex-1">
-                                            <x-prose-content :content="$question" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
+                                            <x-ui.latex :content="$question" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
                                         </span>
                                     </span>
                                     @if($isCorrect === true)

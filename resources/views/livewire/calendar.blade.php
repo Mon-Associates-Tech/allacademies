@@ -505,7 +505,7 @@
             @if($selectedEvent->description)
             <div>
                 <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Description</label>
-                <x-prose-content :content="$selectedEvent->description" class="text-gray-900 dark:text-white" />
+                <x-ui.latex :content="$selectedEvent->description" class="text-gray-900 dark:text-white" />
             </div>
             @endif
 

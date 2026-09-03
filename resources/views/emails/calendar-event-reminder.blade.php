@@ -234,7 +234,7 @@
                                                         Details
                                                     </p>
                                                     <div class="event-description" style="margin: 0; font-size: 15px; color: #495057; line-height: 1.6;">
-                                                        <x-prose-content :content="$event->description" />
+                                                        <x-ui.latex :content="$event->description" />
                                                     </div>
                                                 </td>
                                             </tr>

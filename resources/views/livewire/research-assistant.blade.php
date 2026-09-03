@@ -260,9 +260,10 @@
                                         <div
                                             class="prose prose-sm max-w-none {{ $message['role'] === 'user' ? 'prose-invert' : 'prose-slate dark:prose-invert' }}">
                                             @if (is_string($message['content']))
-                                                <x-prose-content :content="trim($message['content'])"></x-prose-content>
+                                            <x-ui.latex :content="$message['content']" />
+    
                                             @else
-                                                <x-prose-content :content="$message['content']"></x-prose-content>
+                                            <x-ui.latex :content="$message['content']['text']" />
                                             @endif
                                         </div>
 

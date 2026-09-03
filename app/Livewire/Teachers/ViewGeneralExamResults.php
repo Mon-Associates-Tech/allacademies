@@ -78,7 +78,7 @@ class ViewGeneralExamResults extends Component
             return null;
         }
 
-        return GeneralExamSubmission::with(['participant', 'proctoringSession'])
+        return GeneralExamSubmission::with(['generalExamParticipant', 'proctoringSession'])
             ->where('general_exam_id', $this->assignmentId)
             ->find($this->viewingSubmissionId);
     }

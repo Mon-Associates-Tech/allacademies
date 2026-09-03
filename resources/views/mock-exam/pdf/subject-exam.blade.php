@@ -436,7 +436,7 @@
                     <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
 {{--                        @dd($question)--}}
-                        <x-markdown-renderer :content="$question->question_text" inline="true" />
+                        <x-ui.latex :content="$question->question_text" inline="true" />
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
                 </div>
@@ -449,7 +449,7 @@
                     <div class="option-item">
                         <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
                         <span class="option-text">
-                            <x-markdown-renderer :content="$option" inline="true" />
+                            <x-ui.latex :content="$option" inline="true" />
                         </span>
                     </div>
                     @php $optionIndex++; @endphp

@@ -1,0 +1,10 @@
+{
+    "name": "allacademies-katex-batch",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Isolated KaTeX server-side rendering bridge, invoked via PHP Process. Not part of the main Vite build.",
+    "main": "katex-batch.js",
+    "dependencies": {
+        "katex": "^0.16.11"
+    }
+}

@@ -24,8 +24,8 @@
 
     // Intelligently determine if we have HTML or Markdown
     if ($content instanceof \App\Support\Mark) {
-        $htmlContent = $content->up;
-        $markdownContent = $content->down;
+        $htmlContent = $content->down;
+        $markdownContent = $content->up;
     } elseif (is_string($content)) {
         // Heuristic: if it contains block-level HTML tags, treat as HTML
         if (preg_match('/<(p|div|table|img|iframe|h[1-6]|ul|ol|br)\b/i', $content)) {
@@ -120,6 +120,16 @@
         .prose-inline .katex-display {
             margin: 0;
         }
+
+        +
+    /* Images in inline content still need to be mobile-safe even though
+      the full Tailwind Typography prose-img: rules don't apply here */
+    .prose-inline img {
+       max-width: 100%;
+       height: auto;
+       display: inline-block;
+       vertical-align: middle;
+   }
     </style>
 @endonce
 

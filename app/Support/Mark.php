@@ -6,8 +6,9 @@ use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Livewire\Wireable;
 
-class Mark implements Castable
+class Mark implements Castable, Wireable
 {
     public ?string $summary;
     public ?HtmlString $html;
@@ -18,14 +19,29 @@ class Mark implements Castable
         $this->html = is_string($down) ? new HtmlString($down) : null;
     }
 
-    public static function fromArray(?array $array)
-    {
-        if (!is_array($array)) {
-            return new static(null, null);
-        }
-        
-        return new static($array['up'] ?? null, $array['down'] ?? null);
+public static function fromArray(?array $array)
+{
+    if (!is_array($array)) {
+        return new static(null, null);
     }
+
+    // Explicit opt-in: caller supplies raw markdown and wants it rendered
+    // server-side, rather than trusting a client-computed 'down' value.
+    if (array_key_exists('markdown', $array) && is_string($array['markdown'])) {
+        return static::fromMarkdown($array['markdown']);
+    }
+
+    return new static($array['up'] ?? null, $array['down'] ?? null);
+}
+
+public static function fromMarkdown(?string $markdown): static
+{
+    if (is_null($markdown) || trim($markdown) === '') {
+        return new static(null, null);
+    }
+
+    return new static($markdown, app(MarkdownMathService::class)->render($markdown));
+}
 
     public static function fromString(?string $string)
     {
@@ -56,6 +72,16 @@ class Mark implements Castable
     public function toString(): string
     {
         return json_encode($this->toArray());
+    }
+
+    public function toLivewire()
+    {
+        return $this->toArray();
+    }
+
+    public static function fromLivewire($value): static
+    {
+        return static::fromArray($value);
     }
 
     public static function castUsing(array $arguments)

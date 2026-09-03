@@ -103,7 +103,7 @@
 
                     <!-- Description -->
                     @if($resource->description)
-                        <x-prose-content :content="$resource->description" class="mb-6" />
+                        <x-ui.latex :content="$resource->description" class="mb-6" />
                     @endif
 
                     <!-- Tags -->

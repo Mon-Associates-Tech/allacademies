@@ -30,3 +30,4 @@ ddl
 /.github
 .junie
 .
+/resources/scripts/node_modules

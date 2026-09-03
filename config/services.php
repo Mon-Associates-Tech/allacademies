@@ -53,5 +53,8 @@ return [
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
     ],
+    'katex' => [
+    'script_path' => env('KATEX_SCRIPT_PATH', resource_path('scripts/katex-batch.js')),
+],
 
 ];

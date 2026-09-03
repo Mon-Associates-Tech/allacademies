@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-                <a href="{{ route('examination-hub.submissions.show', [$assignment, $submission]) }}" class="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1 mb-2">
+                <a href="{{ route('teachers.general-exams.results', [$assignment, $submission]) }}" class="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1 mb-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     Back to Results
                 </a>
@@ -165,32 +165,39 @@
                         <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                             <h3 class="font-medium text-gray-900 dark:text-white mb-2">Question</h3>
                             <p class="text-gray-700 dark:text-gray-300">
-                                <x-prose-content :content="$currentQuestion->question" />
+                                <x-ui.latex :content="$currentQuestion->question" />
                             </p>
                         </div>
 
                         <!-- Correct Answer (for auto-gradable questions) -->
-                        @if(in_array($currentQuestion->type, ['multiple_choice', 'true_false']))
-                            <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl">
-                                <h3 class="font-medium text-green-800 dark:text-green-300 mb-2">Correct Answer</h3>
-                                @if($currentQuestion->type === 'multiple_choice')
-                                    @php
-                                        $correctKey = strtoupper($currentQuestion->correct_answer);
-                                        $options = $currentQuestion->options ?? [];
-                                        $optionText = $options[$correctKey]
-                                            ?? ($options[strtolower($correctKey)] ?? ($options[strtoupper($correctKey)] ?? ''));
-                                    @endphp
-                                    <div class="flex items-start gap-2 text-green-700 dark:text-green-400">
-                                        <span class="font-semibold flex-shrink-0 pt-0.5">{{ $correctKey }}.</span>
-                                        <span class="flex-1">
-                                            <x-prose-content :content="$optionText" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
-                                        </span>
-                                    </div>
-                                @else
-                                    <p class="text-green-700 dark:text-green-400">{{ ucfirst($currentQuestion->correct_answer) }}</p>
-                                @endif
-                            </div>
-                        @endif
+@if(in_array($currentQuestion->type, ['multiple_choice', 'true_false']))
+    <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl">
+        <h3 class="font-medium text-green-800 dark:text-green-300 mb-2">Correct Answer</h3>
+        @if($currentQuestion->type === 'multiple_choice')
+            @php
+                $correctKey = strtoupper($currentQuestion->correct_answer);
+                $options = $currentQuestion->options ?? [];
+                
+                // Loop through options to find the matching key
+                $optionText = '';
+                foreach ($options as $option) {
+                    if (isset($option['key']) && strtoupper($option['key']) === $correctKey) {
+                        $optionText = $option['value'] ?? '';
+                        break;
+                    }
+                }
+            @endphp
+            <div class="flex items-start gap-2 text-green-700 dark:text-green-400">
+                <span class="font-semibold flex-shrink-0 pt-0.5">{{ $correctKey }}.</span>
+                <span class="flex-1">
+                    <x-ui.latex :content="$optionText" />
+                </span>
+            </div>
+        @else
+            <p class="text-green-700 dark:text-green-400">{{ ucfirst($currentQuestion->correct_answer) }}</p>
+        @endif
+    </div>
+@endif
 
                         <!-- Student's Response -->
                         <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl">
@@ -198,28 +205,35 @@
                             @php
                                 $response = $this->getResponseForQuestion($currentQuestion->id);
                             @endphp
-                            @if($response)
-                                @if($currentQuestion->type === 'multiple_choice')
-                                    @php
-                                        $respKey = strtoupper($response);
-                                        $options = $currentQuestion->options ?? [];
-                                        $optionText = $options[$respKey]
-                                            ?? ($options[strtolower($respKey)] ?? ($options[strtoupper($respKey)] ?? ''));
-                                    @endphp
-                                    <div class="flex items-start gap-2 text-blue-700 dark:text-blue-400">
-                                        <span class="font-semibold flex-shrink-0 pt-0.5">{{ $respKey }}.</span>
-                                        <span class="flex-1">
-                                            <x-prose-content :content="$optionText" class="prose-sm dark:prose-invert prose-p:my-0 prose-ul:my-0 prose-ol:my-0 prose-li:my-0" />
-                                        </span>
-                                    </div>
-                                @elseif($currentQuestion->type === 'true_false')
-                                    <p class="text-blue-700 dark:text-blue-400">{{ ucfirst($response) }}</p>
-                                @else
-                                    <p class="text-blue-700 dark:text-blue-400 whitespace-pre-wrap">{{ $response }}</p>
-                                @endif
-                            @else
-                                <p class="text-gray-400 italic">No response provided</p>
-                            @endif
+                    @if($response)
+    @if($currentQuestion->type === 'multiple_choice')
+        @php
+            $respKey = strtoupper($response);
+            $options = $currentQuestion->options ?? [];
+            
+            // Loop through options to find the matching key
+            $optionText = '';
+            foreach ($options as $option) {
+                if (isset($option['key']) && strtoupper($option['key']) === $respKey) {
+                    $optionText = $option['value'] ?? '';
+                    break;
+                }
+            }
+        @endphp
+        <div class="flex items-start gap-2 text-blue-700 dark:text-blue-400">
+            <span class="font-semibold flex-shrink-0 pt-0.5">{{ $respKey }}.</span>
+            <span class="flex-1">
+                <x-ui.latex :content="$optionText" />
+            </span>
+        </div>
+    @elseif($currentQuestion->type === 'true_false')
+        <p class="text-blue-700 dark:text-blue-400">{{ ucfirst($response) }}</p>
+    @else
+        <p class="text-blue-700 dark:text-blue-400 whitespace-pre-wrap">{{ $response }}</p>
+    @endif
+@else
+    <p class="text-gray-400 italic">No response provided</p>
+@endif
                         </div>
 
                         <!-- Grading Form -->

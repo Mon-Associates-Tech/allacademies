@@ -305,7 +305,7 @@
         {{-- Content Area --}}
         <div class="bg-white dark:bg-gray-800 border-x border-gray-200 dark:border-gray-700 shadow-sm">
             <div class="px-4 py-8 sm:px-6">
-                <x-prose-content :content="$note->content"/>
+                <x-ui.latex :content="$note->content"/>
             </div>
         </div>
 

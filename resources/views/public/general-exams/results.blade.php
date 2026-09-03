@@ -117,7 +117,7 @@
                                     </div>
 
 {{--                                    <p class="text-gray-900 dark:text-white mb-3">{{ $question->question }}</p>--}}
-                                    <x-prose-content content="{{$question->question}}" />
+                                    <x-ui.latex :content="$question->question" />
 
                                     <!-- Your Answer -->
                                     <div class="mb-3">

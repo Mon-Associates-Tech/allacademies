@@ -159,7 +159,7 @@
                                         <span class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">{{ ucfirst(str_replace('_', ' ', $question->type)) }}</span>
                                         <span class="text-xs text-gray-500">{{ $question->marks }} marks</span>
                                     </div>
-                                    <p class="text-gray-900 dark:text-white"><x-prose-content :content="$question->question" />   </p>
+                                    <p class="text-gray-900 dark:text-white"><x-ui.latex :content="$question->question" />   </p>
                                     @if($question->type === 'multiple_choice')
                                         @php
                                             $displayOptions = $question->getOptionsForDisplay();
@@ -171,7 +171,7 @@
                                                     <div class="text-sm flex items-center gap-2 {{ $key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400' }}">
                                                         <span class="flex-shrink-0 font-semibold">{{ $key }}.</span>
                                                         <div class="flex-1">
-                                                            <x-prose-content
+                                                            <x-ui.latex
                                                                 :content="$option"
                                                                 :textColor="$key === $question->correct_answer ? 'text-green-600 font-medium' : 'text-gray-600 dark:text-gray-400'"
                                                             />

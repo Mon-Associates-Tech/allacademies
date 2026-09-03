@@ -16,12 +16,21 @@ const decodeHTMLEntities = (function() {
     };
 })();
 
+function unwrapBacktickedMath(content) {
+    return content
+        .replace(/`(\$\$[\s\S]+?\$\$)`/g, '$1')
+        .replace(/`(\\\[[\s\S]+?\\\])`/g, '$1')
+        .replace(/`(\\\([\s\S]+?\\\))`/g, '$1')
+        .replace(/`(\$[^`$\n]+?\$)`/g, '$1');
+}
+
 window.renderMarkdownWithMath = function(content) {
     if (!content) return '';
 
     try {
-        // 1. Decode entities first to handle any pre-escaped content from the backend
+     // 1. Decode entities first to handle any pre-escaped content from the backend
         const decodedContent = decodeHTMLEntities(content);
+        const unwrapped = unwrapBacktickedMath(decodedContent);
 
         // 2. Sanitize input to prevent XSS, explicitly allowing images and common markdown/math tags
         const allowedTags = [
@@ -36,8 +45,8 @@ window.renderMarkdownWithMath = function(content) {
         ];
         
         const sanitizedContent = typeof DOMPurify !== 'undefined' 
-            ? DOMPurify.sanitize(decodedContent, { ALLOWED_TAGS: allowedTags }) 
-            : decodedContent;
+            ? DOMPurify.sanitize(unwrapped, { ALLOWED_TAGS: allowedTags }) 
+            : unwrapped;
 
         // 3. Parse markdown with marked
         let htmlContent = marked.parse(sanitizedContent);
