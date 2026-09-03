@@ -227,7 +227,7 @@ class TimetableGrid extends Component
         $this->conflictWarnings = [];
     }
 
-    protected function schoolId(): int
+    protected function schoolId(): ?int
     {
         $user = Auth::user();
         return $user->canAccessCrossSchool()
