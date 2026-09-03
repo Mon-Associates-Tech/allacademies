@@ -17,7 +17,7 @@ class SponsorshipContribution extends Model
     const STATUS_REFUNDED = 'refunded';
     const PLATFORM_FEE_PERCENTAGE = 0.01;
     protected $fillable = [
-        'sponsorship_program_id',
+        'sponsorship_project_id',
         'sponsorship_offer_id',
         'user_id',
         'payer_name',
@@ -107,7 +107,7 @@ class SponsorshipContribution extends Model
      */
     public function sponsorshipProject(): BelongsTo
     {
-        return $this->belongsTo(SponsorshipProject::class, 'sponsorship_program_id');
+        return $this->belongsTo(SponsorshipProject::class, 'sponsorship_project_id');
     }
 
     /**
@@ -208,7 +208,7 @@ class SponsorshipContribution extends Model
         $this->update(['status' => self::STATUS_REFUNDED]);
 
         // Decrease the program's amount_raised
-        if ($this->sponsorship_program_id) {
+        if ($this->sponsorship_project_id) {
             $this->sponsorshipProgram->decrement('amount_raised', $this->net_amount);
         }
 

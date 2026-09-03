@@ -44,9 +44,9 @@
       : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   } catch (e) { document.documentElement.dataset.theme = 'light'; }
 </script>
-  <script type="module" crossorigin src="/volta/assets/index-BmW26Epo.js"></script>
-  <link rel="stylesheet" crossorigin href="/volta/assets/index-CsEqZmuw.css">
-<link rel="manifest" href="/volta/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/volta/registerSW.js"></script></head>
+  <script type="module" crossorigin src="./assets/index-D0tSBn4W.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CQ79yovw.css">
+<link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 <body>
 <!-- One sprite of stroke icons, referenced with <use>. Inline rather than a
      file so the chrome never renders a frame of missing iconography, and
@@ -61,6 +61,8 @@
     <g id="i-trash"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></g>
     <g id="i-rotate"><path d="M20 12a8 8 0 11-2.4-5.7"/><path d="M20 3v5h-5"/></g>
     <g id="i-fit"><path d="M4 9V4h5"/><path d="M15 4h5v5"/><path d="M20 15v5h-5"/><path d="M9 20H4v-5"/></g>
+    <g id="i-breadboard"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M12 6v12"/><circle cx="7" cy="10" r=".9"/><circle cx="9.5" cy="10" r=".9"/><circle cx="7" cy="14" r=".9"/><circle cx="9.5" cy="14" r=".9"/><circle cx="14.5" cy="10" r=".9"/><circle cx="17" cy="10" r=".9"/><circle cx="14.5" cy="14" r=".9"/><circle cx="17" cy="14" r=".9"/></g>
+    <g id="i-board"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h4v4H7zM13 13h4v4h-4zM11 9h6M7 11v6h6"/></g>
     <g id="i-chip"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/></g>
     <g id="i-spark"><path d="M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16l-1.7-4.8L5.5 9.5l4.8-1.7z"/><path d="M18 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></g>
     <g id="i-sigma"><path d="M18 5H7l6 7-6 7h11"/></g>
@@ -105,6 +107,8 @@
       </div>
       <button class="btn icon" id="saveBtn" title="Save circuit as a .json file"><svg class="ic" viewBox="0 0 24 24"><use href="#i-save"/></svg></button>
       <button class="btn icon" id="openBtn" title="Open a saved .json circuit"><svg class="ic" viewBox="0 0 24 24"><use href="#i-open"/></svg></button>
+      <button class="btn icon" id="bbBtn" title="Show this circuit built on a breadboard"><svg class="ic" viewBox="0 0 24 24"><use href="#i-breadboard"/></svg></button>
+      <button class="btn icon" id="pcbBtn" title="Export a KiCad netlist for PCB layout"><svg class="ic" viewBox="0 0 24 24"><use href="#i-board"/></svg></button>
       <button class="btn icon" id="shareBtn" title="Copy a shareable link to this circuit"><svg class="ic" viewBox="0 0 24 24"><use href="#i-share"/></svg></button>
       <button class="btn icon danger" id="clearBtn" title="Clear the schematic"><svg class="ic" viewBox="0 0 24 24"><use href="#i-trash"/></svg></button>
     </div>
@@ -251,9 +255,10 @@
         <article><h3>Ask in plain language</h3><p>Describe a circuit and have it built for
           you, or ask why the one on screen is not behaving. The assistant reads the
           schematic you are looking at.</p></article>
-        <article><h3>Works anywhere, offline</h3><p>An installable web app with no server
-          behind it. It runs on a laptop, a phone, or a school machine with a slow
-          connection, and it keeps working when the connection goes away entirely.</p></article>
+        <article><h3>Works anywhere, offline</h3><p>An installable web app that runs
+          entirely in the browser. It works on a laptop, a phone, or a school machine with a
+          slow connection, and it keeps working when the connection goes away entirely, so a
+          lesson does not depend on the network holding up.</p></article>
         <article><h3>A shared commons</h3><p>Members publish designs under CC BY-SA 4.0 so
           anyone can open them, change them and share them back — with credit following the
           work automatically.</p></article>
@@ -286,9 +291,9 @@
             The tools I learned on would tell you the answer without ever showing you the
             circuit thinking. I wanted one that does the opposite: current you can watch
             moving, wires that take their colour from their voltage, and a Math panel that
-            will show you the matrix it just solved if you ask it to. It runs on whatever
-            device a student already owns, needs no licence and no install, and keeps working
-            when the connection does not.
+            will show you the matrix it just solved if you ask it to. It runs in the browser
+            on whatever device a student already owns, and keeps working when the connection
+            does not.
           </p>
           <p>
             The commons is the other half of the idea. Circuits are far easier to learn from
@@ -301,8 +306,8 @@
 
       <section class="aboutcta" id="aboutCta" hidden>
         <h3>Join the commons</h3>
-        <p>Publish your designs, and build on everyone else's. Free, and the editor works
-          fully without an account.</p>
+        <p>Publish your designs, and build on everyone else's. The editor works fully
+          without an account.</p>
         <div class="aboutctabtns">
           <button class="btn primary" id="aboutRegister">Create an account</button>
           <button class="btn" id="aboutLogin">Sign in</button>
@@ -323,6 +328,19 @@
   </div>
 
   <!-- ==== Terms & privacy ============================================== -->
+  <div id="bbView" hidden>
+    <header class="galhead">
+      <div class="brand"><svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg><b class="wordmark">Volta</b><span class="brandsub">Breadboard</span></div>
+      <div class="sep"></div>
+      <span id="bbStatus" class="bbstatus"></span>
+      <button class="btn primary" id="bbClose"><svg class="ic" viewBox="0 0 24 24"><use href="#i-back"/></svg><span>Back to the editor</span></button>
+    </header>
+    <div class="bbwrap">
+      <canvas id="bbCanvas"></canvas>
+      <aside id="bbSide" class="bbside"></aside>
+    </div>
+  </div>
+
   <div id="legalView" hidden>
     <header class="galhead">
       <div class="brand">
@@ -344,7 +362,10 @@
       <p class="draftbanner"><b>Draft — not yet reviewed by a lawyer.</b>
         This was written to be accurate about what Volta actually does, so that
         somebody qualified has a real document to correct rather than a blank
-        page. Do not publish it as it stands.</p>
+        page. Still outstanding: a contact address, a decision on whether 15 is
+        the right age in every country this reaches, and a review of the
+        assistant clauses now that questions are sent to a third party. Do not
+        publish it as it stands.</p>
 
       <article id="legalTerms">
         <h1>Terms of use</h1>
@@ -384,24 +405,36 @@
           information about someone who has not agreed to it; or anything that
           exists to interfere with the service or with other members.</p>
 
-        <h2>6. Moderation</h2>
+        <h2>6. The circuit assistant</h2>
+        <p>Signed-in members can ask the assistant to build or explain a circuit.
+          It is answered by a language model, which means <b>its output is not
+          checked by anyone</b> — it can produce a circuit that looks right and
+          is not. Treat what it gives you as a draft to simulate and inspect, on
+          the same terms as clause 8: it is not a substitute for your judgement.</p>
+        <p>Because each request costs us money, the assistant is rationed to a
+          fixed number of requests per member per day, and we may change that
+          number, or withdraw the assistant, without notice. Use it for circuits.
+          Using it as a general-purpose language model, or trying to get round
+          the limit, is grounds for losing access to it.</p>
+
+        <h2>7. Moderation</h2>
         <p>Every published design carries a Report button. A moderator can
           remove a design from the commons. We may suspend or remove an account
           that repeatedly breaks these terms.</p>
 
-        <h2>7. Leaving</h2>
+        <h2>8. Leaving</h2>
         <p>You can delete your account at any time from the account panel. That
           removes your login, your profile and every design you have published.
           It is immediate and cannot be undone.</p>
 
-        <h2>8. No warranty</h2>
+        <h2>9. No warranty</h2>
         <p>Volta is a teaching and design tool, not a certified engineering
           instrument. Its results are as good as its models and its author can
           make them, and they are not a substitute for your own judgement.
           <b>Do not rely on it for anything where a wrong answer is dangerous or
           expensive.</b> It is provided as it is, without warranty of any kind.</p>
 
-        <h2>9. Changes</h2>
+        <h2>10. Changes</h2>
         <p>If these terms change materially, the version number changes and you
           will be asked to accept the new ones before publishing again.</p>
       </article>
@@ -421,7 +454,31 @@
         <p>Nothing leaves your device. Your circuits, your preferences and your
           Anthropic API key if you set one are stored in your own browser and
           are never sent to us. There is no analytics and there are no tracking
-          cookies.</p>
+          cookies. The one exception is the circuit assistant, which has to send
+          your question somewhere to answer it — see below.</p>
+
+        <h2>The circuit assistant</h2>
+        <p>Asking the assistant a question sends <b>your question and the
+          circuit currently on the canvas</b> away to be answered. Nothing else
+          goes with it: not your email, not your handle, not your other designs.
+          It happens only when you press Ask, never in the background.</p>
+        <p>There are two routes, and which one you are on decides who sees it:</p>
+        <table class="legaltable">
+          <tr><th>Route</th><th>Where your question goes</th><th>What we keep</th></tr>
+          <tr><td><b>Signed in</b> — the assistant works with no key of your own</td>
+              <td>To our server, and on to <b>Anthropic</b>, whose model writes the
+                  answer. We do not store the question or the circuit.</td>
+              <td>A count of how many times you asked, per day, so one member
+                  cannot exhaust the service for everyone. A number and a date,
+                  not your words.</td></tr>
+          <tr><td><b>Your own API key</b> — offline, self-hosted, or signed out</td>
+              <td>Straight from your browser to <b>Anthropic</b>. It never
+                  touches our server, and we never see it.</td>
+              <td>Nothing. We are not part of it.</td></tr>
+        </table>
+        <p>Anthropic processes the request in order to answer it, under their own
+          terms. If you would rather nothing left your machine at all, do not use
+          the assistant — every other part of the editor works without it.</p>
 
         <h2>If you join the commons</h2>
         <table class="legaltable">
@@ -432,6 +489,9 @@
           <tr><td>School</td><td>Optional, and off by default</td><td>Only if you switch it on</td></tr>
           <tr><td>That you confirmed your age and accepted these terms</td><td>To show we asked</td><td>No</td></tr>
           <tr><td>Designs you publish</td><td>They are the point of the commons</td><td>Yes</td></tr>
+          <tr><td>How many times you used the assistant today</td>
+              <td>To stop one member exhausting it for everyone. A count, never the questions</td>
+              <td>No</td></tr>
         </table>
 
         <h2>Your date of birth</h2>
@@ -464,8 +524,9 @@
         <p>Accounts and published designs are stored with Supabase, our database
           provider, in the region chosen when the project was set up. Email for
           sign-up confirmation and password resets is sent through our email
-          provider. Neither uses your data for anything but providing that
-          service to us.</p>
+          provider. Questions you put to the circuit assistant are answered by
+          <b>Anthropic</b>. None of the three uses your data for anything but
+          providing that service to us.</p>
 
         <h2>Children</h2>
         <p>The commons is for members of 15 and over. If you believe a younger
@@ -599,6 +660,22 @@
     </div>
   </div>
 
+  <div id="pcbModal" hidden>
+    <div class="sheet">
+      <div class="sheethead">
+        <h3><svg class="ic" viewBox="0 0 24 24"><use href="#i-board"/></svg> Export netlist for KiCad</h3>
+        <button class="btn icon ghost" id="pcbClose" title="Close"><svg class="ic" viewBox="0 0 24 24"><use href="#i-close"/></svg></button>
+      </div>
+      <p class="empty">Your circuit's connectivity, in the format Pcbnew imports. It is
+        <b>not a board</b>: Volta knows what is joined to what, not what package anything comes
+        in. Read what it could not carry across before laying anything out.</p>
+      <div id="pcbReport"></div>
+      <div class="inspectoract">
+        <button class="btn primary" id="pcbDownload">Download .net</button>
+      </div>
+    </div>
+  </div>
+
   <div id="aiModal" hidden>
     <div class="sheet">
       <div class="sheethead">
@@ -606,10 +683,12 @@
         <button class="btn icon ghost" id="aiClose" title="Close"><svg class="ic" viewBox="0 0 24 24"><use href="#i-close"/></svg></button>
       </div>
       <div id="aiKeySetup" hidden>
-        <p class="empty">Paste an Anthropic API key to enable the assistant. It is stored in
-          this browser's local storage and sent only to api.anthropic.com — which means any
-          script running on this page could read it. Use a key you're comfortable with that,
-          and revoke it if you share this device.</p>
+        <p class="empty"><b>Sign in to use the assistant</b> — approved members get it with no
+          key and nothing to set up. Close this and use <b>Sign in</b> in the toolbar.</p>
+        <p class="empty">Running Volta offline or self-hosted, with no account? Paste your own
+          Anthropic API key instead. It is stored in this browser's local storage and sent only
+          to api.anthropic.com — which means any script running on this page could read it. Use
+          a key you're comfortable with that, and revoke it if you share this device.</p>
         <div class="field"><input id="aiKeyInput" type="password" placeholder="sk-ant-..." /></div>
         <button class="btn primary" id="aiKeySave">Save key</button>
       </div>

@@ -449,7 +449,7 @@
                             View All Projects
                         </a>
                     @else
-                        <a href="{{ route('sign-up') }}"
+                        <a href="{{ route('register') }}"
                            class="inline-flex items-center justify-center px-8 py-4 bg-white text-indigo-600 text-base font-semibold rounded-xl hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
                             Get Started
                         </a>
