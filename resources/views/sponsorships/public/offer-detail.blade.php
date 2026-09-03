@@ -347,7 +347,7 @@
                                         </svg>
                                         Sign In
                                     </a>
-                                    <a href="{{ route('sign-up') }}"
+                                    <a href="{{ route('register') }}"
                                        class="inline-flex items-center justify-center px-8 py-4 bg-indigo-900 text-white font-bold rounded-xl hover:bg-indigo-800 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105 border-2 border-white/20">
                                         Create Account
                                     </a>

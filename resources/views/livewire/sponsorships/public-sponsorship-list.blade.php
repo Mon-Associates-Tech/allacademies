@@ -528,7 +528,7 @@
                                 Benefactor Dashboard
                             </a>
                         @else
-                            <a href="{{ route('sign-up') }}"
+                            <a href="{{ route('register') }}"
                                class="group inline-flex items-center justify-center px-8 py-4 border-2 border-white text-base font-semibold rounded-xl text-white hover:bg-white hover:text-violet-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
                                 <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none"
                                      stroke="currentColor" viewBox="0 0 24 24">
