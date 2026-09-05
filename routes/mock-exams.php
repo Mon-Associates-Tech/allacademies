@@ -103,6 +103,7 @@ Route::middleware(['web', 'auth'])
 
         // ── Step 2 – Template Details (Alpine.js form) ────────────────────
         Route::get('/{template}/front-page', [MockExamTemplateController::class, 'editFrontPage'])->name('front-page.edit');
+        Route::get('/{template}/preview-front-page', [MockExamPdfController::class, 'previewTemplateFrontPage'])->name('preview-front-page');
         Route::get('/{template}/edit',       [MockExamTemplateController::class, 'configureEdit'])->name('edit');
 
         // ── CRUD ──────────────────────────────────────────────────────────

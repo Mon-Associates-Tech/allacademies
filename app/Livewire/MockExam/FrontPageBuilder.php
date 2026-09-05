@@ -17,6 +17,9 @@ class FrontPageBuilder extends Component
     /** Null when creating a new template, set when editing. */
     public ?int $templateId = null;
 
+    public ?MockExamTemplate $template = null; // Added to hold template data for preview
+
+
     // ── Block state ───────────────────────────────────────────────────────────
     /**
      * Ordered list of front-page blocks.
@@ -39,6 +42,8 @@ class FrontPageBuilder extends Component
 
     public function mount(?MockExamTemplate $template = null): void
     {
+        $this->template = $template;
+
         if ($template && $template->exists) {
             $this->templateId      = $template->id;
             $this->frontPageBlocks = ($template->front_page_config['blocks'] ?? []);

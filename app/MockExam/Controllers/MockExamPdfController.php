@@ -8,6 +8,8 @@ use App\MockExam\Models\MockExamSubjectExam;
 use App\MockExam\Services\MockExamPdfService;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use App\MockExam\Models\MockExamTemplate;
+use Spatie\Browsershot\Browsershot;
 
 class MockExamPdfController extends Controller
 {
@@ -93,4 +95,35 @@ class MockExamPdfController extends Controller
     {
         abort_unless($exam->user_id === auth()->id(), 403);
     }
+
+/**
+ * Generate a pixel-perfect PDF preview of the template's front page for the iframe.
+ */
+public function previewTemplateFrontPage(MockExamTemplate $template): \Illuminate\Http\Response
+{
+    abort_unless($template->user_id === auth()->id(), 403);
+    
+    $fontSize = max(8, min(14, (float) request()->input('font_size', 11)));
+    $blocks = $template->front_page_config['blocks'] ?? [];
+
+    // Render the exact same partial, passing $template so it resolves the header/info grid correctly
+    $html = view('livewire.mock-exam.partials.front-page-preview', [
+        'template' => $template,
+        'blocks' => $blocks,
+        'fontSize' => $fontSize,
+        'isPdf' => true, 
+    ])->render();
+
+    // OPTION A: Using Browsershot (Recommended for pixel-perfect match)
+    $pdf = Browsershot::html($html)
+        ->showBackground()
+        ->format('A4')
+        ->margins(0, 0, 0, 0) // Margins are handled by the 15mm padding in the partial
+        ->pdf();
+        
+    return response($pdf, 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="front-page-preview.pdf"'
+    ]);
+}
 }

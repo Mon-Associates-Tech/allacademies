@@ -215,60 +215,125 @@
 
         .prose-inline .katex-display { display: inline-block; margin: 0; }
 
-        /* ─── Front Page ─── */
+        /* ─── Front Page (Cover) ─── */
         .front-page {
             page-break-after: always;
-            text-align: center;
-            padding: 40mm 25mm 30mm 25mm;
             font-family: 'Georgia', 'Times New Roman', serif;
+            color: #1a1a1a;
         }
-        .fp-title {
-            font-size: {{ ($fontSize ?? 11) + 8 }}pt;
-            font-weight: bold;
+        .front-page-frame {
+            display: table;
+            width: 100%;
+            height: 267mm;
+            border: 1px solid #cbd5e1;
+            padding: 14mm 16mm;
+        }
+        .front-page-content {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .fp-block {
+            margin-bottom: 10mm;
+        }
+        .fp-block:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Headings */
+        .fp-heading-h1 {
+            font-size: {{ ($fontSize ?? 11) + 9 }}pt;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #111;
-            margin-bottom: 25px;
+            letter-spacing: 0.06em;
+            color: #111827;
+            line-height: 1.35;
+            padding-bottom: 6mm;
+            border-bottom: 2px solid #1f2937;
+        }
+        .fp-heading-h2 {
+            font-size: {{ ($fontSize ?? 11) + 5 }}pt;
+            font-weight: 600;
+            color: #1f2937;
+            letter-spacing: 0.02em;
             line-height: 1.4;
         }
-        .fp-content {
-            margin: 25px 0;
+        .fp-heading-h3 {
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
+            font-weight: 600;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.4;
+        }
+
+        /* Rich text */
+        .fp-richtext {
+            max-width: 130mm;
+            margin: 0 auto;
             text-align: left;
             font-size: {{ $fontSize ?? 11 }}pt;
             line-height: 1.7;
+            color: #374151;
         }
-        .fp-divider {
-            width: 100%;
-            height: 2px;
-            background: #aaa;
-            margin: 30px 0;
-        }
+
+        /* Image */
         .fp-image {
-            max-width: 100%;
-            margin: 20px auto;
-            display: block;
-        }
-        .fp-info-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 25px 0;
-            text-align: left;
-        }
-        .fp-info-table th {
-            font-weight: bold;
-            padding: 8px 12px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-        }
-        .fp-info-table td {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-        }
-        .fp-fill {
             display: inline-block;
+            border: 1px solid #e5e7eb;
+            padding: 2mm;
+            background: #fff;
+            max-width: 100%;
+        }
+
+        /* Divider */
+        .fp-divider {
+            width: 40mm;
+            height: 0;
+            border-top: 1px solid #9ca3af;
+            margin: 0 auto;
+        }
+
+        /* Declaration panel (info table) */
+        .fp-declaration {
+            max-width: 145mm;
+            margin: 0 auto;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+            padding: 6mm 2mm;
+        }
+        .fp-decl-row {
+            display: table;
             width: 100%;
-            border-bottom: 1px solid #444;
-            height: 14px;
+            table-layout: fixed;
+            margin-bottom: 5mm;
+        }
+        .fp-decl-row:last-child {
+            margin-bottom: 0;
+        }
+        .fp-decl-field {
+            display: table-cell;
+            padding: 0 4mm;
+            text-align: left;
+            vertical-align: bottom;
+        }
+        .fp-decl-label {
+            display: block;
+            font-size: 7.5pt;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #6b7280;
+            margin-bottom: 2mm;
+        }
+        .fp-decl-value {
+            display: block;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            font-weight: 600;
+            color: #111827;
+            border-bottom: 1px solid #9ca3af;
+            min-height: 5mm;
+            padding-bottom: 1mm;
         }
     </style>
 </head>
@@ -276,81 +341,95 @@
     {{-- Front Page if subject exam has template with front page config --}}
     @if($subjectExam->template && !empty($subjectExam->template->front_page_config['blocks']))
         <div class="front-page">
-            @foreach($subjectExam->template->front_page_config['blocks'] ?? [] as $block)
-                @switch($block['type'])
-                    @case('heading')
-                        <div class="fp-title" style="
-                            font-size: {{ ($fontSize ?? 11) + ($block['level'] == 'h1' ? 8 : ($block['level'] == 'h2' ? 5 : 2)) }}pt;
-                            @if($block['level'] == 'h1') text-transform: uppercase; letter-spacing: 0.05em; @endif
-                        ">
-                            {{ $block['content'] ?? '' }}
+            <div class="front-page-frame">
+                <div class="front-page-content">
+                    @foreach($subjectExam->template->front_page_config['blocks'] ?? [] as $block)
+                        <div class="fp-block">
+                            @switch($block['type'])
+                                @case('heading')
+                                    <div class="fp-heading-{{ $block['level'] ?? 'h2' }}">
+                                        {{ $block['content'] ?? '' }}
+                                    </div>
+                                    @break
+
+                                @case('richtext')
+                                    <div class="fp-richtext">
+                                        {!! $block['content'] ?? '' !!}
+                                    </div>
+                                    @break
+
+                                @case('image')
+                                    @php
+                                        // 'src' is always a ready-to-use URL by the time it reaches
+                                        // this view — FrontPageBuilder::uploadBlockImage() already
+                                        // resolves it via Storage::url() before saving, and URL-type
+                                        // blocks store the pasted URL directly. Resolving it again
+                                        // here (as the old markup did) double-prefixed upload URLs.
+                                        $fpImgSrc = $block['src'] ?? null;
+                                        $fpImgAlign = $block['alignment'] ?? 'center';
+                                    @endphp
+                                    @if($fpImgSrc)
+                                        <div style="text-align: {{ $fpImgAlign }};">
+                                            <img src="{{ $fpImgSrc }}"
+                                                 class="fp-image"
+                                                 style="width: {{ $block['width'] ?? 200 }}px;"
+                                                 alt="{{ $block['alt'] ?? '' }}">
+                                        </div>
+                                    @endif
+                                    @break
+
+                                @case('divider')
+                                    <div class="fp-divider"></div>
+                                    @break
+
+                                @case('info_table')
+                                    @php
+                                        $fpFieldLabels = [
+                                            'candidate_name' => 'Full Name',
+                                            'index_number'   => 'Index Number',
+                                            'date'           => 'Date',
+                                            'duration'       => 'Duration',
+                                            'subject'        => 'Subject',
+                                            'grade'          => 'Grade / Class',
+                                            'signature'      => 'Invigilator Signature',
+                                            'score'          => 'Total Score',
+                                        ];
+                                        $fpFieldValues = [
+                                            'date' => $subjectExam->mockExam->starts_at
+                                                ? $subjectExam->mockExam->starts_at->format('d M Y')
+                                                : now()->format('d M Y'),
+                                            'duration' => $subjectExam->duration_in_minutes
+                                                ? ($subjectExam->duration_in_minutes >= 60
+                                                    ? floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '')
+                                                    : $subjectExam->duration_in_minutes . ' mins')
+                                                : null,
+                                            'subject' => $subjectExam->academicSubject?->name,
+                                        ];
+                                        $fpActiveFields = collect($block['fields'] ?? []);
+                                    @endphp
+                                    @if($fpActiveFields->isNotEmpty())
+                                        <div class="fp-declaration">
+                                            @foreach($fpActiveFields->chunk(2) as $fpRow)
+                                                <div class="fp-decl-row">
+                                                    @foreach($fpRow as $fpFieldKey)
+                                                        <div class="fp-decl-field">
+                                                            <span class="fp-decl-label">{{ $fpFieldLabels[$fpFieldKey] ?? $fpFieldKey }}</span>
+                                                            <div class="fp-decl-value">{{ $fpFieldValues[$fpFieldKey] ?? '' }}&nbsp;</div>
+                                                        </div>
+                                                    @endforeach
+                                                    @if($fpRow->count() === 1)
+                                                        <div class="fp-decl-field"></div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @break
+                            @endswitch
                         </div>
-                        @break
-                    @case('richtext')
-                        <div class="fp-content">
-                            {!! $block['content'] !!}
-                        </div>
-                        @break
-                    @case('image')
-                        @if($block['source_type'] == 'url')
-                            <img src="{{ $block['src'] }}" class="fp-image" style="width: {{ $block['width'] ?? 100 }}px;" alt="{{ $block['alt'] ?? '' }}">
-                        @elseif($block['source_type'] == 'upload')
-                            <img src="{{ Storage::disk('public')->url($block['src']) }}" class="fp-image" style="width: {{ $block['width'] ?? 100 }}px;" alt="{{ $block['alt'] ?? '' }}">
-                        @endif
-                        @break
-                    @case('divider')
-                        <div class="fp-divider"></div>
-                        @break
-                    @case('info_table')
-                        @php
-                            $fpFieldLabels = [
-                                'candidate_name' => 'Full Name',
-                                'index_number'   => 'Index Number',
-                                'date'           => 'Date',
-                                'duration'       => 'Duration',
-                                'subject'        => 'Subject',
-                                'grade'          => 'Grade / Class',
-                                'signature'      => 'Invigilator Signature',
-                                'score'          => 'Total Score',
-                            ];
-                            $fpFieldValues = [
-                                'date' => $subjectExam->mockExam->starts_at
-                                    ? $subjectExam->mockExam->starts_at->format('d M Y')
-                                    : now()->format('d M Y'),
-                                'duration' => $subjectExam->duration_in_minutes
-                                    ? ($subjectExam->duration_in_minutes >= 60
-                                        ? floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '')
-                                        : $subjectExam->duration_in_minutes . ' mins')
-                                    : null,
-                                'subject' => $subjectExam->academicSubject?->name,
-                            ];
-                            $fpActiveFields = $block['fields'] ?? [];
-                        @endphp
-                        <table class="fp-info-table">
-                            <thead>
-                                <tr>
-                                    @foreach($fpActiveFields as $fieldKey)
-                                        <th>{{ $fpFieldLabels[$fieldKey] ?? $fieldKey }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    @foreach($fpActiveFields as $fieldKey)
-                                        <td>
-                                            @if(!empty($fpFieldValues[$fieldKey]))
-                                                {{ $fpFieldValues[$fieldKey] }}
-                                            @else
-                                                <span class="fp-fill">&nbsp;</span>
-                                            @endif
-                                        </td>
-                                    @endforeach
-                                </tr>
-                            </tbody>
-                        </table>
-                        @break
-                @endswitch
-            @endforeach
+                    @endforeach
+                </div>
+            </div>
         </div>
     @endif
 

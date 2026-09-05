@@ -2,684 +2,562 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $mockExam->title }}</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $subjectExam->getDisplayTitle() }} - {{ $subjectExam->mockExam->title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+    <link rel="stylesheet" href="{{ public_path('vendor/katex/katex.min.css') }}">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         @page {
             size: A4;
-            margin: 22mm 20mm 26mm 20mm;
+            margin: 15mm;
         }
-
         body {
-            font-family: 'Georgia', 'Times New Roman', serif;
+            font-family: 'Times New Roman', Times, serif;
             font-size: {{ $fontSize ?? 11 }}pt;
-            color: #111;
-            line-height: 1.65;
+            color: #000;
+            line-height: 1.4;
             background: #fff;
         }
-
-        /* ─── Fixed Footer ─── */
-        .pg-footer {
-            position: fixed;
-            bottom: -22mm;
-            left: 0; right: 0;
-            border-top: 1px solid #bbb;
-            padding-top: 3px;
-        }
-        .pg-footer table { width: 100%; border-collapse: collapse; }
-        .pg-footer td {
-            font-size: 7.5pt;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #777;
-            padding: 0 2px;
-        }
-        .ft-right { text-align: right; }
-
-        /* ─── Document Header ─── */
-        .doc-header {
+        
+        /* Front Page Styles */
+        .front-page { page-break-after: always; }
+        .fp-header {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
         }
-        .rule-heavy { height: 3px; background: #111; }
-        .rule-light { height: 1px; background: #111; margin: 3px 0; }
-        .header-body { padding: 10px 0 8px; }
-
-        .school-name {
-            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #111;
-            margin-bottom: 2px;
-        }
-        .school-tagline {
-            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
-            font-style: italic;
-            color: #666;
-            font-family: Arial, Helvetica, sans-serif;
-            margin-bottom: 9px;
-        }
-        .exam-main-title {
-            font-size: {{ ($fontSize ?? 11) + 5 }}pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #111;
-            margin-bottom: 3px;
-        }
-        .exam-sub-date {
-            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
-            color: #666;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        /* ─── Info Table ─── */
-        .info-tbl {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1.5px solid #444;
-            margin-bottom: 18px;
-        }
-        .info-tbl td {
-            padding: 5px 10px;
-            text-align: center;
-            border: 1px solid #bbb;
-            vertical-align: middle;
-        }
-        .ig-lbl {
-            display: block;
-            font-size: 7pt;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #999;
-            font-family: Arial, Helvetica, sans-serif;
-            margin-bottom: 1px;
-        }
-        .ig-val {
-            font-size: {{ $fontSize ?? 11 }}pt;
-            font-weight: bold;
-            color: #111;
-        }
-
-        /* ─── Candidate Information (no box, just ruled fields) ─── */
-        .cand-section { margin-bottom: 18px; }
-        .section-label {
-            font-size: 8pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #111;
-            font-family: Arial, Helvetica, sans-serif;
-            margin-bottom: 4px;
-        }
-        .section-rule { border: none; border-top: 1.5px solid #333; margin-bottom: 12px; }
-
-        .field-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 14px;
-        }
-        .field-row:last-child { margin-bottom: 0; }
-        .field-cell {
-            display: table-cell;
-            padding-right: 24px;
-            vertical-align: bottom;
-        }
-        .field-cell:last-child { padding-right: 0; }
-        .field-lbl {
-            display: block;
-            font-size: 7pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #777;
-            font-family: Arial, Helvetica, sans-serif;
-            margin-bottom: 13px;
-        }
-        .field-line { border-bottom: 1px solid #444; }
-
-        /* ─── Instructions (no box, just ruled separator) ─── */
-        .inst-section { margin-bottom: 20px; }
-        .inst-body {
-            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
-            color: #333;
-            line-height: 1.65;
-        }
-
-        /* ─── Subject Header ─── */
-        .subj-wrap { margin-top: 20px; margin-bottom: 4px; }
-        .subj-rule-top { border: none; border-top: 2.5px solid #111; margin-bottom: 5px; }
-        .subj-rule-btm { border: none; border-top: 1px solid #555; margin-bottom: 10px; }
-        .subj-hdr-tbl { width: 100%; border-collapse: collapse; }
-        .subj-hdr-name {
-            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #111;
-        }
-        .subj-hdr-meta {
-            text-align: right;
-            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
-            color: #666;
-            font-family: Arial, Helvetica, sans-serif;
-            white-space: nowrap;
-        }
-        .subj-inst {
-            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
-            font-style: italic;
-            color: #555;
-            margin-bottom: 12px;
-        }
-
-        /* ─── Section Header ─── */
-        .sec-wrap { margin-top: 18px; margin-bottom: 2px; }
-        .sec-hdr-tbl { width: 100%; border-collapse: collapse; }
-        .sec-hdr-rule { border: none; border-top: 1.5px solid #555; margin-bottom: 10px; }
-        .sec-hdr-name {
-            font-size: {{ ($fontSize ?? 11) + 0.5 }}pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #111;
-        }
-        .sec-hdr-meta {
-            text-align: right;
-            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
-            color: #888;
-            font-family: Arial, Helvetica, sans-serif;
-            white-space: nowrap;
-        }
-        .sec-inst {
-            font-size: {{ ($fontSize ?? 11) - 1.5 }}pt;
-            font-style: italic;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        /* ─── Questions (no borders, pure flow) ─── */
-        .q-item {
-            margin-bottom: 14px;
-            page-break-inside: avoid;
-        }
-        .q-header {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            margin-bottom: 4px;
-        }
-        .q-num {
-            display: table-cell;
-            font-weight: bold;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #111;
-            width: 26px;
-            vertical-align: top;
-            padding-top: 1px;
-        }
-        .q-text {
-            display: table-cell;
-            font-size: {{ $fontSize ?? 11 }}pt;
-            color: #111;
-            vertical-align: top;
-        }
-        .q-marks {
-            display: table-cell;
-            font-size: {{ ($fontSize ?? 11) - 2 }}pt;
-            color: #888;
-            font-family: Arial, Helvetica, sans-serif;
-            vertical-align: top;
-            padding-top: 2px;
-            padding-left: 8px;
-            text-align: right;
-            white-space: nowrap;
-            width: 44px;
-        }
-
-        /* ─── Options (indented, no borders) ─── */
-        .opts-wrap { padding-left: 26px; margin-top: 4px; }
-        .opt-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 2px;
-            page-break-inside: avoid;
-        }
-        .opt-lbl {
-            display: table-cell;
-            width: 22px;
-            font-weight: bold;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
-            color: #333;
-            vertical-align: top;
-        }
-        .opt-txt {
-            display: table-cell;
-            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
-            color: #222;
-            vertical-align: top;
-        }
-
-        /* ─── Essay Lines ─── */
-        .elines { margin-top: 8px; padding-left: 0; }
-        .eline { border-bottom: 1px solid #ccc; height: 22px; }
-
-        /* ─── Page Break ─── */
-        .pg-break { page-break-before: always; }
-
-        /* ─── Front Page Styles ─── */
-        .front-page {
-            page-break-after: always;
-            text-align: center;
-            padding: 40mm 25mm 30mm 25mm;
-            font-family: 'Georgia', 'Times New Roman', serif;
-        }
-        .fp-title {
+        .fp-school {
             font-size: {{ ($fontSize ?? 11) + 8 }}pt;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #111;
-            margin-bottom: 25px;
-            line-height: 1.4;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+        .fp-title {
+            font-size: {{ ($fontSize ?? 11) + 4 }}pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
         }
         .fp-subtitle {
-            font-size: {{ ($fontSize ?? 11) + 2 }}pt;
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
             font-style: italic;
-            color: #666;
-            margin-bottom: 35px;
-            line-height: 1.5;
-        }
-        .fp-divider {
-            width: 100%;
-            height: 1px;
-            background: #ccc;
-            margin: 30px 0;
-            position: relative;
-        }
-        .fp-divider::before {
-            content: "";
-            position: absolute;
-            top: -0.5px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #aaa;
-        }
-        .fp-content {
-            margin: 25px 0;
-            text-align: left;
-            font-size: {{ $fontSize ?? 11 }}pt;
-            line-height: 1.7;
-        }
-        .fp-image {
-            max-width: 100%;
-            margin: 20px auto;
-            display: block;
+            color: #333;
         }
         .fp-info-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 25px 0;
-            text-align: left;
-        }
-        .fp-info-table th {
-            font-weight: bold;
-            padding: 8px 12px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
+            border: 1.5px solid #000;
+            margin-bottom: 20px;
         }
         .fp-info-table td {
             padding: 8px 12px;
+            border: 1px solid #000;
+            vertical-align: top;
+        }
+        .fp-info-label {
+            font-size: {{ ($fontSize ?? 11) - 2 }}pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .fp-info-value {
+            font-size: {{ $fontSize ?? 11 }}pt;
+            font-weight: bold;
+        }
+        .fp-divider {
+            border-top: 1px solid #000;
+            margin: 15px 40px;
+        }
+        
+        /* User blocks */
+        .fp-block { margin-bottom: 12px; }
+        .fp-heading {
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .fp-richtext {
+            text-align: justify;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .fp-image {
+            text-align: center;
+            margin: 12px 0;
+        }
+        .fp-image img {
+            max-width: 300px;
             border: 1px solid #ddd;
         }
-        .fp-info-table .fp-fill {
-            display: inline-block;
+        
+        /* Candidate Info Table */
+        .fp-candidate-table {
             width: 100%;
-            border-bottom: 1px solid #444;
-            height: 14px;
+            border-collapse: collapse;
+            border: 1.5px solid #000;
+            margin-top: 20px;
         }
+        .fp-candidate-table td {
+            padding: 10px 12px;
+            border: 1px solid #000;
+            width: 50%;
+            vertical-align: top;
+        }
+        .fp-candidate-label {
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .fp-candidate-value {
+            font-size: {{ $fontSize ?? 11 }}pt;
+            font-weight: bold;
+        }
+        .fp-line {
+            border-bottom: 1px dotted #000;
+            height: 18px;
+            width: 100%;
+        }
+
+        /* Exam Content Styles */
+        .exam-content { margin-top: 20px; }
+        .header-section {
+            text-align: center;
+            padding: 1rem 0 0.75rem;
+            border-bottom: 2px solid #3b82f6;
+            margin-bottom: 1.25rem;
+        }
+        .school-name {
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
+            font-weight: 600;
+            color: #1f2937;
+            letter-spacing: 0.025em;
+            margin-bottom: 0.25rem;
+        }
+        .exam-main-title {
+            font-size: {{ ($fontSize ?? 11) + 3 }}pt;
+            font-weight: 700;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3rem;
+        }
+        .subject-title {
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-top: 0.5rem;
+        }
+        .info-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+        }
+        .info-item {
+            flex: 1;
+        }
+        .ig-lbl {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            display: block;
+            margin-bottom: 0.1rem;
+        }
+        .ig-val {
+            font-size: {{ ($fontSize ?? 11) }}pt;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .inst-wrap {
+            background-color: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+        .inst-heading {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #1d4ed8;
+            margin-bottom: 0.25rem;
+        }
+        .inst-body {
+            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+        .section-wrap {
+            margin-top: 1.5rem;
+            page-break-inside: avoid;
+        }
+        .section-header {
+            padding: 0.5rem 0;
+            border-bottom: 1.5px solid #3b82f6;
+            margin-bottom: 0.75rem;
+        }
+        .section-title {
+            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
+            font-weight: 600;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        .section-meta {
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        .section-instructions {
+            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
+            color: #4b5563;
+            font-style: italic;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background-color: #fef3c7;
+            border-left: 2px solid #f59e0b;
+        }
+        .question-block {
+            margin-bottom: 1rem;
+            page-break-inside: avoid;
+        }
+        .question-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .question-number {
+            font-weight: 600;
+            color: black;
+            min-width: 1.5rem;
+            flex-shrink: 0;
+        }
+        .question-text {
+            flex: 1;
+            font-size: {{ $fontSize ?? 11 }}pt;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        .question-marks {
+            font-size: {{ ($fontSize ?? 11) - 1 }}pt;
+            color: #6b7280;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .options-list {
+            margin-left: 2rem;
+            margin-top: 0.5rem;
+        }
+        .option-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+            align-items: baseline;
+            page-break-inside: avoid;
+        }
+        .option-label {
+            font-weight: 600;
+            color: black;
+            min-width: 1.5rem;
+            flex-shrink: 0;
+        }
+        .option-text {
+            flex: 1;
+            font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
+            color: #374151;
+            line-height: 1.5;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .prose-inline .katex-display { display: inline-block; margin: 0; }
     </style>
 </head>
 <body>
+    @php
+        $companyName = config('company.name', 'All Academies');
+        $template = $subjectExam->template;
+        
+        $fpFieldValues = [
+            'date' => $subjectExam->mockExam->starts_at
+                ? $subjectExam->mockExam->starts_at->format('d M Y')
+                : now()->format('d M Y'),
+            'duration' => $subjectExam->duration_in_minutes
+                ? ($subjectExam->duration_in_minutes >= 60
+                    ? floor($subjectExam->duration_in_minutes / 60) . ' hr ' . ($subjectExam->duration_in_minutes % 60) . ' min'
+                    : $subjectExam->duration_in_minutes . ' minutes')
+                : null,
+            'subject' => $subjectExam->academicSubject?->name,
+        ];
+    @endphp
 
-{{--
-    Front Page / Cover:
-    A subject exam's template may carry a designed front_page_config
-    (blocks: heading, richtext, image, divider, info_table). If any subject
-    exam on this MockExam has one configured, that designed cover page
-    REPLACES the hardcoded document header / info table / candidate section
-    / general instructions below. If none exists, the hardcoded header is
-    used as-is (unchanged legacy behaviour).
---}}
-@php
-    $hasFrontPage = false;
-    $frontPageConfig = null;
-
-    foreach ($mockExam->subjectExams as $se) {
-        if ($se->template && !empty($se->template->front_page_config['blocks'])) {
-            $hasFrontPage = true;
-            $frontPageConfig = $se->template->front_page_config;
-            break;
-        }
-    }
-
-    $totalMarksForCover    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
-    $totalDurationForCover = $mockExam->subjectExams->sum('duration_in_minutes');
-    $subjectNamesForCover  = $mockExam->subjectExams->map(fn($se) => $se->getDisplayTitle())->implode(', ');
-@endphp
-
-@if($hasFrontPage)
+    {{-- ══════════════════════════════════════════════════════════════
+         PROFESSIONAL FRONT PAGE
+         ═══════════════════════════════════════════════════════════════ -}
     <div class="front-page">
-        @foreach($frontPageConfig['blocks'] ?? [] as $block)
-            @switch($block['type'])
-
-                @case('heading')
-                    <div class="fp-title" style="
-                        font-size: {{ ($fontSize ?? 11) + ($block['level'] == 'h1' ? 8 : ($block['level'] == 'h2' ? 5 : 2)) }}pt;
-                        @if($block['level'] == 'h1') text-transform: uppercase; letter-spacing: 0.05em; @endif
-                    ">
-                        {{ $block['content'] ?? '' }}
-                    </div>
-                    @break
-
-                @case('richtext')
-                    <div class="fp-content">
-                        {!! $block['content'] ?? '' !!}
-                    </div>
-                    @break
-
-                @case('image')
-                    @if(!empty($block['src']))
-                        @php
-                            $imgSrc = $block['source_type'] === 'upload'
-                                ? \Illuminate\Support\Facades\Storage::disk('public')->url($block['src'])
-                                : $block['src'];
-                        @endphp
-                        <img src="{{ $imgSrc }}" class="fp-image" style="width: {{ $block['width'] ?? 300 }}px;" alt="{{ $block['alt'] ?? '' }}">
-                    @endif
-                    @break
-
-                @case('divider')
-                    <div class="fp-divider"></div>
-                    @break
-
-                @case('info_table')
-                    @php
-                        // Keys mirror those produced by the Front Page Builder's info_table
-                        // block (see front-page-builder.blade.php $infoFields array).
-                        $fpFieldLabels = [
-                            'candidate_name' => 'Full Name',
-                            'index_number'   => 'Index Number',
-                            'date'           => 'Date',
-                            'duration'       => 'Duration',
-                            'subject'        => 'Subject',
-                            'grade'          => 'Grade / Class',
-                            'signature'      => 'Invigilator Signature',
-                            'score'          => 'Total Score',
-                        ];
-
-                        // Only fields we can actually compute from exam data get a value;
-                        // everything else (name, index no., signature, score, grade) is
-                        // left as a fillable blank line for the candidate/invigilator.
-                        $fpFieldValues = [
-                            'date' => $mockExam->starts_at
-                                ? $mockExam->starts_at->format('d M Y')
-                                : now()->format('d M Y'),
-                            'duration' => $totalDurationForCover > 0
-                                ? ($totalDurationForCover >= 60
-                                    ? floor($totalDurationForCover / 60) . 'hr' . ($totalDurationForCover % 60 > 0 ? ' ' . ($totalDurationForCover % 60) . 'min' : '')
-                                    : $totalDurationForCover . ' mins')
-                                : null,
-                            'subject' => $subjectNamesForCover ?: null,
-                        ];
-
-                        $fpActiveFields = $block['fields'] ?? [];
-                    @endphp
-                    <table class="fp-info-table">
-                        <thead>
-                            <tr>
-                                @foreach($fpActiveFields as $fieldKey)
-                                    <th>{{ $fpFieldLabels[$fieldKey] ?? $fieldKey }}</th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                @foreach($fpActiveFields as $fieldKey)
-                                    <td>
-                                        @if(!empty($fpFieldValues[$fieldKey]))
-                                            {{ $fpFieldValues[$fieldKey] }}
-                                        @else
-                                            <span class="fp-fill">&nbsp;</span>
-                                        @endif
-                                    </td>
-                                @endforeach
-                            </tr>
-                        </tbody>
-                    </table>
-                    @break
-            @endswitch
-        @endforeach
-    </div>
-@endif
-
-{{-- Fixed Footer --}}
-<div class="pg-footer">
-    <table>
-        <tr>
-            <td style="width:50%;">{{ $mockExam->title }}</td>
-            <td class="ft-right" style="width:50%;">Page <span class="pagenum"></span></td>
-        </tr>
-    </table>
-</div>
-
-@unless($hasFrontPage)
-    {{-- Document Header --}}
-    @php
-        $schoolName = null;
-        try { $schoolName = $mockExam->team?->name; } catch (\Throwable $e) {}
-    @endphp
-
-    <div class="doc-header">
-        <div class="rule-heavy"></div>
-        <div class="rule-light"></div>
-        <div class="header-body">
-            @if($schoolName)
-                <div class="school-name">{{ $schoolName }}</div>
-                <div class="school-tagline">Mock Examination Series</div>
-            @endif
-            <div class="exam-main-title">{{ $mockExam->title }}</div>
-            @if($mockExam->starts_at)
-                <div class="exam-sub-date">{{ $mockExam->starts_at->format('l, d F Y') }}</div>
-            @endif
-        </div>
-        <div class="rule-light"></div>
-        <div class="rule-heavy"></div>
-    </div>
-
-    {{-- Info Table --}}
-    @php
-        $totalMarks    = $mockExam->subjectExams->sum(fn($se) => $se->sections->sum(fn($s) => $s->getTotalMarks()));
-        $totalDuration = $mockExam->subjectExams->sum('duration_in_minutes');
-        $subjectCount  = $mockExam->subjectExams->count();
-    @endphp
-
-    <table class="info-tbl">
-        <tr>
-            <td>
-                <span class="ig-lbl">Exam Date</span>
-                <span class="ig-val">{{ $mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y') }}</span>
-            </td>
-            <td>
-                <span class="ig-lbl">{{ $subjectCount === 1 ? 'Subject' : 'Papers' }}</span>
-                <span class="ig-val">
-                    @if($subjectCount === 1)
-                        {{ Str::limit($mockExam->subjectExams->first()->getDisplayTitle(), 26) }}
-                    @else
-                        {{ $subjectCount }} Papers
-                    @endif
-                </span>
-            </td>
-            @if($totalDuration > 0)
-                <td>
-                    <span class="ig-lbl">Duration</span>
-                    <span class="ig-val">
-                    @if($totalDuration >= 60)
-                            {{ floor($totalDuration / 60) }}hr{{ floor($totalDuration / 60) > 1 ? 's' : '' }}{{ $totalDuration % 60 > 0 ? ' '.($totalDuration % 60).'min' : '' }}
-                        @else
-                            {{ $totalDuration }} mins
-                        @endif
-                </span>
-                </td>
-            @endif
-            @if($totalMarks > 0)
-                <td>
-                    <span class="ig-lbl">Total Marks</span>
-                    <span class="ig-val">{{ number_format($totalMarks, 0) }}</span>
-                </td>
-            @endif
-        </tr>
-    </table>
-
-    {{-- Candidate Information --}}
-    <div class="cand-section">
-        <div class="section-label">Candidate Information</div>
-        <hr class="section-rule">
-        <div class="field-row">
-            <div class="field-cell" style="width:100%;">
-                <span class="field-lbl">Full Name</span>
-                <div class="field-line"></div>
-            </div>
-        </div>
-        <div class="field-row" style="margin-top:10px;">
-            <div class="field-cell" style="width:50%;">
-                <span class="field-lbl">Index No.</span>
-                <div class="field-line"></div>
-            </div>
-            <div class="field-cell" style="width:50%;">
-                <span class="field-lbl">Class / Form</span>
-                <div class="field-line"></div>
-            </div>
-        </div>
-        <div class="field-row" style="margin-top:10px;">
-            <div class="field-cell" style="width:65%;">
-                <span class="field-lbl">Signature</span>
-                <div class="field-line"></div>
-            </div>
-            <div class="field-cell" style="width:35%;">
-                <span class="field-lbl">Date</span>
-                <div class="field-line"></div>
-            </div>
-        </div>
-    </div>
-
-    {{-- General Instructions --}}
-    @if($mockExam->instructions)
-        <div class="inst-section">
-            <div class="section-label">General Instructions to Candidates</div>
-            <hr class="section-rule">
-            <div class="inst-body">{!! $mockExam->instructions !!}</div>
-        </div>
-    @endif
-@endunless
-
-{{-- Subject Exams --}}
-@foreach($mockExam->subjectExams as $seIdx => $se)
-    @if($seIdx > 0)<div class="pg-break"></div>@endif
-
-    <div class="subj-wrap">
-        <div class="subj-rule-top"></div>
-        <table class="subj-hdr-tbl">
-            <tr>
-                <td class="subj-hdr-name">{{ $se->getDisplayTitle() }}</td>
-                @if($se->duration_in_minutes)
-                    <td class="subj-hdr-meta">
-                        Time Allowed:
-                        @if($se->duration_in_minutes >= 60)
-                            {{ floor($se->duration_in_minutes / 60) }}hr{{ floor($se->duration_in_minutes / 60) > 1 ? 's' : '' }}{{ $se->duration_in_minutes % 60 > 0 ? ' '.($se->duration_in_minutes % 60).'min' : '' }}
-                        @else
-                            {{ $se->duration_in_minutes }} minutes
-                        @endif
-                    </td>
+        {{-- Header: School Name, Title, Subtitle --}}
+        <div class="fp-header">
+            <div class="fp-school">{{ $companyName }}</div>
+            @if($template)
+                <div class="fp-title">{{ $template->name }}</div>
+                @if($template->description)
+                    <div class="fp-subtitle">{{ $template->description }}</div>
                 @endif
+            @endif
+        </div>
+
+        {{-- Info Grid: Group, Level, Subject, Duration, Total Marks --}}
+        <table class="fp-info-table">
+            <tr>
+                @if($subjectExam->academicGroup)
+                <td>
+                    <span class="fp-info-label">Group</span>
+                    <span class="fp-info-value">{{ $subjectExam->academicGroup->name }}</span>
+                </td>
+                @endif
+                
+                @if($subjectExam->academicLevel)
+                <td>
+                    <span class="fp-info-label">Level</span>
+                    <span class="fp-info-value">{{ $subjectExam->academicLevel->name }}</span>
+                </td>
+                @endif
+                
+                @if($subjectExam->academicSubject)
+                <td>
+                    <span class="fp-info-label">Subject</span>
+                    <span class="fp-info-value">{{ $subjectExam->academicSubject->name }}</span>
+                </td>
+                @endif
+                
+                @if($subjectExam->duration_in_minutes)
+                <td>
+                    <span class="fp-info-label">Duration</span>
+                    <span class="fp-info-value">{{ $fpFieldValues['duration'] }}</span>
+                </td>
+                @endif
+                
+                <td>
+                    <span class="fp-info-label">Total Marks</span>
+                    <span class="fp-info-value">{{ number_format($subjectExam->getTotalMarks(), 1) }}</span>
+                </td>
             </tr>
         </table>
-        <div class="subj-rule-btm"></div>
 
-        @if($se->instructions)
-            <div class="subj-inst">{!! $se->instructions !!}</div>
+        {{-- User Configured Blocks --}}
+        @if($template && !empty($template->front_page_config['blocks']))
+            @foreach($template->front_page_config['blocks'] as $block)
+                <div class="fp-block">
+                    @switch($block['type'])
+                        @case('heading')
+                            @php
+                                $level = $block['level'] ?? 'h2';
+                                $size = match($level) {
+                                    'h1' => ($fontSize ?? 11) + 6,
+                                    'h2' => ($fontSize ?? 11) + 3,
+                                    'h3' => ($fontSize ?? 11) + 1,
+                                    default => ($fontSize ?? 11) + 2
+                                };
+                            @endphp
+                            <div class="fp-heading" style="font-size: {{ $size }}pt;">
+                                {{ $block['content'] ?? '' }}
+                            </div>
+                            @break
+
+                        @case('richtext')
+                            <div class="fp-richtext">
+                                {!! $block['content'] ?? '' !!}
+                            </div>
+                            @break
+
+                        @case('image')
+                            @php
+                                $align = $block['alignment'] ?? 'center';
+                                $width = $block['width'] ?? 300;
+                            @endphp
+                            @if(!empty($block['src']))
+                                <div class="fp-image" style="text-align: {{ $align }};">
+                                    <img src="{{ $block['src'] }}" alt="{{ $block['alt'] ?? '' }}" style="max-width: {{ $width }}px;">
+                                </div>
+                            @endif
+                            @break
+
+                        @case('divider')
+                            <div class="fp-divider"></div>
+                            @break
+
+                        @case('info_table')
+                            @php
+                                $fieldLabels = [
+                                    'candidate_name' => 'Candidate Name',
+                                    'index_number'   => 'Index Number',
+                                    'date'           => 'Date',
+                                    'duration'       => 'Duration',
+                                    'subject'        => 'Subject',
+                                    'grade'          => 'Grade / Class',
+                                    'signature'      => 'Invigilator Signature',
+                                    'score'          => 'Total Score',
+                                ];
+                                $activeFields = $block['fields'] ?? [];
+                            @endphp
+                            @if(count($activeFields) > 0)
+                                <table class="fp-candidate-table">
+                                    @foreach(array_chunk($activeFields, 2) as $row)
+                                        <tr>
+                                            @foreach($row as $fieldKey)
+                                                <td>
+                                                    <span class="fp-candidate-label">{{ $fieldLabels[$fieldKey] ?? $fieldKey }}</span>
+                                                    @if(isset($fpFieldValues[$fieldKey]) && $fpFieldValues[$fieldKey])
+                                                        <span class="fp-candidate-value">{{ $fpFieldValues[$fieldKey] }}</span>
+                                                    @else
+                                                        <div class="fp-line"></div>
+                                                    @endif
+                                                </td>
+                                            @endforeach
+                                            @if(count($row) === 1)
+                                                <td></td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            @endif
+                            @break
+                    @endswitch
+                </div>
+            @endforeach
+        @endif
+    </div>
+
+    {{-- ═══════════════════════════════════════════════════════════════
+         EXAM CONTENT (Questions)
+         ══════════════════════════════════════════════════════════════ -}
+    <div class="exam-content">
+        {{-- Header --}}
+        <div class="header-section">
+            <div class="school-name">{{ config('company.name', 'All Academies') }}</div>
+            <div class="exam-main-title">{{ $subjectExam->mockExam->title }}</div>
+            <div class="subject-title">{{ $subjectExam->getDisplayTitle() }}</div>
+        </div>
+
+        {{-- Info Grid --}}
+        <div class="info-grid">
+            @if($subjectExam->academicGroup)
+            <div class="info-item">
+                <span class="ig-lbl">Group</span>
+                <span class="ig-val">{{ $subjectExam->academicGroup->name }}</span>
+            </div>
+            @endif
+
+            @if($subjectExam->academicLevel)
+            <div class="info-item">
+                <span class="ig-lbl">Level</span>
+                <span class="ig-val">{{ $subjectExam->academicLevel->name }}</span>
+            </div>
+            @endif
+
+            <div class="info-item">
+                <span class="ig-lbl">Subject</span>
+                <span class="ig-val">{{ $subjectExam->academicSubject?->name }}</span>
+            </div>
+
+            @if($subjectExam->duration_in_minutes)
+            <div class="info-item">
+                <span class="ig-lbl">Duration</span>
+                <span class="ig-val">{{ $subjectExam->duration_in_minutes }} minutes</span>
+            </div>
+            @endif
+
+            <div class="info-item">
+                <span class="ig-lbl">Total Marks</span>
+                <span class="ig-val">{{ number_format($subjectExam->getTotalMarks(), 1) }}</span>
+            </div>
+        </div>
+
+        {{-- Instructions --}}
+        @if($subjectExam->instructions || $subjectExam->mockExam->instructions)
+        <div class="inst-wrap">
+            <div class="inst-heading">Instructions</div>
+            <div class="inst-body">
+                @if($subjectExam->instructions)
+                    {{ $subjectExam->instructions }}
+                @else
+                    {{ $subjectExam->mockExam->instructions }}
+                @endif
+            </div>
+        </div>
         @endif
 
-        @foreach($se->sections as $sIdx => $section)
-            <div class="sec-wrap">
-                <table class="sec-hdr-tbl">
-                    <tr>
-                        <td class="sec-hdr-name">Section {{ $sIdx + 1 }}: {{ $section->title }}</td>
-                        <td class="sec-hdr-meta">
-                            {{ $section->questions->count() }} {{ Str::plural('Question', $section->questions->count()) }}
-                            &nbsp;·&nbsp;
-                            {{ number_format($section->getTotalMarks(), 0) }} Marks
-                        </td>
-                    </tr>
-                </table>
-                <div class="sec-hdr-rule"></div>
-
-                @if($section->instructions)
-                    <div class="sec-inst">{!! $section->instructions !!}</div>
-                @endif
-
-                @foreach($section->questions as $qIdx => $question)
-                    <div class="q-item">
-                        <div class="q-header">
-                            <span class="q-num">{{ $qIdx + 1 }}.</span>
-                            <span class="q-text">
-                                <x-form.markdown-with-math :content="$question->question_text" inline="true" />
-                            </span>
-                            <span class="q-marks">[{{ $question->marks }} mk]</span>
-                        </div>
-
-                        @if($question->isMultipleChoice() && !empty($question->options))
-                            @php $opts = $question->getOptionsForDisplay(); @endphp
-                            <div class="opts-wrap">
-                                @php $optIdx = 0; @endphp
-                                @foreach($opts as $letter => $text)
-                                    <div class="opt-row">
-                                        <span class="opt-lbl">{{ chr(65 + $optIdx) }}.</span>
-                                        <span class="opt-txt"><x-form.markdown-with-math :content="$text" inline="true" /></span>
-                                    </div>
-                                    @php $optIdx++; @endphp
-                                @endforeach
-                            </div>
-
-                        @elseif($question->isTrueFalse())
-                            <div class="opts-wrap">
-                                @foreach([['A','True'],['B','False']] as [$lbl,$val])
-                                    <div class="opt-row">
-                                        <span class="opt-lbl">{{ $lbl }}.</span>
-                                        <span class="opt-txt">{{ $val }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                        @elseif($question->isEssay())
-                            <div class="elines">
-                                @php $numLines = max(4, (int) round($question->marks * 1.2)); @endphp
-                                @for($l = 0; $l < $numLines; $l++)
-                                    <div class="eline"></div>
-                                @endfor
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
+        {{-- Sections and Questions --}}
+        @foreach($subjectExam->sections as $sectionIndex => $section)
+        <div class="section-wrap {{ $sectionIndex > 0 ? 'page-break' : '' }}">
+            <div class="section-header">
+                <div class="section-title">{{ $section->title }}</div>
+                <div class="section-meta">
+                    {{ $section->questions->count() }} questions •
+                    {{ number_format($section->getTotalMarks(), 1) }} marks
+                    @if($section->question_type !== 'mixed')
+                        • {{ ucwords(str_replace('_', ' ', $section->question_type)) }}
+                    @endif
+                </div>
             </div>
+
+            @if($section->instructions)
+            <div class="section-instructions">
+                {{ $section->instructions }}
+            </div>
+            @endif
+
+            @foreach($section->questions as $qIndex => $question)
+            <div class="question-block">
+                <div class="question-header">
+                    <span class="question-number">{{ $loop->iteration }}</span>
+                    <span class="question-text">
+                        <x-ui.latex :content="$question->question_text" inline="true" />
+                    </span>
+                    <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
+                </div>
+
+                @if(in_array($question->source_type, ['multiple_choice', 'true_false']) && is_array($question->options) && !empty($question->options))
+                <div class="options-list">
+                    @php $optionIndex = 0; @endphp
+                    @foreach($question->options as $option)
+
+                    <div class="option-item">
+                        <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
+                        <span class="option-text">
+                            <x-ui.latex :content="$option" inline="true" />
+                        </span>
+                    </div>
+                    @php $optionIndex++; @endphp
+                    @endforeach
+                </div>
+                @endif
+            </div>
+            @endforeach
+        </div>
         @endforeach
     </div>
-@endforeach
-
 </body>
 </html>
