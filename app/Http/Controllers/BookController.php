@@ -652,57 +652,24 @@ class BookController extends Controller
 
         abort_unless(file_exists($pdfPath), 404);
 
-        // Use smalot/pdfparser to extract page and render with GD
         try {
-            $parser = new \Smalot\PdfParser\Parser();
-            $pdf = $parser->parseFile($pdfPath);
-            $pages = $pdf->getPages();
+            $imagick = new \Imagick();
+            $imagick->setResolution(150, 150);
+            $imagick->readImage($pdfPath . '[' . $page . ']');
+            $imagick->setImageFormat('png');
+            $imagick->setImageBackgroundColor('white');
+            $imagick->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
 
-            if (!isset($pages[$page])) {
-                abort(404, 'Page not found');
-            }
-
-            // Create a simple white image with text indicating PDF rendering not available
-            // This is a fallback since GD cannot directly render PDF content
-            $width = 800;
-            $height = 1100;
-            $image = imagecreatetruecolor($width, $height);
-            $white = imagecolorallocate($image, 255, 255, 255);
-            $black = imagecolorallocate($image, 0, 0, 0);
-            $gray = imagecolorallocate($image, 200, 200, 200);
-
-            imagefill($image, 0, 0, $white);
-            imagerectangle($image, 10, 10, $width - 10, $height - 10, $gray);
-
-            // Add text
-            $text = "Page " . ($page + 1);
-            $font = 5;
-            $textWidth = imagefontwidth($font) * strlen($text);
-            $x = ($width - $textWidth) / 2;
-            imagestring($image, $font, $x, 50, $text, $black);
-
-            $message = "PDF rendering requires ImageMagick.";
-            $msgWidth = imagefontwidth($font) * strlen($message);
-            $msgX = ($width - $msgWidth) / 2;
-            imagestring($image, $font, $msgX, 80, $message, $black);
-
-            $info = "Please view the full PDF in the reader.";
-            $infoWidth = imagefontwidth($font) * strlen($info);
-            $infoX = ($width - $infoWidth) / 2;
-            imagestring($image, $font, $infoX, 110, $info, $black);
-
-            ob_start();
-            imagepng($image);
-            $png = ob_get_clean();
-            imagedestroy($image);
+            $png = $imagick->getImageBlob();
+            $imagick->clear();
 
             return response($png, 200, [
                 'Content-Type' => 'image/png',
-                'Content-Disposition' => 'inline; filename="page-'.($page + 1).'.png"',
+                'Content-Disposition' => 'inline; filename="page-' . ($page + 1) . '.png"',
                 'Cache-Control' => 'private, max-age=3600',
             ]);
         } catch (\Exception $e) {
-            abort(500, 'Unable to process PDF: '.$e->getMessage());
+            abort(500, 'Unable to process PDF: ' . $e->getMessage());
         }
     }
 
