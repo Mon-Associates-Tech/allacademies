@@ -1,5 +1,4 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url';
 
 export class PDFReader {
     constructor(config) {
@@ -57,7 +56,7 @@ export class PDFReader {
     async init() {
         try {
             if (typeof pdfjsLib !== 'undefined') {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+                pdfjsLib.GlobalWorkerOptions.workerSrc = '/build/pdf.worker.mjs';
             }
 
             await this.createUI();

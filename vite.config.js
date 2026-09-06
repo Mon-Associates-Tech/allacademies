@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
+import { resolve } from 'path';
+import { copyFileSync, mkdirSync } from 'fs';
 
 export default defineConfig({
     // server: {
@@ -14,6 +16,16 @@ export default defineConfig({
     //     },
     // },
     plugins: [
+        {
+            name: 'copy-pdf-worker',
+            buildStart() {
+                mkdirSync('public/build', { recursive: true });
+                copyFileSync(
+                    resolve('node_modules/pdfjs-dist/build/pdf.worker.mjs'),
+                    'public/build/pdf.worker.mjs'
+                );
+            },
+        },
         laravel({
             input: [
                 'resources/css/app.css',
