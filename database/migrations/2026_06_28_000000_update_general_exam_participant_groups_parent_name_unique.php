@@ -9,7 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('general_exam_participant_groups', function (Blueprint $table) {
-            $table->dropUnique(['name']);
+
+        // $table->dropUnique(['name']);
             $table->unique(['parent_id', 'name'], 'gep_groups_parent_name_uq');
         });
     }
