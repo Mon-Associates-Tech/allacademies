@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('activity_participants')) {
         Schema::create('activity_participants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('activity_id')->constrained()->on('academic_activities')->cascadeOnDelete();
@@ -28,6 +29,7 @@ return new class extends Migration
             $table->index('score');
             $table->index('attendance');
         });
+        }
     }
 
     /**

@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('lesson_notes')) {
         Schema::create('lesson_notes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->string('file_path')->nullable();
             $table->timestamps();
         });
+        }
     }
 
     /**
@@ -29,6 +31,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lesson_notes');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('lesson_notes')) {
+            Schema::dropIfExists('lesson_notes');
+        }
     }
 };

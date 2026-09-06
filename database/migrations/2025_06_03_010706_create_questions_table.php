@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
+        if (!Schema::hasTable('questions')) {
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('questionable_id');
@@ -23,6 +24,7 @@ return new class extends Migration
             $table->foreign('topic_id')->references('id')->on('academic_topics')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
+        }
     }
 
     public function down()

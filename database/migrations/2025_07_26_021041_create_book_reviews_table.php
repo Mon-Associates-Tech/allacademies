@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('book_reviews')) {
         Schema::create('book_reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
@@ -36,6 +37,7 @@ return new class extends Migration
             // Ensure one review per user per book
             $table->unique(['book_id', 'user_id']);
         });
+    }
     }
 
     /**

@@ -12,20 +12,22 @@ class CreateFirewallLogsTable extends Migration
      */
     public function up()
     {
-        Schema::create('firewall_logs', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('ip');
-            $table->string('level')->default('medium');
-            $table->string('middleware');
-            $table->integer('user_id')->nullable();
-            $table->text('url')->nullable();
-            $table->string('referrer')->nullable();
-            $table->text('request')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
+        if (!Schema::hasTable('firewall_logs')) {
+            Schema::create('firewall_logs', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('ip');
+                $table->string('level')->default('medium');
+                $table->string('middleware');
+                $table->integer('user_id')->nullable();
+                $table->text('url')->nullable();
+                $table->string('referrer')->nullable();
+                $table->text('request')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
 
-            $table->index('ip');
-        });
+                $table->index('ip');
+            });
+        }
     }
 
     /**
@@ -35,6 +37,6 @@ class CreateFirewallLogsTable extends Migration
      */
     public function down()
     {
-        Schema::drop('firewall_logs');
+        Schema::dropIfExists('firewall_logs');
     }
 }

@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('students', static function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('student_group_id')->nullable()->constrained('student_groups')->nullOnDelete();
-            $table->timestamps();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('students')) {
+            Schema::create('students', static function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->foreignId('student_group_id')->nullable()->constrained('student_groups')->nullOnDelete();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -24,6 +27,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('students');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('students')) {
+            Schema::dropIfExists('students');
+        }
     }
 };

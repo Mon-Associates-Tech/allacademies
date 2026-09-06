@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schools', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('address')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('email')->nullable();
-            $table->string('website')->nullable();
-            $table->string('logo')->nullable();
-            $table->string('description')->nullable();
-            $table->string('mission')->nullable();
-            $table->string('vision')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('schools')) {
+            Schema::create('schools', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('address')->nullable();
+                $table->string('phone')->nullable();
+                $table->string('email')->nullable();
+                $table->string('website')->nullable();
+                $table->string('logo')->nullable();
+                $table->string('description')->nullable();
+                $table->string('mission')->nullable();
+                $table->string('vision')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

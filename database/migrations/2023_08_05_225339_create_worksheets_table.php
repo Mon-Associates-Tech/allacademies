@@ -14,18 +14,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('worksheets', function (Blueprint $table) {
-            $table->id();
-            $table->integer('seed');
-            $table->string('cursor')->default('0,0');
-            $table->json('sheets')->default(new Expression('(JSON_ARRAY())'));
-            $table->foreignId('quiz_id')->constrained();
-            $table->foreignId('user_id')->constrained();
-            $table->unique(['quiz_id', 'user_id']);
-            $table->timestamp('started_at')->nullable();
-            $table->timestamp('ended_at')->nullable();
-            $table->timestamps();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('worksheets')) {
+            Schema::create('worksheets', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('title');
+                $table->text('description')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -35,6 +33,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('worksheets');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('worksheets')) {
+            Schema::dropIfExists('worksheets');
+        }
     }
 };

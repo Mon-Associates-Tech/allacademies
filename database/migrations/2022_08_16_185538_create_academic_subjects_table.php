@@ -13,13 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('academic_subjects', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('code')->index();
-            $table->foreignId('academic_level_id')->constrained();
-            $table->timestamps();
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('academic_subjects')) {
+            Schema::table('academic_subjects', function (Blueprint $table) {
+                $table->string('name')->after('id');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -29,6 +30,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('academic_subjects');
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('academic_subjects')) {
+            Schema::table('academic_subjects', function (Blueprint $table) {
+                $table->dropColumn(['name', 'user_id']);
+            });
+        }
     }
 };

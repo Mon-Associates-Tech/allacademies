@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('book_student')) {
         Schema::create('book_student', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
@@ -23,6 +24,7 @@ return new class extends Migration
             // Optional: Add a unique constraint to prevent duplicate entries
             $table->unique(['book_id', 'student_id']);
         });
+        }
     }
 
     /**

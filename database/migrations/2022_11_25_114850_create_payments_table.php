@@ -13,15 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('payments', function (Blueprint $table) {
-            $table->id();
-            $table->string('reference');
-            $table->string('amount');
-            $table->string('currency')->default('GHS');
-            $table->string('status')->default('pending');
-            $table->foreignId('subscription_id')->nullable()->constrained();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('payments')) {
+            Schema::create('payments', function (Blueprint $table) {
+                $table->id();
+                $table->string('reference');
+                $table->string('amount');
+                $table->string('currency')->default('GHS');
+                $table->string('status')->default('pending');
+                $table->foreignId('subscription_id')->nullable()->constrained();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

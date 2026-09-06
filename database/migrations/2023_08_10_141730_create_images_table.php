@@ -14,23 +14,26 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('images', function (Blueprint $table) {
-            $table->id();
-            $table->string('path');
-            $table->string('description');
-            if (DB::getDriverName() !== 'sqlite') {
-                $table->fullText('description');
-            }
-            $table->json('tags');
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('images')) {
+            Schema::create('images', function (Blueprint $table) {
+                $table->id();
+                $table->string('path');
+                $table->string('description');
+                if (DB::getDriverName() !== 'sqlite') {
+                    $table->fullText('description');
+                }
+                $table->json('tags');
+                $table->timestamps();
+                $table->softDeletes();
+            });
 
-        if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE images
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::statement("ALTER TABLE images
 ADD COLUMN first_tag VARCHAR(255) GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(tags, '$[0]'))) STORED,
 ADD INDEX images_tags_index (first_tag);
 ");
+            }
         }
     }
 
@@ -41,6 +44,9 @@ ADD INDEX images_tags_index (first_tag);
      */
     public function down()
     {
-        Schema::dropIfExists('images');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('images')) {
+            Schema::dropIfExists('images');
+        }
     }
 };

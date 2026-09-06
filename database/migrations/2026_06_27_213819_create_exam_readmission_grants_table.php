@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('exam_readmission_grants')) {
         Schema::create('exam_readmission_grants', function (Blueprint $table) {
             $table->id();
 
@@ -56,6 +57,7 @@ return new class extends Migration
             // Only one active (unused, unrevoked) grant per submission at a time
             $table->index(['original_submission_id', 'used_at', 'revoked_at'], 'idx_grants_active');
         });
+        }
     }
 
     public function down(): void

@@ -13,12 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('academic_subject_subscription', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('academic_subject_id')->constrained();
-            $table->foreignId('subscription_id')->constrained();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('academic_subject_subscription')) {
+            Schema::create('academic_subject_subscription', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('academic_subject_id')->constrained();
+                $table->foreignId('subscription_id')->constrained();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

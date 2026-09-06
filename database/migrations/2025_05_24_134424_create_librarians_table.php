@@ -8,15 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('librarians', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('librarians')) {
+            Schema::create('librarians', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('librarians');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('librarians')) {
+            Schema::dropIfExists('librarians');
+        }
     }
 };

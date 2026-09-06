@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('assignment_sections')) {
         Schema::create('assignment_sections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
@@ -19,6 +20,7 @@ return new class extends Migration
             $table->integer('order')->default(0);
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void

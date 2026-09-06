@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('book_approvals')) {
         Schema::create('book_approvals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
@@ -17,9 +18,13 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+    }
 
     public function down(): void
     {
-        Schema::dropIfExists('book_approvals');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('book_approvals')) {
+            Schema::dropIfExists('book_approvals');
+        }
     }
 };

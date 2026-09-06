@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
+    {if (!Schema::hasTable('assessments')) {
         Schema::create('assessments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
@@ -17,9 +17,13 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+    }
 
     public function down(): void
     {
-        Schema::dropIfExists('assessments');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('assessments')) {
+            Schema::dropIfExists('assessments');
+        }
     }
 };

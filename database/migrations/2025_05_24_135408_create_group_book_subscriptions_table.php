@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('group_book_subscriptions')) {
         Schema::create('group_book_subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_group_id')->constrained()->onDelete('cascade');
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->index(['subscribed_by_type']);
             $table->index(['subscribed_by_id']);
         });
+        }
     }
 
     /**

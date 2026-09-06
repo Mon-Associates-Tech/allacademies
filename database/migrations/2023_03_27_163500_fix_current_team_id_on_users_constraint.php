@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['current_team_id']);
-            $table->foreign('current_team_id')->references('id')->on('teams');
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreignId('current_team_id')->constrained()->onDelete('cascade')->change();
+            });
+        }
     }
 
     /**
@@ -26,9 +28,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['current_team_id']);
-            $table->foreign('current_team_id')->references('id')->on('users');
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreignId('current_team_id')->constrained()->onDelete('set null')->change();
+            });
+        }
     }
 };

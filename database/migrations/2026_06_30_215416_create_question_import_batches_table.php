@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('question_import_batches')) {
         Schema::create('question_import_batches', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
@@ -38,6 +39,7 @@ return new class extends Migration
 
             $table->index(['user_id', 'status']);
         });
+        }
     }
 
     public function down(): void

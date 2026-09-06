@@ -14,12 +14,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('academic_subtopics', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->foreignIdFor(AcademicTopic::class)->constrained()->cascadeOnDelete();
-            $table->timestamps();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('academic_subtopics')) {
+            Schema::create('academic_subtopics', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->foreignIdFor(AcademicTopic::class)->constrained()->cascadeOnDelete();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -29,6 +32,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('academic_subtopics');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('academic_subtopics')) {
+            Schema::dropIfExists('academic_subtopics');
+        }
     }
 };

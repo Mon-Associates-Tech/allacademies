@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('subject_teacher')) {
         Schema::create('subject_teacher', function (Blueprint $table) {
             $table->id();
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->boolean('is_primary')->default(false);
             $table->text('notes')->nullable();
         });
+        }
     }
 
     /**

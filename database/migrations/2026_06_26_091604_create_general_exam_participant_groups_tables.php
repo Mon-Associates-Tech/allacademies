@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('general_exam_participant_groups')) {
         Schema::create('general_exam_participant_groups', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
@@ -20,7 +21,9 @@ return new class extends Migration
 
             $table->index('name');
         });
+        }
 
+        if (!Schema::hasTable('general_exam_participant_group_members')) {
         Schema::create('general_exam_participant_group_members', function (Blueprint $table) {
             $table->id();
             $table->foreignId('group_id')->constrained('general_exam_participant_groups')->cascadeOnDelete();
@@ -35,6 +38,7 @@ return new class extends Migration
             $table->index(['group_id', 'name']);
             $table->index('email');
         });
+    }
     }
 
     public function down(): void

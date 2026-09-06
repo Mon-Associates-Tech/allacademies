@@ -13,18 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('quizzes', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->dateTime('starts_at')->nullable();
-            $table->dateTime('ends_at')->nullable();
-            $table->bigInteger('duration_in_minutes');
-            $table->json('sections');
-            $table->foreignId('academic_subject_id')->constrained();
-            $table->foreignId('team_id')->constrained();
-            $table->foreignId('creator_id')->constrained('users');
-            $table->timestamps();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('quizzes')) {
+            Schema::create('quizzes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('title');
+                $table->text('description')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -34,6 +32,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('quizzes');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('quizzes')) {
+            Schema::dropIfExists('quizzes');
+        }
     }
 };

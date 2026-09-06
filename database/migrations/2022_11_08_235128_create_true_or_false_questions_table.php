@@ -13,15 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('true_or_false_questions', function (Blueprint $table) {
-            $table->id();
-            $table->json('question');
-            $table->boolean('answer');
-            $table->integer('score')->default(1);
-            $table->string('difficulty_level')->default('unspecified');
-            $table->foreignId('academic_topic_id')->constrained();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('true_or_false_questions')) {
+            Schema::create('true_or_false_questions', function (Blueprint $table) {
+                $table->id();
+                $table->json('question');
+                $table->boolean('answer');
+                $table->integer('score')->default(1);
+                $table->string('difficulty_level')->default('unspecified');
+                $table->foreignId('academic_topic_id')->constrained();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

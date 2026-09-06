@@ -24,9 +24,11 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('school_payment_structures', function (Blueprint $table) {
-            $table->dropForeignIdFor('Subaccount::class');
-            $table->dropColumn('subaccount_id');
-        });
+        if (Schema::hasTable('school_payment_structures')) {
+            Schema::table('school_payment_structures', function (Blueprint $table) {
+                $table->dropForeignIdFor('Subaccount::class');
+                $table->dropColumn('subaccount_id');
+            });
+        }
     }
 };

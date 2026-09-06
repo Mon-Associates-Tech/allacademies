@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('book_inventories')) {
         Schema::create('book_inventories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')->constrained()->cascadeOnDelete();
@@ -23,6 +24,7 @@ return new class extends Migration
             $table->foreignId('last_inventory_by')->nullable()->constrained('users');
             $table->timestamps();
         });
+        }
     }
 
     /**

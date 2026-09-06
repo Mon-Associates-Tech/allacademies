@@ -8,47 +8,57 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('assignment_academic_group')) {
         Schema::create('assignment_academic_group', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('academic_group_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-        });
+        });}
 
+        if (!Schema::hasTable('assignment_academic_level')) {
         Schema::create('assignment_academic_level', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('academic_level_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
+        }
 
+        if (!Schema::hasTable('assignment_student')) {
         Schema::create('assignment_student', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-        });
+        });}
 
+        if (!Schema::hasTable('assignment_student_group')) {
         Schema::create('assignment_student_group', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('student_group_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
+        }
 
+        if (!Schema::hasTable('assignment_topic')) {
         Schema::create('assignment_topic', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('academic_topic_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
+        }
 
+        if (!Schema::hasTable('assignment_subtopic')) {
         Schema::create('assignment_subtopic', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('academic_subtopic_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void

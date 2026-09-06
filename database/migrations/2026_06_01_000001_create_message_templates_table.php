@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('message_templates')) {
         Schema::create('message_templates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->nullable()->constrained()->nullOnDelete();
@@ -25,6 +26,7 @@ return new class extends Migration
 
             $table->unique(['school_id', 'slug']);
         });
+        }
     }
 
     public function down(): void

@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('student_subject', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->foreignId('academic_subject_id')->constrained()->onDelete('cascade');
-            $table->boolean('is_active')->default(true)->comment('true=add subject, false=remove subject from level access');
-            $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->text('notes')->nullable();
-            $table->timestamp('assigned_at')->useCurrent();
-            $table->timestamps();
+        if (!Schema::hasTable('student_subject')) {
+            Schema::create('student_subject', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('student_id')->constrained()->onDelete('cascade');
+                $table->foreignId('academic_subject_id')->constrained()->onDelete('cascade');
+                $table->boolean('is_active')->default(true)->comment('true=add subject, false=remove subject from level access');
+                $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->text('notes')->nullable();
+                $table->timestamp('assigned_at')->useCurrent();
+                $table->timestamps();
 
             // Ensure unique combination
             $table->unique(['student_id', 'academic_subject_id']);
         });
+        }
     }
 
     /**

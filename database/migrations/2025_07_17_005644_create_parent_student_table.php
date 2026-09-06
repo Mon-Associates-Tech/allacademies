@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('parent_student')) {
         Schema::create('parent_student', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('parent_id')->constrained('parents');
@@ -18,6 +19,7 @@ return new class extends Migration
             $table->string('relationship');
             $table->timestamps();
         });
+        }
 
         Schema::table('parents', static function (Blueprint $table) {
             if (Schema::hasColumn('parents', 'student_id')) {

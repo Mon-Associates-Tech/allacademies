@@ -13,9 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('examinations', function (Blueprint $table) {
-            $table->dropColumn('examiners');
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('examinations')) {
+            Schema::table('examinations', function (Blueprint $table) {
+                $table->dropColumn('examiners');
+            });
+        }
     }
 
     /**
@@ -25,8 +28,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('examinations', function (Blueprint $table) {
-            $table->string('examiners')->nullable();
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('examinations')) {
+            Schema::table('examinations', function (Blueprint $table) {
+                $table->string('examiners')->nullable();
+            });
+        }
     }
 };

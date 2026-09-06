@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
+        if (!Schema::hasTable('library_cards')) {
         Schema::create('library_cards', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->index('card_number');
             $table->index('barcode');
         });
+        }
     }
 
     public function down()

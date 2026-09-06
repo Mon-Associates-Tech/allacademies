@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('assessment_responses', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('assessment_id')->constrained()->onDelete('cascade');
-            $table->json('data')->nullable(); // optional extra data like selected options
-            $table->timestamps();
-
-            // Indexes
-            $table->index(['assessment_id']);
-        });
+        if (!Schema::hasTable('assessment_responses')) {
+            Schema::create('assessment_responses', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('assessment_id')->constrained()->onDelete('cascade');
+                $table->json('data')->nullable(); // optional extra data like selected options
+                $table->timestamps();
+            });
+        }
     }
 
     /**

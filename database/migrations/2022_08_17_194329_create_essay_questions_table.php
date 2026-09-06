@@ -13,15 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('essay_questions', function (Blueprint $table) {
-            $table->id();
-            $table->json('question');
-            $table->json('answer');
-            $table->integer('score')->default(15);
-            $table->string('difficulty_level')->default('unspecified');
-            $table->foreignId('academic_topic_id')->constrained();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('essay_questions')) {
+            Schema::create('essay_questions', function (Blueprint $table) {
+                $table->id();
+                $table->json('question');
+                $table->json('answer');
+                $table->integer('score')->default(15);
+                $table->string('difficulty_level')->default('unspecified');
+                $table->foreignId('academic_topic_id')->constrained();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

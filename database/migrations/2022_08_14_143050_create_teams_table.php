@@ -13,13 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('teams', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->boolean('is_personal')->default(false);
-            $table->foreignId('owner_id')->constrained('users');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('teams')) {
+            Schema::create('teams', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->boolean('is_personal')->default(false);
+                $table->foreignId('owner_id')->constrained('users');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

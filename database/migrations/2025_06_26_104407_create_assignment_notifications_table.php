@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('assignment_notifications')) {
         Schema::create('assignment_notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
@@ -17,6 +18,7 @@ return new class extends Migration
             $table->text('message');
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void

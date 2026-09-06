@@ -13,11 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('teams', function (Blueprint $table) {
-            if (!Schema::hasColumn('teams', 'joining_code')) {
-                $table->string('joining_code')->nullable()->unique();
-            }
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('teams')) {
+            Schema::table('teams', function (Blueprint $table) {
+                if (!Schema::hasColumn('teams', 'joining_code')) {
+                    $table->string('joining_code')->nullable()->unique();
+                }
+            });
+        }
     }
 
     /**
@@ -27,8 +30,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('teams', function (Blueprint $table) {
-            $table->dropColumn('joining_code');
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('teams')) {
+            Schema::table('teams', function (Blueprint $table) {
+                $table->dropColumn('joining_code');
+            });
+        }
     }
 };

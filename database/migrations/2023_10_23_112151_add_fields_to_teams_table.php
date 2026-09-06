@@ -15,17 +15,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('teams', function (Blueprint $table) {
-            if (!Schema::hasColumn('teams', 'meta')) {
-                $table->json('meta')->default(new Expression('(JSON_OBJECT())'));
-            }
-            if (!Schema::hasColumn('teams', 'status')) {
-                $table->string('status')->default(TeamStatus::DECLINED->value)->index();
-            }
-            if (!Schema::hasColumn('teams', 'declined_reason')) {
-                $table->text('declined_reason')->nullable();
-            }
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('teams')) {
+            Schema::table('teams', function (Blueprint $table) {
+                if (!Schema::hasColumn('teams', 'meta')) {
+                    $table->json('meta')->default(new Expression('(JSON_OBJECT())'));
+                }
+                if (!Schema::hasColumn('teams', 'status')) {
+                    $table->string('status')->default(TeamStatus::DECLINED->value)->index();
+                }
+                if (!Schema::hasColumn('teams', 'declined_reason')) {
+                    $table->text('declined_reason')->nullable();
+                }
+            });
+        }
     }
 
     /**
@@ -35,8 +38,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('teams', function (Blueprint $table) {
-            $table->dropColumn(['meta', 'status', 'declined_reason']);
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('teams')) {
+            Schema::table('teams', function (Blueprint $table) {
+                $table->dropColumn(['meta', 'status', 'declined_reason']);
+            });
+        }
     }
 };

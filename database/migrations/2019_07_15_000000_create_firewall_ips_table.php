@@ -12,16 +12,18 @@ class CreateFirewallIpsTable extends Migration
      */
     public function up()
     {
-        Schema::create('firewall_ips', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('ip');
-            $table->integer('log_id')->nullable();
-            $table->boolean('blocked')->default(1);
-            $table->timestamps();
-            $table->softDeletes();
-            
-            $table->index('ip');
-        });
+        if (!Schema::hasTable('firewall_ips')) {
+            Schema::create('firewall_ips', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('ip');
+                $table->integer('log_id')->nullable();
+                $table->boolean('blocked')->default(1);
+                $table->timestamps();
+                $table->softDeletes();
+                
+                $table->index('ip');
+            });
+        }
     }
 
     /**
@@ -31,6 +33,6 @@ class CreateFirewallIpsTable extends Migration
      */
     public function down()
     {
-        Schema::drop('firewall_ips');
+        Schema::dropIfExists('firewall_ips');
     }
 }

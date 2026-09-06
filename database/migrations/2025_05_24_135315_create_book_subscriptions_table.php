@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('book_subscriptions')) {
         Schema::create('book_subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
@@ -17,6 +18,7 @@ return new class extends Migration
             $table->string('status')->nullable(); // active, expired, cancelled
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void

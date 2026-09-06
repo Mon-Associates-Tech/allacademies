@@ -13,11 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('academic_groups', function (Blueprint $table) {
-            if (!Schema::hasColumn('academic_groups', 'tag')) {
-                $table->string('tag')->after('name')->nullable()->default('basic');
-            }
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('academic_groups')) {
+            Schema::table('academic_groups', function (Blueprint $table) {
+                if (!Schema::hasColumn('academic_groups', 'tag')) {
+                    $table->string('tag')->after('name')->nullable()->default('basic');
+                }
+            });
+        }
     }
 
     /**
@@ -27,8 +30,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('academic_groups', function (Blueprint $table) {
-            $table->dropColumn('tag');
-        });
+        // Check if the table exists before modifying it
+        if (Schema::hasTable('academic_groups')) {
+            Schema::table('academic_groups', function (Blueprint $table) {
+                $table->dropColumn('tag');
+            });
+        }
     }
 };

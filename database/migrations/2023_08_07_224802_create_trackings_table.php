@@ -13,14 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('trackings', function (Blueprint $table) {
-            $table->id();
-            $table->string('event');
-            $table->nullableNumericMorphs('trackable');
-            $table->foreignId('causer_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->json('snapshot');
-            $table->timestamps();
-        });
+        // Check if the table exists before creating it
+        if (!Schema::hasTable('trackings')) {
+            Schema::create('trackings', function (Blueprint $table) {
+                $table->id();
+                $table->string('event');
+                $table->nullableNumericMorphs('trackable');
+                $table->foreignId('causer_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->json('snapshot');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -30,6 +33,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('trackings');
+        // Check if the table exists before dropping it
+        if (Schema::hasTable('trackings')) {
+            Schema::dropIfExists('trackings');
+        }
     }
 };

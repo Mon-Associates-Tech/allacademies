@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('school_settings')) {
         Schema::create('school_settings', static function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->timestamps();
         });
+    }
     }
 
     public function down(): void
