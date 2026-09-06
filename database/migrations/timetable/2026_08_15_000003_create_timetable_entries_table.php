@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if(!Schema::hasTable('timetable_entries')) {
         Schema::create('timetable_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained()->cascadeOnDelete();
@@ -32,6 +33,7 @@ return new class extends Migration
                 'timetable_class_slot_unique'
             );
         });
+        }
     }
 
     public function down(): void
