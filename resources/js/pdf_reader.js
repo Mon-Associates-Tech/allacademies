@@ -1,5 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
+const pdfjsWorkerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.mjs', import.meta.url).href;
+
 export class PDFReader {
     constructor(config) {
         this.config = {
@@ -56,7 +58,7 @@ export class PDFReader {
     async init() {
         try {
             if (typeof pdfjsLib !== 'undefined') {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+                pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerSrc;
             }
 
             await this.createUI();
@@ -883,7 +885,6 @@ container.innerHTML = `
             const loadingTask = pdfjsLib.getDocument({
                 url: this.config.pdfUrl,
                 withCredentials: true,
-                disableWorker: true,
             });
 
             this.pdfDocument = await loadingTask.promise;

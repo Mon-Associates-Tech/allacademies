@@ -1,6 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import 'pdfjs-dist/legacy/build/pdf.worker.mjs';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.mjs', import.meta.url).href;
 
 window.bookPdfViewer = function bookPdfViewer(config) {
     const internal = {
@@ -37,7 +38,6 @@ window.bookPdfViewer = function bookPdfViewer(config) {
             const loadingTask = pdfjsLib.getDocument({
                 url: config.streamUrl,
                 withCredentials: true,
-                disableWorker: true,
             });
 
             internal.pdfDocument = await loadingTask.promise;
