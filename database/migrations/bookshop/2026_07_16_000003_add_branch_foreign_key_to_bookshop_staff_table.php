@@ -9,6 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bookshop_staff', function (Blueprint $table) {
+            // Drop first in case a previous partial run left the constraint behind.
+            try { $table->dropForeign(['branch_id']); } catch (\Throwable) {}
+
             // A branch admin without a branch_id is treated as unassigned
             // (not superadmin) — routes/services should block dashboard
             // access until a superadmin assigns them one.
