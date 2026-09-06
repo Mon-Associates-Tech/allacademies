@@ -9,12 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('general_exam_participant_groups', function (Blueprint $table) {
-            $table->foreignId('parent_id')
+        if(!Schema::hasColumn('general_exam_participant_groups', 'parent_id'))   { 
+        $table->foreignId('parent_id')
                   ->nullable()
                   ->after('id')
                   ->constrained('general_exam_participant_groups')
                   ->nullOnDelete();
-        });
+     } });
+    
     }
 
     public function down(): void
