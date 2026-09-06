@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('general_exam_participant_groups', function (Blueprint $table) {
 
         // $table->dropUnique(['name']);
-            $table->unique(['parent_id', 'name'], 'gep_groups_parent_name_uq');
+           // $table->unique(['parent_id', 'name'], 'gep_groups_parent_name_uq');
         });
     }
 
