@@ -10,9 +10,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('bookshop_restock_requests', function (Blueprint $table) {
-            $table->uuid('batch_id')->nullable()->after('id');
-        });
+        if (! Schema::hasColumn('bookshop_restock_requests', 'batch_id')) {
+            Schema::table('bookshop_restock_requests', function (Blueprint $table) {
+                $table->uuid('batch_id')->nullable()->after('id');
+            });
+        }
 
         // Backfill: every existing row becomes its own single-item batch,
         // since pre-migration data has no record of which items were
@@ -21,9 +23,11 @@ return new class extends Migration
             DB::table('bookshop_restock_requests')->where('id', $row->id)->update(['batch_id' => (string) Str::uuid()]);
         });
 
-        Schema::table('bookshop_restock_requests', function (Blueprint $table) {
-            $table->index('batch_id');
-        });
+        try {
+            Schema::table('bookshop_restock_requests', function (Blueprint $table) {
+                $table->index('batch_id');
+            });
+        } catch (\Throwable) {}
     }
 
     public function down(): void
