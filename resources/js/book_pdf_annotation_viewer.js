@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/build/pdf.worker.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 window.bookPdfViewer = function bookPdfViewer(config) {
     const internal = {
@@ -27,27 +27,17 @@ window.bookPdfViewer = function bookPdfViewer(config) {
 
         async loadPdf() {
             try {
-                await this.loadPdfDocument(false);
+                await this.loadPdfDocument();
             } catch (error) {
-                if (error instanceof TypeError && String(error.message || '').includes('private field')) {
-                    console.warn('Retrying PDF load using compatibility mode (no worker)');
-                    try {
-                        await this.loadPdfDocument(true);
-                        return;
-                    } catch (fallbackError) {
-                        console.error('Failed to load PDF in compatibility mode', fallbackError);
-                    }
-                }
-
                 console.error('Failed to load PDF', error);
             }
         },
 
-        async loadPdfDocument(disableWorker) {
+        async loadPdfDocument() {
             const loadingTask = pdfjsLib.getDocument({
                 url: config.streamUrl,
                 withCredentials: true,
-                disableWorker,
+                disableWorker: true,
             });
 
             internal.pdfDocument = await loadingTask.promise;
