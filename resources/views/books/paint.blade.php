@@ -16,7 +16,8 @@
     <paint-app id="paint"></paint-app>
 
     <script type="module">
-        const imageUrl = new URL(window.location.href).searchParams.get('imageUrl');
+        const rawImageUrl = new URL(window.location.href).searchParams.get('imageUrl');
+        const imageUrl = rawImageUrl ? new URL(rawImageUrl, window.location.origin).href : null;
 
 
         if (imageUrl) {

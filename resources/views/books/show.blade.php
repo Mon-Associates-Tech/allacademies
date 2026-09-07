@@ -941,7 +941,7 @@
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                     
                     // Open the paint app in a new tab with the image
-                    const paintUrl = `/books/${this.bookId}/paint?imageUrl=` + encodeURIComponent(pngUrl);
+                    const paintUrl = `${window.location.origin}/books/${this.bookId}/paint?imageUrl=` + encodeURIComponent(pngUrl);
                     window.location.href = paintUrl;
                     
                     this.loading = false;
