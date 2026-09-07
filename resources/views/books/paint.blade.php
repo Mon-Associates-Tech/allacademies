@@ -35,13 +35,16 @@
             };
 
             const loadImageElement = async (src) => {
-                const blob = await fetch(src, { credentials: 'same-origin' }).then(r => r.blob());
+                const response = await fetch(src, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
+                const blob = await response.blob();
+                console.log('Blob type:', blob.type, 'size:', blob.size);
                 const blobUrl = URL.createObjectURL(blob);
                 return new Promise((resolve, reject) => {
                     const img = new Image();
                     img.decoding = 'async';
                     img.onload = () => { URL.revokeObjectURL(blobUrl); resolve(img); };
-                    img.onerror = reject;
+                    img.onerror = (e) => { console.error('Blob image load error', blob.type, blob.size, blobUrl); reject(e); };
                     img.src = blobUrl;
                 });
             };
