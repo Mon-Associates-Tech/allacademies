@@ -942,7 +942,7 @@
                     
                     // Open the paint app in a new tab with the image
                     const paintUrl = `/books/${this.bookId}/paint?imageUrl=` + encodeURIComponent(pngUrl);
-                    window.open(paintUrl, '_blank');
+                    window.location.href = paintUrl;
                     
                     this.loading = false;
                     this.showPicker = false;
