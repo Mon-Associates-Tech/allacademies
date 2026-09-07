@@ -16,8 +16,10 @@
     <paint-app id="paint"></paint-app>
 
     <script type="module">
-        const imageUrl = new URL(window.location.href).searchParams.get('imageUrl');
+        const rawImageUrl = new URL(window.location.href).searchParams.get('imageUrl');
+        const imageUrl = rawImageUrl ? new URL(rawImageUrl, window.location.origin).href : null;
 
+        console.log('Paint page loaded with imageUrl:', imageUrl);
         if (imageUrl) {
             const paint = document.getElementById('paint');
             const waitForDrawingContext = async (timeoutMs = 10000) => {
