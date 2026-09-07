@@ -937,7 +937,7 @@
                     const pageIndex = page - 1;
                     
                     // Construct the URL to get the PNG version of the page
-                    const pngUrl = `/books/${this.bookId}/pdf-page-png?page=${pageIndex}`;
+                    const pngUrl = `${window.location.origin}/books/${this.bookId}/pdf-page-png?page=${pageIndex}`;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                     
                     // Open the paint app in a new tab with the image
