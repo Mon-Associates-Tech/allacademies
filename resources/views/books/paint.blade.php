@@ -34,13 +34,17 @@
                 throw new Error('Paint drawing context did not initialize in time.');
             };
 
-            const loadImageElement = (src) => new Promise((resolve, reject) => {
-                const img = new Image();
-                img.decoding = 'async';
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-                img.src = src;
-            });
+            const loadImageElement = async (src) => {
+                const blob = await fetch(src, { credentials: 'same-origin' }).then(r => r.blob());
+                const blobUrl = URL.createObjectURL(blob);
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.decoding = 'async';
+                    img.onload = () => { URL.revokeObjectURL(blobUrl); resolve(img); };
+                    img.onerror = reject;
+                    img.src = blobUrl;
+                });
+            };
 
             const loadImageIntoCanvas = async () => {
                 try {
