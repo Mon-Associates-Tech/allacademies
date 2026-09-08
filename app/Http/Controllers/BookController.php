@@ -645,23 +645,36 @@ class BookController extends Controller
 
     public function pdfPageToPng(Request $request, Book $book): \Illuminate\Http\Response
     {
+        \Log::info('pdfPageToPng called', ['book' => $book->id, 'has_softcopy' => $book->has_softcopy, 'content_url' => $book->content_url]);
         abort_unless($book->has_softcopy && $book->content_url, 404);
 
         $page = max(0, (int) $request->query('page', 0));
         $pdfPath = Storage::disk('public')->path($book->getRawOriginal('content_url'));
 
+        \Log::info('pdfPageToPng path', ['path' => $pdfPath, 'exists' => file_exists($pdfPath)]);
         abort_unless(file_exists($pdfPath), 404);
 
         try {
+            $tmpDir = sys_get_temp_dir();
+            \Log::info('pdfPageToPng tmp dir', [
+                'tmp_dir' => $tmpDir,
+                'writable' => is_writable($tmpDir),
+                'path' => $pdfPath,
+                'exists' => file_exists($pdfPath),
+                'readable' => is_readable($pdfPath),
+            ]);
+            $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_');
+            copy($pdfPath, $tmpPdf);
             $imagick = new \Imagick();
             $imagick->setResolution(150, 150);
-            $imagick->readImage($pdfPath . '[' . $page . ']');
+            $imagick->readImage($tmpPdf . '[' . $page . ']');
             $imagick->setImageFormat('png');
             $imagick->setImageBackgroundColor('white');
             $imagick->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
 
             $png = $imagick->getImageBlob();
             $imagick->clear();
+            @unlink($tmpPdf);
 
             return response($png, 200, [
                 'Content-Type' => 'image/png',
@@ -669,6 +682,13 @@ class BookController extends Controller
                 'Cache-Control' => 'private, max-age=3600',
             ]);
         } catch (\Exception $e) {
+            @unlink($tmpPdf ?? '');
+            \Log::error('pdfPageToPng failed', [
+                'book' => $book->id,
+                'page' => $page,
+                'path' => $pdfPath,
+                'error' => $e->getMessage(),
+            ]);
             abort(500, 'Unable to process PDF: ' . $e->getMessage());
         }
     }
