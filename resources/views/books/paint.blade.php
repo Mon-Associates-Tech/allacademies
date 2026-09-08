@@ -54,8 +54,10 @@
                     const ctx = await waitForDrawingContext();
                     const img = await loadImageElement(imageUrl);
 
-                    ctx.canvas.width = ctx.previewCanvas.width = img.naturalWidth || img.width;
-                    ctx.canvas.height = ctx.previewCanvas.height = img.naturalHeight || img.height;
+                    const width = img.naturalWidth || img.width;
+                    const height = img.naturalHeight || img.height;
+                    ctx.canvas.width = ctx.previewCanvas.width = width;
+                    ctx.canvas.height = ctx.previewCanvas.height = height;
                     ctx.context.imageSmoothingEnabled = true;
                     ctx.context.imageSmoothingQuality = 'high';
                     ctx.context.fillStyle = 'white';
