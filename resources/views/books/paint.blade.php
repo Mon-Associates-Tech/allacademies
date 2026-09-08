@@ -54,19 +54,8 @@
                     const ctx = await waitForDrawingContext();
                     const img = await loadImageElement(imageUrl);
 
-                    const maxWidth = window.innerWidth;
-                    const maxHeight = window.innerHeight - 100;
-                    let width = img.naturalWidth || img.width;
-                    let height = img.naturalHeight || img.height;
-
-                    if (width > maxWidth || height > maxHeight) {
-                        const ratio = Math.min(maxWidth / width, maxHeight / height);
-                        width = Math.floor(width * ratio);
-                        height = Math.floor(height * ratio);
-                    }
-
-                    ctx.canvas.width = ctx.previewCanvas.width = width;
-                    ctx.canvas.height = ctx.previewCanvas.height = height;
+                    ctx.canvas.width = ctx.previewCanvas.width = img.naturalWidth || img.width;
+                    ctx.canvas.height = ctx.previewCanvas.height = img.naturalHeight || img.height;
                     ctx.context.imageSmoothingEnabled = true;
                     ctx.context.imageSmoothingQuality = 'high';
                     ctx.context.fillStyle = 'white';
