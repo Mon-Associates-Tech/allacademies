@@ -155,4 +155,15 @@ return [
 
     'render_on_redirect' => false,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Inject Livewire Assets
+    |--------------------------------------------------------------------------
+    | Disabled because Livewire is bundled via Vite (resources/js/bootstrap.js).
+    | Auto-injection would load livewire.js a second time, causing Alpine's
+    | $persist plugin to be re-registered on an already-frozen property.
+    */
+
+    'inject_assets' => false,
+
 ];
