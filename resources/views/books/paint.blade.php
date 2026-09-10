@@ -6,9 +6,8 @@
     <title>Paint – {{ $book->title }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100vh; overflow: hidden; background: #008080; }
-        paint-app { display: block; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
-        canvas { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
+        html, body { height: 100%; overflow: hidden; background: #008080; display: flex; flex-direction: column; }
+        paint-app { flex: 1; min-height: 0; width: 100%; }
     </style>
     @vite(['resources/js/app.js', 'resources/js/paint.js'])
 </head>
@@ -54,8 +53,11 @@
                     const ctx = await waitForDrawingContext();
                     const img = await loadImageElement(imageUrl);
 
-                    const width = img.naturalWidth || img.width;
-                    const height = img.naturalHeight || img.height;
+                    const naturalWidth = img.naturalWidth || img.width;
+                    const naturalHeight = img.naturalHeight || img.height;
+                    const scale = Math.min(1, window.innerWidth / naturalWidth);
+                    const width = Math.floor(naturalWidth * scale);
+                    const height = Math.floor(naturalHeight * scale);
                     ctx.canvas.width = ctx.previewCanvas.width = width;
                     ctx.canvas.height = ctx.previewCanvas.height = height;
                     ctx.context.imageSmoothingEnabled = true;
