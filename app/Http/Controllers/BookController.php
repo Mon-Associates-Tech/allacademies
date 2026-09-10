@@ -638,9 +638,62 @@ class BookController extends Controller
         return view('books.preview', compact('book'));
     }
 
+    public function myPaints(): \Illuminate\View\View
+    {
+        $paints = \App\Models\BookPaint::with('book')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('books.my-paints', compact('paints'));
+    }
+
     public function paint(Book $book): \Illuminate\View\View
     {
         return view('books.paint', compact('book'));
+    }
+
+    public function loadPaint(Request $request, Book $book): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+        abort_unless($this->canReadBook($user, $book), 403);
+
+        $page = max(0, (int) $request->query('page', 0));
+        $paint = \App\Models\BookPaint::where('book_id', $book->id)
+            ->where('user_id', $user->id)
+            ->where('page', $page)
+            ->first();
+
+        if (! $paint || ! Storage::disk('public')->exists($paint->image_path)) {
+            return response()->json(['url' => null]);
+        }
+
+        return response()->json([
+            'url' => '/storage/' . $paint->image_path,
+        ]);
+    }
+
+    public function savePaint(Request $request, Book $book): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+        abort_unless($this->canReadBook($user, $book), 403);
+
+        $request->validate(['image' => 'required|file|mimes:png|max:20480']);
+
+        $page = max(0, (int) $request->input('page', 0));
+        $path = $request->file('image')->store("book-paints/{$book->id}/{$user->id}", 'public');
+
+        $paint = \App\Models\BookPaint::updateOrCreate(
+            ['book_id' => $book->id, 'user_id' => $user->id, 'page' => $page],
+            ['image_path' => $path]
+        );
+
+        // Delete old file if replaced
+        if ($paint->wasChanged('image_path') && Storage::disk('public')->exists($paint->getOriginal('image_path'))) {
+            Storage::disk('public')->delete($paint->getOriginal('image_path'));
+        }
+
+        return response()->json(['success' => true, 'url' => '/storage/' . $path]);
     }
 
     public function pdfPageToPng(Request $request, Book $book): \Illuminate\Http\Response

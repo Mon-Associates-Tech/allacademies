@@ -29,6 +29,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('books/{book}/file', [BookController::class, 'streamFile'])->name('books.file.stream');
     Route::get('books/{book}/download', [BookController::class, 'downloadFile'])->middleware('signed')->name('books.file.download');
     Route::get('books/{book}/paint', [BookController::class, 'paint'])->name('books.paint');
+    Route::get('books/{book}/paint-data', [BookController::class, 'loadPaint'])->name('books.paint.load');
+    Route::post('books/{book}/paint-data', [BookController::class, 'savePaint'])->name('books.paint.save');
+    Route::get('my-paints', [BookController::class, 'myPaints'])->name('books.my-paints');
     Route::get('books/{book}/pdf-page-png', [BookController::class, 'pdfPageToPng'])->name('books.pdf-page-png');
 
     // Book Subscription Routes
