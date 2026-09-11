@@ -13,7 +13,8 @@ use Illuminate\View\View;
 class MockExamTemplateController extends Controller
 {
     public function __construct(
-        private readonly MockExamCreationService $creationService
+        private readonly MockExamCreationService $creationService,
+        private readonly \App\MockExam\Services\MockExamAttachmentService $attachmentService,
     ) {
         $this->middleware(fn ($request, $next) => $this->ensureInstructor($next));
     }
@@ -93,6 +94,7 @@ class MockExamTemplateController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $payload = $this->validateTemplatePayload($request);
+        $payload['sections_config'] = $this->hydrateSectionAttachments($payload['sections_config']);
 
         MockExamTemplate::create([
             'user_id' => auth()->id(),
@@ -103,8 +105,6 @@ class MockExamTemplateController extends Controller
             'description' => $payload['description'] ?? null,
             'is_active' => (bool) ($payload['is_active'] ?? true),
             'default_duration_minutes' => $payload['default_duration_minutes'] ?? null,
-            'topic_ids' => $payload['topic_ids'] ?? [],
-            'subtopic_ids' => $payload['subtopic_ids'] ?? [],
             'sections_config' => $payload['sections_config'],
             'front_page_config' => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
         ]);
@@ -122,7 +122,8 @@ class MockExamTemplateController extends Controller
         $this->ensureOwner($template);
 
         $payload = $this->validateTemplatePayload($request);
-
+        $payload['sections_config'] = $this->hydrateSectionAttachments($payload['sections_config']);
+        
         $template->update([
             'academic_group_id' => $payload['academic_group_id'] ?? null,
             'academic_level_id' => $payload['academic_level_id'] ?? null,
@@ -131,8 +132,6 @@ class MockExamTemplateController extends Controller
             'description' => $payload['description'] ?? null,
             'is_active' => (bool) ($payload['is_active'] ?? true),
             'default_duration_minutes' => $payload['default_duration_minutes'] ?? null,
-            'topic_ids' => $payload['topic_ids'] ?? [],
-            'subtopic_ids' => $payload['subtopic_ids'] ?? [],
             'sections_config' => $payload['sections_config'],
             'front_page_config' => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
         ]);
@@ -232,23 +231,27 @@ class MockExamTemplateController extends Controller
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'default_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
-            'topic_ids' => ['nullable', 'array'],
-            'topic_ids.*' => ['integer', 'exists:academic_topics,id'],
-            'subtopic_ids' => ['nullable', 'array'],
-            'subtopic_ids.*' => ['integer', 'exists:academic_subtopics,id'],
-            'sections_config' => ['required', 'array', 'min:1'],
+'sections_config' => ['required', 'array', 'min:1'],
             'sections_config.*.title' => ['required', 'string', 'max:255'],
             'sections_config.*.instructions' => ['nullable', 'string'],
             'sections_config.*.question_type' => ['required', 'in:multiple_choice,true_false,essay,mixed'],
             'sections_config.*.question_count' => ['required', 'integer', 'min:1', 'max:200'],
             'sections_config.*.marks_per_question' => ['nullable', 'numeric', 'min:0.5', 'max:100'],
             'sections_config.*.is_randomized' => ['nullable', 'boolean'],
+            'sections_config.*.topic_ids' => ['nullable', 'array'],
+            'sections_config.*.topic_ids.*' => ['integer', 'exists:academic_topics,id'],
+            'sections_config.*.subtopic_ids' => ['nullable', 'array'],
+            'sections_config.*.subtopic_ids.*' => ['integer', 'exists:academic_subtopics,id'],
+            'sections_config.*.insert_blank_page' => ['nullable', 'boolean'],
+            'sections_config.*.document' => ['nullable', 'file', 'mimes:txt,docx,pdf,jpg,jpeg,png', 'max:10240'],
+            'sections_config.*.attachment_original_name' => ['nullable', 'string'],
+            'sections_config.*.attachment_extension' => ['nullable', 'string', 'in:txt,docx,pdf,jpg,jpeg,png'],
+            'sections_config.*.attachment_text' => ['nullable', 'string'],
+            'sections_config.*.attachment_image_path' => ['nullable', 'string'],
+            'sections_config.*.attachment_pdf_images' => ['nullable', 'string'],
             // Passed as a JSON string from the hidden input in configure.blade.php
             'front_page_config' => ['nullable', 'string'],
         ]);
-
-        $data['topic_ids'] = $data['topic_ids'] ?? [];
-        $data['subtopic_ids'] = $data['subtopic_ids'] ?? [];
 
         return $data;
     }
@@ -267,5 +270,39 @@ class MockExamTemplateController extends Controller
         );
 
         return $next(request());
+    }
+
+    /**
+     * Process any uploaded section attachments and normalise the array so it's
+     * safe to JSON-encode into the template's sections_config column. Sections
+     * that don't get a new upload keep whatever was carried forward as hidden
+     * form fields from the previous save.
+     */
+    private function hydrateSectionAttachments(array $sectionsConfig): array
+    {
+        foreach ($sectionsConfig as &$section) {
+            $section['insert_blank_page'] = (bool) ($section['insert_blank_page'] ?? false);
+
+            $document = $section['document'] ?? null;
+
+            if ($document instanceof \Illuminate\Http\UploadedFile) {
+                $section = array_merge($section, $this->attachmentService->process($document));
+            } else {
+                if (isset($section['attachment_pdf_images']) && is_string($section['attachment_pdf_images'])) {
+                    $decoded = json_decode($section['attachment_pdf_images'], true);
+                    $section['attachment_pdf_images'] = is_array($decoded) && $decoded !== [] ? $decoded : null;
+                }
+
+                foreach (['attachment_original_name', 'attachment_extension', 'attachment_text', 'attachment_image_path'] as $key) {
+                    if (($section[$key] ?? '') === '') {
+                        $section[$key] = null;
+                    }
+                }
+            }
+
+            unset($section['document']);
+        }
+
+        return $sectionsConfig;
     }
 }

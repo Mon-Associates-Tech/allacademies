@@ -18,6 +18,15 @@ class MockExamSection extends Model
         'marks_per_question',
         'time_limit_minutes',
         'is_randomized',
+        'topic_ids',
+        'subtopic_ids',
+        'insert_blank_page',
+        'blank_page_text',
+        'attachment_original_name',
+        'attachment_extension',
+        'attachment_text',
+        'attachment_image_path',
+        'attachment_pdf_images',
     ];
 
     protected function casts(): array
@@ -25,6 +34,11 @@ class MockExamSection extends Model
         return [
             'is_randomized'      => 'boolean',
             'marks_per_question' => 'float',
+            'topic_ids'          => 'array',
+            'subtopic_ids'       => 'array',
+            'insert_blank_page'  => 'boolean',
+            'blank_page_text'    => 'string',
+            'attachment_pdf_images' => 'array',
         ];
     }
 
@@ -73,5 +87,25 @@ class MockExamSection extends Model
         }
 
         return $questions;
+    }
+
+        public function hasAttachment(): bool
+    {
+        return ! empty($this->attachment_extension);
+    }
+
+    public function isTextAttachment(): bool
+    {
+        return in_array($this->attachment_extension, ['txt', 'docx'], true);
+    }
+
+    public function isPdfAttachment(): bool
+    {
+        return $this->attachment_extension === 'pdf';
+    }
+
+    public function isImageAttachment(): bool
+    {
+        return in_array($this->attachment_extension, ['jpg', 'jpeg', 'png'], true);
     }
 }

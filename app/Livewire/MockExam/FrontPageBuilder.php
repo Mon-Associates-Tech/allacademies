@@ -20,23 +20,10 @@ class FrontPageBuilder extends Component
     public ?MockExamTemplate $template = null; // Added to hold template data for preview
 
 
-    // ── Block state ───────────────────────────────────────────────────────────
-    /**
-     * Ordered list of front-page blocks.
-     *
-     * Each block is an array with at minimum: id (UUID), type.
-     * Additional keys depend on type:
-     *   heading    – level (h1/h2/h3), content (string)
-     *   richtext   – content (HTML string)
-     *   image      – src, alt, width (px int), alignment (left/center/right), source_type (url/upload), url_input
-     *   divider    – (no extra keys)
-     *   info_table – fields (string[])
-     */
-    public array $frontPageBlocks = [];
-
-    /** Temporary upload slot used by uploadBlockImage(). */
-    #[Validate('nullable|image|max:30720')]
-    public $pendingImage = null;
+// with:
+    // ── Content state ─────────────────────────────────────────────────────────
+    /** Rich text HTML for the front page body, edited via the rich text editor. */
+    public string $content = '';
 
     // ── Mount ─────────────────────────────────────────────────────────────────
 
@@ -45,87 +32,12 @@ class FrontPageBuilder extends Component
         $this->template = $template;
 
         if ($template && $template->exists) {
-            $this->templateId      = $template->id;
-            $this->frontPageBlocks = ($template->front_page_config['blocks'] ?? []);
+            $this->templateId = $template->id;
+            $this->content     = $template->front_page_config['content'] ?? '';
         }
     }
 
-    // ── Block management ──────────────────────────────────────────────────────
 
-    public function addBlock(string $type): void
-    {
-        $base = ['id' => Str::uuid()->toString(), 'type' => $type];
-
-        $this->frontPageBlocks[] = match ($type) {
-            'heading'    => $base + ['level' => 'h2', 'content' => ''],
-            'richtext'   => $base + ['content' => ''],
-            'image'      => $base + [
-                                'src'         => '',
-                                'alt'         => '',
-                                'width'       => 300,
-                                'alignment'   => 'center',
-                                'source_type' => 'url',
-                                'url_input'   => '',
-                            ],
-            'divider'    => $base,
-            'info_table' => $base + ['fields' => ['candidate_name', 'date', 'duration']],
-            default      => $base,
-        };
-    }
-
-    public function removeBlock(int $index): void
-    {
-        array_splice($this->frontPageBlocks, $index, 1);
-        $this->frontPageBlocks = array_values($this->frontPageBlocks);
-    }
-
-    public function moveBlock(int $index, string $direction): void
-    {
-        $target = $direction === 'up' ? $index - 1 : $index + 1;
-
-        if ($target < 0 || $target >= count($this->frontPageBlocks)) {
-            return;
-        }
-
-        [$this->frontPageBlocks[$index], $this->frontPageBlocks[$target]] =
-            [$this->frontPageBlocks[$target], $this->frontPageBlocks[$index]];
-    }
-
-    /** Apply the URL typed into an image block's url_input field as its src. */
-    public function applyImageUrl(int $index): void
-    {
-        $url = trim($this->frontPageBlocks[$index]['url_input'] ?? '');
-        $this->frontPageBlocks[$index]['src'] = $url;
-    }
-
-    /**
-     * Called from the Alpine @change handler via $wire.upload() after the
-     * browser has streamed the file to Livewire.
-     */
-    public function uploadBlockImage(int $index): void
-    {
-        $this->validateOnly('pendingImage');
-
-        $path = $this->pendingImage->store('mock-exam-front-pages', 'public');
-        $url  = Storage::disk('public')->url($path);
-
-        $this->frontPageBlocks[$index]['src'] = $url;
-        $this->pendingImage = null;
-
-        // Tell any Alpine listeners the new src so they can update previews
-        // without waiting for a full Livewire re-render.
-        $this->dispatch('block-image-ready', index: $index, src: $url);
-    }
-
-    /** Toggle a single field on/off in an info_table block's fields array. */
-    public function toggleInfoField(int $blockIndex, string $field): void
-    {
-        $fields = $this->frontPageBlocks[$blockIndex]['fields'] ?? [];
-
-        $this->frontPageBlocks[$blockIndex]['fields'] = in_array($field, $fields, true)
-            ? array_values(array_filter($fields, fn ($f) => $f !== $field))
-            : [...$fields, $field];
-    }
 
     // ── Navigation ────────────────────────────────────────────────────────────
 
@@ -142,8 +54,7 @@ class FrontPageBuilder extends Component
         $template = MockExamTemplate::findOrFail($this->templateId);
         abort_unless($template->user_id === \Illuminate\Support\Facades\Auth::id(), 403);
 
-        $template->update(['front_page_config' => ['blocks' => $this->frontPageBlocks]]);
-
+        $template->update(['front_page_config' => ['content' => $this->content]]);
         session()->forget('template_front_page_config');
 
         session()->flash('success', 'Front page saved.');
@@ -157,7 +68,7 @@ class FrontPageBuilder extends Component
      */
     public function proceed(): void
     {
-        session(['template_front_page_config' => json_encode(['blocks' => $this->frontPageBlocks])]);
+        session(['template_front_page_config' => json_encode(['content' => $this->content])]);
 
         $redirect = $this->templateId
             ? route('mock-exams.templates.edit', $this->templateId)       // Step 2, edit flow

@@ -72,6 +72,7 @@
           action="{{ $template
               ? route('mock-exams.templates.update', $template)
               : route('mock-exams.templates.store') }}"
+              enctype="multipart/form-data"
           class="space-y-7">
         @csrf
         @if($template) @method('PUT') @endif
@@ -139,8 +140,7 @@
                             Academic Group (optional)
                         </label>
                         <select name="academic_group_id" x-model="selectedGroupId"
-                                @change="selectedLevelId = ''; selectedSubjectId = ''; selectedTopicIds = []; selectedSubtopicIds = []"
-                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
+@change="selectedLevelId = ''; selectedSubjectId = ''; sections.forEach(s => { s.topic_ids = []; s.subtopic_ids = []; })"                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
                             <option value="">Select group…</option>
                             @foreach($hierarchyTree as $group)
@@ -155,8 +155,7 @@
                             Academic Level (optional)
                         </label>
                         <select name="academic_level_id" x-model="selectedLevelId"
-                                @change="selectedSubjectId = ''; selectedTopicIds = []; selectedSubtopicIds = []"
-                                :class="!selectedGroupId ? 'opacity-40 pointer-events-none' : ''"
+@change="selectedSubjectId = ''; sections.forEach(s => { s.topic_ids = []; s.subtopic_ids = []; })"                                :class="!selectedGroupId ? 'opacity-40 pointer-events-none' : ''"
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
                             <option value="">Select level…</option>
@@ -172,8 +171,7 @@
                             Subject <span class="text-red-500">*</span>
                         </label>
                         <select name="academic_subject_id" x-model="selectedSubjectId"
-                                @change="selectedTopicIds = []; selectedSubtopicIds = []"
-                                :class="!selectedLevelId ? 'opacity-40 pointer-events-none' : ''"
+@change="sections.forEach(s => { s.topic_ids = []; s.subtopic_ids = []; })"                                :class="!selectedLevelId ? 'opacity-40 pointer-events-none' : ''"
                                 required
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
@@ -185,44 +183,7 @@
                     </div>
                 </div>
 
-                {{-- Topics --}}
-                <div x-show="selectedSubjectId && availableTopics.length > 0" x-transition>
-                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                        Topics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all topics)</span>
-                    </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
-                         style="border-radius: 2px;">
-                        <template x-for="t in availableTopics" :key="t.id">
-                            <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
-                                   style="border-radius: 2px;">
-                                <input type="checkbox" name="topic_ids[]" :value="String(t.id)"
-                                       x-model="selectedTopicIds"
-                                       @change="selectedSubtopicIds = []"
-                                       class="mt-0.5 accent-violet-600 shrink-0">
-                                <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="t.name"></span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
 
-                {{-- Subtopics --}}
-                <div x-show="selectedTopicIds.length > 0 && availableSubtopics.length > 0" x-transition>
-                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                        Subtopics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all subtopics)</span>
-                    </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
-                         style="border-radius: 2px;">
-                        <template x-for="st in availableSubtopics" :key="st.id">
-                            <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
-                                   style="border-radius: 2px;">
-                                <input type="checkbox" name="subtopic_ids[]" :value="String(st.id)"
-                                       x-model="selectedSubtopicIds"
-                                       class="mt-0.5 accent-violet-600 shrink-0">
-                                <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="st.name"></span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -235,18 +196,10 @@
                     <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Sections Configuration</h2>
                     <span class="text-xs text-slate-400" x-text="'(' + sections.length + ' section' + (sections.length !== 1 ? 's' : '') + ')'"></span>
                 </div>
-                <button type="button" @click="addSection()"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-all"
-                        style="border-radius: 2px; background: linear-gradient(135deg, #d97706, #fbbf24); color: white; box-shadow: 0 2px 6px rgba(217,119,6,0.3);">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Section
-                </button>
             </div>
 
             <div class="p-5 space-y-4">
-                <template x-for="(section, idx) in sections" :key="idx">
+                <template x-for="(section, idx) in sections" :key="section._id">
                     <div class="border border-slate-200 dark:border-slate-700 overflow-hidden relative"
                          style="border-radius: 2px;">
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -318,6 +271,7 @@
                                 </div>
                             </div>
 
+
                             <div class="flex items-center gap-2">
                                 <input type="hidden" :name="'sections_config[' + idx + '][is_randomized]'" value="0">
                                 <input type="checkbox" :name="'sections_config[' + idx + '][is_randomized]'" :value="1"
@@ -325,6 +279,104 @@
                                        class="accent-amber-600">
                                 <label class="text-sm text-slate-700 dark:text-slate-300">Randomize question order within this section</label>
                             </div>
+
+                            {{-- Topics (per section) --}}
+                            <div x-show="availableTopics.length > 0" x-transition>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                    Topics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all topics)</span>
+                                </label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
+                                     style="border-radius: 2px;">
+                                    <template x-for="t in availableTopics" :key="t.id">
+                                        <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                               style="border-radius: 2px;">
+                                            <input type="checkbox" :name="'sections_config[' + idx + '][topic_ids][]'" :value="String(t.id)"
+                                                   x-model="section.topic_ids"
+                                                   @change="section.subtopic_ids = []"
+                                                   class="mt-0.5 accent-amber-600 shrink-0">
+                                            <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="t.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Subtopics (per section) --}}
+                            <div x-show="section.topic_ids.length > 0 && sectionSubtopics(section).length > 0" x-transition>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                    Subtopics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all subtopics)</span>
+                                </label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
+                                     style="border-radius: 2px;">
+                                    <template x-for="st in sectionSubtopics(section)" :key="st.id">
+                                        <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                               style="border-radius: 2px;">
+                                            <input type="checkbox" :name="'sections_config[' + idx + '][subtopic_ids][]'" :value="String(st.id)"
+                                                   x-model="section.subtopic_ids"
+                                                   class="mt-0.5 accent-amber-600 shrink-0">
+                                            <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="st.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="grid sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div class="p-4 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                                    <div class="flex items-start gap-2">
+                                        <input type="hidden" :name="'sections_config[' + idx + '][insert_blank_page]'" value="0">
+                                        <input type="checkbox" :name="'sections_config[' + idx + '][insert_blank_page]'" value="1"
+                                               x-model="section.insert_blank_page"
+                                               class="mt-1 accent-amber-600">
+                                        <div class="flex-1">
+                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Insert Blank Page</label>
+                                            <p class="text-xs text-slate-400 mt-0.5">Adds a blank page after this section in the final output.</p>
+                                            <div x-show="section.insert_blank_page" x-transition class="mt-2">
+                                                <input type="text" :name="'sections_config[' + idx + '][blank_page_text]'"
+                                                       x-model="section.blank_page_text"
+                                                       maxlength="500"
+                                                       placeholder="Do not turn the next page until you are told to do so"
+                                                       class="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                                       style="border-radius: 2px;">
+                                                <p class="text-[11px] text-slate-400 mt-1">Leave blank to use the default text above.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-4 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Attach Document</label>
+                                    <p class="text-xs text-slate-400 mt-0.5 mb-2">Insert a txt, docx, pdf, or image file after this section.</p>
+                                    <input type="file" :name="'sections_config[' + idx + '][document]'"
+                                           accept=".txt,.docx,.pdf,.jpg,.jpeg,.png"
+                                           class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-xs file:font-medium file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
+                                    <template x-if="section.attachment_original_name">
+                                        <p class="text-xs text-emerald-600 mt-1.5">
+                                            Currently attached: <span x-text="section.attachment_original_name"></span>
+                                            — choose a new file to replace it.
+                                        </p>
+                                    </template>
+
+                                    {{-- Carries the existing attachment forward on save unless replaced above --}}
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_original_name]'" :value="section.attachment_original_name || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_extension]'" :value="section.attachment_extension || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_text]'" :value="section.attachment_text || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_image_path]'" :value="section.attachment_image_path || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_pdf_images]'" :value="JSON.stringify(section.attachment_pdf_images || [])">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Add Section — placed after the last section --}}
+                <div class="flex justify-end pt-2">
+                    <button type="button" @click="addSection()"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #d97706, #fbbf24); color: white; box-shadow: 0 2px 6px rgba(217,119,6,0.3);">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Section
+                    </button>
+                </div>
                         </div>
                     </div>
                 </template>
@@ -365,12 +417,10 @@ function templateForm() {
 
     @if($template)
     const existing = {
-        groupId:     {{ $template->academic_group_id ?? 'null' }},
-        levelId:     {{ $template->academic_level_id ?? 'null' }},
-        subjectId:   {{ $template->academic_subject_id }},
-        topicIds:    @json(array_map('intval', $template->topic_ids ?? [])),
-        subtopicIds: @json(array_map('intval', $template->subtopic_ids ?? [])),
-        sections:    @json($template->sections_config ?? []),
+        groupId:   {{ $template->academic_group_id ?? 'null' }},
+        levelId:   {{ $template->academic_level_id ?? 'null' }},
+        subjectId: {{ $template->academic_subject_id }},
+        sections:  @json($template->sections_config ?? []),
     };
     @else
     const existing = null;
@@ -379,15 +429,18 @@ function templateForm() {
     return {
         tree,
 
-        selectedGroupId:     '',
-        selectedLevelId:     '',
-        selectedSubjectId:   '',
-        selectedTopicIds:    [],
-        selectedSubtopicIds: [],
+        selectedGroupId:   '',
+        selectedLevelId:   '',
+        selectedSubjectId: '',
 
-        sections: existing ? existing.sections : [
-            { title: '', instructions: '', question_type: 'multiple_choice', question_count: 10, marks_per_question: 1, is_randomized: false }
-        ],
+sections: existing ? existing.sections.map((s, i) => ({
+    ...s,
+    _id: `section-${i}-${Date.now()}`,
+    topic_ids:    (s.topic_ids ?? []).map(String),
+    subtopic_ids: (s.subtopic_ids ?? []).map(String),
+})) : [
+    { _id: `section-0-${Date.now()}`, title: '', instructions: '', question_type: 'multiple_choice', question_count: 10, marks_per_question: 1, is_randomized: false, topic_ids: [], subtopic_ids: [] }
+],
 
         init() {
             if (!existing) return;
@@ -398,22 +451,10 @@ function templateForm() {
                     this.selectedLevelId = String(existing.levelId);
                     this.$nextTick(() => {
                         this.selectedSubjectId = String(existing.subjectId);
-                        this.$nextTick(() => {
-                            this.selectedTopicIds = existing.topicIds.map(String);
-                            this.$nextTick(() => {
-                                this.selectedSubtopicIds = existing.subtopicIds.map(String);
-                            });
-                        });
                     });
                 });
             } else {
                 this.selectedSubjectId = String(existing.subjectId);
-                this.$nextTick(() => {
-                    this.selectedTopicIds = existing.topicIds.map(String);
-                    this.$nextTick(() => {
-                        this.selectedSubtopicIds = existing.subtopicIds.map(String);
-                    });
-                });
             }
         },
 
@@ -426,9 +467,9 @@ function templateForm() {
         get availableTopics() {
             return this.subjects.find(s => String(s.id) === String(this.selectedSubjectId))?.topics ?? [];
         },
-        get availableSubtopics() {
+        sectionSubtopics(section) {
             return this.availableTopics
-                .filter(t => this.selectedTopicIds.includes(String(t.id)))
+                .filter(t => section.topic_ids.includes(String(t.id)))
                 .flatMap(t => t.subtopics ?? []);
         },
 
@@ -439,6 +480,10 @@ function templateForm() {
                 question_count: 10,
                 marks_per_question: 1,
                 is_randomized: false,
+                topic_ids: [],
+                subtopic_ids: [],
+                insert_blank_page: false,
+                blank_page_text: '',
             });
         },
         removeSection(idx) {

@@ -91,7 +91,10 @@ class MockExamCreationService
             $totalCreated = 0;
             $warnings     = [];
 
-            foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
+foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
+                $sectionTopicIds    = $sectionData['topic_ids'] ?? [];
+                $sectionSubtopicIds = $sectionData['subtopic_ids'] ?? [];
+
                 $section = $subjectExam->sections()->create([
                     'title'              => $sectionData['title'],
                     'instructions'       => $sectionData['instructions'] ?? null,
@@ -100,12 +103,23 @@ class MockExamCreationService
                     'question_count'     => (int) ($sectionData['question_count'] ?? 0),
                     'marks_per_question' => (float) ($sectionData['marks_per_question'] ?? 1),
                     'is_randomized'      => (bool) ($sectionData['is_randomized'] ?? false),
+                    'topic_ids'          => $sectionTopicIds,
+                    'subtopic_ids'       => $sectionSubtopicIds,
+                    'insert_blank_page'        => (bool) ($sectionData['insert_blank_page'] ?? false),
+                    'blank_page_text'          => $sectionData['blank_page_text'] ?? null,
+                    'attachment_original_name' => $sectionData['attachment_original_name'] ?? null,
+                    'attachment_extension'     => $sectionData['attachment_extension'] ?? null,
+                    'attachment_text'          => $sectionData['attachment_text'] ?? null,
+                    'attachment_image_path'    => $sectionData['attachment_image_path'] ?? null,
+                    'attachment_pdf_images'    => $sectionData['attachment_pdf_images'] ?? null,
                 ]);
 
+                // Per-section filters take priority; fall back to subject-exam-level
+                // filters for older, non-template flows that don't set them per section.
                 $created = $this->questionService->pullQuestionsForSection(
                     $section,
-                    $payload['subtopic_ids'] ?? [],
-                    $payload['topic_ids'] ?? [],
+                    $sectionSubtopicIds ?: ($payload['subtopic_ids'] ?? []),
+                    $sectionTopicIds ?: ($payload['topic_ids'] ?? []),
                     (int) $payload['academic_subject_id']
                 );
 
@@ -158,7 +172,10 @@ class MockExamCreationService
             $warnings     = [];
 
             foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
-                $section = $subjectExam->sections()->create([
+                
+                            $sectionTopicIds    = $sectionData['topic_ids'] ?? [];
+                $sectionSubtopicIds = $sectionData['subtopic_ids'] ?? [];
+            $section = $subjectExam->sections()->create([
                     'title'              => $sectionData['title'],
                     'instructions'       => $sectionData['instructions'] ?? null,
                     'order'              => $idx + 1,
@@ -166,6 +183,15 @@ class MockExamCreationService
                     'question_count'     => (int) ($sectionData['question_count'] ?? 0),
                     'marks_per_question' => (float) ($sectionData['marks_per_question'] ?? 1),
                     'is_randomized'      => (bool) ($sectionData['is_randomized'] ?? false),
+                    'topic_ids'          => $sectionTopicIds,
+                    'subtopic_ids'       => $sectionSubtopicIds,
+                    'insert_blank_page'        => (bool) ($sectionData['insert_blank_page'] ?? false),
+                    'blank_page_text'          => $sectionData['blank_page_text'] ?? null,
+                    'attachment_original_name' => $sectionData['attachment_original_name'] ?? null,
+                    'attachment_extension'     => $sectionData['attachment_extension'] ?? null,
+                    'attachment_text'          => $sectionData['attachment_text'] ?? null,
+                    'attachment_image_path'    => $sectionData['attachment_image_path'] ?? null,
+                    'attachment_pdf_images'    => $sectionData['attachment_pdf_images'] ?? null,
                 ]);
 
                 $created = $this->questionService->pullQuestionsForSection(

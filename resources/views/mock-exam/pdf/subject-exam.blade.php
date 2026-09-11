@@ -339,155 +339,22 @@
 </head>
 <body>
     {{-- Front Page if subject exam has template with front page config --}}
-    @if($subjectExam->template && !empty($subjectExam->template->front_page_config['blocks']))
+      @if($subjectExam->template && !empty($subjectExam->template->front_page_config['content']))
         <div class="front-page">
             <div class="front-page-frame">
                 <div class="front-page-content">
-                    @foreach($subjectExam->template->front_page_config['blocks'] ?? [] as $block)
-                        <div class="fp-block">
-                            @switch($block['type'])
-                                @case('heading')
-                                    <div class="fp-heading-{{ $block['level'] ?? 'h2' }}">
-                                        {{ $block['content'] ?? '' }}
-                                    </div>
-                                    @break
-
-                                @case('richtext')
-                                    <div class="fp-richtext">
-                                        {!! $block['content'] ?? '' !!}
-                                    </div>
-                                    @break
-
-                                @case('image')
-                                    @php
-                                        // 'src' is always a ready-to-use URL by the time it reaches
-                                        // this view — FrontPageBuilder::uploadBlockImage() already
-                                        // resolves it via Storage::url() before saving, and URL-type
-                                        // blocks store the pasted URL directly. Resolving it again
-                                        // here (as the old markup did) double-prefixed upload URLs.
-                                        $fpImgSrc = $block['src'] ?? null;
-                                        $fpImgAlign = $block['alignment'] ?? 'center';
-                                    @endphp
-                                    @if($fpImgSrc)
-                                        <div style="text-align: {{ $fpImgAlign }};">
-                                            <img src="{{ $fpImgSrc }}"
-                                                 class="fp-image"
-                                                 style="width: {{ $block['width'] ?? 200 }}px;"
-                                                 alt="{{ $block['alt'] ?? '' }}">
-                                        </div>
-                                    @endif
-                                    @break
-
-                                @case('divider')
-                                    <div class="fp-divider"></div>
-                                    @break
-
-                                @case('info_table')
-                                    @php
-                                        $fpFieldLabels = [
-                                            'candidate_name' => 'Full Name',
-                                            'index_number'   => 'Index Number',
-                                            'date'           => 'Date',
-                                            'duration'       => 'Duration',
-                                            'subject'        => 'Subject',
-                                            'grade'          => 'Grade / Class',
-                                            'signature'      => 'Invigilator Signature',
-                                            'score'          => 'Total Score',
-                                        ];
-                                        $fpFieldValues = [
-                                            'date' => $subjectExam->mockExam->starts_at
-                                                ? $subjectExam->mockExam->starts_at->format('d M Y')
-                                                : now()->format('d M Y'),
-                                            'duration' => $subjectExam->duration_in_minutes
-                                                ? ($subjectExam->duration_in_minutes >= 60
-                                                    ? floor($subjectExam->duration_in_minutes / 60) . 'hr' . ($subjectExam->duration_in_minutes % 60 > 0 ? ' ' . ($subjectExam->duration_in_minutes % 60) . 'min' : '')
-                                                    : $subjectExam->duration_in_minutes . ' mins')
-                                                : null,
-                                            'subject' => $subjectExam->academicSubject?->name,
-                                        ];
-                                        $fpActiveFields = collect($block['fields'] ?? []);
-                                    @endphp
-                                    @if($fpActiveFields->isNotEmpty())
-                                        <div class="fp-declaration">
-                                            @foreach($fpActiveFields->chunk(2) as $fpRow)
-                                                <div class="fp-decl-row">
-                                                    @foreach($fpRow as $fpFieldKey)
-                                                        <div class="fp-decl-field">
-                                                            <span class="fp-decl-label">{{ $fpFieldLabels[$fpFieldKey] ?? $fpFieldKey }}</span>
-                                                            <div class="fp-decl-value">{{ $fpFieldValues[$fpFieldKey] ?? '' }}&nbsp;</div>
-                                                        </div>
-                                                    @endforeach
-                                                    @if($fpRow->count() === 1)
-                                                        <div class="fp-decl-field"></div>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                    @break
-                            @endswitch
+                    @if(!empty($subjectExam->template->front_page_config['content']))
+                        <div class="fp-block fp-richtext">
+                            {!! $subjectExam->template->front_page_config['content'] !!}
                         </div>
-                    @endforeach
+                    @endif
                 </div>
             </div>
         </div>
     @endif
 
+
     <div class="exam-container">
-        {{-- Header --}}
-        <div class="header-section">
-            <div class="school-name">{{ config('company.name', 'All Academies') }}</div>
-            <div class="exam-main-title">{{ $subjectExam->mockExam->title }}</div>
-            <div class="subject-title">{{ $subjectExam->getDisplayTitle() }}</div>
-        </div>
-
-        {{-- Info Grid --}}
-        <div class="info-grid">
-            @if($subjectExam->academicGroup)
-            <div class="info-item">
-                <span class="ig-lbl">Group</span>
-                <span class="ig-val">{{ $subjectExam->academicGroup->name }}</span>
-            </div>
-            @endif
-
-            @if($subjectExam->academicLevel)
-            <div class="info-item">
-                <span class="ig-lbl">Level</span>
-                <span class="ig-val">{{ $subjectExam->academicLevel->name }}</span>
-            </div>
-            @endif
-
-            <div class="info-item">
-                <span class="ig-lbl">Subject</span>
-                <span class="ig-val">{{ $subjectExam->academicSubject?->name }}</span>
-            </div>
-
-            @if($subjectExam->duration_in_minutes)
-            <div class="info-item">
-                <span class="ig-lbl">Duration</span>
-                <span class="ig-val">{{ $subjectExam->duration_in_minutes }} minutes</span>
-            </div>
-            @endif
-
-            <div class="info-item">
-                <span class="ig-lbl">Total Marks</span>
-                <span class="ig-val">{{ number_format($subjectExam->getTotalMarks(), 1) }}</span>
-            </div>
-        </div>
-
-        {{-- Instructions --}}
-        @if($subjectExam->instructions || $subjectExam->mockExam->instructions)
-        <div class="inst-wrap">
-            <div class="inst-heading">Instructions</div>
-            <div class="inst-body">
-                @if($subjectExam->instructions)
-                    {{ $subjectExam->instructions }}
-                @else
-                    {{ $subjectExam->mockExam->instructions }}
-                @endif
-            </div>
-        </div>
-        @endif
 
         {{-- Sections and Questions --}}
         @foreach($subjectExam->sections as $sectionIndex => $section)
@@ -515,7 +382,7 @@
                     <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
 {{--                        @dd($question)--}}
-                        <x-ui.latex :content="$question->question_text" inline="true" />
+                        <x-ui.latex :display="true" :content="$question->question_text" inline="true" />
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
                 </div>
@@ -537,6 +404,8 @@
                 @endif
             </div>
             @endforeach
+
+            @include('mock-exam.pdf.partials.section-attachment', ['section' => $section])
         </div>
         @endforeach
     </div>

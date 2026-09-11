@@ -1,5 +1,4 @@
-@props(['blocks' => [], 'template' => null, 'mockExam' => null, 'subjectExam' => null, 'fontSize' => 11, 'isPdf' => false])
-
+@props(['content' => '', 'template' => null, 'mockExam' => null, 'subjectExam' => null, 'fontSize' => 11, 'isPdf' => false])
 @php
     // 1. Intelligently resolve data based on context (Template Builder vs Final PDF)
     $isSubjectExam = !is_null($subjectExam);
@@ -132,88 +131,11 @@
     </div>
 
     {{-- ╔══════════════════════════════════════════════════════════╗
-         ║  USER CONFIGURED BLOCKS (Instructions, Candidate Info)   ║
+         ║  TEMPLATE CONTENT (Rich Text)                            ║
          ╚══════════════════════════════════════════════════════════╝ --}}
-    @foreach($blocks as $block)
-        @switch($block['type'])
-            @case('heading')
-                @php
-                    $level = $block['level'] ?? 'h2';
-                    $size = match($level) { 'h1' => $fontSize + 6, 'h2' => $fontSize + 3, 'h3' => $fontSize + 1, default => $fontSize + 2 };
-                    $align = $block['alignment'] ?? 'center';
-                @endphp
-                <div style="text-align: {{ $align }}; font-weight: bold; text-transform: uppercase; margin: 20px 0 12px 0; font-size: {{ $size }}pt; color: #000; letter-spacing: 1px;">
-                    {{ $block['content'] ?? '' }}
-                </div>
-                @break
-
-            @case('richtext')
-                <div style="margin-bottom: 16px; text-align: justify; color: #111; line-height: 1.6;">
-                    {!! $block['content'] ?? '' !!}
-                </div>
-                @break
-
-            @case('image')
-                @php
-                    $align = $block['alignment'] ?? 'center';
-                    $width = (int) ($block['width'] ?? 200);
-                @endphp
-                @if(!empty($block['src']))
-                    <div style="text-align: {{ $align }}; margin: 16px 0;">
-                        <img src="{{ $imageUrl($block['src']) }}" alt="{{ $block['alt'] ?? '' }}" style="max-width: {{ $width }}px; height: auto; border: 1px solid #ddd;">
-                    </div>
-                @endif
-                @break
-
-            @case('divider')
-                <div style="border-top: 1px solid #000; margin: 20px 40px;"></div>
-                @break
-
-            @case('info_table')
-                @php
-                    $fieldLabels = [
-                        'candidate_name' => 'Candidate Name',
-                        'index_number'   => 'Index Number',
-                        'date'           => 'Date',
-                        'duration'       => 'Duration',
-                        'subject'        => 'Subject',
-                        'grade'          => 'Grade / Class',
-                        'signature'      => 'Invigilator Signature',
-                        'score'          => 'Total Score',
-                    ];
-                    $fieldValues = [
-                        'date'     => $isMockExam ? ($mockExam->starts_at ? $mockExam->starts_at->format('d M Y') : now()->format('d M Y')) : now()->format('d M Y'),
-                        'duration' => $durationText,
-                        'subject'  => $academicSubject?->name ?? 'N/A',
-                    ];
-                    $activeFields = $block['fields'] ?? [];
-                @endphp
-                @if(count($activeFields) > 0)
-                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1.5px solid #000;">
-                        @foreach(array_chunk($activeFields, 2) as $row)
-                            <tr>
-                                @foreach($row as $fieldKey)
-                                    <td style="padding: 10px 12px; border: 1px solid #000; width: 50%; vertical-align: top; background: #fff;">
-                                        <div style="font-size: {{ $fontSize - 1 }}pt; text-transform: uppercase; letter-spacing: 0.5px; color: #000; margin-bottom: 8px; font-weight: bold;">
-                                            {{ $fieldLabels[$fieldKey] ?? $fieldKey }}
-                                        </div>
-                                        @if(isset($fieldValues[$fieldKey]) && $fieldValues[$fieldKey])
-                                            <div style="font-size: {{ $fontSize }}pt; font-weight: bold; color: #000;">
-                                                {{ $fieldValues[$fieldKey] }}
-                                            </div>
-                                        @else
-                                            <div style="border-bottom: 1px dotted #000; height: 18px; width: 100%;"></div>
-                                        @endif
-                                    </td>
-                                @endforeach
-                                @if(count($row) === 1)
-                                    <td style="border: 1px solid #000; width: 50%; background: #fff;"></td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    </table>
-                @endif
-                @break
-        @endswitch
-    @endforeach
+    @if($content)
+        <div style="margin-bottom: 16px; text-align: left; color: #111; line-height: 1.6;">
+            {!! $content !!}
+        </div>
+    @endif
 </div>

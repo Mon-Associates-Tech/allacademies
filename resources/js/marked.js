@@ -7,7 +7,6 @@ window.renderMathInElement = renderMathInElement;
 window.marked = marked;
 
 // Helper to safely decode HTML entities (e.g., if Laravel pre-escaped the string)
-// This prevents "&lt;p&gt;Text&lt;/p&gt;" from rendering as literal text on screen.
 const decodeHTMLEntities = (function() {
     const element = document.createElement('textarea');
     return function(html) {
@@ -24,15 +23,40 @@ function unwrapBacktickedMath(content) {
         .replace(/`(\$[^`$\n]+?\$)`/g, '$1');
 }
 
+
+function mergeAdjacentBacktickSpans(content) {
+    // Some source content splits a single math expression across several
+    // separate single-backtick spans (e.g. `$\hspace{0.3cm}` `(\alpha)\`
+    // `2\frac{3}{4}` `\div ...$` instead of one clean `$...$` span).
+    // Collapse any backtick spans separated by nothing but whitespace into
+    // one span, so the unwrap step below sees the whole expression as a
+    // single unit instead of four fragments.
+    let prev;
+    do {
+        prev = content;
+        content = content.replace(/`([^`\n]*)`(\s+)`([^`\n]*)`/g, '`$1$2$3`');
+    } while (content !== prev);
+    return content;
+}
+
 window.renderMarkdownWithMath = function(content) {
     if (!content) return '';
 
     try {
-     // 1. Decode entities first to handle any pre-escaped content from the backend
+        // 1. Decode entities first to handle any pre-escaped content from the backend
         const decodedContent = decodeHTMLEntities(content);
-        const unwrapped = unwrapBacktickedMath(decodedContent);
+        
+        // 2. Merge fragments of a single math expression that got split across
+        // several adjacent backtick spans, then unwrap the outer backticks.
+        const merged = mergeAdjacentBacktickSpans(decodedContent);
+        const mathifiedContent = unwrapBacktickedMath(merged);
 
-        // 2. Sanitize input to prevent XSS, explicitly allowing images and common markdown/math tags
+        // 3. Anything still wrapped in backticks at this point is genuine inline
+        // code, not math — leave it alone. `marked` will render it as <code>
+        // correctly on its own; forcing every leftover backtick into $...$ is
+        // what fragmented exam content into broken partial expressions.
+
+        // 4. Sanitize input to prevent XSS, explicitly allowing images and common markdown/math tags
         const allowedTags = [
             'img', 'p', 'br', 'strong', 'em', 'code', 'pre', 'a', 'ul', 'ol', 'li', 
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'table', 'thead', 
@@ -45,22 +69,21 @@ window.renderMarkdownWithMath = function(content) {
         ];
         
         const sanitizedContent = typeof DOMPurify !== 'undefined' 
-            ? DOMPurify.sanitize(unwrapped, { ALLOWED_TAGS: allowedTags }) 
-            : unwrapped;
+            ? DOMPurify.sanitize(mathifiedContent, { ALLOWED_TAGS: allowedTags }) 
+            : mathifiedContent;
 
-        // 3. Parse markdown with marked
+        // 5. Parse markdown with marked
         let htmlContent = marked.parse(sanitizedContent);
 
-        // 4. Create temporary element for math rendering
+        // 6. Create temporary element for math rendering
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
 
-        // 5. Apply math rendering if available
-        // Note: renderMathInElement automatically ignores <code> and <pre> tags, 
-        // which correctly prevents math from rendering inside backticks.
+        // 7. Apply math rendering if available
         if (typeof window.renderMathInElement !== 'undefined') {
             window.renderMathInElement(tempDiv, {
                 delimiters: [
+                    // Existing delimiters (backticks are now safely handled in Step 3)
                     {left: '$$', right: '$$', display: true},
                     {left: '$', right: '$', display: false},
                     {left: '\\[', right: '\\]', display: true},

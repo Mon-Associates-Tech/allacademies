@@ -24,8 +24,6 @@ class MockExamTemplate extends Model
         'description',
         'is_active',
         'default_duration_minutes',
-        'topic_ids',
-        'subtopic_ids',
         'sections_config',
         'front_page_config',
     ];
@@ -34,8 +32,6 @@ class MockExamTemplate extends Model
     {
         return [
             'is_active'                => 'boolean',
-            'topic_ids'                => 'array',
-            'subtopic_ids'             => 'array',
             'sections_config'          => 'array',
             'default_duration_minutes' => 'integer',
             'front_page_config'       => 'array',
@@ -108,21 +104,7 @@ class MockExamTemplate extends Model
         return $this->name ?: $this->academicSubject?->name ?: 'Untitled Template';
     }
 
-    /**
-     * Check if this template has topic filters configured.
-     */
-    public function hasTopicFilters(): bool
-    {
-        return !empty($this->topic_ids);
-    }
 
-    /**
-     * Check if this template has subtopic filters configured.
-     */
-    public function hasSubtopicFilters(): bool
-    {
-        return !empty($this->subtopic_ids);
-    }
 
     /**
      * Get the sections configuration as an array.
@@ -176,8 +158,6 @@ class MockExamTemplate extends Model
             'title'               => $this->name,
             'instructions'        => $this->description,
             'duration_in_minutes' => $this->default_duration_minutes,
-            'topic_ids'           => $this->topic_ids ?? [],
-            'subtopic_ids'        => $this->subtopic_ids ?? [],
             'sections'            => $this->sections_config ?? [],
         ];
     }

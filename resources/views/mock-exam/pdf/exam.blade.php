@@ -85,11 +85,11 @@
             letter-spacing: 1px;
             margin-bottom: 10px;
         }
-        .fp-richtext {
-            text-align: justify;
-            line-height: 1.6;
-            margin-bottom: 12px;
-        }
+.fp-richtext {
+    text-align: left;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
         .fp-image {
             text-align: center;
             margin: 12px 0;
@@ -366,87 +366,11 @@
             </tr>
         </table>
 
-        {{-- User Configured Blocks --}}
-        @if($template && !empty($template->front_page_config['blocks']))
-            @foreach($template->front_page_config['blocks'] as $block)
-                <div class="fp-block">
-                    @switch($block['type'])
-                        @case('heading')
-                            @php
-                                $level = $block['level'] ?? 'h2';
-                                $size = match($level) {
-                                    'h1' => ($fontSize ?? 11) + 6,
-                                    'h2' => ($fontSize ?? 11) + 3,
-                                    'h3' => ($fontSize ?? 11) + 1,
-                                    default => ($fontSize ?? 11) + 2
-                                };
-                            @endphp
-                            <div class="fp-heading" style="font-size: {{ $size }}pt;">
-                                {{ $block['content'] ?? '' }}
-                            </div>
-                            @break
-
-                        @case('richtext')
-                            <div class="fp-richtext">
-                                {!! $block['content'] ?? '' !!}
-                            </div>
-                            @break
-
-                        @case('image')
-                            @php
-                                $align = $block['alignment'] ?? 'center';
-                                $width = $block['width'] ?? 300;
-                            @endphp
-                            @if(!empty($block['src']))
-                                <div class="fp-image" style="text-align: {{ $align }};">
-                                    <img src="{{ $block['src'] }}" alt="{{ $block['alt'] ?? '' }}" style="max-width: {{ $width }}px;">
-                                </div>
-                            @endif
-                            @break
-
-                        @case('divider')
-                            <div class="fp-divider"></div>
-                            @break
-
-                        @case('info_table')
-                            @php
-                                $fieldLabels = [
-                                    'candidate_name' => 'Candidate Name',
-                                    'index_number'   => 'Index Number',
-                                    'date'           => 'Date',
-                                    'duration'       => 'Duration',
-                                    'subject'        => 'Subject',
-                                    'grade'          => 'Grade / Class',
-                                    'signature'      => 'Invigilator Signature',
-                                    'score'          => 'Total Score',
-                                ];
-                                $activeFields = $block['fields'] ?? [];
-                            @endphp
-                            @if(count($activeFields) > 0)
-                                <table class="fp-candidate-table">
-                                    @foreach(array_chunk($activeFields, 2) as $row)
-                                        <tr>
-                                            @foreach($row as $fieldKey)
-                                                <td>
-                                                    <span class="fp-candidate-label">{{ $fieldLabels[$fieldKey] ?? $fieldKey }}</span>
-                                                    @if(isset($fpFieldValues[$fieldKey]) && $fpFieldValues[$fieldKey])
-                                                        <span class="fp-candidate-value">{{ $fpFieldValues[$fieldKey] }}</span>
-                                                    @else
-                                                        <div class="fp-line"></div>
-                                                    @endif
-                                                </td>
-                                            @endforeach
-                                            @if(count($row) === 1)
-                                                <td></td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                                </table>
-                            @endif
-                            @break
-                    @endswitch
-                </div>
-            @endforeach
+        {{-- Template Content --}}
+        @if($template && !empty($template->front_page_config['content']))
+            <div class="fp-block fp-richtext">
+                {!! $template->front_page_config['content'] !!}
+            </div>
         @endif
     </div>
 

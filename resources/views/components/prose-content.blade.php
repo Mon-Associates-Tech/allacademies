@@ -81,6 +81,10 @@
             // Define math rendering configuration globally
             window.mathRenderConfig = {
                 delimiters: [
+                    // Backtick delimiters (Added)
+                    {left: '``', right: '``', display: true},
+                    {left: '`', right: '`', display: false},
+                    // Existing delimiters
                     {left: '$$', right: '$$', display: true},
                     {left: '$', right: '$', display: false},
                     {left: '\\[', right: '\\]', display: true},
@@ -121,15 +125,14 @@
             margin: 0;
         }
 
-        +
-    /* Images in inline content still need to be mobile-safe even though
-      the full Tailwind Typography prose-img: rules don't apply here */
-    .prose-inline img {
-       max-width: 100%;
-       height: auto;
-       display: inline-block;
-       vertical-align: middle;
-   }
+        /* Images in inline content still need to be mobile-safe even though
+          the full Tailwind Typography prose-img: rules don't apply here */
+        .prose-inline img {
+           max-width: 100%;
+           height: auto;
+           display: inline-block;
+           vertical-align: middle;
+       }
     </style>
 @endonce
 
@@ -138,35 +141,40 @@
     @if($mathSupport || $markdownContent)
     x-data="{
 init() {
-this.$nextTick(() => this.renderContent());
+    this.$nextTick(() => this.renderContent());
 },
+
 renderContent() {
-// 1. If we only have markdown, parse it using your global JS function
-if (@js($markdownContent && !$htmlContent)) {
-if (typeof window.renderMarkdownWithMath === 'function') {
-this.$el.innerHTML = window.renderMarkdownWithMath(@js($markdownContent));
-}
-}
+    // 1. If we only have markdown, parse it using your global JS function
+    if (@js($markdownContent && !$htmlContent)) {
+        if (typeof window.renderMarkdownWithMath === 'function') {
+            this.$el.innerHTML = window.renderMarkdownWithMath(@js($markdownContent));
+        }
+    } 
+    // 2. NEW: If we have HTML, still check for math delimiters
+    else if (@js($htmlContent)) {
+        // HTML content might still have unprocessed math delimiters
+        // Just render math on the existing HTML
+    }
 
-// 2. Inline mode: unwrap any block wrappers so nothing breaks the line
-if (@js($inline)) {
-this.$el.querySelectorAll('p, h1, h2, h3, h4, h5, h6').forEach((el) => {
-while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
-el.remove();
-});
-}
+    // 3. Inline mode: unwrap any block wrappers so nothing breaks the line
+    if (@js($inline)) {
+        this.$el.querySelectorAll('p, h1, h2, h3, h4, h5, h6').forEach((el) => {
+            while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+            el.remove();
+        });
+    }
 
-// 3. Render Math (KaTeX) on the final HTML
-if (@js($mathSupport) && typeof window.renderMathInElement !== 'undefined') {
-try {
-window.renderMathInElement(this.$el, window.mathRenderConfig);
-} catch(e) {
-console.warn('KaTeX rendering error:', e);
-}
-}
-}
+    // 4. Render Math (KaTeX) on the final HTML
+    if (@js($mathSupport) && typeof window.renderMathInElement !== 'undefined') {
+        try {
+            window.renderMathInElement(this.$el, window.mathRenderConfig);
+        } catch(e) {
+            console.warn('KaTeX rendering error:', e);
+        }
+    }
 }"
-@endif
+    @endif
 >
 {{-- Render the pre-generated HTML from TinyMCE directly --}}
 @if($htmlContent)
