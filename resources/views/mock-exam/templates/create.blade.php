@@ -3,12 +3,42 @@
      style="font-family: 'system-ui', -apple-system, sans-serif;"
      x-data="templateForm()">
 
-    {{-- ── PAGE HEADER ── --}}
+    {{-- ── STEP INDICATOR ──────────────────────────────────────────────────── --}}
+    <div class="flex items-center gap-0">
+        {{-- Step 1 (complete / back link) --}}
+        <a href="{{ $template
+                ? route('mock-exams.templates.front-page.edit', $template)
+                : route('mock-exams.templates.create') }}"
+           class="flex items-center gap-2.5 px-4 py-2.5 transition-all group"
+           style="border-radius: 2px 0 0 2px; background: #4c1d95;"
+           title="Go back to Front Page designer">
+            <span class="flex items-center justify-center w-5 h-5 rounded-full bg-violet-300 text-violet-900 text-xs font-bold shrink-0">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                </svg>
+            </span>
+            <span class="text-violet-300 group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">
+                Front Page
+            </span>
+        </a>
+        {{-- Arrow --}}
+        <div class="w-0 h-0 shrink-0" style="border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-left: 12px solid #4c1d95;"></div>
+        {{-- Step 2 (active) --}}
+        <div class="flex items-center gap-2.5 px-5 py-2.5 ml-0"
+             style="border-radius: 0 2px 2px 0; background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+            <span class="flex items-center justify-center w-5 h-5 rounded-full bg-white text-violet-700 text-xs font-bold shrink-0">2</span>
+            <span class="text-white text-sm font-semibold whitespace-nowrap">Template Details</span>
+        </div>
+    </div>
+
+    {{-- ── PAGE HEADER ─────────────────────────────────────────────────────── --}}
     <div class="overflow-hidden"
          style="border-radius: 2px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: 0 4px 24px rgba(0,0,0,0.15);">
         <div class="h-1 w-full" style="background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);"></div>
         <div class="px-7 py-6 flex items-center gap-4">
-            <a href="{{ route('mock-exams.templates.index') }}"
+            <a href="{{ $template
+                    ? route('mock-exams.templates.front-page.edit', $template)
+                    : route('mock-exams.templates.create') }}"
                class="flex items-center justify-center w-8 h-8 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 transition-all shrink-0"
                style="border-radius: 2px;">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,12 +50,14 @@
                     style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
                     {{ $template ? 'Edit Template' : 'Create Template' }}
                 </h1>
-                <p class="text-slate-400 mt-1 text-sm">Define a reusable template for quick exam generation</p>
+                <p class="text-slate-400 mt-1 text-sm">
+                    Configure the academic scope, sections, and question settings for this template.
+                </p>
             </div>
         </div>
     </div>
 
-    {{-- ── ERRORS ── --}}
+    {{-- ── ERRORS ───────────────────────────────────────────────────────────── --}}
     @if($errors->any())
         <div class="px-5 py-4 text-sm"
              style="border-radius: 2px; background: #fef2f2; border: 1px solid #fecaca;">
@@ -37,12 +69,18 @@
     @endif
 
     <form method="POST"
-          action="{{ $template ? route('mock-exams.templates.update', $template) : route('mock-exams.templates.store') }}"
+          action="{{ $template
+              ? route('mock-exams.templates.update', $template)
+              : route('mock-exams.templates.store') }}"
+              enctype="multipart/form-data"
           class="space-y-7">
         @csrf
         @if($template) @method('PUT') @endif
 
-        {{-- ── TEMPLATE INFO ── --}}
+        {{-- Hidden: carries the front_page_config JSON through the POST --}}
+        {{-- <input type="hidden" name="front_page_config" value="{{ $frontPageConfigJson }}"> --}}
+
+        {{-- ── TEMPLATE INFO ──────────────────────────────────────────────── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
@@ -87,7 +125,7 @@
             </div>
         </div>
 
-        {{-- ── ACADEMIC HIERARCHY ── --}}
+        {{-- ── ACADEMIC HIERARCHY ──────────────────────────────────────────── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
@@ -102,8 +140,7 @@
                             Academic Group (optional)
                         </label>
                         <select name="academic_group_id" x-model="selectedGroupId"
-                                @change="selectedLevelId = ''; selectedSubjectId = ''; selectedTopicIds = []; selectedSubtopicIds = []"
-                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
+@change="selectedLevelId = ''; selectedSubjectId = ''; sections.forEach(s => { s.topic_ids = []; s.subtopic_ids = []; })"                                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
                             <option value="">Select group…</option>
                             @foreach($hierarchyTree as $group)
@@ -118,8 +155,7 @@
                             Academic Level (optional)
                         </label>
                         <select name="academic_level_id" x-model="selectedLevelId"
-                                @change="selectedSubjectId = ''; selectedTopicIds = []; selectedSubtopicIds = []"
-                                :class="!selectedGroupId ? 'opacity-40 pointer-events-none' : ''"
+@change="selectedSubjectId = ''; sections.forEach(s => { s.topic_ids = []; s.subtopic_ids = []; })"                                :class="!selectedGroupId ? 'opacity-40 pointer-events-none' : ''"
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
                             <option value="">Select level…</option>
@@ -135,8 +171,7 @@
                             Subject <span class="text-red-500">*</span>
                         </label>
                         <select name="academic_subject_id" x-model="selectedSubjectId"
-                                @change="selectedTopicIds = []; selectedSubtopicIds = []"
-                                :class="!selectedLevelId ? 'opacity-40 pointer-events-none' : ''"
+@change="sections.forEach(s => { s.topic_ids = []; s.subtopic_ids = []; })"                                :class="!selectedLevelId ? 'opacity-40 pointer-events-none' : ''"
                                 required
                                 class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:bg-slate-800 dark:text-white transition-all"
                                 style="border-radius: 2px;">
@@ -148,48 +183,11 @@
                     </div>
                 </div>
 
-                {{-- Topics --}}
-                <div x-show="selectedSubjectId && availableTopics.length > 0" x-transition>
-                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                        Topics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all topics)</span>
-                    </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
-                         style="border-radius: 2px;">
-                        <template x-for="t in availableTopics" :key="t.id">
-                            <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
-                                   style="border-radius: 2px;">
-                                <input type="checkbox" name="topic_ids[]" :value="String(t.id)"
-                                       x-model="selectedTopicIds"
-                                       @change="selectedSubtopicIds = []"
-                                       class="mt-0.5 accent-violet-600 shrink-0">
-                                <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="t.name"></span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
 
-                {{-- Subtopics --}}
-                <div x-show="selectedTopicIds.length > 0 && availableSubtopics.length > 0" x-transition>
-                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                        Subtopics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all subtopics)</span>
-                    </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
-                         style="border-radius: 2px;">
-                        <template x-for="st in availableSubtopics" :key="st.id">
-                            <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
-                                   style="border-radius: 2px;">
-                                <input type="checkbox" name="subtopic_ids[]" :value="String(st.id)"
-                                       x-model="selectedSubtopicIds"
-                                       class="mt-0.5 accent-violet-600 shrink-0">
-                                <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="st.name"></span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
             </div>
         </div>
 
-        {{-- ── SECTIONS BUILDER ── --}}
+        {{-- ── SECTIONS BUILDER ──────────────────────────────────────────────── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -198,21 +196,12 @@
                     <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Sections Configuration</h2>
                     <span class="text-xs text-slate-400" x-text="'(' + sections.length + ' section' + (sections.length !== 1 ? 's' : '') + ')'"></span>
                 </div>
-                <button type="button" @click="addSection()"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-all"
-                        style="border-radius: 2px; background: linear-gradient(135deg, #d97706, #fbbf24); color: white; box-shadow: 0 2px 6px rgba(217,119,6,0.3);">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Section
-                </button>
             </div>
 
             <div class="p-5 space-y-4">
-                <template x-for="(section, idx) in sections" :key="idx">
+                <template x-for="(section, idx) in sections" :key="section._id">
                     <div class="border border-slate-200 dark:border-slate-700 overflow-hidden relative"
                          style="border-radius: 2px;">
-                        {{-- Section header --}}
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                             <span class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
                                   style="letter-spacing: 0.08em;"
@@ -228,46 +217,46 @@
                         </div>
 
                         <div class="p-5 space-y-4">
-                            {{-- Title & Instructions --}}
-                            <div class="space-y-4">
+                            <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Section Title <span class="text-red-500">*</span></label>
+                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                        Section Title <span class="text-red-500">*</span>
+                                    </label>
                                     <input type="text" :name="'sections_config[' + idx + '][title]'"
                                            x-model="section.title" required
                                            placeholder="e.g. Section A – Objectives"
                                            class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                            style="border-radius: 2px;">
                                 </div>
-                                <div
-                                    x-data="sectionRichEditor(section, idx)"
-                                    x-init="init()"
-                                    x-effect="syncName(idx)"
-                                >
+                                <div>
                                     <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Instructions</label>
-                                    <div class="border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
-                                        <textarea :id="editorId" class="w-full border-0 focus:ring-0 dark:bg-slate-800 dark:text-white" style="min-height: 150px;"></textarea>
-                                    </div>
-                                    {{-- Carries the value on form submit --}}
-                                    <textarea :name="'sections_config[' + idx + '][instructions]'" x-model="section.instructions" class="hidden"></textarea>
+                                    <input type="text" :name="'sections_config[' + idx + '][instructions]'"
+                                           x-model="section.instructions"
+                                           placeholder="Optional instructions for this section"
+                                           class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
+                                           style="border-radius: 2px;">
                                 </div>
                             </div>
 
-                            {{-- Question Type, Count, Marks --}}
                             <div class="grid sm:grid-cols-3 gap-4">
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Question Type <span class="text-red-500">*</span></label>
+                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                        Question Type <span class="text-red-500">*</span>
+                                    </label>
                                     <select :name="'sections_config[' + idx + '][question_type]'"
                                             x-model="section.question_type" required
                                             class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
                                             style="border-radius: 2px;">
                                         <option value="multiple_choice">Multiple Choice</option>
-                                        <option value="true_false">True/False</option>
+                                        <option value="true_false">True / False</option>
                                         <option value="essay">Essay</option>
                                         <option value="mixed">Mixed</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Number of Questions <span class="text-red-500">*</span></label>
+                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                        No. of Questions <span class="text-red-500">*</span>
+                                    </label>
                                     <input type="number" :name="'sections_config[' + idx + '][question_count]'"
                                            x-model.number="section.question_count" min="1" max="200" required
                                            class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
@@ -282,7 +271,7 @@
                                 </div>
                             </div>
 
-                            {{-- Randomized checkbox --}}
+
                             <div class="flex items-center gap-2">
                                 <input type="hidden" :name="'sections_config[' + idx + '][is_randomized]'" value="0">
                                 <input type="checkbox" :name="'sections_config[' + idx + '][is_randomized]'" :value="1"
@@ -290,25 +279,123 @@
                                        class="accent-amber-600">
                                 <label class="text-sm text-slate-700 dark:text-slate-300">Randomize question order within this section</label>
                             </div>
+
+                            {{-- Topics (per section) --}}
+                            <div x-show="availableTopics.length > 0" x-transition>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                    Topics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all topics)</span>
+                                </label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
+                                     style="border-radius: 2px;">
+                                    <template x-for="t in availableTopics" :key="t.id">
+                                        <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                               style="border-radius: 2px;">
+                                            <input type="checkbox" :name="'sections_config[' + idx + '][topic_ids][]'" :value="String(t.id)"
+                                                   x-model="section.topic_ids"
+                                                   @change="section.subtopic_ids = []"
+                                                   class="mt-0.5 accent-amber-600 shrink-0">
+                                            <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="t.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Subtopics (per section) --}}
+                            <div x-show="section.topic_ids.length > 0 && sectionSubtopics(section).length > 0" x-transition>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                    Subtopics <span class="text-slate-400 normal-case font-normal">(optional — leave blank for all subtopics)</span>
+                                </label>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-3 max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700"
+                                     style="border-radius: 2px;">
+                                    <template x-for="st in sectionSubtopics(section)" :key="st.id">
+                                        <label class="flex items-start gap-2 cursor-pointer p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                               style="border-radius: 2px;">
+                                            <input type="checkbox" :name="'sections_config[' + idx + '][subtopic_ids][]'" :value="String(st.id)"
+                                                   x-model="section.subtopic_ids"
+                                                   class="mt-0.5 accent-amber-600 shrink-0">
+                                            <span class="text-xs text-slate-700 dark:text-slate-300 leading-tight" x-text="st.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="grid sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div class="p-4 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                                    <div class="flex items-start gap-2">
+                                        <input type="hidden" :name="'sections_config[' + idx + '][insert_blank_page]'" value="0">
+                                        <input type="checkbox" :name="'sections_config[' + idx + '][insert_blank_page]'" value="1"
+                                               x-model="section.insert_blank_page"
+                                               class="mt-1 accent-amber-600">
+                                        <div class="flex-1">
+                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Insert Blank Page</label>
+                                            <p class="text-xs text-slate-400 mt-0.5">Adds a blank page after this section in the final output.</p>
+                                            <div x-show="section.insert_blank_page" x-transition class="mt-2">
+                                                <input type="text" :name="'sections_config[' + idx + '][blank_page_text]'"
+                                                       x-model="section.blank_page_text"
+                                                       maxlength="500"
+                                                       placeholder="Do not turn the next page until you are told to do so"
+                                                       class="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                                       style="border-radius: 2px;">
+                                                <p class="text-[11px] text-slate-400 mt-1">Leave blank to use the default text above.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-4 border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Attach Document</label>
+                                    <p class="text-xs text-slate-400 mt-0.5 mb-2">Insert a txt, docx, pdf, or image file after this section.</p>
+                                    <input type="file" :name="'sections_config[' + idx + '][document]'"
+                                           accept=".txt,.docx,.pdf,.jpg,.jpeg,.png"
+                                           class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-xs file:font-medium file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
+                                    <template x-if="section.attachment_original_name">
+                                        <p class="text-xs text-emerald-600 mt-1.5">
+                                            Currently attached: <span x-text="section.attachment_original_name"></span>
+                                            — choose a new file to replace it.
+                                        </p>
+                                    </template>
+
+                                    {{-- Carries the existing attachment forward on save unless replaced above --}}
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_original_name]'" :value="section.attachment_original_name || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_extension]'" :value="section.attachment_extension || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_text]'" :value="section.attachment_text || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_image_path]'" :value="section.attachment_image_path || ''">
+                                    <input type="hidden" :name="'sections_config[' + idx + '][attachment_pdf_images]'" :value="JSON.stringify(section.attachment_pdf_images || [])">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Add Section — placed after the last section --}}
+                <div class="flex justify-end pt-2">
+                    <button type="button" @click="addSection()"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-all"
+                            style="border-radius: 2px; background: linear-gradient(135deg, #d97706, #fbbf24); color: white; box-shadow: 0 2px 6px rgba(217,119,6,0.3);">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Section
+                    </button>
+                </div>
                         </div>
                     </div>
                 </template>
             </div>
         </div>
 
-        {{-- ── SUMMARY & ACTIONS ── --}}
+        {{-- ── SUMMARY & ACTIONS ──────────────────────────────────────────────── --}}
         <div class="bg-white dark:bg-slate-900 overflow-hidden"
              style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
             <div class="p-6">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between flex-wrap gap-4">
                     <div class="text-sm text-slate-600 dark:text-slate-400">
-                        <span x-text="sections.length"></span> section(s), 
-                        <span x-text="sections.reduce((sum, s) => sum + (parseInt(s.question_count) || 0), 0)"></span> total questions,
-                        <span x-text="sections.reduce((sum, s) => sum + ((parseInt(s.question_count) || 0) * (parseFloat(s.marks_per_question) || 1)), 0).toFixed(1)"></span> total marks
+                        <span x-text="sections.length"></span> section(s),
+                        <span x-text="sections.reduce((s, x) => s + (parseInt(x.question_count) || 0), 0)"></span> total questions,
+                        <span x-text="sections.reduce((s, x) => s + ((parseInt(x.question_count) || 0) * (parseFloat(x.marks_per_question) || 1)), 0).toFixed(1)"></span> total marks
                     </div>
                     <div class="flex gap-3">
                         <a href="{{ route('mock-exams.templates.index') }}"
-                           class="px-5 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                           class="px-5 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                            style="border-radius: 2px;">
                             Cancel
                         </a>
@@ -324,74 +411,16 @@
     </form>
 </div>
 
-@once
-@push('head')
-<script src="{{ asset('js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script>
-@endpush
-@endonce
-
 <script>
-function sectionRichEditor(section, idx) {
-    return {
-        section,
-        editorId: 'section-instructions-' + idx,
-        editor: null,
-
-        init() {
-            this.$nextTick(() => {
-                const el = document.getElementById(this.editorId);
-                if (!el) return;
-
-                const isDark = document.documentElement.classList.contains('dark');
-
-                tinymce.init({
-                    selector: '#' + this.editorId,
-                    height: 150,
-                    menubar: false,
-                    skin: isDark ? 'oxide-dark' : 'oxide',
-                    content_css: isDark ? 'dark' : 'default',
-                    plugins: 'code lists table link image media paste markdown autoresize',
-                    toolbar: 'undo redo | bold italic strikethrough | h1 h2 h3 | bullist numlist | link image table code | formatselect',
-                    toolbar_mode: 'floating',
-                    content_style: `body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; } img { max-width: 100%; height: auto; }`,
-                    paste_as_text: false,
-                    formats: { bold: {inline: 'strong'}, italic: {inline: 'em'}, strikethrough: {inline: 'del'} },
-                    markdown: { output: 'markdown' },
-                    statusbar: false,
-                    branding: false,
-                    setup: (editor) => {
-                        this.editor = editor;
-                        editor.on('init', () => {
-                            editor.setContent(this.section.instructions || '');
-                        });
-                        editor.on('change keyup', () => {
-                            this.section.instructions = editor.getContent();
-                        });
-                        editor.on('blur', () => {
-                            this.section.instructions = editor.getContent();
-                        });
-                    },
-                });
-            });
-        },
-
-        syncName(idx) {
-            this.editorId = 'section-instructions-' + idx;
-        },
-    };
-}
-
 function templateForm() {
     const tree = @json($hierarchyTree);
 
     @if($template)
     const existing = {
-        groupId:     {{ $template->academic_group_id ?? 'null' }},
-        levelId:     {{ $template->academic_level_id ?? 'null' }},
-        subjectId:   {{ $template->academic_subject_id }},
-        topicIds:    @json(array_map('intval', $template->topic_ids ?? [])),
-        subtopicIds: @json(array_map('intval', $template->subtopic_ids ?? [])),
-        sections:    @json($template->sections_config ?? []),
+        groupId:   {{ $template->academic_group_id ?? 'null' }},
+        levelId:   {{ $template->academic_level_id ?? 'null' }},
+        subjectId: {{ $template->academic_subject_id }},
+        sections:  @json($template->sections_config ?? []),
     };
     @else
     const existing = null;
@@ -400,15 +429,18 @@ function templateForm() {
     return {
         tree,
 
-        selectedGroupId:     '',
-        selectedLevelId:     '',
-        selectedSubjectId:   '',
-        selectedTopicIds:    [],
-        selectedSubtopicIds: [],
+        selectedGroupId:   '',
+        selectedLevelId:   '',
+        selectedSubjectId: '',
 
-        sections: existing ? existing.sections : [
-            { title: '', instructions: '', question_type: 'multiple_choice', question_count: 10, marks_per_question: 1, is_randomized: false }
-        ],
+sections: existing ? existing.sections.map((s, i) => ({
+    ...s,
+    _id: `section-${i}-${Date.now()}`,
+    topic_ids:    (s.topic_ids ?? []).map(String),
+    subtopic_ids: (s.subtopic_ids ?? []).map(String),
+})) : [
+    { _id: `section-0-${Date.now()}`, title: '', instructions: '', question_type: 'multiple_choice', question_count: 10, marks_per_question: 1, is_randomized: false, topic_ids: [], subtopic_ids: [] }
+],
 
         init() {
             if (!existing) return;
@@ -419,23 +451,10 @@ function templateForm() {
                     this.selectedLevelId = String(existing.levelId);
                     this.$nextTick(() => {
                         this.selectedSubjectId = String(existing.subjectId);
-                        this.$nextTick(() => {
-                            this.selectedTopicIds = existing.topicIds.map(String);
-                            this.$nextTick(() => {
-                                this.selectedSubtopicIds = existing.subtopicIds.map(String);
-                            });
-                        });
                     });
                 });
             } else {
-                // If no group/level, just set subject directly
                 this.selectedSubjectId = String(existing.subjectId);
-                this.$nextTick(() => {
-                    this.selectedTopicIds = existing.topicIds.map(String);
-                    this.$nextTick(() => {
-                        this.selectedSubtopicIds = existing.subtopicIds.map(String);
-                    });
-                });
             }
         },
 
@@ -448,9 +467,9 @@ function templateForm() {
         get availableTopics() {
             return this.subjects.find(s => String(s.id) === String(this.selectedSubjectId))?.topics ?? [];
         },
-        get availableSubtopics() {
+        sectionSubtopics(section) {
             return this.availableTopics
-                .filter(t => this.selectedTopicIds.includes(String(t.id)))
+                .filter(t => section.topic_ids.includes(String(t.id)))
                 .flatMap(t => t.subtopics ?? []);
         },
 
@@ -461,6 +480,10 @@ function templateForm() {
                 question_count: 10,
                 marks_per_question: 1,
                 is_randomized: false,
+                topic_ids: [],
+                subtopic_ids: [],
+                insert_blank_page: false,
+                blank_page_text: '',
             });
         },
         removeSection(idx) {
