@@ -275,8 +275,8 @@
                                      x-transition
                                      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                                     <div class="flex items-start space-x-4">
-                                        @if($book->author->user->avatar)
-                                            <img src="{{ $book->author->user->avatar }}"
+                                        @if($book->author?->user?->avatar)
+                                            <img src="{{ $book->author?->user?->avatar }}"
                                                  alt="{{ $book->author_name }}"
                                                  class="w-20 h-20 rounded-full object-cover">
                                         @else
@@ -291,9 +291,9 @@
                                             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
                                                 {{ $book->author_name }}
                                             </h3>
-                                            @if($book->author->bio)
+                                            @if($book->author?->bio)
                                                 <p class="mt-2 text-gray-600 dark:text-gray-400">
-                                                    {{ $book->author->bio }}
+                                                    {{ $book->author?->bio }}
                                                 </p>
                                             @endif
                                         </div>
