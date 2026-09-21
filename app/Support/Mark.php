@@ -8,7 +8,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Wireable;
 
-class Mark implements Castable, Wireable
+class  Mark implements Castable, Wireable
 {
     public ?string $summary;
     public ?HtmlString $html;
@@ -19,43 +19,43 @@ class Mark implements Castable, Wireable
         $this->html = is_string($down) ? new HtmlString($down) : null;
     }
 
-public static function fromArray(?array $array)
-{
-    if (!is_array($array)) {
-        return new static(null, null);
+    public static function fromArray(?array $array)
+    {
+        if (!is_array($array)) {
+            return new static(null, null);
+        }
+
+        // Explicit opt-in: caller supplies raw markdown and wants it rendered
+        // server-side, rather than trusting a client-computed 'down' value.
+        if (array_key_exists('markdown', $array) && is_string($array['markdown'])) {
+            return static::fromMarkdown($array['markdown']);
+        }
+
+        return new static($array['up'] ?? null, $array['down'] ?? null);
     }
 
-    // Explicit opt-in: caller supplies raw markdown and wants it rendered
-    // server-side, rather than trusting a client-computed 'down' value.
-    if (array_key_exists('markdown', $array) && is_string($array['markdown'])) {
-        return static::fromMarkdown($array['markdown']);
+    public static function fromMarkdown(?string $markdown): static
+    {
+        if (is_null($markdown) || trim($markdown) === '') {
+            return new static(null, null);
+        }
+
+        return new static($markdown, app(MarkdownMathService::class)->render($markdown));
     }
-
-    return new static($array['up'] ?? null, $array['down'] ?? null);
-}
-
-public static function fromMarkdown(?string $markdown): static
-{
-    if (is_null($markdown) || trim($markdown) === '') {
-        return new static(null, null);
-    }
-
-    return new static($markdown, app(MarkdownMathService::class)->render($markdown));
-}
 
     public static function fromString(?string $string)
     {
         if (is_null($string) || $string === '') {
             return new static(null, null);
         }
-        
+
         $decoded = json_decode($string, true);
-        
+
         // If it decodes to a valid array, use it
         if (is_array($decoded)) {
             return static::fromArray($decoded);
         }
-        
+
         // Otherwise, treat the plain string as the 'down' (HTML) value
         // and automatically generate the 'up' (plain text summary) value
         return new static(Str::words(strip_tags($string), 20), $string);
@@ -86,8 +86,7 @@ public static function fromMarkdown(?string $markdown): static
 
     public static function castUsing(array $arguments)
     {
-        return new class implements CastsAttributes
-        {
+        return new class implements CastsAttributes {
             public function get($model, string $key, $value, array $attributes)
             {
                 return is_null($value) ? $value : Mark::fromString($value);
@@ -111,15 +110,16 @@ public static function fromMarkdown(?string $markdown): static
                         // FIX: Use 'Mark' explicitly, not 'static', to avoid anonymous class resolution
                         return (new Mark(null, null))->toString();
                     }
-                    
+
                     $decoded = json_decode($value, true);
                     if (is_array($decoded)) {
                         return Mark::fromArray($decoded)->toString();
                     }
-                    
-                    // Treat plain string as the 'down' (HTML) value
-                    // FIX: Use 'Mark' explicitly
-                    return (new Mark(Str::words(strip_tags($value), 20), $value))->toString();
+
+                    // Treat plain string as raw markdown and actually render it — 'down'
+                    // must always be genuinely-rendered HTML, never a lie downstream
+                    // consumers (prose-content, dompdf, Browsershot) take on faith.
+                    return Mark::fromMarkdown($value)->toString();
                 }
 
                 // 4. Null submitted

@@ -335,19 +335,91 @@
             min-height: 5mm;
             padding-bottom: 1mm;
         }
+        +        /* Uploaded PDF front page (mode: upload) — each source page rendered as-is */
+       .front-page-pdf {
+            page-break-after: always;
+            text-align: center;
+        }
+        .front-page-pdf-img {
+            width: 180mm;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .identity-section {
+            text-align: center;
+            padding-bottom: 8mm;
+            margin-bottom: 8mm;
+            border-bottom: 1px solid #000;
+        }
+        .identity-logo { max-height: 18mm; margin-bottom: 3mm; }
+        .identity-line { font-size: {{ ($fontSize ?? 11) + 1 }}pt; font-weight: 600; margin-bottom: 1.5mm; }
+        .identity-pretext { font-weight: 400; color: #333; }
+        .identity-section {
+            text-align: center;
+            padding-bottom: 8mm;
+            margin-bottom: 8mm;
+            border-bottom: 1px solid #000;
+        }
+        .identity-row {
+            display: table;
+            margin: 0 auto 2mm auto;
+        }
+        .identity-row:last-child { margin-bottom: 0; }
+        .identity-row-cell {
+            display: table-cell;
+            vertical-align: middle;
+            padding: 0 3mm;
+        }
+        .identity-logo { max-height: 18mm; }
+        .identity-line { font-weight: 600; }
+        .identity-pretext { font-weight: 400; color: #333; }
     </style>
 </head>
 <body>
-    {{-- Front Page if subject exam has template with front page config --}}
-      @if($subjectExam->template && !empty($subjectExam->template->front_page_config['content']))
+    {{-- Front Page if subject exam has template with front page config —
+         'upload' mode renders the uploaded PDF's own pages as-is; 'editor'
+         mode (or older templates saved before this field existed) falls
+         back to the rich text content inside the standard header frame. --}}
+    @php
+        $frontPageConfig    = $subjectExam->template->front_page_config ?? null;
+        $frontPageMode      = $frontPageConfig['mode'] ?? (!empty($frontPageConfig['content']) ? 'editor' : null);
+        $frontPagePdfImages = $frontPageMode === 'upload' ? ($frontPageConfig['attachment_pdf_images'] ?? []) : [];
+    @endphp
+
+    @if(!empty($identity['rows']))
+        <div class="identity-section">
+            @foreach($identity['rows'] as $row)
+                <div class="identity-row">
+                    @foreach($row as $item)
+                        <div class="identity-row-cell">
+                            @if($item['type'] === 'image')
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->path($item['value']) }}" class="identity-logo">
+                            @else
+                                <div class="identity-line" style="font-size: {{ $item['font_size'] ?? 14 }}pt;">
+                                    @if($item['pretext'])<span class="identity-pretext">{{ $item['pretext'] }}</span> @endif{{ $item['value'] }}
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    @if($frontPageMode === 'upload' && !empty($frontPagePdfImages))
+        @foreach($frontPagePdfImages as $imagePath)
+            <div class="front-page-pdf">
+                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->path($imagePath) }}" class="front-page-pdf-img">
+            </div>
+        @endforeach
+    @elseif($frontPageMode === 'editor' && !empty($frontPageConfig['content']))
         <div class="front-page">
             <div class="front-page-frame">
-                <div class="front-page-content">
-                    @if(!empty($subjectExam->template->front_page_config['content']))
-                        <div class="fp-block fp-richtext">
-                            {!! $subjectExam->template->front_page_config['content'] !!}
-                        </div>
-                    @endif
+               <div class="front-page-content">
+                   <div class="fp-block fp-richtext">
+                       {!! $frontPageConfig['content'] !!}
+                    </div>
                 </div>
             </div>
         </div>
@@ -381,7 +453,6 @@
                 <div class="question-header">
                     <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
-{{--                        @dd($question)--}}
                         <x-ui.latex :display="true" :content="$question->question_text" inline="true" />
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>

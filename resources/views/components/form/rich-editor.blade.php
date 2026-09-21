@@ -16,13 +16,16 @@
         $mark = \App\Support\Mark::fromArray($mark);
     }
 
-    $down = $mark instanceof \App\Support\Mark ? ($mark->down ?? '') : (string) $mark;
-    $up = $mark instanceof \App\Support\Mark ? ($mark->up ?? '') : '';
+// The editor's local "down" var means "current raw text in the box" —
+    // that's Mark's `up` (raw source). Never seed it from Mark's `down`
+    // (rendered HTML) — that was the load-side half of the bug.
+    $down = $mark instanceof \App\Support\Mark ? ($mark->up ?? '') : (string) $mark;
+    $up = ''; // regenerated fresh by updatePreview() on init — never trust a stored client render
 @endphp
 
 <section>
-<div class="space-y-1"
-     x-data="{
+    <div class="space-y-1"
+         x-data="{
         preview: false,
         down: @js($down),
         up: @js($up),
@@ -159,7 +162,7 @@ if (this.livewireModel && window.Livewire) {
             }
         }
      }"
-     x-init="
+         x-init="
         initEditor();
         updatePreview();
         $watch('down', (newValue) => {
@@ -170,7 +173,7 @@ if (this.livewireModel && window.Livewire) {
 
             {{-- 🌟 FIX: Only compile Livewire sync logic if we are inside a Livewire component --}}
 
-        // LIVWIRE SYNC: Push changes to Livewire state with a 500ms debounce
+        // LIVEWIRE SYNC: Push changes to Livewire state with a 500ms debounce
 if (livewireModel && window.Livewire) {
     clearTimeout(window['lw_sync_' + editorId]);
     window['lw_sync_' + editorId] = setTimeout(() => {
@@ -180,60 +183,82 @@ if (livewireModel && window.Livewire) {
 
         });
      "
-     x-effect="updatePreview()"
-     wire:ignore
-     :data-editor-id="editorId">
+         x-effect="updatePreview()"
+         wire:ignore
+         :data-editor-id="editorId">
 
-    <label class="block text-sm tracking-tighter font-medium text-gray-700 dark:text-gray-300">
-        {{ $label ?? ucfirst($name) }}
-        @if(!empty($required)) <span class="text-red-500">*</span> @endif
-    </label>
+        <label class="block text-sm tracking-tighter font-medium text-gray-700 dark:text-gray-300">
+            {{ $label ?? ucfirst($name) }}
+            @if(!empty($required))
+                <span class="text-red-500">*</span>
+            @endif
+        </label>
 
-    @if(!empty($info))
-        <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{ $info }}</p>
-    @endif
+        @if(!empty($info))
+            <p class="text-xs tracking-tight !-mt-0 pb-1 text-gray-500 dark:text-gray-400">{{ $info }}</p>
+        @endif
 
-    <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-        <div class="bg-gray-50 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 flex items-center">
-            <div class="flex">
-                <button type="button" x-on:click="preview = false"
-                    x-bind:class="!preview ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 border-b-0 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'"
-                    class="px-4 py-2 text-sm font-medium border-r transition-colors duration-200">Write</button>
-                <button type="button" x-on:click="preview = true; updatePreview();"
-                    x-bind:class="preview ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 border-b-0 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'"
-                    class="px-4 py-2 text-sm font-medium transition-colors duration-200">Preview</button>
-            </div>
-            <div class="ml-auto px-4 py-2">
-                <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span>LaTeX: $formula$ or $$formula$$</span>
+        <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+            <div class="bg-gray-50 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 flex items-center">
+                <div class="flex">
+                    <button type="button" x-on:click="preview = false"
+                            x-bind:class="!preview ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 border-b-0 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'"
+                            class="px-4 py-2 text-sm font-medium border-r transition-colors duration-200">Write
+                    </button>
+                    <button type="button" x-on:click="preview = true; updatePreview();"
+                            x-bind:class="preview ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 border-b-0 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'"
+                            class="px-4 py-2 text-sm font-medium transition-colors duration-200">Preview
+                    </button>
+                </div>
+                <div class="ml-auto px-4 py-2">
+                    <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <span>LaTeX: $formula$ or $$formula$$</span>
+                    </div>
                 </div>
             </div>
+
+            <div x-show="!preview" class="bg-white dark:bg-gray-800">
+                    <textarea x-bind:id="editorId" wire:key="{{ $editorId }}" name="{{ $name }}[markdown]"
+                              x-model="down" class="w-full border-0 focus:ring-0 dark:bg-gray-800 dark:text-white"
+                              style="min-height: {{ $height }}px; resize: vertical;"></textarea>
+            </div>
+
+            <div x-show="preview" x-html="up"
+                 class="markdown-preview markdown-body bg-white dark:bg-gray-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
+                 style="display: none; min-height: {{ $height }}px;"></div>
         </div>
 
-        <div x-show="!preview" class="bg-white dark:bg-gray-800">
-            <textarea x-bind:id="editorId"  wire:key="{{ $editorId }}" name="{{ $name }}[down]" x-model="down"
-                class="w-full border-0 focus:ring-0 dark:bg-gray-800 dark:text-white"
-                style="min-height: {{ $height }}px; resize: vertical;"></textarea>
-        </div>
+        <textarea x-model="up" x-bind:id="name + '_up'" class="hidden"></textarea>
 
-        <div x-show="preview" x-html="up"
-            class="markdown-preview markdown-body bg-white dark:bg-gray-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
-            style="display: none; min-height: {{ $height }}px;"></div>
+        @error($name.'.down')
+        <div class="text-xs font-medium text-red-600 dark:text-red-400 mt-1">{{ $message }}</div>
+        @enderror
     </div>
 
-    <textarea x-model="up" x-bind:id="name + '_up'" name="{{ $name }}[up]" class="hidden"></textarea>
+    <style>
+        .katex {
+            font-size: 1.1em;
+        }
 
-    @error($name.'.down')
-        <div class="text-xs font-medium text-red-600 dark:text-red-400 mt-1">{{ $message }}</div>
-    @enderror
-</div>
+        .katex-display {
+            margin: 1em 0;
+            text-align: center;
+        }
 
-<style>
-    .katex { font-size: 1.1em; }
-    .katex-display { margin: 1em 0; text-align: center; }
-    .dark .katex { color: #e5e7eb; }
-    .dark .katex .mord { color: #e5e7eb; }
-    .dark .katex .mbin, .dark .katex .mrel, .dark .katex .mop { color: #9ca3af; }
-</style>
+        .dark .katex {
+            color: #e5e7eb;
+        }
+
+        .dark .katex .mord {
+            color: #e5e7eb;
+        }
+
+        .dark .katex .mbin, .dark .katex .mrel, .dark .katex .mop {
+            color: #9ca3af;
+        }
+    </style>
 </section>

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\Books\BookPdfViewerController;
+use App\Http\Controllers\Books\BookPdfJsAnnotationController;
 use App\Http\Controllers\BookProgressController;
 use App\Http\Controllers\BookSubscriptionController;
 use App\Livewire\Learning\BookQuizInterface;
@@ -73,4 +75,25 @@ Route::middleware(['auth'])->group(function () {
 
     // Learning/Quiz Routes (Book-related)
     Route::get('/learning/quiz/{bookId?}', BookQuizInterface::class)->middleware('token.subscription')->name('learning.quiz');
+});
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('books/{book}/pdf-read', [BookPdfViewerController::class, 'read'])
+        ->name('books.pdf.read');
+
+    Route::get('books/{book}/pdf-file', [BookPdfViewerController::class, 'streamFile'])
+        ->middleware('signed')
+        ->name('books.pdf.stream');
+});
+
+
+
+Route::middleware(['auth'])->prefix('books/{book}')->name('books.pdfjs-annotations.')->group(function () {
+    Route::get('/pdfjs-annotations', [BookPdfJsAnnotationController::class, 'index'])->name('index');
+    Route::post('/pdfjs-annotations/sync', [BookPdfJsAnnotationController::class, 'sync'])->name('sync');
+    Route::get('/pdfjs-annotations/{annotation}/comments', [BookPdfJsAnnotationController::class, 'comments'])->name('comments.index');
+    Route::post('/pdfjs-annotations/{annotation}/comments', [BookPdfJsAnnotationController::class, 'storeComment'])->name('comments.store');
+    Route::delete('/pdfjs-annotations/{annotation}/comments/{comment}', [BookPdfJsAnnotationController::class, 'destroyComment'])->name('comments.destroy');
+    Route::post('/pdfjs-annotations/{annotation}/resolve', [BookPdfJsAnnotationController::class, 'resolve'])->name('resolve');
 });

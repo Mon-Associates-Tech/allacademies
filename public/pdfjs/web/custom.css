@@ -1,0 +1,54 @@
+/* Hide ALL Print and Download buttons with maximum specificity */
+#printButton,
+#downloadButton,
+#secondaryPrint,
+#secondaryDownload,
+#print,
+#download,
+.toolbarButton#print,
+.toolbarButton#download,
+.toolbarButton#printButton,
+.toolbarButton#downloadButton,
+[data-l10n-id="print"],
+[data-l10n-id="download"],
+[data-l10n-id="pdfjs-print-button"],
+[data-l10n-id="pdfjs-download-button"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Hide the entire toolbar if you want (optional) */
+/*
+.toolbar {
+    display: none !important;
+}
+*/
+
+/* Hide secondary toolbar buttons */
+.secondaryToolbarButton {
+    /* Keep other secondary buttons visible */
+}
+
+#secondaryPrint,
+#secondaryDownload,
+.secondaryToolbarButton[data-l10n-id="secondaryPrint"],
+.secondaryToolbarButton[data-l10n-id="secondaryDownload"],
+.secondaryToolbarButton[data-l10n-id="pdfjs-secondary-print-button"],
+.secondaryToolbarButton[data-l10n-id="pdfjs-secondary-download-button"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}

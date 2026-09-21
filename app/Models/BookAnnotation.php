@@ -23,6 +23,9 @@ class BookAnnotation extends Model
         'width_pct',
         'height_pct',
         'color',
+        'external_id',
+        'source',
+        'book_id',
         'resolved_at',
         'resolved_by',
     ];

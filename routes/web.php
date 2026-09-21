@@ -436,6 +436,11 @@ Route::get('/volta/{any?}', function () {
     return response()->file(public_path('volta/index.html'));
 })->where('any', '.*')->name('volta');
 
+
+Route::get('/playground', function () {
+    return view('playground');
+})->name('playground')->middleware(['auth']);
+
 /*
 |--------------------------------------------------------------------------
 | Include Additional Route Files

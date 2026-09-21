@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class MockExamTemplateController extends Controller
+class MockExamTemplateController1 extends Controller
 {
     public function __construct(
         private readonly MockExamCreationService $creationService

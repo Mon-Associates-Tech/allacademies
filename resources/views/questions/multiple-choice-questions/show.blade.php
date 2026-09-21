@@ -71,7 +71,7 @@
                     <!-- Question Text -->
                     <div class="prose dark:prose-invert max-w-none p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600">
                         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Question</h3>
-                         <x-ui.latex :content="$multipleChoiceQuestion->question->up" display="true" class="prose dark:prose-invert max-w-none" />
+                         <x-ui.latex :content="$multipleChoiceQuestion->question->down" display="true" class="prose dark:prose-invert max-w-none" />
 
                     </div>
 

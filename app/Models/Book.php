@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Log;
 use setasign\Fpdi\Fpdi;
@@ -137,7 +138,7 @@ class Book extends Model
     public function getCoverImageAttribute(): string
     {
         if ($this->attributes['cover_image']) {
-            return asset('storage/'.$this->attributes['cover_image']);
+            return asset('storage/' . $this->attributes['cover_image']);
         }
         $sampleCovers = [
             'images/book-cover.png',
@@ -151,7 +152,7 @@ class Book extends Model
     public function getContentUrlAttribute(): string
     {
         if ($this->attributes['content_url']) {
-            return asset('storage/'.$this->attributes['content_url']);
+            return asset('storage/' . $this->attributes['content_url']);
         }
 
         return asset('sample.pdf');
@@ -161,7 +162,7 @@ class Book extends Model
     {
         // If we have an existing sample URL, return it
         if ($this->attributes['sample_url']) {
-            return asset('storage/'.$this->attributes['sample_url']);
+            return asset('storage/' . $this->attributes['sample_url']);
         }
 
         // If no sample exists but we have a full PDF and table of contents, try to generate one
@@ -171,7 +172,7 @@ class Book extends Model
                 // Update the model with the generated sample
                 $this->update(['sample_url' => $generatedSample]);
 
-                return asset('storage/'.$generatedSample);
+                return asset('storage/' . $generatedSample);
             }
         }
 
@@ -185,7 +186,7 @@ class Book extends Model
     private function shouldGenerateSample(): bool
     {
         return $this->attributes['content_url']
-            && ! $this->attributes['sample_url'];
+            && !$this->attributes['sample_url'];
     }
 
     /**
@@ -194,7 +195,7 @@ class Book extends Model
     private function generateSampleFromFullPdf(): ?string
     {
         // Check if we have what we need
-        if (! $this->shouldGenerateSample()) {
+        if (!$this->shouldGenerateSample()) {
             return null;
         }
 
@@ -203,7 +204,7 @@ class Book extends Model
             $fullPdfPath = Storage::disk('public')->path($this->attributes['content_url']);
 
             // Check if the file exists
-            if (! file_exists($fullPdfPath)) {
+            if (!file_exists($fullPdfPath)) {
                 return null;
             }
 
@@ -212,7 +213,7 @@ class Book extends Model
 
             // Get the first chapter pages
             $firstChapter = $this->table_of_contents[0] ?? null;
-            if (! $firstChapter) {
+            if (!$firstChapter) {
                 return null;
             }
 
@@ -235,8 +236,8 @@ class Book extends Model
             }
 
             // Generate a unique filename for the sample
-            $filename = 'sample_'.$this->id.'_'.time().'.pdf';
-            $samplePath = 'book-samples/'.$filename;
+            $filename = 'sample_' . $this->id . '_' . time() . '.pdf';
+            $samplePath = 'book-samples/' . $filename;
 
             // Save the sample PDF
             $pdfContent = $pdf->Output('', 'S');
@@ -245,13 +246,13 @@ class Book extends Model
             return $samplePath;
         } catch (Exception $e) {
             // Log the error but don't break the flow
-            Log::error('Error extracting sample PDF for book ID '.$this->id.': '.$e->getMessage());
+            Log::error('Error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
 
             // Return null to indicate failure, but don't throw exception
             return asset('sample.pdf');
         } catch (Throwable $e) {
             // Catch any other errors (like parse errors)
-            Log::error('Critical error extracting sample PDF for book ID '.$this->id.': '.$e->getMessage());
+            Log::error('Critical error extracting sample PDF for book ID ' . $this->id . ': ' . $e->getMessage());
 
             return null;
         }
@@ -342,22 +343,22 @@ class Book extends Model
 
     public function getFormattedSubscriptionFeeAttribute(): string
     {
-        return 'GHS '.number_format($this->annual_subscription_fee, 2);
+        return 'GHS ' . number_format($this->annual_subscription_fee, 2);
     }
 
     public function getSubscriptionConditionsAttribute()
     {
         return $this->attributes['subscription_conditions'] ??
-            "1. Subscription is valid for one year from payment date\n".
-            "2. Book content is for reading only - no downloading, copying or printing allowed\n".
-            "3. Access will be revoked upon subscription expiry\n".
-            "4. Subscription is non-refundable\n".
+            "1. Subscription is valid for one year from payment date\n" .
+            "2. Book content is for reading only - no downloading, copying or printing allowed\n" .
+            "3. Access will be revoked upon subscription expiry\n" .
+            "4. Subscription is non-refundable\n" .
             '5. Content is protected by copyright laws';
     }
 
     public function getIsFreeAttribute(): bool
     {
-        return ! $this->annual_subscription_fee || $this->annual_subscription_fee == 0;
+        return !$this->annual_subscription_fee || $this->annual_subscription_fee == 0;
     }
 
     public function scopeFree($query)
@@ -448,7 +449,7 @@ class Book extends Model
         // Check if user hasn't already reviewed this book
         $existingReview = $this->reviews()->where('user_id', $userId)->exists();
 
-        return ! $existingReview;
+        return !$existingReview;
     }
 
     /**
@@ -485,15 +486,15 @@ class Book extends Model
         $readingTimeHours = $readingTimeMinutes / 60;
 
         if ($readingTimeHours < 1) {
-            return round($readingTimeMinutes).' minutes';
+            return round($readingTimeMinutes) . ' minutes';
         } else {
             $hours = floor($readingTimeHours);
             $minutes = round(($readingTimeHours - $hours) * 60);
 
             if ($minutes == 0) {
-                return $hours.' hour'.($hours > 1 ? 's' : '');
+                return $hours . ' hour' . ($hours > 1 ? 's' : '');
             } else {
-                return $hours.'h '.$minutes.'m';
+                return $hours . 'h ' . $minutes . 'm';
             }
         }
     }
@@ -527,7 +528,7 @@ class Book extends Model
 
     public function getTableOfContentsAttribute($value)
     {
-        if (! empty($value)) {
+        if (!empty($value)) {
             return is_string($value) ? json_decode($value, true) : $value;
         }
 
@@ -665,4 +666,102 @@ class Book extends Model
     {
         return $this->hasMany(Note::class);
     }
+
+    public function getBookStatus()
+    {
+
+
+        // Check if book is free
+        if ($this->annual_subscription_fee == 0 || is_null($this->annual_subscription_fee)) {
+            return [
+                'type' => 'free',
+                'label' => 'Added',
+                'class' => 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
+            ];
+        }
+
+        // Check individual subscription
+        $individualSubscription = BookSubscription::where('user_id', Auth::id())
+            ->where('book_id', $this->id)
+            ->where('status', 'active')
+            ->first();
+
+        if ($individualSubscription) {
+            return [
+                'type' => 'subscribed',
+                'label' => 'Subscribed',
+                'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
+            ];
+        }
+
+        // Check pending payment
+        $pendingSubscription = BookSubscription::where('user_id', Auth::id())
+            ->where('book_id', $this->id)
+            ->where('status', 'pending_payment')
+            ->first();
+
+        if ($pendingSubscription) {
+            return [
+                'type' => 'pending',
+                'label' => 'Pending Payment',
+                'class' => 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-100',
+            ];
+        }
+
+        // Check group subscription
+        $student = Auth::user()->student;
+        if ($student && $student->studentGroup) {
+            $groupSubscription = $student->studentGroup->subscriptions()
+                ->where('book_id', $this->id)
+                ->where('status', 'active')
+                ->first();
+
+            if ($groupSubscription) {
+                return [
+                    'type' => 'group_subscribed',
+                    'label' => 'Group Access',
+                    'class' => 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100',
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    public function hasBookAccess($bookId)
+    {
+        $user = Auth::user();
+        $student = $user->student;
+
+        // Check individual subscription
+        $hasIndividualSubscription = BookSubscription::where('user_id', $user->id)
+            ->where('book_id', $bookId)
+            ->where('status', 'active')
+            ->exists();
+
+        if ($hasIndividualSubscription) {
+            return 'subscribed';
+        }
+
+        // Check group subscription if student has a group
+        if ($student && $student->studentGroup) {
+            $hasGroupSubscription = $student->studentGroup->subscriptions()
+                ->where('book_id', $bookId)
+                ->where('status', 'active')
+                ->exists();
+
+            if ($hasGroupSubscription) {
+                return 'group_subscribed';
+            }
+        }
+
+        // Check if book is free (no subscription fee required)
+        $book = Book::find($bookId);
+        if ($book && ($book->annual_subscription_fee == 0 || is_null($book->annual_subscription_fee))) {
+            return 'free';
+        }
+
+        return false;
+    }
+
 }

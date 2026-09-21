@@ -14,7 +14,9 @@
 <div wire:ignore>
     @if($label)
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ $label }}@if($required) <span class="text-red-500">*</span>@endif
+            {{ $label }}@if($required)
+                <span class="text-red-500">*</span>
+            @endif
         </label>
     @endif
     @if($info)
@@ -24,52 +26,55 @@
 </div>
 
 <script>
-(function () {
-    const editorId  = @js($editorId);
-    const initial   = @js($content);
-    const lwProp    = @js($livewire);
-    const height    = @js($height);
-    const isDark    = document.documentElement.classList.contains('dark');
+    (function () {
+        const editorId = @js($editorId);
+        const initial = @js($content);
+        const lwProp = @js($livewire);
+        const height = @js($height);
+        const isDark = document.documentElement.classList.contains('dark');
 
-    function boot() {
-        if (typeof tinymce === 'undefined' || !document.getElementById(editorId)) {
-            return setTimeout(boot, 80);
+        function boot() {
+            if (typeof tinymce === 'undefined' || !document.getElementById(editorId)) {
+                return setTimeout(boot, 80);
+            }
+
+            tinymce.init({
+                selector: '#' + editorId,
+                height: height,
+                menubar: false,
+                skin: isDark ? 'oxide-dark' : 'oxide',
+                content_css: isDark ? 'dark' : 'default',
+                plugins: 'code lists table link image media paste autoresize',
+                toolbar: 'undo redo | bold italic strikethrough | fontsizeselect fontsize | alignleft aligncenter alignright alignjustify | h1 h2 h3 | bullist numlist | link image table code | formatselect',
+                fontsize_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt',
+                font_size_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt',
+
+                toolbar_mode: 'floating',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; }',
+                paste_as_text: false,
+                statusbar: false,
+                branding: false,
+                setup(editor) {
+                    editor.on('init', () => editor.setContent(initial || ''));
+
+                    const sync = () => {
+                        const el = document.getElementById(editorId);
+                        const wireEl = el?.closest('[wire\\:id]') || el?.getRootNode()?.host?.closest('[wire\\:id]');
+                        const wireId = wireEl?.getAttribute('wire:id');
+                        const component = wireId ? Livewire.find(wireId) : null;
+                        if (component) component.set(lwProp, editor.getContent());
+                    };
+
+                    editor.on('blur', sync);
+                    editor.on('change', sync);
+                },
+            });
         }
 
-        tinymce.init({
-            selector: '#' + editorId,
-            height: height,
-            menubar: false,
-            skin: isDark ? 'oxide-dark' : 'oxide',
-            content_css: isDark ? 'dark' : 'default',
-            plugins: 'code lists table link image media paste autoresize',
-            toolbar: 'undo redo | bold italic strikethrough | h1 h2 h3 | bullist numlist | link image table code | formatselect',
-            toolbar_mode: 'floating',
-            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; }',
-            paste_as_text: false,
-            statusbar: false,
-            branding: false,
-            setup(editor) {
-                editor.on('init', () => editor.setContent(initial || ''));
-
-                const sync = () => {
-                    const el = document.getElementById(editorId);
-                    const wireEl = el?.closest('[wire\\:id]') || el?.getRootNode()?.host?.closest('[wire\\:id]');
-                    const wireId = wireEl?.getAttribute('wire:id');
-                    const component = wireId ? Livewire.find(wireId) : null;
-                    if (component) component.set(lwProp, editor.getContent());
-                };
-
-                editor.on('blur', sync);
-                editor.on('change', sync);
-            },
-        });
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', boot);
-    } else {
-        boot();
-    }
-})();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    })();
 </script>

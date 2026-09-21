@@ -39,7 +39,7 @@ class PublicSponsorOfferList extends Component
     public function openBidModal($offerId)
     {
         if (!Auth::check()) {
-            return redirect()->route('sign-in');
+            return redirect()->route('login');
         }
 
         $this->selectedOfferId = $offerId;

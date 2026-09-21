@@ -1,4 +1,3 @@
-{{-- resources/views/components/ui/latex.blade.php --}}
 @props([
     'expression' => null, // raw TeX, e.g. "\frac{1}{2}" — skips markdown entirely
     'display' => false,   // display mode for $expression
@@ -14,12 +13,22 @@
                 this.$nextTick(() => {
                     if (typeof window.katex === 'undefined') return;
                     try {
-                        window.katex.render(@js($expression), this.$el, {
-                            displayMode: @js($display),
-                            throwOnError: false,
-                            strict: false,
-                            trust: true,
-                        });
+                        let expr = @js($expression).trim();
+                        expr = expr.replace(/^`|`$/g, '').trim();
+                        let displayMode = @js($display);
+                        if (expr.startsWith('$$') && expr.endsWith('$$')) {
+                            expr = expr.slice(2, -2).trim();
+                            displayMode = true;
+                        } else if (expr.startsWith('$') && expr.endsWith('$')) {
+                            expr = expr.slice(1, -1).trim();
+                        }
+                        window.katex.render(expr, this.$el, {
+
+                            displayMode,
+                             throwOnError: false,
+                             strict: false,
+                             trust: true,
+                         });
                     } catch (e) {
                         console.warn('KaTeX render error:', e);
                         this.$el.textContent = @js($expression);

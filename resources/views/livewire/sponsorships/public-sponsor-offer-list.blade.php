@@ -344,7 +344,7 @@
                                 </a>
                             @endif
                         @else
-                            <a href="{{ route('sign-in') }}"
+                            <a href="{{ route('login') }}"
                                class="group/btn relative block w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-center rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-xl transform hover:scale-105 mb-2">
                                 <span class="flex items-center justify-center">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

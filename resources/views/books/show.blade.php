@@ -188,219 +188,161 @@
                             </div>
                         </div>
 
+
                         <!-- Action Buttons -->
-                        <div class="mt-6 space-y-3">
+                        <div class="mt-6 space-y-4">
                             @auth
-                                <div class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Reading Progress</h4>
-                                        <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ $readingProgressPercentage }}%</span>
+                                <!-- Reading Progress Card -->
+                                <div class="p-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                            </svg>
+                                            Reading Progress
+                                        </h4>
+                                        <span class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">{{ $readingProgressPercentage }}%</span>
                                     </div>
-                                    <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div class="h-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300"
-                                             style="width: {{ $readingProgressPercentage }}%"></div>
+                                    <div class="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500 ease-out" style="width: {{ $readingProgressPercentage }}%"></div>
                                     </div>
                                     @if($userReadingProgress)
-                                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                                            Page {{ min((int) ($userReadingProgress->current_page ?? 0), max((int) ($userReadingProgress->total_pages ?: $book->pages ?: 1), 1)) }}
-                                            of {{ (int) ($userReadingProgress->total_pages ?: $book->pages ?: 1) }}
-                                        </p>
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                                            Last read {{ optional($userReadingProgress->last_read_at)->diffForHumans() ?? 'recently' }}
-                                        </p>
+                                        <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                            <span>Page {{ min((int) ($userReadingProgress->current_page ?? 0), max((int) ($userReadingProgress->total_pages ?: $book->pages ?: 1), 1)) }} of {{ (int) ($userReadingProgress->total_pages ?: $book->pages ?: 1) }}</span>
+                                            <span>{{ optional($userReadingProgress->last_read_at)->diffForHumans() ?? 'Recently' }}</span>
+                                        </div>
                                     @else
-                                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">No reading activity yet.</p>
+                                        <p class="mt-3 text-xs text-gray-500 dark:text-gray-400 italic">No reading activity yet. Start reading!</p>
                                     @endif
                                 </div>
                             @endauth
 
                             <!-- Primary Action -->
-                            @if($canRead)
-
-                                <x-button.primary
-                                    onclick="Livewire.dispatch('openPDFReader', {bookId: {{ $book->id }}})"
-                                    class="px-4 py-3 flex w-full  text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    <span>Read Now</span>
-                                </x-button.primary>
-
-                            @else
-                                <form method="POST"
-                                      action="{{ route('books.subscribe.store', ['book' => $book]) }}">
-                                    @csrf
-                                    <button type="submit"
-                                            class="flex items-center text-sm justify-center w-full text-nowrap px-6 py-4 text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
-                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                            <div class="space-y-3">
+                                @if($canRead)
+                                    <a href="{{ url()->temporarySignedRoute('books.pdf.read', now()->addMinutes(15), ['book' => $book]) }}"
+                                       class="group relative flex items-center justify-center w-full px-6 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900">
+                                        <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                         </svg>
-                                        @if($book->is_free)
-                                            <span>Add to Reading List</span>
-                                        @else
-                                            <span>Subscribe - GHS {{ number_format($book->annual_subscription_fee, 2) }}/year</span>
-                                        @endif
-
-                                    </button>
-                                </form>
-                            @endif
+                                        <span>Read Now</span>
+                                    </a>
+                                @else
+                                    <form method="POST" action="{{ route('books.subscribe.store', ['book' => $book]) }}">
+                                        @csrf
+                                        <button type="submit" class="group relative flex items-center justify-center w-full px-6 py-4 text-base font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-gray-900">
+                                            <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                                            </svg>
+                                            @if($book->is_free)
+                                                <span>Add to Library</span>
+                                            @else
+                                                <span>Subscribe - GHS {{ number_format($book->annual_subscription_fee, 2) }}/yr</span>
+                                            @endif
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
 
                             <!-- Secondary Actions Grid -->
                             <div class="grid grid-cols-2 gap-3">
-                                <!-- Preview Button -->
                                 @if($book->sample_url)
-                                    <button
-                                        x-data="{}"
-                                        @click="$dispatch('open-modal', {name: 'book-preview'})"
-                                        class="flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
-                                        <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
-                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    <button @click="$dispatch('open-modal', {name: 'book-preview'})" class="flex flex-col items-center justify-center gap-2 px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 group">
+                                        <svg class="w-6 h-6 text-indigo-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                         </svg>
-                                        <span class="text-sm font-medium">Preview</span>
+                                        <span class="text-xs font-semibold">Preview</span>
                                     </button>
-
                                 @endif
 
-                                <!-- Notes Button -->
-                                <button
-                                    onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: { name: 'book-notes', zIndex: 'z-[60]' } }))"
-                                    class="flex items-center justify-center px-3 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
-                                    <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none"
-                                         stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                <button onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: { name: 'book-notes', zIndex: 'z-[60]' } }))" class="flex flex-col items-center justify-center gap-2 px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 group">
+                                    <svg class="w-6 h-6 text-amber-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
-                                    <span class="text-sm font-medium">Notes</span>
+                                    <span class="text-xs font-semibold">My Notes</span>
                                 </button>
-                            </div>
-                            <!-- Open in Paint -->
-                            @if( $book->has_softcopy && $canRead)
-                                <div x-data="paintLauncher({{ $book->id }}, {{ $book->pages ?? 1 }})">
-                                    <button @click="launch()"
-                                            class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
-                                        <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                        </svg>
-                                        Open in Paint
-                                    </button>
 
-                                    <!-- Page picker modal -->
-                                    <div x-show="showPicker"
-                                         x-transition
-                                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-                                         @click.self="showPicker = false">
-                                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-80">
-                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Select Page to Open</h3>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Paint only supports images. Choose a page to convert to PNG.</p>
-                                            <div class="flex items-center gap-3 mb-6">
-                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Page:</label>
-                                                <input type="number" x-model="page" min="1" :max="totalPages"
-                                                       class="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                                <span class="text-sm text-gray-500 dark:text-gray-400">of <span x-text="totalPages"></span></span>
-                                            </div>
-                                            <div class="flex gap-3">
-                                                <button @click="openPaint()"
-                                                        :disabled="loading"
-                                                        class="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium">
-                                                    <svg x-show="loading" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                    </svg>
-                                                    <span x-text="loading ? 'Opening...' : 'Open in Paint'"></span>
-                                                </button>
-                                                <button @click="showPicker = false"
-                                                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    Cancel
-                                                </button>
+                                @if($book->has_softcopy && $canRead)
+                                    <div x-data="paintLauncher({{ $book->id }}, {{ $book->pages ?? 1 }})" class="col-span-1">
+                                        <button @click="launch()" class="w-full flex flex-col items-center justify-center gap-2 px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 group">
+                                            <svg class="w-6 h-6 text-rose-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            </svg>
+                                            <span class="text-xs font-semibold">Paint</span>
+                                        </button>
+
+                                        <!-- Page picker modal (Unchanged logic) -->
+                                        <div x-show="showPicker" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showPicker = false">
+                                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-80">
+                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Select Page to Open</h3>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Paint only supports images. Choose a page to convert to PNG.</p>
+                                                <div class="flex items-center gap-3 mb-6">
+                                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Page:</label>
+                                                    <input type="number" x-model="page" min="1" :max="totalPages" class="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                                    <span class="text-sm text-gray-500 dark:text-gray-400">of <span x-text="totalPages"></span></span>
+                                                </div>
+                                                <div class="flex gap-3">
+                                                    <button @click="openPaint()" :disabled="loading" class="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium">
+                                                        <svg x-show="loading" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                        </svg>
+                                                        <span x-text="loading ? 'Opening...' : 'Paint'"></span>
+                                                    </button>
+                                                    <button @click="showPicker = false" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endif
+                                @endif
 
-                            <!-- Share Button -->
-                            <div class="relative" x-data="{ open: false }">
-                                <button @click="open = !open"
-                                        class="flex items-center justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-                                    </svg>
-                                    Share Book
-                                </button>
-                                <div x-show="open"
-                                     @click.away="open = false"
-                                     x-transition:enter="transition ease-out duration-200"
-                                     x-transition:enter-start="opacity-0 transform scale-95"
-                                     x-transition:enter-end="opacity-100 transform scale-100"
-                                     x-transition:leave="transition ease-in duration-75"
-                                     x-transition:leave-start="opacity-100 transform scale-100"
-                                     x-transition:leave-end="opacity-0 transform scale-95"
-                                     class="absolute right-0 w-56 mt-2 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 border border-gray-200 dark:border-gray-700">
-                                    <button
-                                        @click="navigator.clipboard.writeText('{{ route('books.public', ['book' => $book]) }}'); open = false; alert('Link copied!')"
-                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
-                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor"
-                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                @if($canRead)
+                                    <a href="{{ route('learning.quiz') }}?bookId={{$book->id}}" class="flex flex-col items-center justify-center gap-2 px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 group">
+                                        <svg class="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                         </svg>
-                                        Copy Link
+                                        <span class="text-xs font-semibold">Take Quiz</span>
+                                    </a>
+                                @endif
+                            </div>
+
+                            <!-- Tertiary Actions (Share) -->
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <div class="relative" x-data="{ open: false }">
+                                    <button @click="open = !open" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                                        </svg>
+                                        Share
                                     </button>
-                                    <a href="https://twitter.com/intent/tweet?text={{ urlencode($book->title) }}&url={{ urlencode(route('books.public', $book)) }}"
-                                       target="_blank"
-                                       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                        <div class="flex items-center">
-                                            <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                                            </svg>
+
+                                    <!-- Share Dropdown (Opens upwards to prevent viewport clipping) -->
+                                    <div x-show="open"
+                                         @click.away="open = false"
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 transform scale-95"
+                                         x-transition:enter-end="opacity-100 transform scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="opacity-100 transform scale-100"
+                                         x-transition:leave-end="opacity-0 transform scale-95"
+                                         class="absolute bottom-full left-0 mb-2 w-56 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl z-50 border border-gray-200 dark:border-gray-700">
+
+                                        <button @click="navigator.clipboard.writeText('{{ route('books.public', ['book' => $book]) }}'); open = false; $dispatch('notify', {message: 'Link copied to clipboard!', type: 'success'})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors">
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            Copy Link
+                                        </button>
+                                        <a href="https://twitter.com/intent/tweet?text={{ urlencode($book->title) }}&url={{ urlencode(route('books.public', $book)) }}" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors">
+                                            <svg class="w-4 h-4 text-[#1DA1F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
                                             Share on Twitter
-                                        </div>
-                                    </a>
-                                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('books.public', $book)) }}"
-                                       target="_blank"
-                                       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                        <div class="flex items-center">
-                                            <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                            </svg>
+                                        </a>
+                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('books.public', $book)) }}" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors">
+                                            <svg class="w-4 h-4 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                                             Share on Facebook
-                                        </div>
-                                    </a>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <!-- Add to Reading List -->
-                            <button
-                                class="flex hidden items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-600">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                Add to Reading List
-                            </button>
-
-                            @if($canRead)
-                                <a href="{{ route('learning.quiz') }}?bookId={{$book->id}}"
-                                   class="flex items-center text-nowrap justify-center w-full px-4 py-3 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 group">
-                                    <svg class="w-5 h-5 mr-2 text-blue-500 group-hover:scale-110 transition-transform"
-                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                    </svg>
-                                    <span class="font-medium">Take Quiz</span>
-                                </a>
-                            @endif
                         </div>
 
 
@@ -931,19 +873,19 @@
                 },
                 openPaintWithPage(pageNum) {
                     this.loading = true;
-                    
+
                     // Validate page number
                     const page = Math.max(1, Math.min(pageNum, this.totalPages));
                     const pageIndex = page - 1;
-                    
+
                     // Construct the URL to get the PNG version of the page
                     const pngUrl = `${window.location.origin}/books/${this.bookId}/pdf-page-png?page=${pageIndex}`;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    
+
                     // Open the paint app in a new tab with the image
                     const paintUrl = `${window.location.origin}/books/${this.bookId}/paint?imageUrl=` + encodeURIComponent(pngUrl);
                     window.location.href = paintUrl;
-                    
+
                     this.loading = false;
                     this.showPicker = false;
                 },

@@ -50,19 +50,19 @@ class MarkdownMathService
         $mathExpressions = [];
         $prepared = [];
 
-    foreach ($markdownStrings as $key => $markdown) {
-        if (!is_string($markdown) || trim($markdown) === '') {
-            $prepared[$key] = '';
-            continue;
+        foreach ($markdownStrings as $key => $markdown) {
+            if (!is_string($markdown) || trim($markdown) === '') {
+                $prepared[$key] = '';
+                continue;
+            }
+
+            $text = $this->unwrapBacktickedMath($markdown);
+            $text = $this->protectFencedCode($text, $protectedCode);
+            $text = $this->extractMath($text, $mathExpressions);
+            $text = $this->restoreFencedCode($text, $protectedCode);
+
+            $prepared[$key] = $text;
         }
-
-        $text = $this->unwrapBacktickedMath($markdown);
-        $text = $this->protectFencedCode($text, $protectedCode);
-        $text = $this->extractMath($text, $mathExpressions);
-        $text = $this->restoreFencedCode($text, $protectedCode);
-
-        $prepared[$key] = $text;
-    }
 
         $renderedMath = $mathExpressions === [] ? [] : $this->safeRenderMathBatch($mathExpressions);
 
@@ -177,27 +177,4 @@ class MarkdownMathService
 
         return $decoded;
     }
-
-    /**
- * Authors frequently wrap LaTeX in single backticks (`$...$`), treating math
- * like inline code — likely a habit carried over from copy-pasting question
- * banks generated elsewhere. Strip the backticks when they exactly wrap a
- * complete math delimiter pair, so the expression reaches extractMath() as
- * plain $...$ / \(...\) / \[...\] rather than being fenced off as code.
- */
-private function unwrapBacktickedMath(string $text): string
-{
-    $patterns = [
-        '/`(\$\$.+?\$\$)`/s',
-        '/`(\\\\\[.+?\\\\\])`/s',
-        '/`(\\\\\(.+?\\\\\))`/s',
-        '/`(\$[^`$\n]+?\$)`/',
-    ];
-
-    foreach ($patterns as $pattern) {
-        $text = preg_replace($pattern, '$1', $text);
-    }
-
-    return $text;
-}
 }

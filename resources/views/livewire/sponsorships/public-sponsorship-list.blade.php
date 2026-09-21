@@ -474,7 +474,7 @@
                                             Create a Project
                                         </a>
                                     @else
-                                        <a href="{{ route('sign-in') }}"
+                                        <a href="{{ route('login') }}"
                                            class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
                                             Login to Create a Project
                                         </a>

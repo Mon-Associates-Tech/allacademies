@@ -8,8 +8,8 @@
 
             <!-- Background Image with Blur -->
             <div class="absolute inset-0">
-                <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1920&q=80" 
-                     alt="Library Background" 
+                <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1920&q=80"
+                     alt="Library Background"
                      class="w-full h-full object-cover">
                 <div class="absolute inset-0 backdrop-blur-sm bg-white/40 dark:bg-gray-900/40"></div>
             </div>
@@ -165,7 +165,7 @@
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Academic Levels</label>
                                 @livewire('common.searchable-multi-select', [
                                     'items' => $academicLevels->map(fn($l) => [
-                                        'id' => $l->id, 
+                                        'id' => $l->id,
                                         'name' => $l->name . ' (' . ($l->academicGroup->name ?? 'No Group') . ')'
                                     ])->toArray(),
                                     'selected' => request('academic_levels', []),
@@ -181,7 +181,7 @@
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Subjects</label>
                                 @livewire('common.searchable-multi-select', [
                                     'items' => $academicSubjects->map(fn($s) => [
-                                        'id' => $s->id, 
+                                        'id' => $s->id,
                                         'name' => $s->name . ' - ' . ($s->academicLevel->name ?? 'N/A') . ' (' . ($s->academicLevel->academicGroup->name ?? 'N/A') . ')'
                                     ])->toArray(),
                                     'selected' => request('academic_subjects', []),
@@ -400,10 +400,29 @@
                     @endforeach
                 </div>
 
-                <div
-                    class="mt-16 flex justify-center">
-                    {{ $books->appends(request()->query())->links() }}
-                </div>
+                    <div class="mt-16 flex flex-col items-center gap-4">
+                        <!-- Info -->
+                        <div class="text-sm text-gray-400">
+                            Page {{ $books->currentPage() }} of {{ $books->lastPage() }}
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex flex-row gap-3">
+                            @if (!$books->onFirstPage())
+                                <a href="{{ $books->previousPageUrl() }}"
+                                   class="px-6 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-center">
+                                    ← Previous
+                                </a>
+                            @endif
+
+                            @if ($books->hasMorePages())
+                                <a href="{{ $books->nextPageUrl() }}"
+                                   class="px-6 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-center">
+                                    Next →
+                                </a>
+                            @endif
+                        </div>
+                    </div>
             @else
                 <div class="text-center py-24">
                     <div class="max-w-md mx-auto">
@@ -419,7 +438,7 @@
                         </div>
 
                         <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">No books found</h3>
-                        
+
                         @php
                             $activeFilters = [];
                             if(request('search')) $activeFilters[] = 'Search: "' . request('search') . '"';
@@ -443,11 +462,11 @@
                                 if($subjectNames) $activeFilters[] = 'Subjects: ' . $subjectNames;
                             }
                         @endphp
-                        
+
                         <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed text-lg">
                             We couldn't find any books matching your criteria.
                         </p>
-                        
+
                         @if(count($activeFilters) > 0)
                             <div class="mb-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
                                 <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Active Filters:</p>
@@ -460,7 +479,7 @@
                                 </div>
                             </div>
                         @endif
-                        
+
                         <p class="text-gray-500 dark:text-gray-400 mb-10 text-base">
                             Try adjusting your filters or explore our collection.
                         </p>
