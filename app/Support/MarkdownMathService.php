@@ -177,4 +177,27 @@ class MarkdownMathService
 
         return $decoded;
     }
+
+    /**
+     * Authors frequently wrap LaTeX in single backticks (`$...$`), treating math
+     * like inline code — likely a habit carried over from copy-pasting question
+     * banks generated elsewhere. Strip the backticks when they exactly wrap a
+     * complete math delimiter pair, so the expression reaches extractMath() as
+     * plain $...$ / \(...\) / \[...\] rather than being fenced off as code.
+     */
+    private function unwrapBacktickedMath(string $text): string
+    {
+        $patterns = [
+            '/`(\$\$.+?\$\$)`/s',
+            '/`(\\\\\[.+?\\\\\])`/s',
+            '/`(\\\\\(.+?\\\\\))`/s',
+            '/`(\$[^`$\n]+?\$)`/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            $text = preg_replace($pattern, '$1', $text);
+        }
+
+        return $text;
+    }
 }
