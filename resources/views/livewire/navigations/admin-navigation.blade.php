@@ -220,26 +220,27 @@
         label="Examinations"
         :open="true"
     >
-        <x-app.nav-item
+{{--        <x-app.nav-item
             href="{{ route('teachers.general-exams.index') }}"
             :active="Route::is('teachers.general-exams.index')"
             icon="heroicon-o-document"
-        >Manage Exams
-        </x-app.nav-item>
 
-        <x-app.nav-item
+        >Manage Exams
+        </x-app.nav-item>--}}
+
+{{--        <x-app.nav-item
             href="{{ route('teachers.general-exams.create') }}"
             :active="Route::is('teachers.general-exams.create')"
             icon="heroicon-o-plus-circle"
             class="hidden"
         >Create Exam
-        </x-app.nav-item>
+        </x-app.nav-item>--}}
 
         <x-app.nav-item
             href="{{ route('general-exams.subscription.dashboard') }}"
             :active="Route::is('general-exams.subscription.dashboard')"
             icon="heroicon-o-ticket"
-        >Exam Subscriptions
+        >Mock Subscriptions
         </x-app.nav-item>
 
 
@@ -250,19 +251,19 @@
         >Mock Exams
         </x-app.nav-item>
 
-        <x-app.nav-item
+{{--        <x-app.nav-item
             href="{{ route('mock-exams.templates.index') }}"
             :active="Route::is('mock-exams.templates.*')"
             icon="heroicon-o-document-duplicate"
         >Mock Exam Templates
-        </x-app.nav-item>
+        </x-app.nav-item>--}}
 
         @if(auth()->user()->role === UserRole::OWNER)
             <x-app.nav-item
                 href="{{ route('admin.generate-examination') }}"
                 :active="Route::is('admin.generate-examination')"
                 icon="heroicon-o-sparkles"
-            >AI Exam Generator
+            >Exams Centre
             </x-app.nav-item>
         @endif
     </x-app.nav-section>

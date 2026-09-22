@@ -27,7 +27,20 @@ class GenerateExamination extends Component
 
     public function loadGroupedSubjects()
     {
-        $groups = AcademicGroup::with(['academicLevels.subjects'])
+        $user = auth()->user();
+        $isOwner = $user ? $user->isOwner() : false;
+
+        $groups = AcademicGroup::with(['academicLevels.subjects' => function ($query) use ($user, $isOwner) {
+            if ( !$isOwner) {
+                // Constrain subjects to only those linked to the current user's subscriptions
+                $query->whereHas('subscriptions', function ($subQuery) use ($user) {
+                    $subQuery->where('subscriber_id', $user->id);
+
+                    // Optional but recommended: Only include active/paid subscriptions
+                     $subQuery->where('status', 'paid')->where('expires_at', '>', now());
+                });
+            }
+        }])
             ->get()
             ->map(function ($group) {
                 return [
@@ -56,9 +69,16 @@ class GenerateExamination extends Component
                                 ];
                             })->toArray(),
                         ];
-                    })->toArray(),
+                    })
+                        // Filter out levels that no longer have any subjects after the subscription constraint
+                        ->filter(fn($level) => !empty($level['subjects']))
+                        ->values()
+                        ->toArray(),
                 ];
             })
+            // Filter out groups that no longer have any valid levels
+            ->filter(fn($group) => !empty($group['levels']))
+            ->values()
             ->toArray();
 
         $this->groupedSubjects = $groups;

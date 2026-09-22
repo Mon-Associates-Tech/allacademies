@@ -12,6 +12,8 @@ use App\MockExam\Controllers\MockExamSubjectExamController;
 use App\MockExam\Controllers\MockExamTakingController;
 use App\MockExam\Controllers\MockExamTemplateController;
 use App\MockExam\Controllers\MockExamUserIdentityController;
+use App\MockExam\Models\MockExamSubscriptionPayment;
+use App\MockExam\Services\MockExamSubscriptionService;
 use Illuminate\Support\Facades\Route;
 
 // ─── Instructor routes ────────────────────────────────────────────────────────
@@ -164,4 +166,59 @@ Route::prefix('pdf-render')->name('mock-exams.pdf.render.')->group(function () {
     Route::get('/subject-exam/{mockExam}/{subjectExam}', [MockExamPdfController::class, 'renderSubjectExamHtml'])
         ->name('subject-exam')
         ->middleware('signed'); // Ensures only valid, signed requests can access this
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Subscription Routes (Authentication Required)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/subscriptions')->name('mock-exams.subscription.')->group(function () {
+    // Teacher subscription dashboard
+    Route::get('/', function () {
+        return view('mock-exams.subscriptions.dashboard');
+    })->name('dashboard');
+
+    // Paystack payment callback
+    Route::get('/payment/callback', function (MockExamSubscriptionService $service) {
+        $reference = request('reference');
+        if (! $reference) {
+            return redirect()->route('mock-exams.subscription.dashboard')->with('error', 'No payment reference found.');
+        }
+
+        $payment = MockExamSubscriptionPayment::where('paystack_reference', $reference)->first();
+        if (! $payment) {
+            return redirect()->route('general-exams.subscription.dashboard')->with('error', 'Payment record not found.');
+        }
+
+        if ($payment->payment_type === 'topup') {
+            $result = $service->verifyTopUp($reference);
+        } else {
+            $result = $service->verifyAndActivate($reference);
+        }
+
+        if ($result['success']) {
+            return redirect()->route('general-exams.subscription.dashboard')->with('success', 'Payment successful! Your subscription is now active.');
+        }
+
+        return redirect()->route('general-exams.subscription.dashboard')->with('error', 'Payment could not be verified. Please contact support.');
+    })->name('payment.callback');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Owner Subscription Management Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified', 'web'])->prefix('admin/mock-exams')->name('admin.mock-exams.')->group(function () {
+    Route::get('/subscriptions', function () {
+        return view('mock-exams.subscriptions.index');
+    })->name('subscriptions');
+
+    Route::get('/pricing-tiers', function () {
+        return view('mock-exams.pricing-tiers');
+    })->name('pricing-tiers');
 });
