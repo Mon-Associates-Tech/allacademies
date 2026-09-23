@@ -42,6 +42,7 @@ class EssayQuestionController extends Controller
      */
     public function store(AcademicGroup $academicGroup, AcademicLevel $academicLevel, AcademicSubject $academicSubject, AcademicTopic $academicTopic, EssayQuestionRequest $request): RedirectResponse
     {
+        dd('store');
         $this->authorize('moderate');
         $data = $request->validated();
 

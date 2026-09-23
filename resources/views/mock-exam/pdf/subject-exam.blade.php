@@ -5,7 +5,7 @@
     <title>{{ $subjectExam->getDisplayTitle() }} - {{ $subjectExam->mockExam->title }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ public_path('vendor/katex/katex.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/katex/katex.min.css') }}">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -453,7 +453,7 @@
                 <div class="question-header">
                     <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
-                        <x-ui.latex :display="true" :content="$question->question_text" inline="true" />
+                        <x-markdown-viewer :content="$question->question_text" display="true" class="prose dark:prose-invert max-w-none" />
                     </span>
                     <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
                 </div>
@@ -466,7 +466,7 @@
                     <div class="option-item">
                         <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
                         <span class="option-text">
-                            <x-ui.latex :content="$option" inline="true" />
+                            <x-markdown-viewer :content="$option" display="true" class="prose dark:prose-invert max-w-none" />
                         </span>
                     </div>
                     @php $optionIndex++; @endphp

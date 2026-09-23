@@ -531,8 +531,6 @@
         {!! $frontPageConfig['content'] !!}
     </div>
     @endif
-    </div>
-@endif
 
 {{-- ═══════════════════════════════════════════════════════════════
      EXAM CONTENT (Questions)
@@ -618,7 +616,7 @@
                 <div class="question-header">
                     <span class="question-number">{{ $loop->iteration }}</span>
                     <span class="question-text">
-                        <x-ui.math-pdf :content="$question->question_text" inline="true"/>
+                        <x-prose-content :content="$question->question_text" inline="true"/>
                     </span>
                     <span
                         class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
@@ -632,7 +630,7 @@
                             <div class="option-item">
                                 <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
                                 <span class="option-text">
-                            <x-ui.math-pdf :content="$option" inline="true"/>
+                            <x-prose-content :content="$option" inline="true"/>
                         </span>
                             </div>
                             @php $optionIndex++; @endphp

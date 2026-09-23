@@ -90,8 +90,8 @@
                                 @foreach($multipleChoiceQuestions as $multipleChoiceQuestion)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                         <td class="px-6 py-4 whitespace-normal">
-                                            <x-ui.latex :content="$multipleChoiceQuestion->question->down" display="true" class="prose dark:prose-invert max-w-none" />
-                                        
+                                            <x-markdown-viewer :content="$multipleChoiceQuestion->question" display="true" class="prose dark:prose-invert max-w-none" />
+
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ match($multipleChoiceQuestion->difficulty_level) {

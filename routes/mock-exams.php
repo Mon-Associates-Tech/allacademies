@@ -8,6 +8,7 @@ use App\MockExam\Controllers\MockExamParticipantController;
 use App\MockExam\Controllers\MockExamPdfController;
 use App\MockExam\Controllers\MockExamProctoringController;
 use App\MockExam\Controllers\MockExamResultController;
+use App\MockExam\Controllers\MockExamSelfServeController;
 use App\MockExam\Controllers\MockExamSubjectExamController;
 use App\MockExam\Controllers\MockExamTakingController;
 use App\MockExam\Controllers\MockExamTemplateController;
@@ -82,6 +83,15 @@ Route::middleware(['web', 'auth'])
 
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
+    });
+
+
+Route::middleware(['auth', 'verified', 'web'])
+    ->prefix('dashboard/mock-exams/generate')
+    ->name('mock-exams.generate.')
+    ->group(function () {
+        Route::get('/', [MockExamSelfServeController::class, 'index'])->name('index');
+        Route::post('/{template}', [MockExamSelfServeController::class, 'generate'])->name('store');
     });
 
 // ─── Template Management Routes ───────────────────────────────────────────────

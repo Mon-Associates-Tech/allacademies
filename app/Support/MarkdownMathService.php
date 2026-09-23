@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Services\Content\HtmlContentCleaner;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use League\CommonMark\GithubFlavoredMarkdownConverter;
@@ -199,5 +200,67 @@ class MarkdownMathService
         }
 
         return $text;
+    }
+
+    /**
+     * Cache-backed render for display components (one Node call per unique string, ever).
+     */
+    public function cachedRender(string $raw): string
+    {
+        return cache()->remember(
+            'math-content:v1:' . sha1($raw),
+            now()->addDays(7),
+            fn () => $this->render($raw)
+        );
+    }
+
+    /**
+     * Warm many strings in ONE Node process call (use in the controller that builds a paper).
+     */
+    public function cachedRenderMany(array $raws): array
+    {
+        $out = [];
+        $misses = [];
+
+        foreach ($raws as $key => $raw) {
+            $cacheKey = 'math-content:v1:' . sha1($raw);
+            $out[$key] = cache()->get($cacheKey);
+            if ($out[$key] === null) {
+                $misses[$key] = $raw;
+            }
+        }
+
+        if ($misses !== []) {
+            $rendered = $this->renderMany($misses);
+            foreach ($rendered as $key => $html) {
+                cache()->put('math-content:v1:' . sha1($misses[$key]), $html, now()->addDays(7));
+                $out[$key] = $html;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Legacy HTML (Word-pasted content): clean it and render only the math inside,
+     * without running it through CommonMark (which would strip the tags/<br>s).
+     */
+    public function renderHtmlWithMath(?string $html): string
+    {
+        if (!is_string($html) || trim($html) === '') {
+            return '';
+        }
+
+        $clean = class_exists(HtmlContentCleaner::class)
+            ? app(HtmlContentCleaner::class)->clean($html)
+            : $html;
+
+        $expressions = [];
+        $text = $this->unwrapBacktickedMath($clean);
+        $text = $this->extractMath($text, $expressions);
+
+        $rendered = $expressions === [] ? [] : $this->safeRenderMathBatch($expressions);
+
+        return $this->injectMath($text, $rendered);
     }
 }

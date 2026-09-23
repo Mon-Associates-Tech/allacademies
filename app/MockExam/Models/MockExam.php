@@ -21,6 +21,7 @@ class MockExam extends Model
     protected $fillable = [
         'user_id',
         'mock_exam_subscription_id',
+        'academic_subject_id',
         'title',
         'description',
         'instructions',
@@ -286,5 +287,10 @@ class MockExam extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(MockExamSubscription::class, 'mock_exam_subscription_id');
+    }
+
+    public function academicSubject(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubject::class);
     }
 }

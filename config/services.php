@@ -53,10 +53,19 @@ return [
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
     ],
- 
+
     'katex' => [
         'script_path' => env('KATEX_SCRIPT_PATH', resource_path('scripts/katex-batch.js')),
         'markdown_script_path' => env('KATEX_MARKDOWN_SCRIPT_PATH', resource_path('scripts/markdown-batch.js')),
+    ],
+
+    'renderer' => [
+        'node' => env('NODE_BIN', 'node'),
+        'script' => env(
+            'CONTENT_RENDERER_SCRIPT',
+            resource_path('js/content/render.server.mjs')
+        ),
+        'timeout' => env('CONTENT_RENDERER_TIMEOUT', 30),
     ],
 
 ];

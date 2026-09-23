@@ -83,7 +83,8 @@
                                 <div class="mr-2 font-medium">{{ $loop->iteration }}.</div>
                                 <div class="flex-1">
                                     <div>
-                                        <p class="font-medium" x-html="marked.parse(@js($mc['question']['up']))" />
+{{--                                        <p class="font-medium" x-html="marked.parse(@js($mc['question']['up']))" />--}}
+                                        <x-markdown-viewer :content="$mc['question']['down']" />
                                         <div x-bind:class="'elliptical' === format ? 'grid-cols-2' : 'grid-cols-1'"
                                              class="grid gap-x-5">
                                             @foreach ($mc['options'] as $key => $o)
@@ -91,7 +92,7 @@
                                                     <div class="flex space-x-2 items-baseline">
                                                         <div>({{ $key }})</div>
                                                         <div>
-                                                            <p x-html="marked.parse(@js($o))" />
+                                                            <x-markdown-viewer :content="$o" />
                                                         </div>
                                                     </div>
                                                 @endif

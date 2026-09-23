@@ -36,6 +36,8 @@ class MockExamCreationService
             'ends_at'                     => $payload['ends_at'] ?? null,
             'is_randomized'               => (bool) ($payload['is_randomized'] ?? false),
             'max_attempts'                => (int) ($payload['max_attempts'] ?? 1),
+            'academic_subject_id'         => $payload['academic_subject_id'] ?? null,
+            'mock_exam_subscription_id'   => $payload['mock_exam_subscription_id'] ?? null,
         ]);
     }
 
@@ -172,7 +174,7 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
             $warnings     = [];
 
             foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
-                
+
                             $sectionTopicIds    = $sectionData['topic_ids'] ?? [];
                 $sectionSubtopicIds = $sectionData['subtopic_ids'] ?? [];
             $section = $subjectExam->sections()->create([
@@ -238,7 +240,7 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
     ): array {
         // Build payload from template with optional overrides
         $payload = $template->toSubjectExamPayload();
-        
+
         // Apply overrides
         if (isset($overrides['title'])) {
             $payload['title'] = $overrides['title'];
@@ -255,7 +257,7 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
         if (isset($overrides['subtopic_ids'])) {
             $payload['subtopic_ids'] = $overrides['subtopic_ids'];
         }
-        
+
         // Add template_id to the payload
         $payload['template_id'] = $template->id;
 

@@ -295,6 +295,28 @@
             }
         });
     });
+    document.addEventListener('livewire:init', () => {
+        Livewire.hook('morph.updated', ({ el }) => {
+            // Only run if the updated element contains raw $ or \[ delimiters
+            if (el.innerHTML && (el.innerHTML.includes('$') || el.innerHTML.includes('\\['))) {
+
+                // Prevent double-rendering if it already contains KaTeX spans
+                if (!el.querySelector('.katex') && typeof window.renderMathInElement === 'function') {
+                    window.renderMathInElement(el, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\[', right: '\\]', display: true},
+                            {left: '\\(', right: '\\)', display: false}
+                        ],
+                        throwOnError: false,
+                        strict: false
+                    });
+                }
+            }
+        });
+    });
+
 </script>
 @stack('scripts')
 </body>
