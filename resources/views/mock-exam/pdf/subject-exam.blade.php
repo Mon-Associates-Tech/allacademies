@@ -150,64 +150,67 @@
             background-color: #fef3c7;
             border-left: 2px solid #f59e0b;
         }
-
-        /* Question Styles */
         .question-block {
-            margin-bottom: 1rem;
+            margin-bottom: 12pt;
             page-break-inside: avoid;
         }
-        .question-header {
-            display: flex;
-            align-items: baseline;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
+
+        table.question-header,
+        table.options-list {
+            width: 100%;
+            border-collapse: collapse;
         }
+        .question-header td,
+        .options-list td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .question-header { margin-bottom: 6pt; }
+
         .question-number {
+            width: 24px;
             font-weight: 600;
             color: black;
-            min-width: 1.5rem;
-            flex-shrink: 0;
         }
         .question-text {
-            flex: 1;
             font-size: {{ $fontSize ?? 11 }}pt;
             color: #1f2937;
             line-height: 1.6;
         }
         .question-marks {
+            width: 60px;
+            text-align: right;
             font-size: {{ ($fontSize ?? 11) - 1 }}pt;
             color: #6b7280;
             font-weight: 600;
             white-space: nowrap;
-            flex-shrink: 0;
-            margin-left: auto;
         }
 
-        /* Options for MCQ */
-        .options-list {
-            margin-left: 2rem;
-            margin-top: 0.5rem;
-        }
-        .option-item {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.35rem;
-            align-items: baseline;
-            page-break-inside: avoid;
-        }
+        .options-wrap { margin-left: 24px; }
+        .option-item { page-break-inside: avoid; }
         .option-label {
+            width: 24px;
             font-weight: 600;
             color: black;
-            min-width: 1.5rem;
-            flex-shrink: 0;
+            padding-bottom: 4pt;
         }
         .option-text {
-            flex: 1;
             font-size: {{ ($fontSize ?? 11) - 0.5 }}pt;
             color: #374151;
             line-height: 1.5;
+            padding-bottom: 4pt;
         }
 
+        /* Neutralise the block elements the markdown component emits */
+        .question-text p,
+        .option-text p,
+        .question-text > div,
+        .option-text > div {
+            margin: 0;
+            padding: 0;
+        }
+        .question-text p + p { margin-top: 4pt; }
         /* Page break helpers */
         .page-break {
             page-break-before: always;
@@ -445,35 +448,39 @@
             @if($section->instructions)
             <div class="section-instructions">
                 {{ $section->instructions }}
+                <x-markdown-viewer :content="$section->instructions" display="true" class="prose dark:prose-invert max-w-none" />
             </div>
             @endif
 
-            @foreach($section->questions as $qIndex => $question)
-            <div class="question-block">
-                <div class="question-header">
-                    <span class="question-number">{{ $loop->iteration }}</span>
-                    <span class="question-text">
-                        <x-markdown-viewer :content="$question->question_text" display="true" class="prose dark:prose-invert max-w-none" />
-                    </span>
-                    <span class="question-marks">[{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]</span>
-                </div>
+            @foreach($section->questions as $question)
+                <div class="question-block">
+                    <table class="question-header">
+                        <tr>
+                            <td class="question-number">{{ $loop->iteration }}.</td>
+                            <td class="question-text">
+                                <x-markdown-viewer :content="$question->question_text" display="true" />
+                            </td>
+                            <td class="question-marks">
+                                [{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]
+                            </td>
+                        </tr>
+                    </table>
 
-                @if(in_array($question->source_type, ['multiple_choice', 'true_false']) && is_array($question->options) && !empty($question->options))
-                <div class="options-list">
-                    @php $optionIndex = 0; @endphp
-                    @foreach($question->options as $option)
-
-                    <div class="option-item">
-                        <span class="option-label">{{ chr(65 + (int)$optionIndex) }}.</span>
-                        <span class="option-text">
-                            <x-markdown-viewer :content="$option" display="true" class="prose dark:prose-invert max-w-none" />
-                        </span>
-                    </div>
-                    @php $optionIndex++; @endphp
-                    @endforeach
+                    @if(in_array($question->source_type, ['multiple_choice', 'true_false']) && is_array($question->options) && !empty($question->options))
+                        <div class="options-wrap">
+                            <table class="options-list">
+                                @foreach($question->options as $option)
+                                    <tr class="option-item">
+                                        <td class="option-label">{{ chr(65 + $loop->index) }}.</td>
+                                        <td class="option-text">
+                                            <x-markdown-viewer :content="$option" display="true" />
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        </div>
+                    @endif
                 </div>
-                @endif
-            </div>
             @endforeach
 
             @include('mock-exam.pdf.partials.section-attachment', ['section' => $section])
