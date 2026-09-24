@@ -147,7 +147,7 @@
             font-style: italic;
             margin-bottom: 0.75rem;
             padding: 0.5rem;
-            background-color: #fef3c7;
+            /*background-color: #fef3c7;*/
             border-left: 2px solid #f59e0b;
         }
         .question-block {
@@ -447,7 +447,6 @@
 
             @if($section->instructions)
             <div class="section-instructions">
-                {{ $section->instructions }}
                 <x-markdown-viewer :content="$section->instructions" display="true" class="prose dark:prose-invert max-w-none" />
             </div>
             @endif
@@ -460,9 +459,9 @@
                             <td class="question-text">
                                 <x-markdown-viewer :content="$question->question_text" display="true" />
                             </td>
-                            <td class="question-marks">
-                                [{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]
-                            </td>
+{{--                            <td class="question-marks">--}}
+{{--                                [{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]--}}
+{{--                            </td>--}}
                         </tr>
                     </table>
 
