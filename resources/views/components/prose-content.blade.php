@@ -3,16 +3,17 @@
     'size' => 'base',
     'mathSupport' => true,
     'textColor' => null,
-    'inline' => false,
+    'inline' => true,
+    'pdf' => false,
 ])
 
 @php
     $inline = filter_var($inline, FILTER_VALIDATE_BOOLEAN);
     $mathSupport = filter_var($mathSupport, FILTER_VALIDATE_BOOLEAN);
+    $pdf = filter_var($pdf, FILTER_VALIDATE_BOOLEAN);
 
     $sizeClasses = match($size) {
         'sm' => 'prose-sm',
-        'base' => 'prose-base',
         'lg' => 'prose-lg',
         'xl' => 'prose-xl',
         '2xl' => 'prose-2xl',
@@ -27,10 +28,23 @@
         $markdownContent = $content->up;
     } elseif (is_string($content)) {
         if (preg_match('/<(p|div|table|img|iframe|h[1-6]|ul|ol|br)\b/i', $content)) {
-            $htmlContent = $content;
+                      $htmlContent = $pdf
+               ? app(\App\Support\MarkdownMathService::class)->renderHtmlWithMath($content)
+               : $content;
         } else {
-            $markdownContent = $content;
-        }
+            if ($pdf) {
+                // dompdf has no JS engine — resolve to final HTML right now,
+                // server-side, via the same Node/KaTeX bridge used elsewhere.
+                $htmlContent = app(\App\Support\MarkdownMathService::class)->cachedRender($content);
+            } else {
+                $markdownContent = $content;
+
+            }
+         }
+    }
+
+    if ($pdf) {
+        $mathSupport = false; // no Alpine under dompdf — nothing to init
     }
 
     if ($inline) {
@@ -71,39 +85,6 @@
     $tag = $inline ? 'span' : 'div';
 @endphp
 
-@once
-    @push('scripts')
-        <script>
-            window.mathRenderConfig = {
-                delimiters: [
-                    // Backtick delimiters (Added)
-                    {left: '``', right: '``', display: true},
-                    {left: '`', right: '`', display: false},
-                    // Existing delimiters
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\\[', right: '\\]', display: true},
-                    {left: '\\(', right: '\\)', display: false}
-                ],
-                throwOnError: false,
-                errorColor: '#cc0000',
-                strict: false,
-                trust: true
-            };
-        </script>
-    @endpush
-
-    <style>
-        .prose-inline { display: inline; margin: 0; padding: 0; }
-        .prose-inline p, .prose-inline div, .prose-inline h1, .prose-inline h2, .prose-inline h3,
-        .prose-inline h4, .prose-inline h5, .prose-inline h6, .prose-inline ul, .prose-inline ol, .prose-inline li,
-        .prose-inline blockquote {
-            display: inline; margin: 0; padding: 0; font-size: inherit; line-height: inherit; border: 0;
-        }
-        .prose-inline .katex-display { margin: 0; }
-        .prose-inline img { max-width: 100%; height: auto; display: inline-block; vertical-align: middle; }
-    </style>
-@endonce
 
 {{--
     NOTICE: x-data is now a clean, single-line function call.
@@ -112,9 +93,9 @@
 <{{ $tag }}
     {{ $attributes->merge(['class' => $baseProseClasses . ($textColor ? " {$textColor}" : '')]) }}
     @if($mathSupport)
-        x-data="proseMathRenderer(@js($markdownContent), @js($htmlContent), @js($inline))"
-        x-init="initRenderer()"
-    @endif
+    x-data="proseMathRenderer(@js($markdownContent), @js($htmlContent), @js($inline))"
+x-init="initRenderer()"
+@endif
 >
 @if($htmlContent)
     {!! $htmlContent !!}
@@ -125,42 +106,3 @@
 @endif
 </{{ $tag }}>
 
-@once
-<script>
-    function proseMathRenderer(markdownContent, htmlContent, isInline) {
-        return {
-            initRenderer() {
-                this.$nextTick(() => {
-                    this.renderContent();
-                });
-            },
-            renderContent() {
-                // 1. If we only have markdown, parse it using your global JS function
-                if (markdownContent && !htmlContent) {
-                    if (typeof window.renderMarkdownWithMath === 'function') {
-                        this.$el.innerHTML = window.renderMarkdownWithMath(markdownContent);
-                    }
-                }
-
-
-                // 2. Inline mode: unwrap block wrappers so nothing breaks the line
-                if (isInline) {
-                    this.$el.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div').forEach((el) => {
-                        while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
-                        el.remove();
-                    });
-                }
-
-                // 3. Render Math (KaTeX auto-render) on the cleaned HTML
-                if (typeof window.renderMathInElement !== 'undefined') {
-                    try {
-                        window.renderMathInElement(this.$el, window.mathRenderConfig);
-                    } catch(e) {
-                        console.warn('KaTeX rendering error:', e);
-                    this.$el.insertAdjacentHTML('beforeend', `<div style="color:#cc0000;font:11px monospace;border-top:1px dashed #cc0000;margin-top:4px;padding-top:2px;">⚠ render error: ${e.message}</div>`);                    }
-                }
-            }
-        }
-    }
-</script>
-@endonce

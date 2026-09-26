@@ -1,7 +1,5 @@
-{{-- resources/views/livewire/mock-exam/identity-field-manager.blade.php --}}
 <div class="max-w-5xl mx-auto px-4 py-8">
     <div class="mb-6">
-        <h1 class="text-lg font-bold text-slate-900 dark:text-white">Exam Identity Fields</h1>
         <p class="text-sm text-slate-500 dark:text-slate-400">
             Define the fields every user fills in for their exam identity section — shown at the top of every generated
             exam, above the front page.

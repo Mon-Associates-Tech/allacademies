@@ -122,7 +122,7 @@
         }
         .section-header {
             padding: 0.5rem 0;
-            border-bottom: 1.5px solid #3b82f6;
+            /*border-bottom: 1.5px solid #3b82f6;*/
             margin-bottom: 0.75rem;
         }
         .section-title {
@@ -432,7 +432,7 @@
         <div class="section-wrap {{ $sectionIndex > 0 ? 'page-break' : '' }}">
             <div class="section-header">
                 <div class="section-title">{{ $section->title }}</div>
-                <div class="section-meta">
+                <div class="section-meta hidden">
                     {{ $section->questions->count() }} questions •
                     {{ number_format($section->getTotalMarks(), 1) }} marks
                     @if($section->question_type !== 'mixed')

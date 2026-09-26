@@ -59,7 +59,20 @@ window.renderMarkdownWithMath = function(content) {
                     .replace(/`(\\\([\s\S]+?\\\))`/g, '$1')
                     .replace(/`(\$[^`$\n]+?\$)`/g, '$1');
 
-        const allowedTags = [
+               // texmath requires no whitespace immediately inside a delimiter, or it
+                   // fails to close the span and greedily merges into the next one instead
+                       // (e.g. "$a = $ $b$" -> one malformed expression, KaTeX parse error).
+                           const trimmed = unwrapped.replace(
+                       /(\$\$)([\s\S]+?)(\$\$)|(\$)([^$\n]+?)(\$)|(\\\[)([\s\S]+?)(\\\])|(\\\()([\s\S]+?)(\\\))/g,
+                       (m, ddL, ddC, ddR, dL, dC, dR, brL, brC, brR, pL, pC, pR) => {
+                           if (ddL !== undefined) return ddL + ddC.trim() + ddR;
+                           if (dL !== undefined) return dL + dC.trim() + dR;
+                           if (brL !== undefined) return brL + brC.trim() + brR;
+                           return pL + pC.trim() + pR;
+                       }
+               );
+
+                                        const allowedTags = [
             'img', 'p', 'br', 'strong', 'em', 'code', 'pre', 'a', 'ul', 'ol', 'li',
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'table', 'thead',
             'tbody', 'tr', 'th', 'td', 'span', 'div', 'math', 'annotation',
@@ -71,8 +84,8 @@ window.renderMarkdownWithMath = function(content) {
         ];
 
         const sanitizedContent = typeof DOMPurify !== 'undefined'
-            ? DOMPurify.sanitize(unwrapped, { ALLOWED_TAGS: allowedTags })
-            : unwrapped;
+            ? DOMPurify.sanitize(trimmed, { ALLOWED_TAGS: allowedTags })
+            : trimmed;
 
         // markdown-it-texmath renders $...$ / $$...$$ / \(...\) / \[...\]
         // straight to KaTeX HTML during md.render() — no separate DOM-walk

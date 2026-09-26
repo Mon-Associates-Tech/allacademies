@@ -5,6 +5,15 @@
     sidebarHistoryOpen: false,
     sidebarParametersOpen: false,
     messageRows: 3,
+        pageScroller: null,
+
+    init() {
+       // app.blade.php's own content area (x-ref='contentarea') is the single
+            // real scrollbar for the page. We hook into that, not a nested container,
+            // so there's only ever one scrollbar.
+            this.pageScroller = document.querySelector('[x-ref=\'contentarea\']') || window;
+            this.pageScroller.addEventListener('scroll', () => this.checkScroll());
+        },
 
     addSubtopic() {
         if (this.newSubtopic.trim()) {
@@ -12,15 +21,23 @@
             this.newSubtopic = '';
         }
     },
-
     scrollToBottom() {
-        const chatContainer = $refs.chatContainer;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        const el = this.pageScroller;
+       if (!el) return;
+        if (el === window) {
+            window.scrollTo({top: document.body.scrollHeight, behavior: 'auto'});
+        } else {
+            el.scrollTop = el.scrollHeight;
+        }
     },
 
     checkScroll() {
-        const chatContainer = $refs.chatContainer;
-        this.showScrollToBottom = chatContainer.scrollHeight - chatContainer.scrollTop > chatContainer.clientHeight + 100;
+        const el = this.pageScroller;
+       if (!el) return;
+        const scrollTop = el === window ? window.scrollY : el.scrollTop;
+        const scrollHeight = el === window ? document.body.scrollHeight : el.scrollHeight;
+        const clientHeight = el === window ? window.innerHeight : el.clientHeight;
+        this.showScrollToBottom = scrollHeight - scrollTop > clientHeight + 100;
     },
 
     toggleHistorySidebar() {
@@ -35,15 +52,13 @@
         const textarea = this.$refs.messageInput;
         if (textarea) {
             textarea.style.height = 'auto';
-            const lineHeight = 24;
-            const maxLines = 5;
-            const maxHeight = lineHeight * maxLines;
+            const maxHeight = 160;
             const newHeight = Math.min(textarea.scrollHeight, maxHeight);
             textarea.style.height = newHeight + 'px';
         }
     }
 }"
-     class="ra-shell h-screen flex flex-col bg-[var(--ra-bg)] transition-colors duration-200 overflow-hidden"
+      class="ra-shell min-h-[calc(100vh-var(--header-height))] flex flex-col bg-[var(--ra-bg)] transition-colors duration-200"
      @scroll-to-bottom.window="scrollToBottom()">
 
     <!-- Header -->
@@ -106,7 +121,7 @@
     </header>
 
     <!-- Main Content Grid -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1">
 
         @php
             $now = carbon()::now();
@@ -141,7 +156,7 @@
                 </button>
             </div>
 
-            <div x-data="{ openGroups: @js($groupKeys) }" class="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
+            <div x-data="{ openGroups: @js($groupKeys) }" class="flex-1  p-3 space-y-4">
                 @forelse($grouped as $label => $conversations)
                     <div>
                         <button
@@ -193,7 +208,7 @@
         </div>
 
         <!-- Chat Area -->
-        <div class="flex-1 flex flex-col relative overflow-hidden bg-[var(--ra-bg)]">
+        <div class="flex-1 flex flex-col relative  bg-[var(--ra-bg)]">
 
             <!-- Token Warning -->
             @if ($this->currentTokenWarning)
@@ -221,10 +236,10 @@
                 </div>
             @endif
 
-            <div class="flex-1 flex flex-col overflow-hidden {{ empty($messages) ? 'justify-center' : '' }}">
+            <div class="flex-1 flex flex-col  {{ empty($messages) ? 'justify-center' : '' }}">
                 <!-- Chat Messages -->
                 <div x-ref="chatContainer" @scroll="checkScroll()"
-                     class="{{ empty($messages) ? 'flex-none' : 'flex-1' }} overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar">
+                     class="{{ empty($messages) ? 'flex-none' : 'flex-1' }}  p-4 sm:p-6 space-y-8">
 
                     @if (empty($messages))
                         <div class="text-center px-4 pb-8">
@@ -358,10 +373,10 @@
 
                 <!-- Message Input -->
                 <div
-                    class="flex-shrink-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--ra-bg)] via-[var(--ra-bg)] to-transparent">
+                     class="flex-shrink-0 sticky bottom-0 z-10 p-4 sm:p-6 bg-gradient-to-t from-[var(--ra-bg)] via-[var(--ra-bg)] to-transparent">
                     <div class="max-w-3xl mx-auto">
                         <div
-                            class="relative flex items-end gap-2 p-2 bg-[var(--ra-surface)] rounded-3xl border border-[var(--ra-border)] shadow-sm focus-within:border-[var(--ra-accent)] focus-within:ring-4 focus-within:ring-[var(--ra-accent)]/15 transition-all duration-200 {{ $this->messageInputDisabled ? 'opacity-60 cursor-not-allowed' : '' }}">
+                            class="relative flex items-end gap-2 p-3 bg-[var(--ra-surface)] rounded-3xl border border-[var(--ra-border)] shadow-sm focus-within:border-[var(--ra-accent)] focus-within:ring-4 focus-within:ring-[var(--ra-accent)]/15 transition-all duration-200 {{ $this->messageInputDisabled ? 'opacity-60 cursor-not-allowed' : '' }}">
 
                             <!-- Left Action -->
                             <div class="flex-shrink-0 ml-1 mb-1">
@@ -382,7 +397,7 @@
                                       @input="adjustMessageRows()"
                                       @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
                                       rows="1"
-                                      class="ra-prose flex-1 w-full px-3 py-2 bg-transparent border-0 focus:ring-0 text-[var(--ra-ink)] placeholder-[var(--ra-muted)] text-sm resize-none max-h-[120px] overflow-y-auto leading-relaxed"
+                                      class="ra-prose flex-1 w-full px-3 py-3 bg-transparent border-0 focus:ring-0 text-[var(--ra-ink)] placeholder-[var(--ra-muted)] text-sm resize-none min-h-[52px] max-h-[160px] overflow-y-auto leading-relaxed"
                                       placeholder="{{ $this->messageInputDisabled ? 'Subscribe to chat...' : 'Ask anything...' }}"
                                       @disabled($this->messageInputDisabled)></textarea>
 
@@ -437,7 +452,7 @@
                     </button>
                 </div>
             </div>
-            <div class="font-heading flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+            <div class="font-heading flex-1 p-4 space-y-5">
                 <!-- Age -->
                 <div>
                     <label
