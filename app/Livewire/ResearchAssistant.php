@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Rule;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -77,6 +78,7 @@ class ResearchAssistant extends Component
 
     public $errors = [];
 
+    #[Url(as: 'conversationId', history: true)]
     public $conversationId;
 
     public $conversationTitle;
@@ -181,11 +183,11 @@ class ResearchAssistant extends Component
     if (empty($content)) {
         return '';
     }
-    
+
     // Ensure we are working with a string for json_decode
     $contentString = is_array($content) ? json_encode($content) : $content;
     $decoded = json_decode($contentString, true);
-    
+
     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
         $segments = [];
         if (isset($decoded[0]['content']) && is_array($decoded[0]['content'])) {
@@ -203,7 +205,7 @@ class ResearchAssistant extends Component
         $joined = trim(implode("\n", array_filter($segments, static fn ($segment) => trim($segment) !== '')));
         return $joined !== '' ? $joined : $fallback;
     }
-    
+
     return $contentString;
 }
 

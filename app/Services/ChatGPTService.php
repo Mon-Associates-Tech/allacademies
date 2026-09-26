@@ -39,7 +39,7 @@ class ChatGPTService
 
         // Build proper responses API request
         $formattedMessages = is_string($messages) ? [['role' => 'user', 'content' => $messages]] : $messages;
-        
+
         $requestData = [
             'model' => $model ?: $this->model,
             'input' => $formattedMessages,

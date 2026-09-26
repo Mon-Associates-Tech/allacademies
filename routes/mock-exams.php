@@ -70,17 +70,30 @@ Route::middleware(['web', 'auth'])
         // Live monitoring
         Route::get('/{mockExam}/monitor', [MockExamMonitoringController::class, 'index'])->name('monitor');
 
-        // PDF downloads
-        Route::get('/{mockExam}/pdf', [MockExamPdfController::class, 'previewPage'])->name('pdf');
-        Route::get('/{mockExam}/pdf/download', [MockExamPdfController::class, 'examPdf'])->name('pdf.exam');
-        Route::get('/{mockExam}/pdf/preview', [MockExamPdfController::class, 'previewExamPdf'])->name('pdf.preview');
-        Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKeyPdf'])->name('pdf.answer-key');
+// HTML exam views.
+// Route names still contain "pdf" for backwards compatibility,
+// but they now render normal Blade views instead of PDF files.
+        Route::get('/{mockExam}/pdf', [MockExamPdfController::class, 'previewPage'])
+            ->name('pdf');
 
-        // Subject exam PDF downloads
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'previewSubjectExamPdf'])->name('subject-exams.pdf.preview');
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExamPdf'])->name('subject-exams.pdf.download');
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])->name('subject-exams.pdf.page');
+        Route::get('/{mockExam}/pdf/download', [MockExamPdfController::class, 'exam'])
+            ->name('pdf.exam');
 
+        Route::get('/{mockExam}/pdf/preview', [MockExamPdfController::class, 'exam'])
+            ->name('pdf.preview');
+
+        Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKey'])
+            ->name('pdf.answer-key');
+
+// Subject exam HTML views.
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'subjectExam'])
+            ->name('subject-exams.pdf.preview');
+
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExam'])
+            ->name('subject-exams.pdf.download');
+
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])
+            ->name('subject-exams.pdf.page');
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
     });

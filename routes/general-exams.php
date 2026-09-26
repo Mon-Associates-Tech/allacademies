@@ -7,6 +7,7 @@ use App\Http\Controllers\Student\GeneralExamController as StudentGeneralExamCont
 use App\Http\Controllers\Teachers\GeneralExamController as TeacherGeneralExamController;
 use App\Services\GeneralExam\GeneralExamAnswerSheetService;
 use App\Services\GeneralExam\GeneralExamParticipantVerificationService;
+use App\Services\GeneralExam\GeneralExamService;
 use App\Services\GeneralExam\GeneralExamSubscriptionService;
 use Illuminate\Support\Facades\Route;
 
@@ -44,7 +45,7 @@ Route::get('/general-exams/verify-email', function () {
     }
 
     $verificationService = app(GeneralExamParticipantVerificationService::class);
-    $assignmentService = app(\App\Services\GeneralExam\GeneralExamService::class);
+    $assignmentService = app(GeneralExamService::class);
     $result = $verificationService->verifyEmail($token, $accessCode);
 
     if (! $result['success']) {

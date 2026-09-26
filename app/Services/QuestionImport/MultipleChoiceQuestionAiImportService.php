@@ -6,6 +6,7 @@ use App\Models\AcademicSubject;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\MultipleChoiceQuestion;
+use App\Services\ResearchAssistantService;
 use App\Support\Mark;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -486,7 +487,7 @@ PROMPT;
 
         $chunks = [];
         $parts = preg_split('/(<\/(?:p|div|section|article|tr|table)>|<br\s*\/?>|\n{2,})/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-        
+
         $currentChunk = '';
         foreach ($parts as $part) {
             if (mb_strlen($currentChunk . $part) > $maxChunkSize) {
@@ -494,7 +495,7 @@ PROMPT;
                     $chunks[] = trim($currentChunk);
                     $currentChunk = '';
                 }
-                
+
                 if (mb_strlen($part) > $maxChunkSize) {
                     $length = mb_strlen($part);
                     for ($i = 0; $i < $length; $i += $maxChunkSize) {
@@ -507,11 +508,11 @@ PROMPT;
                 $currentChunk .= $part;
             }
         }
-        
+
         if (trim($currentChunk) !== '') {
             $chunks[] = trim($currentChunk);
         }
-        
+
         return array_filter($chunks, fn($c) => trim($c) !== '');
     }
 }

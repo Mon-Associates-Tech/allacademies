@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Exception\CommonMarkException;
+use Symfony\Component\Process\Process;
+
 
 if (! function_exists('fisher_yates_shuffle')) {
     function fisher_yates_shuffle($array, $seed)
@@ -139,42 +141,42 @@ if (! function_exists('stripMarkdownForPdf')) {
         // Convert display math first: $$...$$ or \[...\]
         $text = preg_replace('/\\\\\[(.*?)\\\\\]/s', '$1', $text);
         $text = preg_replace('/\$\$(.+?)\$\$/s', '$1', $text);
-        
+
         // Convert inline math: $...$ or \(...\)
         $text = preg_replace('/\\\\\((.*?)\\\\\)/s', '$1', $text);
         $text = preg_replace('/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/s', '$1', $text);
-        
+
         // Remove markdown headers
         $text = preg_replace('/^#{1,6}\s+/m', '', $text);
-        
+
         // Remove bold/italic markers
         $text = preg_replace('/\*{1,3}(.+?)\*{1,3}/', '$1', $text);
         $text = preg_replace('/_{1,3}(.+?)_{1,3}/', '$1', $text);
-        
+
         // Remove code blocks and inline code
         $text = preg_replace('/`{3}[^`]*`{3}/s', '', $text);
         $text = preg_replace('/`([^`]+)`/', '$1', $text);
-        
+
         // Remove image syntax but keep alt text
         $text = preg_replace('/!\[([^\]]*)\]\([^)]*\)/', '$1', $text);
-        
+
         // Remove link syntax but keep link text
         $text = preg_replace('/\[([^\]]*)\]\([^)]*\)/', '$1', $text);
-        
+
         // Remove blockquotes
         $text = preg_replace('/^>\s+/m', '', $text);
-        
+
         // Remove horizontal rules
         $text = preg_replace('/^[-*_]{3,}$/m', '', $text);
-        
+
         // Remove list markers
         $text = preg_replace('/^[\s-]*[-*+]\s+/m', '', $text);
         $text = preg_replace('/^\d+\.\s+/m', '', $text);
-        
+
         // Clean up extra whitespace
         $text = preg_replace('/\n{3,}/', "\n\n", $text);
         $text = trim($text);
-        
+
         // Escape HTML entities for safe rendering
         return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     }
@@ -195,7 +197,7 @@ if (! function_exists('renderMarkdownForPdf')) {
         // First, protect math expressions by replacing them with placeholders
         $mathExpressions = [];
         $placeholderIndex = 0;
-        
+
         // Protect display math: $$...$$
         $text = preg_replace_callback('/\$\$(.+?)\$\$/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_DISPLAY_{$placeholderIndex}__";
@@ -203,7 +205,7 @@ if (! function_exists('renderMarkdownForPdf')) {
             $placeholderIndex++;
             return $placeholder;
         }, $text);
-        
+
         // Protect display math: \[...\]
         $text = preg_replace_callback('/\\\\\[(.+?)\\\\\]/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_DISPLAY_{$placeholderIndex}__";
@@ -211,7 +213,7 @@ if (! function_exists('renderMarkdownForPdf')) {
             $placeholderIndex++;
             return $placeholder;
         }, $text);
-        
+
         // Protect inline math: $...$
         $text = preg_replace_callback('/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_INLINE_{$placeholderIndex}__";
@@ -219,7 +221,7 @@ if (! function_exists('renderMarkdownForPdf')) {
             $placeholderIndex++;
             return $placeholder;
         }, $text);
-        
+
         // Protect inline math: \(...\)
         $text = preg_replace_callback('/\\\\\((.+?)\\\\\)/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_INLINE_{$placeholderIndex}__";
@@ -227,7 +229,7 @@ if (! function_exists('renderMarkdownForPdf')) {
             $placeholderIndex++;
             return $placeholder;
         }, $text);
-        
+
         // Now convert markdown to HTML using CommonMark
         $config = [
             'html_input' => 'strip',
@@ -239,20 +241,20 @@ if (! function_exists('renderMarkdownForPdf')) {
                 'soft_break' => " ",  // Use space instead of newline for inline flow
             ],
         ];
-        
+
         $converter = new \League\CommonMark\CommonMarkConverter($config);
         try {
             $html = $converter->convertToHtml($text);
-            
+
             // Strip paragraph tags for inline content
             $html = preg_replace('/^<p>/', '', $html);
             $html = preg_replace('/<\/p>$/', '', $html);
-            
+
             // Restore math expressions
             foreach ($mathExpressions as $placeholder => $replacement) {
                 $html = str_replace($placeholder, $replacement, $html);
             }
-            
+
             return $html;
         } catch (\Exception $e) {
             // Fallback to plain text with math
@@ -655,5 +657,26 @@ if (!function_exists('extractQuestionsFromDocument')) {
     {
         $service = app(\App\Services\DocumentQuestionExtractionService::class);
         return $service->extractFromText($content, $questionType, $count);
+    }
+
+
+    function latexToSvg(string $latex): string
+    {
+        // Call the node script
+        $process = new Process(['node', base_path('render-math.js'), $latex]);
+        $process->setTimeout(10); // Prevent infinite hanging
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            // Fallback to raw text if it fails
+            return '<span style="color:red;">[Math Error]</span>';
+        }
+
+        return $process->getOutput();
+    }
+
+    function carbon(): Carbon
+    {
+        return new Carbon();
     }
 }

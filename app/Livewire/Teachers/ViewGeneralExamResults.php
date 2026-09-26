@@ -278,7 +278,7 @@ class ViewGeneralExamResults extends Component
             // ✅ EXPLICITLY PASS COMPUTED PROPERTIES TO THE BLADE VIEW
             'assignment' => $this->assignment,
             'viewingSubmission' => $this->viewingSubmission,
-            
+
             'submissions' => $this->submissions,
             'statusOptions' => $this->statusOptions,
             'submissionCounts' => $this->submissionCounts,

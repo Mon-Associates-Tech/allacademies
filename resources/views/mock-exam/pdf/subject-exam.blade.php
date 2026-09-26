@@ -5,14 +5,10 @@
     <title>{{ $subjectExam->getDisplayTitle() }} - {{ $subjectExam->mockExam->title }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('vendor/katex/katex.min.css') }}">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        @page {
-            size: A4;
-            margin: 15mm;
-        }
+    <style>
+        {!! file_get_contents(public_path('vendor/katex/katex.min.css')) !!}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -447,7 +443,7 @@
 
             @if($section->instructions)
             <div class="section-instructions">
-                <x-markdown-viewer :content="$section->instructions" display="true" class="prose dark:prose-invert max-w-none" />
+                <x-ui.latex :content="$section->instructions" display="true" :pdf="true" class="prose dark:prose-invert max-w-none" />
             </div>
             @endif
 
@@ -457,7 +453,7 @@
                         <tr>
                             <td class="question-number">{{ $loop->iteration }}.</td>
                             <td class="question-text">
-                                <x-markdown-viewer :content="$question->question_text" display="true" />
+                                <x-ui.latex :content="$question->question_text" display="true" :pdf="true" />
                             </td>
 {{--                            <td class="question-marks">--}}
 {{--                                [{{ $question->marks }} mark{{ $question->marks != 1 ? 's' : '' }}]--}}
@@ -472,7 +468,7 @@
                                     <tr class="option-item">
                                         <td class="option-label">{{ chr(65 + $loop->index) }}.</td>
                                         <td class="option-text">
-                                            <x-markdown-viewer :content="$option" display="true" />
+                                            <x-ui.latex :content="$option" display="true" :pdf="true" />
                                         </td>
                                     </tr>
                                 @endforeach

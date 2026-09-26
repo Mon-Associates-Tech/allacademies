@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Services\Content\HtmlContentCleaner;
+use App\Helpers\Content\HtmlContentCleaner;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use League\CommonMark\GithubFlavoredMarkdownConverter;

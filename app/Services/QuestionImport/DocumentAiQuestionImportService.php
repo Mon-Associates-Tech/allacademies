@@ -312,7 +312,7 @@ PROMPT;
 
         // Normalize the merged results
         $normalized = $this->normalizeParsedResponse($allParsedResults, $activeHandlers, $extracted['method']);
-        
+
         // Prepend any chunk-level errors to the normalization errors
         $normalized['errors'] = array_merge($chunkErrors, $normalized['errors']);
 
@@ -321,7 +321,7 @@ PROMPT;
 
     /**
      * Split large HTML content into smaller chunks to avoid hitting AI context/output limits.
-     * Attempts to break at natural boundaries (paragraphs, divs, double newlines) to avoid 
+     * Attempts to break at natural boundaries (paragraphs, divs, double newlines) to avoid
      * splitting a single question in half.
      */
     private function chunkContent(string $html, int $maxChunkSize = 15000): array
@@ -334,7 +334,7 @@ PROMPT;
         $chunks = [];
         // Split by closing tags or double newlines to preserve structure
         $parts = preg_split('/(<\/(?:p|div|section|article|tr|table)>|<br\s*\/?>|\n{2,})/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-        
+
         $currentChunk = '';
         foreach ($parts as $part) {
             if (mb_strlen($currentChunk . $part) > $maxChunkSize) {
@@ -342,7 +342,7 @@ PROMPT;
                     $chunks[] = trim($currentChunk);
                     $currentChunk = '';
                 }
-                
+
                 // If the individual part is still larger than the limit, split it forcefully
                 if (mb_strlen($part) > $maxChunkSize) {
                     $length = mb_strlen($part);
@@ -356,11 +356,11 @@ PROMPT;
                 $currentChunk .= $part;
             }
         }
-        
+
         if (trim($currentChunk) !== '') {
             $chunks[] = trim($currentChunk);
         }
-        
+
         return array_filter($chunks, fn($c) => trim($c) !== '');
     }
 }

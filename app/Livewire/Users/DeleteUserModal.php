@@ -3,7 +3,7 @@
 namespace App\Livewire\Users;
 
 use App\Models\User;
-use App\Services\UserDeletionService;
+use App\Helpers\UserDeletionService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
 

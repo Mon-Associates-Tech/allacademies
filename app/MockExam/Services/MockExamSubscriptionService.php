@@ -2,12 +2,6 @@
 
 namespace App\MockExam\Services;
 
-use App\Enums\GeneralExamSubscriptionStatus;
-use App\ExaminationHub\Models\GeneralExamScoreAuditLog;
-use App\ExaminationHub\Models\GeneralExamSubmission;
-use App\ExaminationHub\Models\GeneralExamSubscription;
-use App\ExaminationHub\Models\GeneralExamSubscriptionPayment;
-use App\ExaminationHub\Models\GeneralExamSubscriptionPlan;
 use App\MockExam\Models\MockExamPricingTier;
 use App\MockExam\Models\MockExamSubmission;
 use App\MockExam\Models\MockExamSubscription;
