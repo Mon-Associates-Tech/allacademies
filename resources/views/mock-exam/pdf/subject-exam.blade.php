@@ -393,7 +393,7 @@
                     @foreach($row as $item)
                         <div class="identity-row-cell">
                             @if($item['type'] === 'image')
-                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->path($item['value']) }}" class="identity-logo">
+                                <img alt="logo" src="{{ asset('storage/'.$item['value']) }}" class="identity-logo">
                             @else
                                 <div class="identity-line" style="font-size: {{ $item['font_size'] ?? 14 }}pt;">
                                     @if($item['pretext'])<span class="identity-pretext">{{ $item['pretext'] }}</span> @endif{{ $item['value'] }}
@@ -409,7 +409,7 @@
     @if($frontPageMode === 'upload' && !empty($frontPagePdfImages))
         @foreach($frontPagePdfImages as $imagePath)
             <div class="front-page-pdf">
-                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->path($imagePath) }}" class="front-page-pdf-img">
+                <img src="{{ asset('storage/'. $imagePath) }}" class="front-page-pdf-img">
             </div>
         @endforeach
     @elseif($frontPageMode === 'editor' && !empty($frontPageConfig['content']))

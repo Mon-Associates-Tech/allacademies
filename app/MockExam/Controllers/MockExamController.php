@@ -5,7 +5,6 @@ namespace App\MockExam\Controllers;
 use App\Http\Controllers\Controller;
 use App\MockExam\Models\MockExam;
 use App\MockExam\Services\MockExamCreationService;
-use App\Models\AcademicGroup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,20 +17,47 @@ class MockExamController extends Controller
         $this->middleware(fn ($request, $next) => $this->ensureInstructor($next));
     }
 
-    // ─── Index ────────────────────────────────────────────────────────────────
-
-    public function index(): View
+    // ─── Index (Enhanced with Filters, Search, Sorting & View Toggle) ───────────
+    public function index(Request $request): View
     {
-        $exams = MockExam::where('user_id', auth()->id())
-            ->withCount(['subjectExams', 'submissions'])
-            ->latest()
-            ->paginate(15);
+        $filters = [
+            'search'         => $request->string('search')->toString(),
+            'status'         => $request->string('status')->toString(),
+            'sort_by'        => $request->string('sort_by')->toString() ?: 'created_at',
+            'sort_direction' => $request->string('sort_direction')->toString() ?: 'desc',
+            'view'           => $request->string('view')->toString() ?: 'list', // 'list' or 'table'
+        ];
 
-        return view('mock-exam.index', compact('exams'));
+        $query = MockExam::where('user_id', auth()->id())
+            ->withCount(['subjectExams', 'submissions']);
+
+        // Apply Search
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('description', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('access_code', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+
+        // Apply Status Filter
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply Sorting securely
+        $allowedSortFields = ['title', 'status', 'created_at', 'starts_at'];
+        $sortField = in_array($filters['sort_by'], $allowedSortFields) ? $filters['sort_by'] : 'created_at';
+        $sortDirection = in_array(strtolower($filters['sort_direction']), ['asc', 'desc']) ? $filters['sort_direction'] : 'desc';
+
+        $query->orderBy($sortField, $sortDirection);
+
+        $exams = $query->paginate(15)->withQueryString();
+
+        return view('mock-exam.index', compact('exams', 'filters'));
     }
 
     // ─── Create / Store ───────────────────────────────────────────────────────
-
     public function create(): View
     {
         return view('mock-exam.create');
@@ -40,41 +66,33 @@ class MockExamController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $payload = $this->validateExamPayload($request);
-
         $exam = $this->creationService->createExam((int) auth()->id(), $payload);
-
         return redirect()
             ->route('mock-exams.show', $exam)
             ->with('success', 'Mock exam created. Now add subject exams below.');
     }
 
     // ─── Show ─────────────────────────────────────────────────────────────────
-
     public function show(MockExam $mockExam): View
     {
         $this->ensureOwner($mockExam);
-
         $mockExam->load([
             'subjectExams.academicSubject',
             'subjectExams.academicLevel',
             'subjectExams.sections.questions',
             'configuredParticipants',
         ]);
-
         $submissions = $mockExam->submissions()
             ->latest('submitted_at')
             ->paginate(20);
-
         return view('mock-exam.show', compact('mockExam', 'submissions'));
     }
 
     // ─── Edit / Update ────────────────────────────────────────────────────────
-
     public function edit(MockExam $mockExam): View
     {
         $this->ensureOwner($mockExam);
         abort_if($mockExam->submissions()->exists(), 422, 'This exam already has submissions and cannot be edited.');
-
         return view('mock-exam.create', ['exam' => $mockExam]);
     }
 
@@ -82,34 +100,27 @@ class MockExamController extends Controller
     {
         $this->ensureOwner($mockExam);
         abort_if($mockExam->submissions()->exists(), 422, 'This exam already has submissions and cannot be edited.');
-
         $payload = $this->validateExamPayload($request);
         $this->creationService->updateExam($mockExam, $payload);
-
         return redirect()
             ->route('mock-exams.show', $mockExam)
             ->with('success', 'Mock exam updated.');
     }
 
     // ─── Destroy ──────────────────────────────────────────────────────────────
-
     public function destroy(MockExam $mockExam): RedirectResponse
     {
         $this->ensureOwner($mockExam);
         $mockExam->delete();
-
         return redirect()
             ->route('mock-exams.index')
             ->with('success', 'Mock exam deleted.');
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
-
-    /** Build the complete academic hierarchy tree for Alpine.js cascading dropdowns. */
     public static function hierarchyTree(): array
     {
         return MockExam::hierarchyTree();
-        
     }
 
     private function validateExamPayload(Request $request): array
@@ -146,7 +157,6 @@ class MockExamController extends Controller
             403,
             'Only instructors can access this area.'
         );
-
         return $next(request());
     }
 }
