@@ -216,7 +216,7 @@
 
         /* ─── Front Page (Cover) ─── */
         .front-page {
-            page-break-after: always;
+            /*page-break-after: always;*/
             font-family: 'Georgia', 'Times New Roman', serif;
             color: #1a1a1a;
         }
@@ -224,7 +224,7 @@
             display: table;
             width: 100%;
             height: 267mm;
-            border: 1px solid #cbd5e1;
+            /*border: 1px solid #cbd5e1;*/
             padding: 14mm 16mm;
         }
         .front-page-content {
@@ -248,7 +248,7 @@
             color: #111827;
             line-height: 1.35;
             padding-bottom: 6mm;
-            border-bottom: 2px solid #1f2937;
+            /*border-bottom: 2px solid #1f2937;*/
         }
         .fp-heading-h2 {
             font-size: {{ ($fontSize ?? 11) + 5 }}pt;
@@ -298,7 +298,7 @@
             max-width: 145mm;
             margin: 0 auto;
             border-top: 1px solid #d1d5db;
-            border-bottom: 1px solid #d1d5db;
+            /*border-bottom: 1px solid #d1d5db;*/
             padding: 6mm 2mm;
         }
         .fp-decl-row {
@@ -330,7 +330,7 @@
             font-size: {{ $fontSize ?? 11 }}pt;
             font-weight: 600;
             color: #111827;
-            border-bottom: 1px solid #9ca3af;
+            /*border-bottom: 1px solid #9ca3af;*/
             min-height: 5mm;
             padding-bottom: 1mm;
         }
@@ -349,7 +349,7 @@
             text-align: center;
             padding-bottom: 8mm;
             margin-bottom: 8mm;
-            border-bottom: 1px solid #000;
+            /*border-bottom: 1px solid #000;*/
         }
         .identity-logo { max-height: 18mm; margin-bottom: 3mm; }
         .identity-line { font-size: {{ ($fontSize ?? 11) + 1 }}pt; font-weight: 600; margin-bottom: 1.5mm; }
@@ -358,7 +358,7 @@
             text-align: center;
             padding-bottom: 8mm;
             margin-bottom: 8mm;
-            border-bottom: 1px solid #000;
+            /*border-bottom: 1px solid #000;*/
         }
         .identity-row {
             display: table;
@@ -376,6 +376,21 @@
     </style>
 </head>
 <body>
+
+{{-- ── PRINT BUTTON (Hidden during print) ──────────────────────────────────── --}}
+<div class="print:hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-end">
+    <button onclick="window.print()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg"
+            style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Print Exam
+    </button>
+</div>
+
+<div class="print-content">
     {{-- Front Page if subject exam has template with front page config —
          'upload' mode renders the uploaded PDF's own pages as-is; 'editor'
          mode (or older templates saved before this field existed) falls
@@ -396,7 +411,7 @@
                                 <img alt="logo" src="{{ asset('storage/'.$item['value']) }}" class="identity-logo">
                             @else
                                 <div class="identity-line" style="font-size: {{ $item['font_size'] ?? 14 }}pt;">
-                                    @if($item['pretext'])<span class="identity-pretext">{{ $item['pretext'] }}</span> @endif{{ $item['value'] }}
+                                    @if($item['pretext'])<span class="identity-pretext">{!! $item['pretext'] !!}</span> @endif{{ $item['value'] }}
                                 </div>
                             @endif
                         </div>
@@ -425,7 +440,7 @@
     @endif
 
 
-    <div class="exam-container">
+    <div class="exam-container mt-0 pt-0">
 
         {{-- Sections and Questions --}}
         @foreach($subjectExam->sections as $sectionIndex => $section)
@@ -482,5 +497,76 @@
         </div>
         @endforeach
     </div>
+</div>
 </body>
+
+<style>
+    @media print {
+        @page {
+            margin: 15mm;
+            size: auto;
+        }
+
+        /* 1. Reset root elements to flow naturally */
+        html, body {
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* 2. Kill Tailwind's height/overflow classes that cause blank pages */
+        main, #app, [id^="app"], [id^="root"],
+        .min-h-screen, .h-screen, .h-full, .min-h-full, .max-h-screen,
+        .flex-1, .flex-grow,
+        .overflow-hidden, .overflow-y-auto, .overflow-auto,
+        [class*="h-["], [class*="min-h-["], [class*="max-h-["] {
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* 3. Reset all page breaks to auto (prevents accidental forced breaks) */
+        * {
+            page-break-after: auto !important;
+            break-after: auto !important;
+            page-break-before: auto !important;
+            break-before: auto !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
+
+        /* 4. Hide UI chrome */
+        nav, aside, .sidebar, .no-print, .print\:hidden, button, [onclick*="print"] {
+            display: none !important;
+        }
+
+        /* 5. FIX HUGE GAP: Remove top margins/padding from the very first content elements */
+        body > div:first-child,
+        main > div:first-child,
+        .print-content > *:first-child {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        /* 6. FIX HUGE GAP: Collapse empty paragraphs and line breaks often left by Rich Text Editors */
+        p:empty, div:empty, br {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 0 !important;
+        }
+
+        /* 7. FIX HUGE GAP: Ensure the first heading/section doesn't have a massive top margin */
+        h1:first-of-type, h2:first-of-type, h3:first-of-type, h4:first-of-type {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+    }
+</style>
 </html>

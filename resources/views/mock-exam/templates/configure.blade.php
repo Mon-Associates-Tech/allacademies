@@ -246,27 +246,86 @@
 
                             <div class="p-5 space-y-4">
                                 <div class="grid sm:grid-cols-2 gap-4">
+                                    {{-- ── SECTION TITLE EDITOR ──────────────────────────────────────────── --}}
                                     <div>
-                                        <label
-                                            class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2"
-                                            style="letter-spacing: 0.08em;">
+                                        <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                                             Section Title <span class="text-red-500">*</span>
                                         </label>
-                                        <input type="text" :name="'sections_config[' + idx + '][title]'"
-                                               x-model="section.title" required
-                                               placeholder="e.g. Section A – Objectives"
-                                               class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                                               style="border-radius: 2px;">
+                                        <div class="space-y-1"
+                                             x-data="richEditor(section, idx, 'title')"
+                                             x-init="initEditor(); updatePreview();"
+                                             x-effect="updatePreview()"
+                                             :data-editor-id="editorId">
+                                            <div class="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden" style="border-radius: 2px;">
+                                                <div class="bg-slate-50 dark:bg-slate-700 border-b border-slate-300 dark:border-slate-600 flex items-center">
+                                                    <div class="flex">
+                                                        <button type="button" x-on:click="preview = false"
+                                                                x-bind:class="!preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                                                                class="px-4 py-2 text-xs font-medium border-r transition-colors duration-200">Write</button>
+                                                        <button type="button" x-on:click="preview = true; updatePreview();"
+                                                                x-bind:class="preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                                                                class="px-4 py-2 text-xs font-medium transition-colors duration-200">Preview</button>
+                                                    </div>
+                                                    <div class="ml-auto px-4 py-2">
+                                                        <div class="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                            <span>LaTeX: $formula$</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div x-show="!preview" class="bg-white dark:bg-slate-800">
+                    <textarea x-bind:id="editorId"
+                              :name="'sections_config[' + idx + '][' + field + ']'"
+                              x-model="section[field]"
+                              class="w-full border-0 focus:ring-0 dark:bg-slate-800 dark:text-white"
+                              style="min-height: 150px; resize: vertical;"></textarea>
+                                                </div>
+                                                <div x-show="preview" x-html="previewHtml"
+                                                     class="markdown-preview markdown-body bg-white dark:bg-slate-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
+                                                     style="display: none; min-height: 150px;"></div>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {{-- ── INSTRUCTIONS EDITOR ─────────────────────────────────────────────── --}}
                                     <div>
-                                        <label
-                                            class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2"
-                                            style="letter-spacing: 0.08em;">Instructions</label>
-                                        <input type="text" :name="'sections_config[' + idx + '][instructions]'"
-                                               x-model="section.instructions"
-                                               placeholder="Optional instructions for this section"
-                                               class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                                               style="border-radius: 2px;">
+                                        <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                                            Instructions
+                                        </label>
+                                        <div class="space-y-1"
+                                             x-data="richEditor(section, idx, 'instructions')"
+                                             x-init="initEditor(); updatePreview();"
+                                             x-effect="updatePreview()"
+                                             :data-editor-id="editorId">
+                                            <div class="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden" style="border-radius: 2px;">
+                                                <div class="bg-slate-50 dark:bg-slate-700 border-b border-slate-300 dark:border-slate-600 flex items-center">
+                                                    <div class="flex">
+                                                        <button type="button" x-on:click="preview = false"
+                                                                x-bind:class="!preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                                                                class="px-4 py-2 text-xs font-medium border-r transition-colors duration-200">Write</button>
+                                                        <button type="button" x-on:click="preview = true; updatePreview();"
+                                                                x-bind:class="preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                                                                class="px-4 py-2 text-xs font-medium transition-colors duration-200">Preview</button>
+                                                    </div>
+                                                    <div class="ml-auto px-4 py-2">
+                                                        <div class="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                            <span>LaTeX: $formula$</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div x-show="!preview" class="bg-white dark:bg-slate-800">
+                    <textarea x-bind:id="editorId"
+                              :name="'sections_config[' + idx + '][' + field + ']'"
+                              x-model="section[field]"
+                              class="w-full border-0 focus:ring-0 dark:bg-slate-800 dark:text-white"
+                              style="min-height: 150px; resize: vertical;"></textarea>
+                                                </div>
+                                                <div x-show="preview" x-html="previewHtml"
+                                                     class="markdown-preview markdown-body bg-white dark:bg-slate-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
+                                                     style="display: none; min-height: 150px;"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -582,7 +641,83 @@
                 removeSection(idx) {
                     if (this.sections.length > 1) this.sections.splice(idx, 1);
                 },
-            };
+
+                    richEditor(section, idx, field) {
+                        return {
+                            preview: false,
+                            previewHtml: '',
+                            editor: null,
+                            initialized: false,
+                            editorId: 'sec-editor-' + idx + '-' + field + '-' + section._id,
+                            field: field,
+
+                            initEditor() {
+                                if (this.initialized) return;
+                                this.$nextTick(() => {
+                                    const el = document.getElementById(this.editorId);
+                                    if (!el) return;
+                                    const isDark = document.documentElement.classList.contains('dark');
+                                    tinymce.init({
+                                        selector: '#' + this.editorId,
+                                        height: 150,
+                                        menubar: false,
+                                        skin: isDark ? 'oxide-dark' : 'oxide',
+                                        content_css: isDark ? 'dark' : 'default',
+                                        plugins: 'code lists table link image media paste markdown autoresize',
+                                        toolbar: 'undo redo | bold italic strikethrough | h1 h2 h3 | bullist numlist | link image table code | formatselect',
+                                        toolbar_mode: 'floating',
+                                        content_style: "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; background: #fff; color: #111; } body.dark { background: #1f2937 !important; color: #f3f4f6 !important; } .mce-content-body p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }",
+                                        paste_as_text: false,
+                                        setup: (editor) => {
+                                            this.editor = editor;
+                                            editor.on('init', () => {
+                                                this.initialized = true;
+                                                editor.setContent(section[this.field] || '');
+                                                if (isDark) {
+                                                    editor.getBody().classList.add('dark');
+                                                    editor.getDoc().documentElement.classList.add('dark');
+                                                }
+                                            });
+                                            editor.on('change keyup', () => {
+                                                section[this.field] = editor.getContent();
+                                                this.updatePreview();
+                                            });
+                                        },
+                                        formats: {
+                                            bold: {inline: 'strong'},
+                                            italic: {inline: 'em'},
+                                            strikethrough: {inline: 'del'}
+                                        },
+                                        statusbar: false,
+                                        branding: false,
+                                        markdown: { output: 'markdown' }
+                                    });
+                                });
+                            },
+
+                            updatePreview() {
+                                let c = section[this.field] || '';
+                                let html = typeof marked !== 'undefined' ? marked.parse(c) : c;
+                                html = html.replace(/<img([^>]+)>/gi, (m, a) => `<img alt='' ${a} style='max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>`);
+                                this.previewHtml = html;
+                                this.$nextTick(() => {
+                                    if (typeof renderMathInElement !== 'undefined') {
+                                        const p = document.querySelector(`[data-editor-id='${this.editorId}'] .markdown-preview`);
+                                        if (p) renderMathInElement(p, {
+                                            delimiters: [
+                                                {left: '$$', right: '$$', display: true},
+                                                {left: '$', right: '$', display: false}
+                                            ],
+                                            throwOnError: false
+                                        });
+                                    }
+                                });
+                            }
+                        };
+                    },
+
+            }//
+
         }
     </script>
 </x-layouts.app>
