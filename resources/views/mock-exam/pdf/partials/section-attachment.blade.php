@@ -16,12 +16,12 @@
     @elseif($section->isPdfAttachment())
         @foreach(($section->attachment_pdf_images ?? []) as $imagePath)
             <div class="page-break">
-                <img src="{{ public_path('storage/'.$imagePath) }}" style="width: 100%;">
+                <img src="{{ asset('storage/'.$imagePath) }}" style="width: 100%;">
             </div>
         @endforeach
     @elseif($section->isImageAttachment())
         <div class="page-break" style="text-align: center;">
-            <img src="{{ public_path('storage/'.$section->attachment_image_path) }}" style="max-width: 100%;">
+            <img src="{{ asset('storage/'.$section->attachment_image_path) }}" style="max-width: 100%;">
         </div>
     @endif
 @endif

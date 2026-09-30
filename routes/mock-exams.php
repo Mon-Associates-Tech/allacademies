@@ -96,6 +96,9 @@ Route::middleware(['web', 'auth'])
             ->name('subject-exams.pdf.page');
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
+        Route::post('/{subjectExam}/regenerate', [MockExamSubjectExamController::class, 'regenerate'])
+            ->name('subject-exams.regenerate');
+
     });
 
 

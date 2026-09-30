@@ -2,7 +2,8 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "sync-tinymce": "rm -rf public/vendor/tinymce && cp -r node_modules/tinymce public/vendor/tinymce",
+        "build": "vite build && npm run sync-tinymce",
         "copy-pdf-worker": "node resources/js/copy-worker.js"
     },
     "devDependencies": {

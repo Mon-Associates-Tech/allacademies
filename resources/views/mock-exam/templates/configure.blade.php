@@ -1,4 +1,9 @@
 <x-layouts.app>
+
+    @push('head')
+        <script src="{{ asset('js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script>
+
+    @endpush
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
          style="font-family: 'system-ui', -apple-system, sans-serif;"
          x-data="templateForm()">
@@ -245,86 +250,44 @@
                             </div>
 
                             <div class="p-5 space-y-4">
-                                <div class="grid sm:grid-cols-2 gap-4">
-                                    {{-- ── SECTION TITLE EDITOR ──────────────────────────────────────────── --}}
+                                <div class="space-y-4">
+                                    {{-- Title --}}
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                                            Section Title <span class="text-red-500">*</span>
-                                        </label>
-                                        <div class="space-y-1"
-                                             x-data="richEditor(section, idx, 'title')"
-                                             x-init="initEditor(); updatePreview();"
-                                             x-effect="updatePreview()"
+                                        <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Title</label>
+                                        <div class="rich-editor-wrap"
+                                             x-data="richEditor(section, idx, 'title', 300)"
+                                             x-init="initEditor()"
                                              :data-editor-id="editorId">
-                                            <div class="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden" style="border-radius: 2px;">
-                                                <div class="bg-slate-50 dark:bg-slate-700 border-b border-slate-300 dark:border-slate-600 flex items-center">
-                                                    <div class="flex">
-                                                        <button type="button" x-on:click="preview = false"
-                                                                x-bind:class="!preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
-                                                                class="px-4 py-2 text-xs font-medium border-r transition-colors duration-200">Write</button>
-                                                        <button type="button" x-on:click="preview = true; updatePreview();"
-                                                                x-bind:class="preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
-                                                                class="px-4 py-2 text-xs font-medium transition-colors duration-200">Preview</button>
-                                                    </div>
-                                                    <div class="ml-auto px-4 py-2">
-                                                        <div class="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400">
-                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                                            <span>LaTeX: $formula$</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div x-show="!preview" class="bg-white dark:bg-slate-800">
-                    <textarea x-bind:id="editorId"
-                              :name="'sections_config[' + idx + '][' + field + ']'"
-                              x-model="section[field]"
-                              class="w-full border-0 focus:ring-0 dark:bg-slate-800 dark:text-white"
-                              style="min-height: 150px; resize: vertical;"></textarea>
-                                                </div>
-                                                <div x-show="preview" x-html="previewHtml"
-                                                     class="markdown-preview markdown-body bg-white dark:bg-slate-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
-                                                     style="display: none; min-height: 150px;"></div>
+                                            <div class="flex justify-end border-b border-slate-100 dark:border-slate-700">
+                                                <button type="button" @click="preview = !preview; if(preview) updatePreview()" class="px-3 py-1 text-xs font-medium transition-colors rounded-t" :class="preview ? 'text-violet-600 bg-violet-50 dark:bg-violet-900/30' : 'text-slate-500 hover:text-slate-700'">Preview</button>
                                             </div>
+                                            <div x-show="!preview">
+                <textarea :id="editorId"
+                          :name="'sections_config[' + idx + '][' + field + ']'"
+                          x-model="section[field]"
+                          class="hidden"></textarea>
+                                            </div>
+                                            <div x-show="preview" x-html="previewHtml" class="markdown-preview prose prose-sm max-w-none dark:prose-invert p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-b min-h-[200px]"></div>
                                         </div>
                                     </div>
 
-                                    {{-- ── INSTRUCTIONS EDITOR ─────────────────────────────────────────────── --}}
+                                    {{-- Instructions --}}
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                                            Instructions
-                                        </label>
-                                        <div class="space-y-1"
-                                             x-data="richEditor(section, idx, 'instructions')"
-                                             x-init="initEditor(); updatePreview();"
-                                             x-effect="updatePreview()"
+                                        <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Instructions</label>
+                                        <div class="rich-editor-wrap"
+                                             x-data="richEditor(section, idx, 'instructions', 350)"
+                                             x-init="initEditor()"
                                              :data-editor-id="editorId">
-                                            <div class="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden" style="border-radius: 2px;">
-                                                <div class="bg-slate-50 dark:bg-slate-700 border-b border-slate-300 dark:border-slate-600 flex items-center">
-                                                    <div class="flex">
-                                                        <button type="button" x-on:click="preview = false"
-                                                                x-bind:class="!preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
-                                                                class="px-4 py-2 text-xs font-medium border-r transition-colors duration-200">Write</button>
-                                                        <button type="button" x-on:click="preview = true; updatePreview();"
-                                                                x-bind:class="preview ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 border-b-0 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
-                                                                class="px-4 py-2 text-xs font-medium transition-colors duration-200">Preview</button>
-                                                    </div>
-                                                    <div class="ml-auto px-4 py-2">
-                                                        <div class="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400">
-                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                                            <span>LaTeX: $formula$</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div x-show="!preview" class="bg-white dark:bg-slate-800">
-                    <textarea x-bind:id="editorId"
-                              :name="'sections_config[' + idx + '][' + field + ']'"
-                              x-model="section[field]"
-                              class="w-full border-0 focus:ring-0 dark:bg-slate-800 dark:text-white"
-                              style="min-height: 150px; resize: vertical;"></textarea>
-                                                </div>
-                                                <div x-show="preview" x-html="previewHtml"
-                                                     class="markdown-preview markdown-body bg-white dark:bg-slate-800 p-4 overflow-auto prose prose-sm dark:prose-invert max-w-none"
-                                                     style="display: none; min-height: 150px;"></div>
+                                            <div class="flex justify-end border-b border-slate-100 dark:border-slate-700">
+                                                <button type="button" @click="preview = !preview; if(preview) updatePreview()" class="px-3 py-1 text-xs font-medium transition-colors rounded-t" :class="preview ? 'text-violet-600 bg-violet-50 dark:bg-violet-900/30' : 'text-slate-500 hover:text-slate-700'">Preview</button>
                                             </div>
+                                            <div x-show="!preview">
+                <textarea :id="editorId"
+                          :name="'sections_config[' + idx + '][' + field + ']'"
+                          x-model="section[field]"
+                          class="hidden"></textarea>
+                                            </div>
+                                            <div x-show="preview" x-html="previewHtml" class="markdown-preview prose prose-sm max-w-none dark:prose-invert p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-b min-h-[200px]"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -642,79 +605,82 @@
                     if (this.sections.length > 1) this.sections.splice(idx, 1);
                 },
 
-                    richEditor(section, idx, field) {
-                        return {
-                            preview: false,
-                            previewHtml: '',
-                            editor: null,
-                            initialized: false,
-                            editorId: 'sec-editor-' + idx + '-' + field + '-' + section._id,
-                            field: field,
+                richEditor(section, idx, field, height = 300) {
+                    return {
+                        preview: false,
+                        previewHtml: '',
+                        editor: null,
+                        initialized: false,
+                        editorId: 'sec-editor-' + idx + '-' + field + '-' + section._id,
+                        field: field,
+                        editorHeight: height,
+                        initEditor() {
+                            if (this.initialized) return;
+                            this.$nextTick(() => {
+                                const el = document.getElementById(this.editorId);
+                                if (!el) return;
+                                const isDark = document.documentElement.classList.contains('dark');
+                                tinymce.init({
+                                    selector: '#' + this.editorId,
+                                    height: this.editorHeight,
+                                    minHeight: this.editorHeight,
+                                    menubar: false,
+                                    skin: isDark ? 'oxide-dark' : 'oxide',
+                                    content_css: isDark ? 'dark' : 'default',
+                                    // Added advlist, autolink, and other standard plugins to support the new buttons
+                                    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount autoresize',
 
-                            initEditor() {
-                                if (this.initialized) return;
-                                this.$nextTick(() => {
-                                    const el = document.getElementById(this.editorId);
-                                    if (!el) return;
-                                    const isDark = document.documentElement.classList.contains('dark');
-                                    tinymce.init({
-                                        selector: '#' + this.editorId,
-                                        height: 150,
-                                        menubar: false,
-                                        skin: isDark ? 'oxide-dark' : 'oxide',
-                                        content_css: isDark ? 'dark' : 'default',
-                                        plugins: 'code lists table link image media paste markdown autoresize',
-                                        toolbar: 'undo redo | bold italic strikethrough | h1 h2 h3 | bullist numlist | link image table code | formatselect',
-                                        toolbar_mode: 'floating',
-                                        content_style: "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; background: #fff; color: #111; } body.dark { background: #1f2937 !important; color: #f3f4f6 !important; } .mce-content-body p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }",
-                                        paste_as_text: false,
-                                        setup: (editor) => {
-                                            this.editor = editor;
-                                            editor.on('init', () => {
-                                                this.initialized = true;
-                                                editor.setContent(section[this.field] || '');
-                                                if (isDark) {
-                                                    editor.getBody().classList.add('dark');
-                                                    editor.getDoc().documentElement.classList.add('dark');
-                                                }
-                                            });
-                                            editor.on('change keyup', () => {
-                                                section[this.field] = editor.getContent();
-                                                this.updatePreview();
-                                            });
-                                        },
-                                        formats: {
-                                            bold: {inline: 'strong'},
-                                            italic: {inline: 'em'},
-                                            strikethrough: {inline: 'del'}
-                                        },
-                                        statusbar: false,
-                                        branding: false,
-                                        markdown: { output: 'markdown' }
-                                    });
-                                });
-                            },
+                                    // Completely revamped toolbar with all requested features
+                                    toolbar: 'undo redo | formatselect fontfamily fontsize | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table | removeformat | code markdown | help',
 
-                            updatePreview() {
-                                let c = section[this.field] || '';
-                                let html = typeof marked !== 'undefined' ? marked.parse(c) : c;
-                                html = html.replace(/<img([^>]+)>/gi, (m, a) => `<img alt='' ${a} style='max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>`);
-                                this.previewHtml = html;
-                                this.$nextTick(() => {
-                                    if (typeof renderMathInElement !== 'undefined') {
-                                        const p = document.querySelector(`[data-editor-id='${this.editorId}'] .markdown-preview`);
-                                        if (p) renderMathInElement(p, {
-                                            delimiters: [
-                                                {left: '$$', right: '$$', display: true},
-                                                {left: '$', right: '$', display: false}
-                                            ],
-                                            throwOnError: false
+                                    toolbar_mode: 'wrap', // Changed from 'floating' to 'wrap' so it's always visible
+                                    content_style: "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; background: #fff; color: #111; } body.dark { background: #1f2937 !important; color: #f3f4f6 !important; } .mce-content-body p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }",
+                                    paste_as_text: false,
+                                    setup: (editor) => {
+                                        this.editor = editor;
+                                        editor.on('init', () => {
+                                            this.initialized = true;
+                                            editor.setContent(section[this.field] || '');
+                                            if (isDark) {
+                                                editor.getBody().classList.add('dark');
+                                                editor.getDoc().documentElement.classList.add('dark');
+                                            }
                                         });
-                                    }
+                                        editor.on('change keyup', () => {
+                                            section[this.field] = editor.getContent();
+                                            this.updatePreview();
+                                        });
+                                    },
+                                    formats: {
+                                        bold: {inline: 'strong'},
+                                        italic: {inline: 'em'},
+                                        strikethrough: {inline: 'del'}
+                                    },
+                                    statusbar: false,
+                                    branding: false,
                                 });
-                            }
-                        };
-                    },
+                            });
+                        },
+                        updatePreview() {
+                            let c = section[this.field] || '';
+                            let html = typeof marked !== 'undefined' ? marked.parse(c) : c;
+                            html = html.replace(/<img([^>]+)>/gi, (m, a) => `<img alt='' ${a} style='max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>`);
+                            this.previewHtml = html;
+                            this.$nextTick(() => {
+                                if (typeof renderMathInElement !== 'undefined') {
+                                    const p = document.querySelector(`[data-editor-id='${this.editorId}'] .markdown-preview`);
+                                    if (p) renderMathInElement(p, {
+                                        delimiters: [
+                                            {left: '$$', right: '$$', display: true},
+                                            {left: '$', right: '$', display: false}
+                                        ],
+                                        throwOnError: false
+                                    });
+                                }
+                            });
+                        }
+                    };
+                }
 
             }//
 

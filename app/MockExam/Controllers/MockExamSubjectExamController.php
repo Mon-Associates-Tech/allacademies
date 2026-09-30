@@ -5,6 +5,7 @@ namespace App\MockExam\Controllers;
 use App\Http\Controllers\Controller;
 use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSubjectExam;
+use App\MockExam\Models\MockExamTemplate;
 use App\MockExam\Services\MockExamCreationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -149,5 +150,22 @@ class MockExamSubjectExamController extends Controller
     private function ensureOwner(MockExam $exam): void
     {
         abort_unless($exam->user_id === auth()->id(), 403);
+    }
+
+    public function regenerate(MockExam $mockExam, MockExamSubjectExam $subjectExam): RedirectResponse
+    {
+        abort_unless($mockExam->user_id === auth()->id(), 403);
+        abort_if($mockExam->submissions()->exists(), 422, 'This exam has submissions and cannot be regenerated.');
+
+        $template = $subjectExam->template_id
+            ? MockExamTemplate::findOrFail($subjectExam->template_id)
+            : null;
+        abort_unless($template && $template->user_id === auth()->id(), 422, 'This subject exam has no template to regenerate from.');
+
+        $result = $this->creationService->updateSubjectExam($subjectExam, $template->toSubjectExamPayload());
+
+        return redirect()
+            ->route('mock-exams.show', $mockExam)
+            ->with('success', "Subject exam regenerated from template — {$result['questions_created']} question(s) loaded.");
     }
 }

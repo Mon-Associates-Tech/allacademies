@@ -371,6 +371,21 @@
                                     </svg>
                                 </a>
 
+                                @if($se->template_id && !$mockExam->submissions()->exists())
+                                    <form method="POST" action="{{ route('mock-exams.subject-exams.regenerate', [$mockExam, $se]) }}"
+                                          onsubmit="return confirm('Rebuild this subject exam from its template? Current sections and questions will be replaced.')">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-amber-600 border border-slate-200 dark:border-slate-700 hover:border-amber-400 transition-all"
+                                                style="border-radius: 2px;"
+                                                title="Regenerate from template">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
+
                                 {{-- Delete Subject Exam --}}
                                 <form method="POST" action="{{ route('mock-exams.subject-exams.destroy', [$mockExam, $se]) }}"
                                       onsubmit="return confirm('Remove this subject exam and all its questions?')">

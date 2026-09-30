@@ -446,7 +446,9 @@
         @foreach($subjectExam->sections as $sectionIndex => $section)
         <div class="section-wrap {{ $sectionIndex > 0 ? 'page-break' : '' }}">
             <div class="section-header">
-                <div class="section-title">{{ $section->title }}</div>
+                <div class="section-title">
+                <x-ui.latex :content="$section->title" display="true" :pdf="true" />
+                </div>
                 <div class="section-meta hidden">
                     {{ $section->questions->count() }} questions •
                     {{ number_format($section->getTotalMarks(), 1) }} marks
@@ -457,7 +459,7 @@
             </div>
 
             @if($section->instructions)
-            <div class="section-instructions">
+            <div class="section-instructionss">
                 <x-ui.latex :content="$section->instructions" display="true" :pdf="true" class="prose dark:prose-invert max-w-none" />
             </div>
             @endif
