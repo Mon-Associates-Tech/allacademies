@@ -11,6 +11,7 @@ class MockExamPricingTier extends Model
 
     protected $fillable = [
         'name',
+        'user_group',
         'subject_count',
         'price_per_student',
         'print_flat_rate',
@@ -20,9 +21,10 @@ class MockExamPricingTier extends Model
     protected function casts(): array
     {
         return [
+            'user_group'        => MockExamUserGroup::class,
             'price_per_student' => 'decimal:2',
-            'print_flat_rate' => 'decimal:2',
-            'is_active' => 'boolean',
+            'print_flat_rate'   => 'decimal:2',
+            'is_active'         => 'boolean',
         ];
     }
 
@@ -32,16 +34,23 @@ class MockExamPricingTier extends Model
     }
 
     /**
-     * Get the tier for a given subject count, falling back to the highest available tier.
+     * Find the best-matching tier for a subject count and user group.
+     * Falls back to the highest available tier for that group, then to 'individual'.
      */
+    public static function forSubjectCountAndGroup(int $count, string $userGroup = 'individual'): ?self
+    {
+        $find = fn (string $group) => self::active()
+            ->where('user_group', $group)
+            ->where('subject_count', '<=', $count)
+            ->orderByDesc('subject_count')
+            ->first();
+
+        return $find($userGroup) ?? ($userGroup !== 'individual' ? $find('individual') : null);
+    }
+
+    /** @deprecated Use forSubjectCountAndGroup() */
     public static function forSubjectCount(int $count): ?self
     {
-        return self::active()
-            ->where('subject_count', $count)
-            ->first()
-            ?? self::active()
-                ->where('subject_count', '<=', $count)
-                ->orderByDesc('subject_count')
-                ->first();
+        return self::forSubjectCountAndGroup($count, 'individual');
     }
 }

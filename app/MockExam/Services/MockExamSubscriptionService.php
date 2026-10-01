@@ -31,7 +31,8 @@ class MockExamSubscriptionService
 
         return $plan->calculatePrice(
             $config['subject_count'],
-            $config['participant_count'] ?? 0
+            $config['participant_count'] ?? 0,
+            $config['user_group'] ?? 'individual'
         );
     }
 
@@ -74,20 +75,21 @@ class MockExamSubscriptionService
     {
         $plan = MockExamSubscriptionPlan::findOrFail($config['plan_id']);
         $subjectCount = count($config['subject_ids']);
+        $userGroup = $config['user_group'] ?? 'individual';
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
-        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0);
+        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup);
         if ($amount <= 0) {
-            throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count.');
+            throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count and user group.');
         }
 
-        return DB::transaction(function () use ($user, $plan, $config, $amount, $examCyclesPerSubject) {
+        return DB::transaction(function () use ($user, $plan, $config, $amount, $examCyclesPerSubject, $userGroup) {
             $subscription = MockExamSubscription::create([
                 'user_id' => $user->id,
                 'mock_exam_subscription_plan_id' => $plan->id,
                 'type' => $config['type'],
+                'user_group' => $userGroup,
                 'status' => MockExamSubscriptionStatus::Pending,
                 'participant_slots' => $config['participant_count'] ?? 0,
-                // Stored as "exam cycles per subject".
                 'max_exams' => $examCyclesPerSubject,
                 'amount_paid' => $amount,
             ]);
@@ -108,7 +110,7 @@ class MockExamSubscriptionService
 
             $paystackData = $this->paystack->initializeTransaction([
                 'email' => $user->email,
-                'amount' => (int) ($amount * 100), // Paystack uses kobo/pesewas
+                'amount' => (int) ($amount * 100),
                 'reference' => $reference,
                 'currency' => 'GHS',
                 'metadata' => [
@@ -263,12 +265,14 @@ class MockExamSubscriptionService
     {
         $plan = MockExamSubscriptionPlan::findOrFail($config['plan_id']);
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
+        $userGroup = $config['user_group'] ?? 'individual';
 
-        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $examCyclesPerSubject) {
+        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $examCyclesPerSubject, $userGroup) {
             $subscription = MockExamSubscription::create([
                 'user_id' => $targetUser->id,
                 'mock_exam_subscription_plan_id' => $plan->id,
                 'type' => $config['type'],
+                'user_group' => $userGroup,
                 'status' => MockExamSubscriptionStatus::Active,
                 'participant_slots' => $config['participant_count'] ?? 0,
                 'max_exams' => $examCyclesPerSubject,
@@ -294,17 +298,19 @@ class MockExamSubscriptionService
     {
         $plan = MockExamSubscriptionPlan::findOrFail($config['plan_id']);
         $subjectCount = count($config['subject_ids']);
+        $userGroup = $config['user_group'] ?? 'individual';
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
-        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0);
+        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup);
         if ($amount <= 0) {
-            throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count.');
+            throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count and user group.');
         }
 
-        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $amount, $examCyclesPerSubject) {
+        return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $amount, $examCyclesPerSubject, $userGroup) {
             $subscription = MockExamSubscription::create([
                 'user_id' => $targetUser->id,
                 'mock_exam_subscription_plan_id' => $plan->id,
                 'type' => $config['type'],
+                'user_group' => $userGroup,
                 'status' => MockExamSubscriptionStatus::Pending,
                 'participant_slots' => $config['participant_count'] ?? 0,
                 'max_exams' => $examCyclesPerSubject,
@@ -315,7 +321,7 @@ class MockExamSubscriptionService
 
             $subscription->subjects()->sync($config['subject_ids']);
 
-            $reference = 'GES-OWN-'.strtoupper(Str::random(10));
+            $reference = 'MES-OWN-'.strtoupper(Str::random(10));
 
             $payment = MockExamSubscriptionPayment::create([
                 'mock_exam_subscription_id' => $subscription->id,

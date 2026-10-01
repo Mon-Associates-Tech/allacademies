@@ -14,7 +14,7 @@
     @if($activeTab === 'subscriptions')
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">My Exam Subscriptions</h2>
-            <button wire:click="$set('showPurchaseForm', true)"
+            <button wire:click="openPurchaseForm"
                     class="px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700">
                 + New Subscription
             </button>
@@ -27,20 +27,19 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Plan</label>
-                        <select wire:model.live="planId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
-                            <option value="0">Select plan...</option>
-                            @foreach($mockPlans as $plan)
-                                <option value="{{ $plan->id }}">{{ $plan->name }} ({{ $plan->type }})</option>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">I am subscribing as</label>
+                        <select wire:model.live="userGroup" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
+                            @foreach($userGroupOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
-                        @error('planId') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('userGroup') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Delivery Type</label>
                         <select wire:model.live="type" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
-                            <option value="online">Online (students take on platform)</option>
-                            <option value="print">Print (answer sheet generated)</option>
+                            <option value="print">Print</option>
+                            <option value="online">Online</option>
                         </select>
                     </div>
                 </div>
@@ -140,24 +139,20 @@
                 </div>
 
                 @if($calculatedPrice > 0)
-                    <div class="rounded-md border border-indigo-200 bg-indigo-50 p-4">
-                        <div class="text-lg font-semibold text-indigo-700">
+                    <div class="rounded-md border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-700 p-4 mb-4">
+                        <div class="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
                             Total: GHS {{ number_format($calculatedPrice, 2) }}
                         </div>
-
                         @if($selectedPricingTier)
-                            <div class="mt-1 text-sm text-indigo-700">
-                                Pricing Tier: {{ $selectedPricingTier->name }}
+                            <div class="mt-1 text-sm text-indigo-600 dark:text-indigo-400">
+                                Tier: {{ $selectedPricingTier->name }}
                             </div>
                         @endif
-
-                        <div class="mt-1 text-sm text-indigo-600">
-                            @if($type === 'online')
-                                {{ count($selectedSubjectIds) }} subject(s)
-                                × {{ $participantCount }} participant(s)
-                            @else
-                                {{ count($selectedSubjectIds) }} subject(s) flat rate
-                            @endif
+                        <div class="mt-1 text-sm text-indigo-600 dark:text-indigo-400">
+                            {{ count($selectedSubjectIds) }} subject(s)
+                            · {{ $userGroupOptions[$userGroup] ?? $userGroup }}
+                            · {{ $maxExams ?? 1 }} cycle(s)
+                            @if($type === 'online') · {{ $participantCount }} participant(s) @endif
                         </div>
                     </div>
                 @endif
@@ -219,6 +214,10 @@
                             </div>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                 Subjects: {{ $sub->subjects->pluck('name')->join(', ') ?: 'None' }}
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                {{ $sub->user_group instanceof \App\MockExam\Models\MockExamUserGroup ? $sub->user_group->label() : ucfirst(str_replace('_', ' ', $sub->user_group ?? '')) }}
+                                &nbsp;·&nbsp; {{ $sub->max_exams ?? 1 }} cycle(s) per subject
                             </p>
                             @if($sub->type === 'online')
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">

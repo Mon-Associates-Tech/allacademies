@@ -5,12 +5,10 @@ namespace App\Livewire\MockExam\Subscriptions;
 use App\MockExam\Models\MockExamSubscription;
 use App\MockExam\Models\MockExamSubscriptionPlan;
 use App\MockExam\Models\MockExamSubscriptionStatus;
+use App\MockExam\Models\MockExamUserGroup;
 use App\MockExam\Services\MockExamSubscriptionService;
 use App\Models\AcademicSubject;
-use App\ExaminationHub\Models\GeneralExamSubscription;
-use App\ExaminationHub\Models\GeneralExamSubscriptionPlan;
 use App\Models\User;
-use App\Services\GeneralExam\GeneralExamSubscriptionService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -34,7 +32,9 @@ class MockExamSubscriptionManager extends Component
 
     public int $planId = 0;
 
-    public string $type = 'online';
+    public string $type = 'print';
+
+    public string $userGroup = 'individual';
 
     public string $subjectSearch = '';
 
@@ -70,10 +70,8 @@ class MockExamSubscriptionManager extends Component
         $this->recalculatePrice();
     }
 
-    public function updatedType(): void
-    {
-        $this->recalculatePrice();
-    }
+    public function updatedType(): void { $this->recalculatePrice(); }
+    public function updatedUserGroup(): void { $this->recalculatePrice(); }
 
     public function recalculatePrice(): void
     {
@@ -92,7 +90,8 @@ class MockExamSubscriptionManager extends Component
 
         $this->calculatedPrice = $plan->calculatePrice(
             count($this->selectedSubjectIds),
-            $this->participantCount
+            $this->participantCount,
+            $this->userGroup
         );
     }
 
@@ -105,10 +104,11 @@ class MockExamSubscriptionManager extends Component
 
     public function openAllocationForm(): void
     {
-        $this->reset(['selectedUserId', 'selectedUserName', 'planId', 'type', 'selectedSubjectIds', 'participantCount', 'maxExams', 'calculatedPrice', 'subjectSearch']);
+        $this->reset(['selectedUserId', 'selectedUserName', 'planId', 'type', 'userGroup', 'selectedSubjectIds', 'participantCount', 'maxExams', 'calculatedPrice', 'subjectSearch']);
         $this->allocationMode = 'grant';
         $this->participantCount = 30;
-        $this->type = 'online';
+        $this->type = 'print';
+        $this->userGroup = 'individual';
         $this->maxExams = 1;
         $this->showAllocationForm = true;
     }
@@ -116,23 +116,25 @@ class MockExamSubscriptionManager extends Component
     public function allocate(MockExamSubscriptionService $service): void
     {
         $this->validate([
-            'selectedUserId' => 'required|exists:users,id',
-            'planId' => 'required|exists:general_exam_subscription_plans,id',
-            'type' => 'required|in:online,print',
-            'selectedSubjectIds' => 'required|array|min:1',
-            'participantCount' => 'required_if:type,online|integer|min:1',
-            'maxExams' => 'required|integer|min:1',
+            'selectedUserId'     => 'required|exists:users,id',
+            'planId'             => 'required|exists:mock_exam_subscription_plans,id',
+            'type'               => 'required|in:online,print',
+            'userGroup'          => 'required|in:individual,school,local_government,organization',
+            'selectedSubjectIds' => 'required|array|min:1|distinct',
+            'participantCount'   => 'required_if:type,online|integer|min:1',
+            'maxExams'           => 'required|integer|min:1',
         ]);
 
         $owner = auth()->user();
         $targetUser = User::findOrFail($this->selectedUserId);
 
         $config = [
-            'plan_id' => $this->planId,
-            'type' => $this->type,
-            'subject_ids' => $this->selectedSubjectIds,
+            'plan_id'         => $this->planId,
+            'type'            => $this->type,
+            'user_group'      => $this->userGroup,
+            'subject_ids'     => array_unique($this->selectedSubjectIds),
             'participant_count' => $this->type === 'online' ? $this->participantCount : 0,
-            'max_exams' => $this->maxExams,
+            'max_exams'       => $this->maxExams,
         ];
 
         try {
@@ -177,10 +179,11 @@ class MockExamSubscriptionManager extends Component
 
     public function addSubject(int $id): void
     {
-        if (! in_array($id, $this->selectedSubjectIds)) {
-            $this->selectedSubjectIds[] = $id;
-            $this->recalculatePrice();
+        if (in_array($id, $this->selectedSubjectIds)) {
+            return; // prevent duplicates
         }
+        $this->selectedSubjectIds[] = $id;
+        $this->recalculatePrice();
         $this->subjectSearch = '';
     }
 

@@ -1,19 +1,18 @@
 <div>
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">General Exam Subscriptions</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Mock Exam Subscriptions</h2>
         <button wire:click="openAllocationForm"
                 class="px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700">
             Allocate Subscription
         </button>
     </div>
 
-    {{-- Allocation Form --}}
     @if($showAllocationForm)
         <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Allocate Subscription to User</h3>
 
             {{-- User Search --}}
-            <div class="mb-4" x-data>
+            <div class="mb-4">
                 <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">User</label>
                 @if($selectedUserId)
                     <div class="flex items-center gap-2 p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-700">
@@ -37,8 +36,7 @@
                 @error('selectedUserId') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                {{-- Plan --}}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Plan</label>
                     <select wire:model.live="planId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
@@ -50,19 +48,30 @@
                     @error('planId') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Type --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Delivery Type</label>
                     <select wire:model.live="type" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
-                        <option value="online">Online</option>
                         <option value="print">Print</option>
+                        <option value="online">Online</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">User Group</label>
+                    <select wire:model.live="userGroup" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
+                        @foreach(\App\MockExam\Models\MockExamUserGroup::options() as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('userGroup') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             {{-- Subjects --}}
             <div class="mb-4">
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Subjects</label>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Subjects <span class="text-gray-400 font-normal">(each subject can only be added once)</span>
+                </label>
 
                 @if($this->selectedSubjects->isNotEmpty())
                     <div class="flex flex-wrap gap-1.5 mb-2">
@@ -92,7 +101,7 @@
                         </div>
                     @elseif(strlen($subjectSearch) >= 1)
                         <div class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg px-3 py-2 text-sm text-gray-400">
-                            No subjects found. Create subjects via Academic Management first.
+                            No subjects found.
                         </div>
                     @endif
                 </div>
@@ -111,6 +120,7 @@
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Exam Cycles Per Subject</label>
                     <input type="number" wire:model="maxExams" min="1"
                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
+                    <p class="text-xs text-gray-400 mt-1">How many times each subject can be printed/used.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Allocation Mode</label>
@@ -123,9 +133,13 @@
 
             @if($calculatedPrice > 0)
                 <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <p class="text-sm text-blue-700 dark:text-blue-300">
-                        Calculated Price: <strong>GHS {{ number_format($calculatedPrice, 2) }}</strong>
-                        @if($allocationMode === 'grant') <span class="text-xs">(waived — grant mode)</span> @endif
+                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                        GHS {{ number_format($calculatedPrice, 2) }}
+                        @if($allocationMode === 'grant') <span class="text-xs font-normal">(waived — grant mode)</span> @endif
+                    </p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                        {{ count($selectedSubjectIds) }} subject(s) ×
+                        {{ \App\MockExam\Models\MockExamUserGroup::from($userGroup)->label() }} rate
                     </p>
                 </div>
             @endif
@@ -156,7 +170,6 @@
         </select>
     </div>
 
-    {{-- Subscriptions Table --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 dark:bg-gray-700/50">
@@ -164,8 +177,9 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Plan</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Type</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User Group</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Subjects</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Slots</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Cycles/Subject</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Granted By</th>
                     <th class="px-4 py-3"></th>
@@ -184,17 +198,16 @@
                                 {{ ucfirst($sub->type) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $sub->subjects->pluck('name')->join(', ') ?: '—' }}</td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                            @if($sub->type === 'online')
-                                {{ $sub->participants_used }}/{{ $sub->participant_slots }}
-                            @else
-                                —
-                            @endif
+                        <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                            {{ $sub->user_group instanceof \App\MockExam\Models\MockExamUserGroup ? $sub->user_group->label() : ucfirst(str_replace('_', ' ', $sub->user_group ?? '—')) }}
                         </td>
+                        <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                            {{ $sub->subjects->pluck('name')->join(', ') ?: '—' }}
+                        </td>
+                        <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{{ $sub->max_exams ?? 1 }}</td>
                         <td class="px-4 py-3">
                             <span class="px-2 py-0.5 rounded-full text-xs font-medium
-                                {{ $sub->status->value === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : '' }}
+                                {{ $sub->status->value === 'active'  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : '' }}
                                 {{ $sub->status->value === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : '' }}
                                 {{ in_array($sub->status->value, ['expired','cancelled']) ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : '' }}">
                                 {{ ucfirst($sub->status->value) }}
@@ -213,7 +226,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No subscriptions found.</td>
+                        <td colspan="9" class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No subscriptions found.</td>
                     </tr>
                 @endforelse
             </tbody>

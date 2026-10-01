@@ -1,9 +1,9 @@
 <div>
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">General Exam Pricing Tiers</h2>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Mock Exam Pricing Tiers</h2>
         <button wire:click="openCreate"
                 class="px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700">
-            Add Tiers
+            Add Tier
         </button>
     </div>
 
@@ -12,37 +12,39 @@
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
                 {{ $editingId ? 'Edit Tier' : 'New Tier' }}
             </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Tier Name</label>
+                    <input type="text" wire:model="name" placeholder="e.g. School – 3 Subjects"
+                           class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
+                    @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
 
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">
-                        Tier Name
-                    </label>
-
-                    <input
-                        type="text"
-                        id="name"
-                        wire:model="name"
-                        placeholder="e.g. Basic Tier"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    >
-
-                    @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">User Group</label>
+                    <select wire:model="userGroup"
+                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm">
+                        @foreach($this->userGroupOptions as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('userGroup') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
+
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Subject Count</label>
                     <input type="number" wire:model="subjectCount" min="1" max="20"
                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
                     @error('subjectCount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
+
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Price Per Student (GHS) — Online</label>
                     <input type="number" step="0.01" wire:model="pricePerStudent"
                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm" />
                     @error('pricePerStudent') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
+
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Print Flat Rate (GHS) — Per Subject</label>
                     <input type="number" step="0.01" wire:model="printFlatRate"
@@ -50,6 +52,7 @@
                     @error('printFlatRate') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
+
             <div class="flex items-center gap-3 mt-4">
                 <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <input type="checkbox" wire:model="isActive" class="rounded border-gray-300 dark:border-gray-600" />
@@ -74,9 +77,10 @@
             <thead class="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">User Group</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Subjects</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Online (per student)</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Print (flat rate/subject)</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Print (flat/subject)</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</th>
                     <th class="px-4 py-3"></th>
                 </tr>
@@ -84,7 +88,12 @@
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 @forelse($tiers as $tier)
                     <tr wire:key="tier-{{ $tier['id'] }}" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{{ $tier['name'] ?? 'Base Tier' }}</td>
+                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{{ $tier['name'] ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                {{ \App\MockExam\Models\MockExamUserGroup::from($tier['user_group'])->label() }}
+                            </span>
+                        </td>
                         <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $tier['subject_count'] }} subject(s)</td>
                         <td class="px-4 py-3 text-gray-600 dark:text-gray-300">GHS {{ number_format($tier['price_per_student'], 2) }}</td>
                         <td class="px-4 py-3 text-gray-600 dark:text-gray-300">GHS {{ number_format($tier['print_flat_rate'], 2) }}</td>
@@ -109,7 +118,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                        <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
                             No pricing tiers configured yet.
                         </td>
                     </tr>

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+// MockExamUserGroup is in the same namespace — no import needed
+
 class MockExamSubscription extends Model
 {
     use HasFactory, SoftDeletes;
@@ -19,6 +21,7 @@ class MockExamSubscription extends Model
         'user_id',
         'mock_exam_subscription_plan_id',
         'type',
+        'user_group',
         'status',
         'participant_slots',
         'participants_used',
@@ -34,7 +37,9 @@ class MockExamSubscription extends Model
     protected function casts(): array
     {
         return [
-            'status' => MockExamSubscriptionStatus::class,
+            'status'     => MockExamSubscriptionStatus::class,
+            'user_group' => MockExamUserGroup::class,
+
             'amount_paid' => 'decimal:2',
             'granted_by_owner' => 'boolean',
             'activated_at' => 'datetime',
@@ -51,7 +56,7 @@ class MockExamSubscription extends Model
 
     public function plan(): BelongsTo
     {
-        return $this->belongsTo(MockExamSubscriptionPlan::class, 'general_exam_subscription_plan_id');
+        return $this->belongsTo(MockExamSubscriptionPlan::class, 'mock_exam_subscription_plan_id');
     }
 
     public function grantedBy(): BelongsTo

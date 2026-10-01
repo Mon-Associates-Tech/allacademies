@@ -3,6 +3,7 @@
 namespace App\Livewire\MockExam\Subscriptions;
 
 use App\MockExam\Models\MockExamPricingTier;
+use App\MockExam\Models\MockExamUserGroup;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -15,6 +16,8 @@ class MockExamPricingTierManager extends Component
     public ?int $editingId = null;
 
     public string $name = '';
+
+    public string $userGroup = 'individual';
 
     public int $subjectCount = 1;
 
@@ -38,18 +41,19 @@ class MockExamPricingTierManager extends Component
             ->toArray();
     }
 
+    public function getUserGroupOptionsProperty(): array
+    {
+        return MockExamUserGroup::options();
+    }
+
     public function openCreate(): void
     {
         $this->reset([
-            'editingId',
-            'name',
-            'subjectCount',
-            'pricePerStudent',
-            'printFlatRate',
-            'isActive',
+            'editingId', 'name', 'userGroup', 'subjectCount',
+            'pricePerStudent', 'printFlatRate', 'isActive',
         ]);
-
         $this->isActive = true;
+        $this->userGroup = 'individual';
         $this->showForm = true;
     }
 
@@ -59,6 +63,9 @@ class MockExamPricingTierManager extends Component
 
         $this->editingId = $id;
         $this->name = (string) ($tier->name ?? '');
+        $this->userGroup = $tier->user_group instanceof MockExamUserGroup
+            ? $tier->user_group->value
+            : (string) ($tier->user_group ?? 'individual');
         $this->subjectCount = (int) $tier->subject_count;
         $this->pricePerStudent = (string) $tier->price_per_student;
         $this->printFlatRate = (string) $tier->print_flat_rate;
@@ -71,25 +78,22 @@ class MockExamPricingTierManager extends Component
     {
         $this->validate([
             'name' => [
-                'required',
-                'string',
-                'max:255',
-
-                // Optional but recommended: prevent duplicate tier names
-                Rule::unique('mock_exam_pricing_tiers', 'name')
-                    ->ignore($this->editingId),
+                'required', 'string', 'max:255',
+                Rule::unique('mock_exam_pricing_tiers', 'name')->ignore($this->editingId),
             ],
-            'subjectCount' => 'required|integer|min:1|max:20',
+            'userGroup'       => 'required|in:individual,school,local_government,organization',
+            'subjectCount'    => 'required|integer|min:1|max:20',
             'pricePerStudent' => 'required|numeric|min:0',
-            'printFlatRate' => 'required|numeric|min:0',
+            'printFlatRate'   => 'required|numeric|min:0',
         ]);
 
         $data = [
-            'name' => $this->name,
-            'subject_count' => $this->subjectCount,
+            'name'              => $this->name,
+            'user_group'        => $this->userGroup,
+            'subject_count'     => $this->subjectCount,
             'price_per_student' => $this->pricePerStudent,
-            'print_flat_rate' => $this->printFlatRate,
-            'is_active' => $this->isActive,
+            'print_flat_rate'   => $this->printFlatRate,
+            'is_active'         => $this->isActive,
         ];
 
         if ($this->editingId) {

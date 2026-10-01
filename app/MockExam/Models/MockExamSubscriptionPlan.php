@@ -57,22 +57,22 @@ class MockExamSubscriptionPlan extends Model
      * Calculate the price for this plan given a subject count and participant count.
      * If base_price is set (> 0), it overrides tier-based calculation.
      */
-    public function calculatePrice(int $subjectCount, int $participantCount = 0): float
+    public function calculatePrice(int $subjectCount, int $participantCount = 0, string $userGroup = 'individual', int $examCycles = 1): float
     {
         if ($this->base_price > 0) {
-            return (float) $this->base_price;
+            return (float) $this->base_price * max(1, $examCycles);
         }
 
-        $tier = MockExamPricingTier::forSubjectCount($subjectCount);
+        $tier = MockExamPricingTier::forSubjectCountAndGroup($subjectCount, $userGroup);
 
         if (! $tier) {
             return 0.0;
         }
 
         if ($this->type === 'print') {
-            return (float) $tier->print_flat_rate * $subjectCount;
+            return (float) $tier->print_flat_rate * $subjectCount * max(1, $examCycles);
         }
 
-        return (float) $tier->price_per_student * $participantCount;
+        return (float) $tier->price_per_student * $participantCount * max(1, $examCycles);
     }
 }
