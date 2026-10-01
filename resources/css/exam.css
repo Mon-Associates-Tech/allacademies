@@ -1,0 +1,56 @@
+
+@layer base {
+    :root {
+        --c-paper: 245 243 236;
+        --c-surface: 255 255 255;
+        --c-surface-2: 250 248 241;
+        --c-ink: 29 37 52;
+        --c-ink-soft: 90 98 116;
+        --c-muted: 139 144 157;
+        --c-line: 226 221 208;
+        --c-line-strong: 201 195 177;
+        --c-accent: 178 58 42;
+        --c-primary: 34 48 79;
+        --c-primary-hi: 45 63 104;
+        --c-on-primary: 247 246 240;
+        --c-ok: 30 122 77;
+        --c-warn: 180 83 9;
+    }
+
+    .dark {
+        --c-paper: 14 18 25;
+        --c-surface: 22 27 38;
+        --c-surface-2: 18 23 34;
+        --c-ink: 233 235 241;
+        --c-ink-soft: 170 177 192;
+        --c-muted: 126 133 150;
+        --c-line: 42 49 65;
+        --c-line-strong: 59 67 86;
+        --c-accent: 224 96 76;
+        --c-primary: 233 235 241;
+        --c-primary-hi: 255 255 255;
+        --c-on-primary: 21 26 38;
+        --c-ok: 76 192 138;
+        --c-warn: 226 164 84;
+    }
+}
+
+@layer utilities {
+    /* Ruled exam-paper background + red margin line (≥ 900px) */
+    .bg-exam-sheet {
+        background:
+            radial-gradient(900px 420px at 88% -8%, rgb(var(--c-primary) / 0.10), transparent 62%),
+            repeating-linear-gradient(180deg, transparent 0 31px, rgb(var(--c-ink) / 0.05) 31px 32px),
+            rgb(var(--c-paper));
+    }
+
+    @media (min-width: 900px) {
+        .bg-exam-sheet {
+            background:
+                linear-gradient(90deg, transparent 0 79px, rgb(var(--c-accent) / 0.16) 79px 80px, transparent 80px),
+                radial-gradient(900px 420px at 88% -8%, rgb(var(--c-primary) / 0.10), transparent 62%),
+                repeating-linear-gradient(180deg, transparent 0 31px, rgb(var(--c-ink) / 0.05) 31px 32px),
+                rgb(var(--c-paper));
+        }
+    }
+}

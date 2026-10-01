@@ -2,6 +2,8 @@
 @import './additional-styles/fullcalender.css';
 @import './design-tokens.css';
 @import './prose-themed.css';
+@import './exam.css';
+
 
 @tailwind base;
 @tailwind components;

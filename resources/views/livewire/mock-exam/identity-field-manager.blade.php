@@ -1,129 +1,131 @@
-<div class="max-w-5xl mx-auto px-4 py-8">
-    <div class="mb-6">
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-            Define the fields every user fills in for their exam identity section — shown at the top of every generated
-            exam, above the front page.
-        </p>
-    </div>
+{{-- resources/views/livewire/mock-exam/identity-fields.blade.php --}}
 
-    <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-        {{-- Form --}}
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4"
-             style="border-radius: 2px;">
-            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                {{ $editingId ? 'Edit Field' : 'Add Field' }}
-            </h2>
-            <form wire:submit.prevent="save" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Key</label>
-                    <input type="text" wire:model="key" placeholder="school_name"
-                           class="w-full px-2.5 py-1.5 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                           style="border-radius: 2px;">
-                    @error('key') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Label</label>
-                    <input type="text" wire:model="label" placeholder="School Name"
-                           class="w-full px-2.5 py-1.5 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                           style="border-radius: 2px;">
-                    @error('label') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Type</label>
-                    <select wire:model="type"
-                            class="w-full px-2.5 py-1.5 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                            style="border-radius: 2px;">
+<x-exam.page>
+    <x-exam.header
+        eyebrow="ADMIN · EXAM IDENTITY SCHEMA"
+        title="Identity Fields"
+        sub="Define the fields every user fills in for their exam identity section — shown at the top of every generated exam, above the front page."
+        :lines="['FIELD', 'SCHEMA']"
+    />
+
+    <x-exam.flash />
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+
+        {{-- ============ Form ============ --}}
+        <x-exam.card class="h-fit animate-rise lg:sticky lg:top-7" :padded="false">
+            <x-slot:header>
+                <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">
+                    {{ $editingId ? 'EDIT FIELD · #' . $editingId : 'NEW FIELD' }}
+                </p>
+            </x-slot:header>
+
+            <form wire:submit.prevent="save" class="space-y-4 p-5">
+                <x-exam.field bare label="Key" required>
+                    <x-exam.input wire:model="key" placeholder="school_name" />
+                </x-exam.field>
+
+                <x-exam.field bare label="Label" required>
+                    <x-exam.input wire:model="label" placeholder="School Name" />
+                </x-exam.field>
+
+                <x-exam.field bare label="Type">
+                    <x-exam.select wire:model="type">
                         <option value="text">Text</option>
                         <option value="image">Image</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Pretext (optional)</label>
-                    <input type="text" wire:model="pretext" placeholder="AllAcademies Examination Conducted For"
-                           class="w-full px-2.5 py-1.5 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                           style="border-radius: 2px;">
-                </div>
+                    </x-exam.select>
+                </x-exam.field>
 
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Font Size (pt) — text fields
-                        only</label>
-                    <input type="number" wire:model="fontSize" min="6" max="72"
-                           class="w-full px-2.5 py-1.5 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                           style="border-radius: 2px;">
-                </div>
-                <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <input type="checkbox" wire:model="sameRow"> Same row as previous field
-                </label>
-                <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <input type="checkbox" wire:model="isRequired"> Required
-                </label>
-                <div class="flex gap-2 pt-1">
-                    <button type="submit"
-                            class="flex-1 px-3 py-2 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700"
-                            style="border-radius: 2px;">
-                        {{ $editingId ? 'Update' : 'Add Field' }}
-                    </button>
-                    @if($editingId)
-                        <button type="button" wire:click="resetForm"
-                                class="px-3 py-2 text-xs font-medium text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
-                                style="border-radius: 2px;">
-                            Cancel
-                        </button>
-                    @endif
+                <x-exam.field bare label="Pretext (optional)">
+                    <x-exam.input wire:model="pretext" placeholder="AllAcademies Examination Conducted For" />
+                    <p class="mt-1.5 font-mono text-[10.5px] tracking-wide text-muted">
+                        PRINTS BEFORE THE VALUE ON THE SHEET
+                    </p>
+                </x-exam.field>
+
+                <x-exam.field bare label="Font Size (pt) — text fields only">
+                    <x-exam.input type="number" min="6" max="72" wire:model="fontSize" />
+                </x-exam.field>
+
+                <div class="space-y-2.5 border-t border-dashed border-line pt-4">
+                    <label class="flex cursor-pointer items-center gap-2.5 text-sm text-ink-soft">
+                        <input type="checkbox" wire:model="sameRow" class="h-4 w-4 rounded border-line-strong accent-primary focus:ring-primary/20" />
+                        Same row as previous field
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2.5 text-sm text-ink-soft">
+                        <input type="checkbox" wire:model="isRequired" class="h-4 w-4 rounded border-line-strong accent-primary focus:ring-primary/20" />
+                        Required <span class="font-bold text-accent">*</span>
+                    </label>
                 </div>
             </form>
-        </div>
 
-        {{-- List --}}
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden"
-             style="border-radius: 2px;">
+            <x-slot:footer>
+                <div class="flex gap-2">
+                    <x-exam.button type="submit" wire:click="save">
+                        {{ $editingId ? 'Update' : 'Add Field' }}
+                    </x-exam.button>
+                    @if($editingId)
+                        <x-exam.button type="button" variant="ghost" wire:click="resetForm">Cancel</x-exam.button>
+                    @endif
+                </div>
+            </x-slot:footer>
+        </x-exam.card>
+
+        {{-- ============ List ============ --}}
+        <div class="animate-rise [animation-delay:60ms]">
+            <p class="mb-3 font-mono text-[10.5px] tracking-[0.14em] text-muted">
+                REGISTERED FIELDS · {{ count($fields) }}
+            </p>
+
             @if(empty($fields))
-                <div class="p-6 text-sm text-slate-500 text-center">No fields yet — add one on the left.</div>
+                <x-exam.empty compact title="No fields yet" description="Add one on the left to start building the exam header." />
             @else
-                <table class="w-full text-sm">
-                    <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-700 text-left text-xs text-slate-500 uppercase">
-                        <th class="px-4 py-2">Order</th>
-                        <th class="px-4 py-2">Key</th>
-                        <th class="px-4 py-2">Label</th>
-                        <th class="px-4 py-2">Type</th>
-                        <th class="px-4 py-2">Row</th>
-                        <th class="px-4 py-2">Pretext</th>
-                        <th class="px-4 py-2"></th>
-                    </tr>
-                    </thead>
-                    <tbody>
+                <x-exam.table :headers="['Order', 'Key', 'Label', 'Type', 'Row', 'Pretext', '']">
                     @foreach($fields as $field)
-                        <tr class="border-b border-slate-100 dark:border-slate-800">
-                            <td class="px-4 py-2 whitespace-nowrap">
-                                <button type="button" wire:click="moveUp({{ $field->id }})"
-                                        class="text-slate-400 hover:text-slate-700">↑
-                                </button>
-                                <button type="button" wire:click="moveDown({{ $field->id }})"
-                                        class="text-slate-400 hover:text-slate-700">↓
-                                </button>
+                        <tr wire:key="field-{{ $field->id }}" class="transition hover:bg-surface-2/60">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" wire:click="moveUp({{ $field->id }})"
+                                            aria-label="Move up"
+                                            class="grid h-7 w-7 place-items-center rounded border border-line bg-surface text-muted transition hover:border-primary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">↑</button>
+                                    <button type="button" wire:click="moveDown({{ $field->id }})"
+                                            aria-label="Move down"
+                                            class="grid h-7 w-7 place-items-center rounded border border-line bg-surface text-muted transition hover:border-primary hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">↓</button>
+                                </div>
                             </td>
-                            <td class="px-4 py-2 font-mono text-xs text-slate-600 dark:text-slate-400">{{ $field->key }}</td>
-                            <td class="px-4 py-2 text-slate-700 dark:text-slate-300">{{ $field->label }}</td>
-                            <td class="px-4 py-2 text-slate-500">
-                                {{ ucfirst($field->type) }}{{ $field->type === 'text' && $field->font_size ? ' · '.$field->font_size.'pt' : '' }}
+                            <td class="px-4 py-3">
+                                <code class="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-ink-soft">{{ $field->key }}</code>
                             </td>
-                            <td class="px-4 py-2 text-xs text-slate-400">{{ $field->same_row ? '↳ same row' : 'New row' }}</td>
-                            <td class="px-4 py-2 text-slate-400 text-xs">{{ $field->pretext ?: '—' }}</td>
-                            <td class="px-4 py-2 text-right whitespace-nowrap">
-                                <button type="button" wire:click="edit({{ $field->id }})"
-                                        class="text-xs text-violet-600 hover:text-violet-800 mr-3">Edit
-                                </button>
-                                <button type="button" wire:click="delete({{ $field->id }})"
-                                        wire:confirm="Delete this field? Existing saved values for it stay in the database but won't display."
-                                        class="text-xs text-red-600 hover:text-red-800">Delete
-                                </button>
+                            <td class="px-4 py-3 font-semibold text-ink">{{ $field->label }}</td>
+                            <td class="px-4 py-3">
+                                <x-exam.badge :tone="$field->type === 'image' ? 'warn' : 'primary'">
+                                    {{ ucfirst($field->type) }}{{ $field->type === 'text' && $field->font_size ? ' · ' . $field->font_size . 'pt' : '' }}
+                                </x-exam.badge>
+                            </td>
+                            <td class="px-4 py-3 font-mono text-[10.5px] tracking-wide text-muted">
+                                {{ $field->same_row ? '↳ SAME ROW' : 'NEW ROW' }}
+                            </td>
+                            <td class="px-4 py-3 max-w-[180px] truncate font-mono text-[11px] text-muted">
+                                {{ $field->pretext ?: '—' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-end gap-3">
+                                    <x-exam.link-button wire:click="edit({{ $field->id }})">Edit</x-exam.link-button>
+                                    <x-exam.link-button tone="danger" wire:click="delete({{ $field->id }})"
+                                                        wire:confirm="Delete this field? Existing saved values for it stay in the database but won't display.">
+                                        Delete
+                                    </x-exam.link-button>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
-                    </tbody>
-                </table>
+                </x-exam.table>
+
+                <p class="mt-3 font-mono text-[10.5px] tracking-wide text-muted">
+                    TIP · DRAG-ORDER IS MANUAL. USE ↑ / ↓ TO REARRANGE THE HEADER BLOCK ON THE GENERATED PDF.
+                </p>
             @endif
         </div>
+
     </div>
-</div>
+</x-exam.page>

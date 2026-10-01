@@ -36,6 +36,48 @@ module.exports = {
                 retro:   '#01B3EF',
                 range:   '#F05F19',
                 vert:    '#7DC353',
+                            paper:   'rgb(var(--c-paper) / <alpha-value>)',
+                surface: {
+                    DEFAULT: 'rgb(var(--c-surface) / <alpha-value>)',
+                    2:       'rgb(var(--c-surface-2) / <alpha-value>)',
+                },
+                ink: {
+                    DEFAULT: 'rgb(var(--c-ink) / <alpha-value>)',
+                    soft:    'rgb(var(--c-ink-soft) / <alpha-value>)',
+                },
+                muted: 'rgb(var(--c-muted) / <alpha-value>)',
+                line: {
+                    DEFAULT: 'rgb(var(--c-line) / <alpha-value>)',
+                    strong:  'rgb(var(--c-line-strong) / <alpha-value>)',
+                },
+                accent:  'rgb(var(--c-accent) / <alpha-value>)',
+                primary: {
+                    DEFAULT: 'rgb(var(--c-primary) / <alpha-value>)',
+                    hi:      'rgb(var(--c-primary-hi) / <alpha-value>)',
+                },
+                'on-primary': 'rgb(var(--c-on-primary) / <alpha-value>)',
+                ok:            'rgb(var(--c-ok) / <alpha-value>)',
+                warn: 'rgb(var(--c-warn) / <alpha-value>)',
+            },
+            fontFamily: {
+                sans:    ['"Instrument Sans"', ...defaultTheme.fontFamily.sans],
+                display: ['"Zilla Slab"', 'Georgia', 'serif'],
+                mono:    ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
+            },
+            keyframes: {
+                rise: {
+                    '0%':   { opacity: '0', transform: 'translateY(8px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                stamp: {
+                    '0%':   { opacity: '0', transform: 'rotate(8deg) scale(1.5)' },
+                    '60%':  { opacity: '1' },
+                    '100%': { opacity: '0.9', transform: 'rotate(8deg) scale(1)' },
+                },
+            },
+            animation: {
+                rise:  'rise 0.5s ease both',
+                stamp: 'stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both',
             },
             fontFamily: {
                 sans: ['Exo', ...defaultTheme.fontFamily.sans],
