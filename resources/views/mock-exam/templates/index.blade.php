@@ -132,6 +132,30 @@
                                 </div>
 
                                 <div class="flex items-center gap-2">
+                                    {{-- Assign to Mock --}}
+                                    <form method="POST" action="{{ route('mock-exams.templates.assign', $template) }}"
+                                          class="flex items-center gap-1.5">
+                                        @csrf
+                                        @method('PATCH')
+                                        <select name="mock_exam_id"
+                                                class="text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                                                style="border-radius: 2px; min-width: 160px;">
+                                            <option value="">— No mock —</option>
+                                            @foreach($userMocks as $mock)
+                                                <option value="{{ $mock->id }}" @selected($template->mock_exam_id === $mock->id)>
+                                                    {{ Str::limit($mock->title, 35) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <button type="submit"
+                                                class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 transition-colors"
+                                                style="border-radius: 2px;"
+                                                title="Save assignment">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </button>
+                                    </form>
                                     <a href="{{ route('mock-exams.templates.edit', $template) }}"
                                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors"
                                        style="border-radius: 2px;">

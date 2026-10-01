@@ -17,6 +17,7 @@ class MockExamTemplate extends Model
 
     protected $fillable = [
         'user_id',
+        'mock_exam_id',
         'academic_group_id',
         'academic_level_id',
         'academic_subject_id',
@@ -43,6 +44,11 @@ class MockExamTemplate extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function mockExam(): BelongsTo
+    {
+        return $this->belongsTo(\App\MockExam\Models\MockExam::class);
     }
 
     public function academicGroup(): BelongsTo

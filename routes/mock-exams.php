@@ -96,6 +96,7 @@ Route::middleware(['web', 'auth'])
             ->name('subject-exams.pdf.page');
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
+        Route::get('/{mockExam}/templates/create', [MockExamTemplateController::class, 'createForMock'])->name('templates.create-for-mock');
         Route::post('/{subjectExam}/regenerate', [MockExamSubjectExamController::class, 'regenerate'])
             ->name('subject-exams.regenerate');
 
@@ -147,6 +148,7 @@ Route::middleware(['web', 'auth'])
         Route::post('/', [MockExamTemplateController::class, 'store'])->name('store');
         Route::put('/{template}', [MockExamTemplateController::class, 'update'])->name('update');
         Route::delete('/{template}', [MockExamTemplateController::class, 'destroy'])->name('destroy');
+        Route::patch('/{template}/assign', [MockExamTemplateController::class, 'assign'])->name('assign');
     });
 
 // ─── Grade scales — own top-level prefix, zero conflict with {mockExam} ───────

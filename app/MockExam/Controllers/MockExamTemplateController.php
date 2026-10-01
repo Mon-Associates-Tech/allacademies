@@ -28,6 +28,22 @@ class MockExamTemplateController extends Controller
     {
         return view('mock-exam.templates.create', [
             'template' => null,
+            'mockExamId' => null,
+            'hierarchyTree' => MockExamController::hierarchyTree(),
+        ]);
+    }
+
+    /**
+     * Start the template creation wizard pre-bound to a specific mock exam.
+     */
+    public function createForMock(MockExam $mockExam): View
+    {
+        $this->ensureOwner($mockExam);
+        session(['template_mock_exam_id' => $mockExam->id]);
+
+        return view('mock-exam.templates.create', [
+            'template' => null,
+            'mockExamId' => $mockExam->id,
             'hierarchyTree' => MockExamController::hierarchyTree(),
         ]);
     }
@@ -64,6 +80,7 @@ class MockExamTemplateController extends Controller
         return view('mock-exam.templates.configure', [
             'hierarchyTree' => MockExamController::hierarchyTree(),
             'template' => null,
+            'mockExamId' => session('template_mock_exam_id'),
             'frontPageConfigJson' => session('template_front_page_config', '{"blocks":[]}'),
         ]);
     }
@@ -98,6 +115,7 @@ class MockExamTemplateController extends Controller
 
         MockExamTemplate::create([
             'user_id' => auth()->id(),
+            'mock_exam_id' => session('template_mock_exam_id') ?: ($payload['mock_exam_id'] ?? null),
             'academic_group_id' => $payload['academic_group_id'] ?? null,
             'academic_level_id' => $payload['academic_level_id'] ?? null,
             'academic_subject_id' => $payload['academic_subject_id'],
@@ -110,7 +128,7 @@ class MockExamTemplateController extends Controller
         ]);
 
         // Session data has been consumed — clear it.
-        session()->forget('template_front_page_config');
+        session()->forget(['template_front_page_config', 'template_mock_exam_id']);
 
         return redirect()
             ->route('mock-exams.templates.index')
@@ -125,6 +143,7 @@ class MockExamTemplateController extends Controller
         $payload['sections_config'] = $this->hydrateSectionAttachments($payload['sections_config']);
         
         $template->update([
+            'mock_exam_id' => $payload['mock_exam_id'] ?? $template->mock_exam_id,
             'academic_group_id' => $payload['academic_group_id'] ?? null,
             'academic_level_id' => $payload['academic_level_id'] ?? null,
             'academic_subject_id' => $payload['academic_subject_id'],
@@ -136,7 +155,7 @@ class MockExamTemplateController extends Controller
             'front_page_config' => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
         ]);
 
-        session()->forget('template_front_page_config');
+        session()->forget(['template_front_page_config', 'template_mock_exam_id']);
 
         return redirect()
             ->route('mock-exams.templates.index')
@@ -160,11 +179,28 @@ class MockExamTemplateController extends Controller
     public function index(): View
     {
         $templates = MockExamTemplate::where('user_id', auth()->id())
-            ->with(['academicSubject', 'academicLevel', 'academicGroup'])
+            ->with(['academicSubject', 'academicLevel', 'academicGroup', 'mockExam'])
             ->latest()
             ->paginate(20);
 
-        return view('mock-exam.templates.index', compact('templates'));
+        $userMocks = MockExam::where('user_id', auth()->id())
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        return view('mock-exam.templates.index', compact('templates', 'userMocks'));
+    }
+
+    public function assign(Request $request, MockExamTemplate $template): RedirectResponse
+    {
+        $this->ensureOwner($template);
+
+        $request->validate([
+            'mock_exam_id' => ['nullable', 'integer', 'exists:mock_exams,id'],
+        ]);
+
+        $template->update(['mock_exam_id' => $request->input('mock_exam_id') ?: null]);
+
+        return back()->with('success', 'Template assignment updated.');
     }
 
     // ─── Quick Generate Exam from Template ────────────────────────────────────
@@ -224,6 +260,7 @@ class MockExamTemplateController extends Controller
     private function validateTemplatePayload(Request $request): array
     {
         $data = $request->validate([
+            'mock_exam_id' => ['nullable', 'integer', 'exists:mock_exams,id'],
             'academic_group_id' => ['nullable', 'integer', 'exists:academic_groups,id'],
             'academic_level_id' => ['nullable', 'integer', 'exists:academic_levels,id'],
             'academic_subject_id' => ['required', 'integer', 'exists:academic_subjects,id'],

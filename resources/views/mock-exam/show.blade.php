@@ -248,6 +248,7 @@
                 {{-- Quick Generate from Template --}}
                 @php
                     $availableTemplates = \App\MockExam\Models\MockExamTemplate::where('user_id', auth()->id())
+                        ->where('mock_exam_id', $mockExam->id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
@@ -293,6 +294,14 @@
                         </div>
                     </div>
                 @endif
+                <a href="{{ route('mock-exams.templates.create-for-mock', $mockExam) }}"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 transition-all"
+                   style="border-radius: 2px;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    New Template
+                </a>
                 <a href="{{ route('mock-exams.subject-exams.create', $mockExam) }}"
                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all"
                    style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">

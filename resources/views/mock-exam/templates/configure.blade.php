@@ -92,6 +92,9 @@
 
             {{-- Hidden: carries the front_page_config JSON through the POST --}}
             <input type="hidden" name="front_page_config" value="{{ $frontPageConfigJson }}">
+            @if($mockExamId ?? ($template->mock_exam_id ?? null))
+                <input type="hidden" name="mock_exam_id" value="{{ $mockExamId ?? $template->mock_exam_id }}">
+            @endif
 
             {{-- ── TEMPLATE INFO ──────────────────────────────────────────────── --}}
             <div class="bg-white dark:bg-slate-900 overflow-hidden"
