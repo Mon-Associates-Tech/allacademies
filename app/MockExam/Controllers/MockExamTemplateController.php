@@ -175,7 +175,7 @@ class MockExamTemplateController extends Controller
 
         $validated = $request->validate([
             'template_id' => ['required', 'integer', 'exists:mock_exam_templates,id'],
-            'title' => ['nullable', 'string', 'max:255'],
+            'title' => ['nullable', 'string'],
             'instructions' => ['nullable', 'string'],
         ]);
 
@@ -232,7 +232,7 @@ class MockExamTemplateController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'default_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
 'sections_config' => ['required', 'array', 'min:1'],
-            'sections_config.*.title' => ['required', 'string', 'max:255'],
+            'sections_config.*.title' => ['required', 'string'],
             'sections_config.*.instructions' => ['nullable', 'string'],
             'sections_config.*.question_type' => ['required', 'in:multiple_choice,true_false,essay,mixed'],
             'sections_config.*.question_count' => ['required', 'integer', 'min:1', 'max:200'],
