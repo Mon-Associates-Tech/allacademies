@@ -35,6 +35,13 @@ class Dashboard extends Component
     public ?int $maxExams = 1;
     public float $calculatedPrice = 0;
 
+    // ── Pending payment ────────────────────────────────────────────────────────
+    public bool $showCancelConfirm = false;
+    public ?int $cancellingSubscriptionId = null;
+
+    // ── Expanded mocks ─────────────────────────────────────────────────────────
+    public array $expandedSubscriptionIds = [];
+
     // ── Top-up form ────────────────────────────────────────────────────────────
     public bool $showTopUpForm = false;
     public ?int $topUpSubscriptionId = null;
@@ -265,6 +272,73 @@ class Dashboard extends Component
         }
     }
 
+    // ==================== PENDING PAYMENT ACTIONS ====================
+
+    public function retryPayment(int $subscriptionId, MockExamSubscriptionService $service): void
+    {
+        $subscription = MockExamSubscription::with('subjects')->findOrFail($subscriptionId);
+        abort_unless($subscription->user_id === auth()->id(), 403);
+
+        // Re-use the existing pending payment if it exists, otherwise create a new one
+        $payment = $subscription->payments()->where('status', 'pending')->latest()->first();
+
+        if ($payment && $payment->paystack_access_code) {
+            $this->redirect('https://checkout.paystack.com/' . $payment->paystack_access_code);
+            return;
+        }
+
+        // Initiate a fresh payment for the same subscription config
+        try {
+            $result = $service->initiatePayment(auth()->user(), [
+                'plan_id'         => $subscription->mock_exam_subscription_plan_id,
+                'type'            => $subscription->type,
+                'user_group'      => $subscription->user_group instanceof \App\MockExam\Models\MockExamUserGroup
+                    ? $subscription->user_group->value
+                    : $subscription->user_group,
+                'subject_ids'     => $subscription->subjects->pluck('id')->toArray(),
+                'participant_count' => $subscription->participant_slots,
+                'max_exams'       => $subscription->max_exams,
+            ]);
+
+            if (! empty($result['authorization_url'])) {
+                $this->redirect($result['authorization_url']);
+            }
+        } catch (\Throwable $e) {
+            $this->dispatch('flash', type: 'error', message: $e->getMessage());
+        }
+    }
+
+    public function confirmCancel(int $subscriptionId): void
+    {
+        $this->cancellingSubscriptionId = $subscriptionId;
+        $this->showCancelConfirm = true;
+    }
+
+    public function cancelSubscription(): void
+    {
+        $subscription = MockExamSubscription::findOrFail($this->cancellingSubscriptionId);
+        abort_unless($subscription->user_id === auth()->id(), 403);
+
+        $subscription->update(['status' => \App\MockExam\Models\MockExamSubscriptionStatus::Cancelled]);
+
+        $this->showCancelConfirm = false;
+        $this->cancellingSubscriptionId = null;
+        $this->dispatch('flash', type: 'success', message: 'Subscription cancelled.');
+    }
+
+    // ==================== TOGGLE MOCKS ====================
+
+    public function toggleMocks(int $subscriptionId): void
+    {
+        if (in_array($subscriptionId, $this->expandedSubscriptionIds)) {
+            $this->expandedSubscriptionIds = array_values(
+                array_filter($this->expandedSubscriptionIds, fn ($id) => $id !== $subscriptionId)
+            );
+        } else {
+            $this->expandedSubscriptionIds[] = $subscriptionId;
+        }
+    }
+
     // ==================== TOP-UP ====================
 
     public function openTopUp(int $subscriptionId): void
@@ -378,6 +452,19 @@ class Dashboard extends Component
                 ->get()
             : collect();
 
+        // Load mocks for expanded subscriptions
+        $subscriptionMocks = [];
+        if (! empty($this->expandedSubscriptionIds)) {
+            $mocks = MockExam::whereIn('mock_exam_subscription_id', $this->expandedSubscriptionIds)
+                ->withCount('subjectExams')
+                ->latest()
+                ->get()
+                ->groupBy('mock_exam_subscription_id');
+            foreach ($this->expandedSubscriptionIds as $subId) {
+                $subscriptionMocks[$subId] = $mocks->get($subId, collect());
+            }
+        }
+
         $selectedMockSubscription = $this->selectedSubscriptionId
             ? $mockSubscriptions->firstWhere('id', $this->selectedSubscriptionId)
             : null;
@@ -413,6 +500,7 @@ class Dashboard extends Component
 
         return view('livewire.mock-exam.subscriptions.dashboard', [
             'mockSubscriptions'        => $mockSubscriptions,
+            'subscriptionMocks'        => $subscriptionMocks,
             'selectedMockSubscription' => $selectedMockSubscription,
             'mockExams'                => $mockExams,
             'mockSubmissions'          => $mockSubmissions,

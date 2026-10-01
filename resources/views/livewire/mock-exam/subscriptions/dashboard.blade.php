@@ -181,17 +181,61 @@
                             </div>
 
                             <div class="flex shrink-0 flex-col items-end gap-2">
-                                <x-exam.link-button wire:click="$set('selectedSubscriptionId', {{ $sub->id }}); $set('activeTab', 'results')">View Results</x-exam.link-button>
-                                @if($sub->type === 'online' && $sub->isActive())
-                                    <x-exam.link-button tone="muted" wire:click="openTopUp({{ $sub->id }})">Add Slots</x-exam.link-button>
+                                @if($sub->status->value === 'pending')
+                                    <x-exam.link-button wire:click="retryPayment({{ $sub->id }})" tone="ok">Pay Now</x-exam.link-button>
+                                    <x-exam.link-button wire:click="confirmCancel({{ $sub->id }})" tone="danger">Cancel</x-exam.link-button>
+                                @elseif($sub->status->value === 'active')
+                                    <x-exam.link-button wire:click="$set('selectedSubscriptionId', {{ $sub->id }}); $set('activeTab', 'results')">View Results</x-exam.link-button>
+                                    <x-exam.link-button wire:click="toggleMocks({{ $sub->id }})" tone="muted">
+                                        {{ in_array($sub->id, $expandedSubscriptionIds) ? 'Hide Mocks' : 'View Mocks' }}
+                                    </x-exam.link-button>
+                                    @if($sub->type === 'online')
+                                        <x-exam.link-button tone="muted" wire:click="openTopUp({{ $sub->id }})">Add Slots</x-exam.link-button>
+                                    @endif
                                 @endif
                             </div>
                         </div>
                     </article>
+
+                    {{-- Expanded mocks panel --}}
+                    @if(in_array($sub->id, $expandedSubscriptionIds))
+                        <div class="-mt-2 rounded-b-md border border-t-0 border-line bg-surface-2 px-4 pb-4 pt-3">
+                            <p class="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Mocks under this subscription</p>
+                            @forelse($subscriptionMocks[$sub->id] ?? collect() as $mock)
+                                <div wire:key="mock-{{ $mock->id }}" class="flex items-center justify-between gap-4 border-b border-line py-2 last:border-b-0">
+                                    <div>
+                                        <p class="text-sm font-semibold text-ink">{{ $mock->title }}</p>
+                                        <p class="font-mono text-[10.5px] text-muted">
+                                            {{ $mock->subject_exams_count }} subject exam(s)
+                                            · {{ ucfirst($mock->status) }}
+                                            · {{ ucfirst($mock->delivery_type) }}
+                                        </p>
+                                    </div>
+                                    <a href="{{ route('mock-exams.show', $mock) }}"
+                                       class="font-mono text-[11px] tracking-wide text-primary hover:underline">
+                                        Open →
+                                    </a>
+                                </div>
+                            @empty
+                                <p class="py-2 text-sm text-muted">No mocks created under this subscription yet.</p>
+                            @endforelse
+                        </div>
+                    @endif
                 @empty
                     <x-exam.empty compact title="No subscriptions yet" description="Purchase one to start creating exams." />
                 @endforelse
             </div>
+
+            {{-- Cancel confirm modal --}}
+            @if($showCancelConfirm)
+                <x-exam.modal title="Cancel Subscription">
+                    <p class="text-sm text-ink-soft">Are you sure you want to cancel this subscription? This action cannot be undone.</p>
+                    <x-slot:footer>
+                        <x-exam.button type="button" variant="ghost" wire:click="$set('showCancelConfirm', false)">Keep It</x-exam.button>
+                        <x-exam.button type="button" variant="danger" wire:click="cancelSubscription">Yes, Cancel</x-exam.button>
+                    </x-slot:footer>
+                </x-exam.modal>
+            @endif
         </div>
     @endif
 

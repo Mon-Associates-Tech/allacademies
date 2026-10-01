@@ -32,7 +32,8 @@ class MockExamSubscriptionService
         return $plan->calculatePrice(
             $config['subject_count'],
             $config['participant_count'] ?? 0,
-            $config['user_group'] ?? 'individual'
+            $config['user_group'] ?? 'individual',
+            max(1, (int) ($config['exam_cycles'] ?? $config['max_exams'] ?? 1))
         );
     }
 
@@ -77,7 +78,7 @@ class MockExamSubscriptionService
         $subjectCount = count($config['subject_ids']);
         $userGroup = $config['user_group'] ?? 'individual';
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
-        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup);
+        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup, $examCyclesPerSubject);
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count and user group.');
         }
@@ -300,7 +301,7 @@ class MockExamSubscriptionService
         $subjectCount = count($config['subject_ids']);
         $userGroup = $config['user_group'] ?? 'individual';
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
-        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup);
+        $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup, $examCyclesPerSubject);
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Unable to initialize payment: calculated amount is invalid. Please review pricing tiers for the selected subject count and user group.');
         }
