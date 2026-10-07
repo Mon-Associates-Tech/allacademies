@@ -1,4 +1,9 @@
 <x-layouts.app>
+
+    @push('head')
+        <script src="{{ asset('js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script>
+    @endpush
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
      style="font-family: 'system-ui', -apple-system, sans-serif;"
      x-data="subjectExamForm()">
@@ -216,7 +221,7 @@
             </div>
 
             <div class="p-5 space-y-4">
-                <template x-for="(section, idx) in sections" :key="idx">
+                <template x-for="(section, idx) in sections" :key="section._id">
                     <div class="border border-slate-200 dark:border-slate-700 overflow-hidden relative"
                          style="border-radius: 2px;">
                         {{-- Section header --}}
@@ -235,23 +240,43 @@
                         </div>
 
                         <div class="p-5 space-y-4">
-                            {{-- Title & Instructions --}}
-                            <div class="grid sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Section Title <span class="text-red-500">*</span></label>
-                                    <input type="text" :name="'sections[' + idx + '][title]'"
-                                           x-model="section.title" required
-                                           placeholder="e.g. Section A – Objectives"
-                                           class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                                           style="border-radius: 2px;">
+                            {{-- Title --}}
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Section Title <span class="text-red-500">*</span></label>
+                                <div class="rich-editor-wrap"
+                                     x-data="richEditor(section, idx, 'title', 300)"
+                                     x-init="initEditor()"
+                                     :data-editor-id="editorId">
+                                    <div class="flex justify-end border-b border-slate-100 dark:border-slate-700">
+                                        <button type="button" @click="preview = !preview; if(preview) updatePreview()" class="px-3 py-1 text-xs font-medium transition-colors rounded-t" :class="preview ? 'text-violet-600 bg-violet-50 dark:bg-violet-900/30' : 'text-slate-500 hover:text-slate-700'">Preview</button>
+                                    </div>
+                                    <div x-show="!preview">
+                                        <textarea :id="editorId"
+                                                  :name="'sections[' + idx + '][' + field + ']'"
+                                                  x-model="section[field]"
+                                                  class="hidden"></textarea>
+                                    </div>
+                                    <div x-show="preview" x-html="previewHtml" class="markdown-preview prose prose-sm max-w-none dark:prose-invert p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-b min-h-[200px]"></div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Instructions</label>
-                                    <input type="text" :name="'sections[' + idx + '][instructions]'"
-                                           x-model="section.instructions"
-                                           placeholder="e.g. Answer ALL questions in this section"
-                                           class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:bg-slate-800 dark:text-white transition-all"
-                                           style="border-radius: 2px;">
+                            </div>
+
+                            {{-- Instructions --}}
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Instructions</label>
+                                <div class="rich-editor-wrap"
+                                     x-data="richEditor(section, idx, 'instructions', 350)"
+                                     x-init="initEditor()"
+                                     :data-editor-id="editorId">
+                                    <div class="flex justify-end border-b border-slate-100 dark:border-slate-700">
+                                        <button type="button" @click="preview = !preview; if(preview) updatePreview()" class="px-3 py-1 text-xs font-medium transition-colors rounded-t" :class="preview ? 'text-violet-600 bg-violet-50 dark:bg-violet-900/30' : 'text-slate-500 hover:text-slate-700'">Preview</button>
+                                    </div>
+                                    <div x-show="!preview">
+                                        <textarea :id="editorId"
+                                                  :name="'sections[' + idx + '][' + field + ']'"
+                                                  x-model="section[field]"
+                                                  class="hidden"></textarea>
+                                    </div>
+                                    <div x-show="preview" x-html="previewHtml" class="markdown-preview prose prose-sm max-w-none dark:prose-invert p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-b min-h-[200px]"></div>
                                 </div>
                             </div>
 
@@ -323,7 +348,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                {{ $subjectExam ? 'Save Changes' : 'Add Subject Exam &amp; Pull Questions' }}
+                {{ $subjectExam ? 'Save Changes' : 'Add Subject Exam And Pull Questions' }}
             </button>
             <a href="{{ route('mock-exams.show', $mockExam) }}"
                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
@@ -379,8 +404,11 @@ function subjectExamForm() {
         selectedTopicIds:    [],
         selectedSubtopicIds: [],
 
-        sections: existing ? existing.sections : [
-            { title: '', instructions: '', question_type: 'multiple_choice', question_count: 10, marks_per_question: 1, is_randomized: false }
+        sections: existing ? existing.sections.map((s, i) => ({
+            ...s,
+            _id: `section-${i}-${Date.now()}`,
+        })) : [
+            { _id: `section-0-${Date.now()}`, title: '', instructions: '', question_type: 'multiple_choice', question_count: 10, marks_per_question: 1, is_randomized: false }
         ],
 
         // ── Alpine calls init() after the component is mounted and x-for has
@@ -433,6 +461,7 @@ function subjectExamForm() {
         // ── Section helpers ───────────────────────────────────────────────────
         addSection() {
             this.sections.push({
+                _id: `section-${this.sections.length}-${Date.now()}`,
                 title: '', instructions: '',
                 question_type: 'multiple_choice',
                 question_count: 10,
@@ -442,6 +471,79 @@ function subjectExamForm() {
         },
         removeSection(idx) {
             if (this.sections.length > 1) this.sections.splice(idx, 1);
+        },
+
+        richEditor(section, idx, field, height = 300) {
+            return {
+                preview: false,
+                previewHtml: '',
+                editor: null,
+                initialized: false,
+                editorId: 'sec-editor-' + idx + '-' + field + '-' + section._id,
+                field: field,
+                editorHeight: height,
+                initEditor() {
+                    if (this.initialized) return;
+                    this.$nextTick(() => {
+                        const el = document.getElementById(this.editorId);
+                        if (!el) return;
+                        const isDark = document.documentElement.classList.contains('dark');
+                        tinymce.init({
+                            selector: '#' + this.editorId,
+                            height: this.editorHeight,
+                            minHeight: this.editorHeight,
+                            menubar: false,
+                            skin: isDark ? 'oxide-dark' : 'oxide',
+                            content_css: isDark ? 'dark' : 'default',
+                            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount autoresize',
+                            toolbar: 'undo redo | formatselect fontfamily fontsize | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table | removeformat | code | help',
+                            toolbar_mode: 'wrap',
+                            content_style: "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; background: #fff; color: #111; } body.dark { background: #1f2937 !important; color: #f3f4f6 !important; } .mce-content-body p { margin: 0 0 16px; } img { max-width: 100%; height: auto; }",
+                            paste_as_text: false,
+                            setup: (editor) => {
+                                this.editor = editor;
+                                editor.on('init', () => {
+                                    this.initialized = true;
+                                    editor.setContent(section[this.field] || '');
+                                    if (isDark) {
+                                        editor.getBody().classList.add('dark');
+                                        editor.getDoc().documentElement.classList.add('dark');
+                                    }
+                                });
+                                editor.on('change keyup', () => {
+                                    section[this.field] = editor.getContent();
+                                    this.updatePreview();
+                                });
+                            },
+                            formats: {
+                                bold: {inline: 'strong'},
+                                italic: {inline: 'em'},
+                                strikethrough: {inline: 'del'}
+                            },
+                            statusbar: false,
+                            branding: false,
+                        });
+                    });
+                },
+                updatePreview() {
+                    let c = section[this.field] || '';
+                    let html = typeof marked !== 'undefined' ? marked.parse(c) : c;
+                    html = html.replace(/<img([^>]+)>/gi, (m, a) => `<img alt='' ${a} style='max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>`);
+                    this.previewHtml = html;
+                    this.$nextTick(() => {
+                        if (typeof renderMathInElement !== 'undefined') {
+                            const p = document.querySelector(`[data-editor-id='${this.editorId}'] .markdown-preview`);
+                            if (p) renderMathInElement(p, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                    });
+                }
+            };
         },
     };
 }

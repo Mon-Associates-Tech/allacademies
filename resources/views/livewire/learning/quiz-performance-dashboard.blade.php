@@ -1,285 +1,133 @@
-<div class="quiz-performance-dashboard">
-    {{-- Header --}}
-    <div class="dashboard-header bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                    Performance Dashboard
-                </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    @if(isset($userId) && $userId !== auth()->id())
-                        Performance analytics for {{ $this->targetUser->name }}
-                    @else
-                        Track your performance and progress
-                    @endif
-                </p>
-                <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                    <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                    </svg>
-                    {{ $this->getGradingSystemName() }}
-                </p>
-            </div>
+<x-exam.page>
+    <x-exam.header
+        eyebrow="STUDENT RECORDS · PERFORMANCE ANALYTICS"
+        title="Performance Dashboard"
+        :sub="isset($userId) && $userId !== auth()->id()
+            ? 'Performance analytics for ' . $this->targetUser->name . '.'
+            : 'Track your performance and progress across every quiz you have taken.'"
+        :lines="['GRADE', 'BOOK']"
+    />
 
-            <div class="flex gap-3">
-                <button wire:click="resetFilters"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition">
-                    <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Reset Filters
-                </button>
+    <x-exam.flash />
 
-                <button wire:click="exportPerformanceData"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
-                    <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Export Report
-                </button>
-            </div>
+    {{-- Toolbar --}}
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <x-exam.badge tone="primary">{{ $this->getGradingSystemName() }}</x-exam.badge>
+        <div class="flex gap-2">
+            {{-- VERIFY: adjust handler names to your component --}}
+            <x-exam.button type="button" variant="ghost" wire:click="resetFilters">Reset Filters</x-exam.button>
+            <x-exam.button type="button" wire:click="exportReport">Export Report</x-exam.button>
         </div>
     </div>
 
     {{-- Filters --}}
-    <div class="filters bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {{-- Period Filter --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time Period</label>
-                <select wire:model.live="selectedPeriod"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+    <x-exam.card class="mb-6" :padded="false">
+        <x-slot:header>
+            <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">FILTERS · REFINE THE RECORD SET</p>
+        </x-slot:header>
+
+        <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            {{-- VERIFY: wire:model names below — source markup was stripped --}}
+            <x-exam.field bare label="Time Period">
+                <x-exam.select wire:model.live="selectedPeriod">
                     @foreach($periods as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
-                </select>
-            </div>
+                </x-exam.select>
+            </x-exam.field>
 
-            {{-- Book Filter --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Book</label>
-                <select wire:model.live="selectedBookId"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="">All Books</option>
+            <x-exam.field bare label="Book">
+                <x-exam.select wire:model.live="selectedBookId" placeholder="All Books">
                     @foreach($availableBooks as $book)
                         <option value="{{ $book->id }}">{{ $book->title }}</option>
                     @endforeach
-                </select>
-            </div>
+                </x-exam.select>
+            </x-exam.field>
 
-            {{-- Difficulty Filter --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Difficulty</label>
-                <select wire:model.live="selectedDifficulty"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <x-exam.field bare label="Difficulty">
+                <x-exam.select wire:model.live="selectedDifficulty">
                     @foreach($difficulties as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
-                </select>
-            </div>
+                </x-exam.select>
+            </x-exam.field>
 
-            {{-- Question Type Filter --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Question Type</label>
-                <select wire:model.live="selectedQuestionType"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <x-exam.field bare label="Question Type">
+                <x-exam.select wire:model.live="selectedQuestionType">
                     @foreach($questionTypes as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
-                </select>
-            </div>
+                </x-exam.select>
+            </x-exam.field>
+
+            <x-exam.field bare label="Min Score (%)">
+                <x-exam.input type="number" min="0" max="100" wire:model.live="minScore" />
+            </x-exam.field>
+
+            <x-exam.field bare label="Max Score (%)">
+                <x-exam.input type="number" min="0" max="100" wire:model.live="maxScore" />
+            </x-exam.field>
+
+            @if($selectedPeriod === 'custom')
+                <x-exam.field bare label="Start Date">
+                    <x-exam.input type="date" wire:model.live="startDate" />
+                </x-exam.field>
+                <x-exam.field bare label="End Date">
+                    <x-exam.input type="date" wire:model.live="endDate" />
+                </x-exam.field>
+            @endif
         </div>
+    </x-exam.card>
 
-        {{-- Score Range Filter --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Min Score (%)</label>
-                <input type="number" wire:model.live="minScore" min="0" max="100"
-                       placeholder="0"
-                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Score (%)</label>
-                <input type="number" wire:model.live="maxScore" min="0" max="100"
-                       placeholder="100"
-                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-        </div>
-
-        {{-- Custom Date Range --}}
-        @if($selectedPeriod === 'custom')
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
-                    <input type="date" wire:model.live="startDate"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
-                    <input type="date" wire:model.live="endDate"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-            </div>
-        @endif
-    </div>
-
-    {{-- Overview Stats --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {{-- Total Quizzes --}}
-        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Quizzes</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ $this->performanceData['total_quizzes'] }}
-                    </p>
-                </div>
-                <div class="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-full">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Average Score --}}
-        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Average Score</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ number_format($this->performanceData['average_score'], 1) }}%
-                    </p>
-                    @php
-                        $avgGradeInfo = $this->getGrade($this->performanceData['average_score']);
-                    @endphp
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Grade: {{ $avgGradeInfo['grade'] }} ({{ $avgGradeInfo['interpretation'] }})
-                    </p>
-                </div>
-                <div class="p-3 bg-green-100 dark:bg-green-900/50 rounded-full">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Highest Score --}}
-        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Best Score</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {{ number_format($this->performanceData['highest_score'], 1) }}%
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Personal best
-                    </p>
-                </div>
-                <div class="p-3 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
-                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Improvement Trend --}}
-        <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Trend</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2 capitalize">
-                        {{ $this->performanceData['improvement_trend']['trend'] }}
-                    </p>
-                    @if($this->performanceData['improvement_trend']['change'] != 0)
-                        <p class="text-xs mt-1 {{ $this->performanceData['improvement_trend']['change'] > 0 ? 'text-green-600' : 'text-red-600' }}">
-                            {{ $this->performanceData['improvement_trend']['change'] > 0 ? '+' : '' }}{{ number_format($this->performanceData['improvement_trend']['change'], 1) }}%
-                        </p>
-                    @endif
-                </div>
-                <div class="p-3 {{ $this->performanceData['improvement_trend']['trend'] === 'improving' ? 'bg-green-100' : ($this->performanceData['improvement_trend']['trend'] === 'declining' ? 'bg-red-100' : 'bg-gray-100') }} rounded-full">
-                    @if($this->performanceData['improvement_trend']['trend'] === 'improving')
-                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                        </svg>
-                    @elseif($this->performanceData['improvement_trend']['trend'] === 'declining')
-                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
-                        </svg>
-                    @else
-                        <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/>
-                        </svg>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Additional Stats Row --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Questions Answered</h3>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                {{ number_format($this->performanceData['total_questions_answered']) }}
-            </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {{ number_format($this->performanceData['total_correct_answers']) }} correct
+    {{-- Overview stats --}}
+    @php($trend = $this->performanceData['improvement_trend'])
+    <div class="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <x-exam.stat label="Total Quizzes" :value="$this->performanceData['total_quizzes']" />
+        <div>
+            <x-exam.stat label="Average Score" :value="number_format($this->performanceData['average_score'], 1) . '%'" />
+            @php($avgGradeInfo = $this->getGrade($this->performanceData['average_score']))
+            <p class="mt-1.5 text-center font-mono text-[10px] tracking-wider text-muted">
+                GRADE {{ $avgGradeInfo['grade'] }} · {{ strtoupper($avgGradeInfo['interpretation']) }}
             </p>
         </div>
+        <x-exam.stat label="Best Score" :value="number_format($this->performanceData['highest_score'], 1) . '%'" tone="ok" />
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Average Time</h3>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                {{ gmdate('i:s', $this->performanceData['average_time_taken'] ?? 0) }}
+        <div class="rounded-md border border-line bg-surface p-4 text-center shadow-[0_1px_2px_rgba(20,24,34,0.04)]">
+            <p class="font-display text-2xl font-bold {{ $trend['trend'] === 'improving' ? 'text-ok' : ($trend['trend'] === 'declining' ? 'text-accent' : 'text-ink') }}">
+                {{ $trend['trend'] === 'improving' ? '▲' : ($trend['trend'] === 'declining' ? '▼' : '→') }}
             </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">per quiz</p>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Completion Rate</h3>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                {{ number_format($this->performanceData['completion_rate'], 1) }}%
-            </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">of started quizzes</p>
-        </div>
-    </div>
-
-    {{-- Main Content Tabs --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
-        <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="flex -mb-px">
-                <button wire:click="$set('activeView', 'overview')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'overview' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
-                    Overview
-                </button>
-                <button wire:click="$set('activeView', 'detailed')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'detailed' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
-                    Detailed Analysis
-                </button>
-                <button wire:click="$set('activeView', 'trends')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'trends' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
-                    Trends
-                </button>
-                <button wire:click="$set('activeView', 'comparisons')"
-                        class="px-6 py-4 text-sm font-medium border-b-2 transition {{ $activeView === 'comparisons' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500' }}">
-                    Comparisons
-                </button>
-            </nav>
-        </div>
-
-        <div class="p-6">
-            @if($activeView === 'overview')
-                @include('livewire.learning.partials.performance-overview')
-            @elseif($activeView === 'detailed')
-                @include('livewire.learning.partials.performance-detailed')
-            @elseif($activeView === 'trends')
-                @include('livewire.learning.partials.performance-trends')
-            @elseif($activeView === 'comparisons')
-                @include('livewire.learning.partials.performance-comparisons')
+            <p class="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Trend</p>
+            @if($trend['change'] != 0)
+                <p class="mt-1 font-mono text-[10.5px] tracking-wide {{ $trend['change'] > 0 ? 'text-ok' : 'text-accent' }}">
+                    {{ $trend['change'] > 0 ? '+' : '' }}{{ number_format($trend['change'], 1) }}%
+                </p>
             @endif
         </div>
     </div>
-</div>
+
+    {{-- Secondary stats --}}
+    <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <x-exam.stat label="Questions Answered" :value="number_format($this->performanceData['total_questions_answered'])" />
+        <x-exam.stat label="Average Time / Quiz" :value="gmdate('i:s', $this->performanceData['average_time_taken'] ?? 0)" />
+        <x-exam.stat label="Completion Rate" :value="number_format($this->performanceData['completion_rate'], 1) . '%'" />
+    </div>
+
+    {{-- Analysis views --}}
+    <x-exam.tabs
+        :tabs="['overview' => 'Overview', 'detailed' => 'Detailed Analysis', 'trends' => 'Trends', 'comparisons' => 'Comparisons']"
+        :active="$activeView"
+        property="activeView"
+    />
+
+    <div class="animate-rise">
+        @if($activeView === 'overview')
+            @include('livewire.learning.partials.performance-overview')
+        @elseif($activeView === 'detailed')
+            @include('livewire.learning.partials.performance-detailed')
+        @elseif($activeView === 'trends')
+            @include('livewire.learning.partials.performance-trends')
+        @elseif($activeView === 'comparisons')
+            @include('livewire.learning.partials.performance-comparisons')
+        @endif
+    </div>
+</x-exam.page>

@@ -1,4 +1,4 @@
-<x-layouts.app>
+<x-layouts.app page-name="{{ $book->title }}" :meta-description="$book->description" :meta-image="$book->cover_image" :meta-title="$book->title" :meta-url="route('books.public', $book)" :meta-type="'book'">
     @php
         $cover = $book->cover_image;
     @endphp

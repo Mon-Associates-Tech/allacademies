@@ -1,120 +1,104 @@
-<div class="performance-detailed space-y-6">
-    {{-- Performance by Book with Chart --}}
-    <div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance by Book</h3>
-        @if(count($this->performanceByBook) > 0)
-            {{-- Book Performance Bar Chart --}}
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-6">
-                @if(!empty($bookBarLabels))
-                    <livewire:charts.bar-chart :labels="$bookBarLabels" :datasets="$bookBarDatasets" :options="$bookBarOptions" height-class="h-72" />
-                @else
-                    <div class="flex items-center justify-center h-72 text-gray-500 dark:text-gray-400">
-                        <p>No book performance chart data available</p>
-                    </div>
-                @endif
-            </div>
+{{-- Performance by book --}}
+<x-exam.card class="mb-6" :padded="false">
+    <x-slot:header>
+        <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">PERFORMANCE BY BOOK</p>
+    </x-slot:header>
 
-            {{-- Book Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="p-5">
+        @if(count($this->performanceByBook) > 0)
+            @if(!empty($bookBarLabels))
+                <livewire:charts.bar-chart :labels="$bookBarLabels" :datasets="$bookBarDatasets" :options="$bookBarOptions" height-class="h-72" />
+                <div class="mb-5 min-h-[220px]"></div>
+            @endif
+
+            <div class="space-y-3">
                 @foreach($this->performanceByBook as $bookPerf)
-                    <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition bg-white dark:bg-gray-800">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex-1">
-                                <h4 class="font-medium text-gray-900 dark:text-white">{{ Str::limit($bookPerf['book_title'], 50) }}</h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $bookPerf['author'] }}</p>
-                            </div>
-                            <span class="ml-2 text-lg font-bold {{ $bookPerf['average_score'] >= 80 ? 'text-green-600 dark:text-green-400' : ($bookPerf['average_score'] >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">
-                                {{ number_format($bookPerf['average_score'], 1) }}%
-                            </span>
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface-2 px-4 py-3 transition hover:border-primary/40">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold text-ink">{{ Str::limit($bookPerf['book_title'], 50) }}</p>
+                            <p class="font-mono text-[10.5px] tracking-wide text-muted">{{ $bookPerf['author'] }}</p>
                         </div>
-                        <div class="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-                            <span>{{ $bookPerf['quiz_count'] }} {{ Str::plural('quiz', $bookPerf['quiz_count']) }}</span>
-                            <span>Best: {{ number_format($bookPerf['best_score'], 1) }}%</span>
-                        </div>
-                        @if($bookPerf['improvement'] != 0)
-                            <div class="mt-2 text-xs {{ $bookPerf['improvement'] > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                {{ $bookPerf['improvement'] > 0 ? '▲' : '▼' }} {{ abs($bookPerf['improvement']) }}% from first attempt
+                        <div class="flex flex-wrap items-center gap-4">
+                            @if($bookPerf['improvement'] != 0)
+                                <span class="font-mono text-[10.5px] tracking-wide {{ $bookPerf['improvement'] > 0 ? 'text-ok' : 'text-accent' }}">
+                                    {{ $bookPerf['improvement'] > 0 ? '▲' : '▼' }} {{ abs($bookPerf['improvement']) }}% FROM FIRST ATTEMPT
+                                </span>
+                            @endif
+                            <div class="text-right">
+                                <p class="font-display text-lg font-bold text-primary">{{ number_format($bookPerf['average_score'], 1) }}%</p>
+                                <p class="font-mono text-[10px] tracking-wider text-muted">
+                                    {{ $bookPerf['quiz_count'] }} {{ strtoupper(Str::plural('quiz', $bookPerf['quiz_count'])) }} · BEST {{ number_format($bookPerf['best_score'], 1) }}%
+                                </p>
                             </div>
-                        @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <p class="text-gray-500 dark:text-gray-400 text-sm">No book data available</p>
+            <x-exam.empty compact title="No book data available" />
         @endif
     </div>
+</x-exam.card>
 
-    {{-- Performance by Difficulty and Question Type with Charts --}}
-    <div class="grid grid-cols-12 gap-6">
-        {{-- Difficulty Distribution Pie Chart --}}
-        <div class="col-span-12 lg:col-span-6">
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quizzes by Difficulty</h3>
-                @if(!empty($difficultyPieLabels))
-                    <livewire:charts.pie-chart :labels="$difficultyPieLabels" :values="$difficultyPieValues" :options="$difficultyPieOptions" height-class="h-64" />
-                @else
-                    <div class="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                        <p>No difficulty data available</p>
-                    </div>
-                @endif
-            </div>
-            {{-- Difficulty Cards --}}
+{{-- Difficulty + question type --}}
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+    {{-- By difficulty --}}
+    <x-exam.card :padded="false">
+        <x-slot:header>
+            <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">QUIZZES BY DIFFICULTY</p>
+        </x-slot:header>
+        <div class="p-5">
+            @if(!empty($difficultyPieLabels))
+                <livewire:charts.pie-chart :labels="$difficultyPieLabels" :values="$difficultyPieValues" :options="$difficultyPieOptions" height-class="h-64" />
+                <div class="mb-5 min-h-[200px]"></div>
+            @else
+                <p class="mb-4 text-sm text-muted">No difficulty data available.</p>
+            @endif
+
             @if(count($this->performanceByDifficulty) > 0)
-                <div class="grid grid-cols-3 gap-4 mt-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     @foreach($this->performanceByDifficulty as $diffPerf)
-                        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
-                            <div class="text-center">
-                                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">{{ $diffPerf['difficulty'] }}</h4>
-                                <div class="text-2xl font-bold {{ $diffPerf['average_score'] >= 80 ? 'text-green-600 dark:text-green-400' : ($diffPerf['average_score'] >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">
-                                    {{ number_format($diffPerf['average_score'], 1) }}%
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ $diffPerf['quiz_count'] }} {{ Str::plural('quiz', $diffPerf['quiz_count']) }}
-                                </p>
-                            </div>
+                        <div class="rounded-md border border-line bg-surface-2 p-3 text-center">
+                            <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{{ $diffPerf['difficulty'] }}</p>
+                            <p class="mt-1 font-display text-xl font-bold text-primary">{{ number_format($diffPerf['average_score'], 1) }}%</p>
+                            <p class="mt-0.5 font-mono text-[10px] tracking-wider text-muted">{{ $diffPerf['quiz_count'] }} {{ strtoupper(Str::plural('QUIZ', $diffPerf['quiz_count'])) }}</p>
                         </div>
                     @endforeach
                 </div>
             @endif
         </div>
+    </x-exam.card>
 
-        {{-- Question Type Distribution Pie Chart --}}
-        <div class="col-span-12 lg:col-span-6">
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quizzes by Question Type</h3>
-                @if(!empty($typePieLabels))
-                    <livewire:charts.pie-chart :labels="$typePieLabels" :values="$typePieValues" :options="$typePieOptions" height-class="h-64" />
-                @else
-                    <div class="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-                        <p>No question type data available</p>
-                    </div>
-                @endif
-            </div>
-            {{-- Question Type Cards --}}
+    {{-- By question type --}}
+    <x-exam.card :padded="false">
+        <x-slot:header>
+            <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">QUIZZES BY QUESTION TYPE</p>
+        </x-slot:header>
+        <div class="p-5">
+            @if(!empty($typePieLabels))
+                <livewire:charts.pie-chart :labels="$typePieLabels" :values="$typePieValues" :options="$typePieOptions" height-class="h-64" />
+                <div class="mb-5 min-h-[200px]"></div>
+            @else
+                <p class="mb-4 text-sm text-muted">No question type data available.</p>
+            @endif
+
             @if(count($this->performanceByQuestionType) > 0)
-                <div class="space-y-3 mt-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     @foreach($this->performanceByQuestionType as $typePerf)
-                        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-medium text-gray-900 dark:text-white">{{ $typePerf['type'] }}</span>
-                                <span class="text-lg font-bold {{ $typePerf['average_score'] >= 80 ? 'text-green-600 dark:text-green-400' : ($typePerf['average_score'] >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">
-                                    {{ number_format($typePerf['average_score'], 1) }}%
-                                </span>
-                            </div>
-                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                                <div class="h-2.5 rounded-full {{ $typePerf['average_score'] >= 80 ? 'bg-green-600' : ($typePerf['average_score'] >= 60 ? 'bg-yellow-600' : 'bg-red-600') }}"
-                                     style="width: {{ $typePerf['average_score'] }}%"></div>
-                            </div>
-                            <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                <span>{{ $typePerf['quiz_count'] }} {{ Str::plural('quiz', $typePerf['quiz_count']) }}</span>
+                        <div class="rounded-md border border-line bg-surface-2 p-3 text-center">
+                            <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{{ $typePerf['type'] }}</p>
+                            <p class="mt-1 font-display text-xl font-bold text-primary">{{ number_format($typePerf['average_score'], 1) }}%</p>
+                            <p class="mt-0.5 font-mono text-[10px] tracking-wider text-muted">
+                                {{ $typePerf['quiz_count'] }} {{ strtoupper(Str::plural('QUIZ', $typePerf['quiz_count'])) }}
                                 @if($typePerf['average_time'] > 0)
-                                    <span>Avg time: {{ gmdate('i:s', $typePerf['average_time']) }}</span>
+                                    · {{ gmdate('i:s', $typePerf['average_time']) }} AVG
                                 @endif
-                            </div>
+                            </p>
                         </div>
                     @endforeach
                 </div>
             @endif
         </div>
-    </div>
+    </x-exam.card>
 </div>

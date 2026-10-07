@@ -131,7 +131,7 @@ class MockExamSubjectExamController extends Controller
             'subtopic_ids'         => ['nullable', 'array'],
             'subtopic_ids.*'       => ['integer', 'exists:academic_subtopics,id'],
             'sections'             => ['required', 'array', 'min:1'],
-            'sections.*.title'              => ['required', 'string', 'max:255'],
+            'sections.*.title'              => ['required', 'string'],
             'sections.*.instructions'       => ['nullable', 'string'],
             'sections.*.question_type'      => ['required', 'in:multiple_choice,true_false,essay,mixed'],
             'sections.*.question_count'     => ['required', 'integer', 'min:1', 'max:200'],
