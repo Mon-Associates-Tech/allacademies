@@ -19,9 +19,15 @@
                     <p class="text-xs text-slate-600 mt-0.5 font-mono">PDF Preview &amp; Export</p>
                 </div>
             </div>
-            <x-ui.button href="{{ route('mock-exams.show', $mockExam) }}" variant="ghost" size="sm" icon="arrow-left">
-                Back to Exam
-            </x-ui.button>
+            @if(isset($fromSubscription) && $fromSubscription)
+                <x-ui.button href="{{ route('mock-exams.subscription.dashboard') }}" variant="ghost" size="sm" icon="arrow-left">
+                    Back to My Subscriptions
+                </x-ui.button>
+            @else
+                <x-ui.button href="{{ route('mock-exams.show', $mockExam) }}" variant="ghost" size="sm" icon="arrow-left">
+                    Back to Exam
+                </x-ui.button>
+            @endif
         </div>
     </div>
 
@@ -157,7 +163,7 @@
             </div>
 
             <iframe id="pdfPreview"
-                    src="{{ route('mock-exams.pdf.preview', $mockExam) }}?font_size={{ $fontSize }}"
+                    src="{{ route('mock-exams.subject-exams.pdf.page', [$mockExam, $subjectExam]) }}?font_size={{ $fontSize }}"
                     class="w-full border-0 block"
                     style="height: calc(100vh - 136px); min-height: 700px; background: #fff;"
                     title="PDF Preview">

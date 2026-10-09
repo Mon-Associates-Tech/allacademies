@@ -7,14 +7,25 @@
                     <h1 class="text-xl font-bold text-white">Subject Exam Preview</h1>
                     <p class="text-sm text-slate-400 mt-1">{{ $subjectExam->getDisplayTitle() }}</p>
                 </div>
-                <a href="{{ route('mock-exams.show', $mockExam) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium transition-all"
-                   style="background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                    </svg>
-                    Back to Mock Exam
-                </a>
+                @if(isset($fromSubscription) && $fromSubscription)
+                    <a href="{{ route('mock-exams.subscription.dashboard') }}"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium transition-all"
+                       style="background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to My Subscriptions
+                    </a>
+                @else
+                    <a href="{{ route('mock-exams.show', $mockExam) }}"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium transition-all"
+                       style="background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to Mock Exam
+                    </a>
+                @endif
             </div>
         </div>
 

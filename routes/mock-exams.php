@@ -87,19 +87,30 @@ Route::middleware(['web', 'auth'])
 
 // Subject exam HTML views.
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'subjectExam'])
-            ->name('subject-exams.pdf.preview');
+->name('subject-exams.pdf.preview');
 
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExam'])
             ->name('subject-exams.pdf.download');
 
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])
             ->name('subject-exams.pdf.page');
+            
+        // Subscription-based preview routes
+        Route::get('/{mockExam}/subscription-preview', [MockExamPdfController::class, 'previewPageFromSubscription'])
+            ->name('subscription-preview');
+            
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/subscription-preview', [MockExamPdfController::class, 'previewSubjectExamPageFromSubscription'])
+            ->name('subject-exams.subscription-preview');
+            
+        // Subscription-based exam preview route
+        Route::get('/{mockExam}/subscription-preview/download', [MockExamPdfController::class, 'examFromSubscription'])
+            ->name('subscription-preview.download');
+
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');
         Route::get('/{mockExam}/templates/create', [MockExamTemplateController::class, 'createForMock'])->name('templates.create-for-mock');
         Route::post('/{subjectExam}/regenerate', [MockExamSubjectExamController::class, 'regenerate'])
             ->name('subject-exams.regenerate');
-
     });
 
 

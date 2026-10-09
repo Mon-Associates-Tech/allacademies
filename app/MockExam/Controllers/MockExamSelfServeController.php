@@ -52,10 +52,7 @@ class MockExamSelfServeController extends Controller
         $subscription = null;
 
         // ── Subscription gate ───────────────────────────────────────────
-        // Comment out the next line to bypass the requirement while
-        // testing the generation flow. $subscription stays null above,
-        // so nothing else needs to change.
-       // $subscription = $this->ensureActiveSubscription($template);
+        $subscription = $this->ensureActiveSubscription($template);
 
         $exam = $this->creationService->createExam((int) auth()->id(), [
             'title'                     => $template->getDisplayName(),

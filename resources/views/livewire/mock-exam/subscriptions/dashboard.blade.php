@@ -22,127 +22,29 @@
     {{-- ==================== SUBSCRIPTIONS TAB ==================== --}}
     @if($activeTab === 'subscriptions')
         <div class="animate-rise">
-            <div class="mb-5 flex items-center justify-between gap-4">
-                <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">MY SUBSCRIPTIONS · {{ count($mockSubscriptions) }}</p>
-                <x-exam.button type="button" wire:click="openPurchaseForm">+ New Subscription</x-exam.button>
+            <!-- Search and Filter Controls -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <x-exam.input 
+                        wire:model.live.debounce.300ms="search" 
+                        placeholder="Search subscriptions, mocks, subjects..." 
+                        icon="search"
+                    />
+                </div>
+                
+                <div class="flex gap-2">
+                    <x-exam.select wire:model.live="sortBy">
+                        <option value="created_at">Date Created</option>
+                        <option value="plan.name">Plan Name</option>
+                        <option value="expires_at">Expiration Date</option>
+                    </x-exam.select>
+                    
+                    <x-exam.select wire:model.live="sortDirection">
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                    </x-exam.select>
+                </div>
             </div>
-
-            {{-- Purchase form --}}
-            @if($showPurchaseForm)
-                <x-exam.card class="mb-6 animate-rise" :padded="false">
-                    <x-slot:header>
-                        <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">CONFIGURE SUBSCRIPTION</p>
-                    </x-slot:header>
-
-                    <div class="space-y-5 p-5">
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <x-exam.field bare label="I am subscribing as">
-                                <x-exam.select wire:model.live="userGroup">
-                                    @foreach($userGroupOptions as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                    @endforeach
-                                </x-exam.select>
-                            </x-exam.field>
-
-                            <x-exam.field bare label="Delivery Type">
-                                <x-exam.select wire:model.live="type">
-                                    <option value="print">Print</option>
-                                    <option value="online">Online</option>
-                                </x-exam.select>
-                            </x-exam.field>
-                        </div>
-
-                        <x-exam.field bare label="Subjects (select all that apply)">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label class="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Academic Group</label>
-                                    <x-exam.select wire:model.live="selectedAcademicGroupId" placeholder="Select group…">
-                                        @foreach($this->academicGroups as $group)
-                                            <option value="{{ $group->id }}">{{ $group->name }}</option>
-                                        @endforeach
-                                    </x-exam.select>
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Academic Level</label>
-                                    <x-exam.select wire:model.live="selectedAcademicLevelId" placeholder="Select level…" :disabled="!$selectedAcademicGroupId">
-                                        @foreach($this->academicLevels as $level)
-                                            <option value="{{ $level->id }}">{{ $level->name }}</option>
-                                        @endforeach
-                                    </x-exam.select>
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <x-exam.chips :items="$this->selectedSubjects" remove-action="removeSubject" with-meta />
-
-                                <div class="relative">
-                                    <x-exam.input wire:model.live="subjectSearch" placeholder="Type to search subjects in selected level…" />
-                                    <x-exam.picklist
-                                        :items="$this->subjectSearchResults"
-                                        action="addSubject"
-                                        :empty="strlen($subjectSearch) >= 1 ? 'No subjects found. Ask your administrator to create subjects first.' : null"
-                                    />
-                                </div>
-
-                                @if($selectedAcademicLevelId)
-                                    <x-exam.picklist :items="$this->filteredSubjects" action="addSubject" :absolute="false" empty="No available subjects in this level." />
-                                @endif
-                            </div>
-                            @error('selectedSubjectIds') <p class="mt-2 font-mono text-[11.5px] text-accent">▲ {{ $message }}</p> @enderror
-                        </x-exam.field>
-
-                        @if($type === 'online')
-                            <x-exam.field bare label="Number of Participants" class="sm:max-w-xs">
-                                <x-exam.input type="number" min="1" wire:model.live="participantCount" />
-                            </x-exam.field>
-                        @endif
-
-                        <x-exam.field bare label="Exam Cycles Per Subject" class="sm:max-w-xs">
-                            <x-exam.input type="number" min="1" wire:model.live="maxExams" />
-                            <p class="mt-1.5 text-xs text-muted">Total generations = selected subjects × cycles per subject.</p>
-                        </x-exam.field>
-
-                        @if($calculatedPrice > 0)
-                            <x-exam.callout>
-                                <p class="font-display text-lg font-bold text-primary">Total: GHS {{ number_format($calculatedPrice, 2) }}</p>
-                                @if($selectedPricingTier)
-                                    <p class="mt-1 text-sm text-primary/80">Tier: {{ $selectedPricingTier->name }}</p>
-                                @endif
-                                <p class="mt-1 font-mono text-[11px] tracking-wide text-muted">
-                                    {{ count($selectedSubjectIds) }} SUBJECT(S) · {{ $userGroupOptions[$userGroup] ?? $userGroup }} · {{ $maxExams ?? 1 }} CYCLE(S)@if($type === 'online') · {{ $participantCount }} PARTICIPANT(S) @endif
-                                </p>
-                            </x-exam.callout>
-                        @endif
-                    </div>
-
-                    <x-slot:footer>
-                        <div class="flex justify-end gap-2">
-                            <x-exam.button type="button" variant="ghost" wire:click="$set('showPurchaseForm', false)">Cancel</x-exam.button>
-                            <x-exam.button type="button" wire:click="purchase">Proceed to Payment</x-exam.button>
-                        </div>
-                    </x-slot:footer>
-                </x-exam.card>
-            @endif
-
-            {{-- Top-up modal --}}
-            @if($showTopUpForm)
-                <x-exam.modal title="Add Participant Slots">
-                    <x-exam.field bare label="Additional Participants">
-                        <x-exam.input type="number" min="1" wire:model.live="additionalParticipants" />
-                    </x-exam.field>
-
-                    @if($topUpPrice > 0)
-                        <p class="mt-4 text-sm text-ink-soft">
-                            Top-up cost: <strong class="font-display text-base font-bold text-primary">GHS {{ number_format($topUpPrice, 2) }}</strong>
-                        </p>
-                    @endif
-
-                    <x-slot:footer>
-                        <x-exam.button type="button" variant="ghost" wire:click="$set('showTopUpForm', false)">Cancel</x-exam.button>
-                        <x-exam.button type="button" wire:click="processTopUp">Pay & Add Slots</x-exam.button>
-                    </x-slot:footer>
-                </x-exam.modal>
-            @endif
 
             {{-- Subscriptions list --}}
             <div class="grid gap-4">
@@ -151,238 +53,170 @@
                     <article wire:key="sub-{{ $sub->id }}"
                              class="animate-rise rounded-md border border-line bg-surface p-4 shadow-[0_1px_2px_rgba(20,24,34,0.04)]">
                         <div class="flex items-start justify-between gap-4">
-                            <div class="min-w-0">
-                                <div class="mb-2 flex flex-wrap items-center gap-2">
-                                    <h3 class="font-display text-base font-bold">{{ $sub->plan->name }}</h3>
-                                    <x-exam.badge :tone="$sub->type === 'online' ? 'primary' : 'warn'">{{ ucfirst($sub->type) }}</x-exam.badge>
-                                    <x-exam.badge :tone="$sub->status->value === 'active' ? 'ok' : 'muted'">{{ ucfirst($sub->status->value) }}</x-exam.badge>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2.5">
+                                    <h3 class="truncate text-base font-semibold text-ink">{{ $sub->plan->name }}</h3>
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-success"></span>
+                                        Active
+                                    </span>
                                 </div>
 
-                                <div class="space-y-1 font-mono text-[11px] tracking-wide text-muted">
-                                    <p><span class="text-ink-soft">SUBJECTS:</span> {{ $sub->subjects->pluck('name')->join(', ') ?: 'NONE' }}</p>
-                                    <p><span class="text-ink-soft">GROUP:</span> {{ $groupLabel }} · {{ $sub->max_exams ?? 1 }} CYCLE(S) PER SUBJECT</p>
-                                    @if($sub->expires_at)
-                                        <p><span class="text-ink-soft">EXPIRES:</span> {{ $sub->expires_at->format('M d, Y') }}</p>
-                                    @endif
-                                </div>
-
-                                @if($sub->type === 'online')
-                                    @php($slotsPct = $sub->participant_slots > 0 ? min(100, round($sub->participants_used / $sub->participant_slots * 100)) : 0)
-                                    <div class="mt-3">
-                                        <div class="flex items-baseline justify-between font-mono text-[10.5px] tracking-wider text-muted">
-                                            <span>PARTICIPANTS {{ $sub->participants_used }}/{{ $sub->participant_slots }}</span>
-                                            <span>EXAMS {{ $sub->exams_used }}{{ $sub->max_exams ? '/' . $sub->max_exams : '' }}</span>
-                                        </div>
-                                        <div class="mt-1 h-1 w-full overflow-hidden rounded-full bg-line">
-                                            <div class="h-full rounded-full bg-primary transition-all" style="width: {{ $slotsPct }}%"></div>
-                                        </div>
-                                    </div>
-                                @endif
+                                <ul class="mt-1.5 space-y-1 font-mono text-[10.5px] text-muted">
+                                    <li class="flex items-baseline gap-2">
+                                        <span class="text-muted/80">·</span>
+                                        <span>{{ $groupLabel }} · {{ ucfirst($sub->type) }}</span>
+                                    </li>
+                                    <li class="flex items-baseline gap-2">
+                                        <span class="text-muted/80">·</span>
+                                        <span>{{ $sub->subjects->count() }} subject{{ $sub->subjects->count() !== 1 ? 's' : '' }} · {{ $sub->granted_by ? 'Granted by ' . $sub->grantedBy->name : 'Self-purchased' }}</span>
+                                    </li>
+                                    <li class="flex items-baseline gap-2">
+                                        <span class="text-muted/80">·</span>
+                                        <span>Expires {{ $sub->expires_at ? $sub->expires_at->format('M j, Y \\a\\t g:i A') : 'Never' }}</span>
+                                    </li>
+                                </ul>
                             </div>
 
                             <div class="flex shrink-0 flex-col items-end gap-2">
-                                @if($sub->status->value === 'pending')
-                                    <x-exam.link-button wire:click="retryPayment({{ $sub->id }})" tone="ok">Pay Now</x-exam.link-button>
-                                    <x-exam.link-button wire:click="confirmCancel({{ $sub->id }})" tone="danger">Cancel</x-exam.link-button>
-                                @elseif($sub->status->value === 'active')
-                                    <x-exam.link-button wire:click="$set('selectedSubscriptionId', {{ $sub->id }}); $set('activeTab', 'results')">View Results</x-exam.link-button>
-                                    <x-exam.link-button wire:click="toggleMocks({{ $sub->id }})" tone="muted">
-                                        {{ in_array($sub->id, $expandedSubscriptionIds) ? 'Hide Mocks' : 'View Mocks' }}
-                                    </x-exam.link-button>
-                                    @if($sub->type === 'online')
-                                        <x-exam.link-button tone="muted" wire:click="openTopUp({{ $sub->id }})">Add Slots</x-exam.link-button>
+                                <div class="flex items-center gap-2">
+                                    @if($sub->max_exams_remaining > 0)
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary" title="You have {{ $sub->max_exams_remaining }} exam cycle{{ $sub->max_exams_remaining !== 1 ? 's' : '' }} remaining out of {{ $sub->max_exams }} total">
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {{ $sub->max_exams_remaining }} remaining
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive" title="You have reached your limit of {{ $sub->max_exams }} exam cycle{{ $sub->max_exams !== 1 ? 's' : '' }}">
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Limit reached
+                                        </span>
                                     @endif
-                                @endif
+
+                                    @if($sub->type === 'online' && $sub->participant_slots_remaining > 0)
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary" title="You have {{ $sub->participant_slots_remaining }} participant slot{{ $sub->participant_slots_remaining !== 1 ? 's' : '' }} remaining">
+                                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                            {{ $sub->participant_slots_remaining }} slots
+                                        </span>
+                                    @elseif($sub->type === 'online')
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive" title="You have 0 participant slots remaining. Use 'Top Up' to add more.">
+                                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            No slots
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </article>
 
-                    {{-- Expanded mocks panel --}}
-                    @if(in_array($sub->id, $expandedSubscriptionIds))
-                        <div class="-mt-2 rounded-b-md border border-t-0 border-line bg-surface-2 px-4 pb-4 pt-3">
-                            <p class="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Mocks under this subscription</p>
-                            @forelse($subscriptionMocks[$sub->id] ?? collect() as $mock)
-                                <div wire:key="mock-{{ $mock->id }}" class="flex items-center justify-between gap-4 border-b border-line py-2 last:border-b-0">
-                                    <div>
-                                        <p class="text-sm font-semibold text-ink">{{ $mock->title }}</p>
-                                        <p class="font-mono text-[10.5px] text-muted">
-                                            {{ $mock->subject_exams_count }} subject exam(s)
-                                            · {{ ucfirst($mock->status) }}
-                                            · {{ ucfirst($mock->delivery_type) }}
-                                        </p>
+                        {{-- Mock exams associated with this subscription --}}
+                        @if($sub->mockExams->isNotEmpty())
+                            <div class="mt-4 border-t border-line pt-4">
+                                <p class="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Mocks under this subscription</p>
+                                
+                                @foreach($sub->mockExams as $mock)
+                                    <div class="mb-3 last:mb-0">
+                                        <div class="flex items-center justify-between gap-4 py-2 border-b border-line last:border-b-0">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-semibold text-ink">{{ $mock->title }}</p>
+                                                <p class="font-mono text-[10.5px] text-muted">
+                                                    {{ $mock->subjectExams->count() }} subject exam(s)
+                                                    · {{ ucfirst($mock->status) }}
+                                                    · {{ ucfirst($mock->delivery_type) }}
+                                                </p>
+                                            </div>
+
+                                        </div>
+                                        
+                                        {{-- List individual subject exams under this mock --}}
+                                        @if($mock->subjectExams->isNotEmpty())
+                                            <div class="ml-4 mt-2 space-y-1 border-l-2 border-primary/20 pl-3">
+                                                @foreach($mock->subjectExams as $subjectExam)
+                                                    <div class="flex items-center justify-between py-1">
+                                                        <div class="flex-1">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary">
+                                                                    {{ $subjectExam->academicSubject->name ?? 'Unknown Subject' }}
+                                                                </span>
+                                                                <span class="text-sm text-ink">{{ $subjectExam->getDisplayTitle() }}</span>
+                                                            </div>
+                                                            <div class="flex gap-3 mt-1">
+                                                                <span class="inline-flex items-center gap-1 font-mono text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                                                    </svg>
+                                                                    {{ $subjectExam->sections->count() }} sections
+                                                                </span>
+                                                                <span class="inline-flex items-center gap-1 font-mono text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    {{ $subjectExam->sections->sum(fn($s) => $s->questions->count()) }} questions
+                                                                </span>
+                                                                <span class="inline-flex items-center gap-1 font-mono text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    {{ $subjectExam->duration_in_minutes ?? 'N/A' }} min
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <a href="{{ route('mock-exams.subject-exams.subscription-preview', [$mock, $subjectExam]) }}"
+                                                           class="font-mono text-[11px] tracking-wide text-primary hover:underline whitespace-nowrap">
+                                                            Preview →
+                                                        </a>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
-                                    <a href="{{ route('mock-exams.show', $mock) }}"
-                                       class="font-mono text-[11px] tracking-wide text-primary hover:underline">
-                                        Open →
-                                    </a>
-                                </div>
-                            @empty
-                                <p class="py-2 text-sm text-muted">No mocks created under this subscription yet.</p>
-                            @endforelse
-                        </div>
-                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+                    </article>
                 @empty
-                    <x-exam.empty compact title="No subscriptions yet" description="Purchase one to start creating exams." />
+                    <x-exam.empty
+                        title="No subscriptions yet"
+                        description="You don't have any active subscriptions."
+                    />
                 @endforelse
             </div>
-
-            {{-- Cancel confirm modal --}}
-            @if($showCancelConfirm)
-                <x-exam.modal title="Cancel Subscription">
-                    <p class="text-sm text-ink-soft">Are you sure you want to cancel this subscription? This action cannot be undone.</p>
-                    <x-slot:footer>
-                        <x-exam.button type="button" variant="ghost" wire:click="$set('showCancelConfirm', false)">Keep It</x-exam.button>
-                        <x-exam.button type="button" variant="danger" wire:click="cancelSubscription">Yes, Cancel</x-exam.button>
-                    </x-slot:footer>
-                </x-exam.modal>
-            @endif
         </div>
     @endif
 
     {{-- ==================== RESULTS TAB ==================== --}}
     @if($activeTab === 'results')
         <div class="animate-rise">
-            <div class="mb-5 grid grid-cols-1 gap-3 sm:max-w-2xl sm:grid-cols-2">
-                <x-exam.select wire:model.live="selectedSubscriptionId" placeholder="Select subscription…">
-                    @foreach($mockSubscriptions as $sub)
-                        <option value="{{ $sub->id }}">{{ $sub->plan->name }} — {{ $sub->subjects->pluck('name')->join(', ') }}</option>
-                    @endforeach
-                </x-exam.select>
-
-                @if($selectedMockSubscription)
-                    <x-exam.select wire:model.live="selectedExamId" placeholder="Select exam…">
-                        @foreach($mockExams as $exam)
-                            <option value="{{ $exam->id }}">{{ $exam->title }} ({{ $exam->submissions_count }} submissions)</option>
-                        @endforeach
-                    </x-exam.select>
-                @endif
-            </div>
-
-            @if($selectedExamId && $mockSubmissions->count())
-                <x-exam.table :headers="['Participant', 'Score', 'Grade', 'Started', 'Submitted', 'Duration', '']">
-                    @foreach($mockSubmissions as $submission)
-                        @php($gradeTone = !$submission->grade ? 'muted'
-                            : (in_array($submission->grade, ['A+','A']) ? 'ok'
-                            : ($submission->grade === 'B' ? 'primary'
-                            : ($submission->grade === 'C' ? 'warn' : 'danger'))))
-                        <tr wire:key="submission-{{ $submission->id }}" class="transition hover:bg-surface-2/60">
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-ink">{{ $submission->getParticipantName() }}</p>
-                                <p class="font-mono text-[10.5px] text-muted">{{ $submission->getParticipantEmail() }}</p>
-                            </td>
-                            <td class="px-4 py-3 text-ink-soft">
-                                <span class="font-semibold text-ink">{{ $submission->score }}/{{ $submission->total_marks }}</span>
-                                <span class="font-mono text-[10.5px] text-muted">({{ $submission->percentage }}%)</span>
-                            </td>
-                            <td class="px-4 py-3"><x-exam.badge :tone="$gradeTone">{{ $submission->grade ?? '—' }}</x-exam.badge></td>
-                            <td class="px-4 py-3 font-mono text-[11px] text-muted">{{ $submission->started_at?->format('M d, H:i') ?? '—' }}</td>
-                            <td class="px-4 py-3 font-mono text-[11px] text-muted">{{ $submission->submitted_at?->format('M d, H:i') ?? '—' }}</td>
-                            <td class="px-4 py-3 font-mono text-[11px] text-muted">{{ $submission->time_spent_seconds ? gmdate('H:i:s', $submission->time_spent_seconds) : '—' }}</td>
-                            <td class="px-4 py-3">
-                                <x-exam.link-button wire:click="openScoreEditor({{ $submission->id }})">Edit Scores</x-exam.link-button>
-                            </td>
-                        </tr>
-                    @endforeach
-
-                    <x-slot:footer>{{ $mockSubmissions->links() }}</x-slot:footer>
-                </x-exam.table>
-            @elseif($selectedExamId)
-                <x-exam.empty compact title="No submissions yet" description="No submissions for this exam yet." />
-            @endif
-
-            {{-- Score editor modal --}}
-            @if($showScoreEditor && $editingMockSubmission)
-                <x-exam.modal max-width="max-w-2xl" title="Edit Scores — {{ $editingMockSubmission->getParticipantName() }}">
-                    <div class="space-y-3">
-                        @foreach($editingMockSubmission->assignment->questions as $question)
-                            <div wire:key="q-{{ $question->id }}" class="rounded-md border border-line bg-surface-2 p-3">
-                                <p class="mb-2 text-sm text-ink">{{ $question->question }}</p>
-                                <div class="flex items-center gap-3">
-                                    <label class="font-mono text-[10.5px] uppercase tracking-wider text-muted">Points (max {{ $question->marks }})</label>
-                                    <input type="number" step="0.5" min="0" max="{{ $question->marks }}"
-                                           wire:model="editedScores.{{ $question->id }}"
-                                           class="w-24 rounded border border-line-strong bg-surface px-3 py-2 text-sm text-ink transition hover:border-ink-soft focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20">
-                                </div>
-                            </div>
-                        @endforeach
-
-                        <x-exam.field bare label="Reason for change (optional)">
-                            <textarea wire:model="scoreEditReason" rows="2"
-                                      class="w-full rounded border border-line-strong bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted transition hover:border-ink-soft focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20"></textarea>
-                        </x-exam.field>
-
-                        @if($mockAuditLogs->isNotEmpty())
-                            <div class="rounded-md border border-line bg-surface-2 p-3">
-                                <p class="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Audit History</p>
-                                <ol class="space-y-1.5">
-                                    @foreach($mockAuditLogs as $log)
-                                        <li wire:key="log-{{ $log->id }}" class="text-xs leading-relaxed text-muted">
-                                            <span class="font-semibold text-ink-soft">{{ $log->editor->name }}</span>
-                                            changed score from {{ $log->old_score }} to {{ $log->new_score }}
-                                            ({{ $log->old_grade }} → {{ $log->new_grade }})
-                                            at {{ $log->created_at->format('M d, H:i') }}
-                                            @if($log->reason) — “{{ $log->reason }}” @endif
-                                        </li>
-                                    @endforeach
-                                </ol>
-                            </div>
-                        @endif
-                    </div>
-
-                    <x-slot:footer>
-                        <x-exam.button type="button" variant="ghost" wire:click="$set('showScoreEditor', false)">Cancel</x-exam.button>
-                        <x-exam.button type="button" wire:click="saveScores" loading="Recalculating…">Save & Recalculate</x-exam.button>
-                    </x-slot:footer>
-                </x-exam.modal>
-            @endif
+            <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">YOUR EXAM RESULTS</p>
+            <x-exam.empty
+                title="No results yet"
+                description="Complete an exam to see your results here."
+            />
         </div>
     @endif
 
     {{-- ==================== PERFORMANCE TAB ==================== --}}
     @if($activeTab === 'performance')
         <div class="animate-rise">
-            <div class="mb-6">
-                <p class="mb-3 font-mono text-[10.5px] tracking-[0.14em] text-muted">PARTICIPANT PERFORMANCE OVER TIME</p>
-                <div class="flex max-w-xl gap-2">
-                    <x-exam.input wire:model="performanceSearch" placeholder="Search by name or email…" />
-                    <x-exam.button type="button" wire:click="searchPerformance">Search</x-exam.button>
-                </div>
-                @error('performanceSearch') <p class="mt-2 font-mono text-[11.5px] text-accent">▲ {{ $message }}</p> @enderror
-            </div>
-
-            @if(!empty($performanceResults))
-                <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <x-exam.stat label="Exams Taken" :value="$performanceResults['total_exams']" />
-                    <x-exam.stat label="Average Score" :value="number_format($performanceResults['average_score'], 1) . '%'" />
-                    <x-exam.stat label="Highest Score" :value="number_format($performanceResults['highest_score'], 1) . '%'" tone="ok" />
-                    <x-exam.stat label="Lowest Score" :value="number_format($performanceResults['lowest_score'], 1) . '%'" tone="danger" />
-                </div>
-
-                <x-exam.table :headers="['Exam', 'Score', 'Grade', 'Date']">
-                    @foreach($performanceResults['submissions'] as $submission)
-                        @php($perfTone = !$submission->grade ? 'muted'
-                            : (in_array($submission->grade, ['A+','A']) ? 'ok'
-                            : ($submission->grade === 'B' ? 'primary' : 'danger')))
-                        <tr wire:key="perf-{{ $submission->id }}" class="transition hover:bg-surface-2/60">
-                            <td class="px-4 py-3 font-semibold text-ink">{{ $submission->assignment->title }}</td>
-                            <td class="px-4 py-3 text-ink-soft">
-                                {{ $submission->score }}/{{ $submission->total_marks }}
-                                <span class="font-mono text-[10.5px] text-muted">({{ $submission->percentage }}%)</span>
-                            </td>
-                            <td class="px-4 py-3"><x-exam.badge :tone="$perfTone">{{ $submission->grade ?? '—' }}</x-exam.badge></td>
-                            <td class="px-4 py-3 font-mono text-[11px] text-muted">{{ $submission->submitted_at?->format('M d, Y') }}</td>
-                        </tr>
-                    @endforeach
-                </x-exam.table>
-            @endif
+            <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">PARTICIPANT PERFORMANCE ANALYSIS</p>
+            <x-exam.empty
+                title="No performance data"
+                description="Track participant performance after completing exams."
+            />
         </div>
     @endif
 
     {{-- ==================== IDENTITY TAB ==================== --}}
-@if($activeTab === 'identity')
-    <div class="animate-rise">
-        @livewire('mock-exam.my-identity-form')
-    </div>
-@endif
-
+    @if($activeTab === 'identity')
+        <div class="animate-rise">
+            <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">YOUR EXAM IDENTIFICATION DETAILS</p>
+            <livewire:mock-exam.user-identity-form />
+        </div>
+    @endif
 </x-exam.page>

@@ -5,6 +5,7 @@ namespace App\MockExam\Services;
 use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSection;
 use App\MockExam\Models\MockExamSubjectExam;
+use App\MockExam\Models\MockExamSubscription;
 use App\MockExam\Models\MockExamTemplate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,9 @@ class MockExamCreationService
 
     public function createExam(int $userId, array $payload): MockExam
     {
-        return MockExam::create([
+        $payload['mock_exam_subscription_id'] ??= $this->resolveActiveSubscriptionId($userId);
+
+        $exam = MockExam::create([
             'user_id'                     => $userId,
             'title'                       => $payload['title'],
             'description'                 => $payload['description'] ?? null,
@@ -37,8 +40,63 @@ class MockExamCreationService
             'is_randomized'               => (bool) ($payload['is_randomized'] ?? false),
             'max_attempts'                => (int) ($payload['max_attempts'] ?? 1),
             'academic_subject_id'         => $payload['academic_subject_id'] ?? null,
-            'mock_exam_subscription_id'   => $payload['mock_exam_subscription_id'] ?? null,
+            'mock_exam_subscription_id'   => $payload['mock_exam_subscription_id'],
         ]);
+
+        $this->syncUserMockSubjectsToActiveSubscriptions($userId);
+
+        return $exam;
+    }
+
+    public function syncUserMockSubjectsToActiveSubscriptions(int $userId): void
+    {
+        $mockSubjectIds = MockExam::where('user_id', $userId)
+            ->with('subjectExams')
+            ->get()
+            ->flatMap(fn (MockExam $exam) => array_merge(
+                $exam->subjectExams->pluck('academic_subject_id')->filter()->all(),
+                $exam->academic_subject_id ? [$exam->academic_subject_id] : []
+            ))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $subscriptions = MockExamSubscription::where('user_id', $userId)
+            ->active()
+            ->get();
+
+        foreach ($subscriptions as $subscription) {
+            $currentSubjectIds = $subscription->subjects()->pluck('academic_subjects.id')->all();
+            $merged = array_values(array_unique(array_merge($currentSubjectIds, $mockSubjectIds)));
+            $subscription->subjects()->sync($merged);
+        }
+    }
+
+    private function resolveActiveSubscriptionId(int $userId): ?int
+    {
+        // First try to find a subscription that covers the academic subject of this exam
+        $academicSubjectId = request()->input('academic_subject_id'); // Get from request if available
+        
+        if ($academicSubjectId) {
+            $subscription = MockExamSubscription::where('user_id', $userId)
+                ->active()
+                ->whereHas('subjects', function ($query) use ($academicSubjectId) {
+                    $query->where('academic_subjects.id', $academicSubjectId);
+                })
+                ->orderByDesc('activated_at')
+                ->first();
+                
+            if ($subscription) {
+                return $subscription->id;
+            }
+        }
+        
+        // If no subject-specific subscription found, return the most recently activated one
+        return MockExamSubscription::where('user_id', $userId)
+            ->active()
+            ->orderByDesc('activated_at')
+            ->value('id');
     }
 
     public function updateExam(MockExam $exam, array $payload): MockExam
@@ -133,6 +191,13 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
                 }
             }
 
+            $this->syncUserMockSubjectsToActiveSubscriptions($mockExam->user_id);
+
+            // Update the parent mock exam's academic subject ID if not already set
+            if (!$mockExam->academic_subject_id && $subjectExam->academic_subject_id) {
+                $mockExam->update(['academic_subject_id' => $subjectExam->academic_subject_id]);
+            }
+
             Log::info('MockExamCreationService: subject exam created', [
                 'mock_exam_id'     => $mockExam->id,
                 'subject_exam_id'  => $subjectExam->id,
@@ -210,6 +275,8 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
                     $warnings[] = "Section \"{$sectionData['title']}\": requested {$requested} question(s), found {$created}.";
                 }
             }
+
+            $this->syncUserMockSubjectsToActiveSubscriptions($subjectExam->mockExam->user_id);
 
             Log::info('MockExamCreationService: subject exam updated', [
                 'subject_exam_id'    => $subjectExam->id,

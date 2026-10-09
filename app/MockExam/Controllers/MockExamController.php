@@ -111,7 +111,9 @@ class MockExamController extends Controller
     public function destroy(MockExam $mockExam): RedirectResponse
     {
         $this->ensureOwner($mockExam);
+        $userId = $mockExam->user_id;
         $mockExam->delete();
+        $this->creationService->syncUserMockSubjectsToActiveSubscriptions($userId);
         return redirect()
             ->route('mock-exams.index')
             ->with('success', 'Mock exam deleted.');

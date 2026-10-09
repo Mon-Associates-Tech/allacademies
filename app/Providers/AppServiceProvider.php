@@ -12,9 +12,11 @@ use App\Models\SchoolPaymentStructure;
 use App\Models\TrueOrFalseQuestion;
 use App\Models\User;
 use App\Models\UserBook;
+use App\MockExam\Models\MockExam;
 use App\Observers\AcademicFeeStructureObserver;
 use App\Observers\SchoolPaymentObserver;
 use App\Observers\SchoolPaymentStructureObserver;
+use App\Observers\MockExamObserver;
 // ...existing code...
 use App\Services\Sms\NullSmsProvider;
 use App\Services\QuestionImportService;
@@ -90,6 +92,9 @@ class AppServiceProvider extends ServiceProvider
         TrueOrFalseQuestion::observe(TrueOrFalseQuestionObserver::class);
         MultipleChoiceQuestion::observe(MultipleChoiceQuestionObserver::class);
         EssayQuestion::observe(EssayQuestionObserver::class);
+        
+        // Register MockExam observer
+        MockExam::observe(MockExamObserver::class);
 
         $this->app->singleton(\App\Services\MediaService::class);
         // In AppServiceProvider boot method

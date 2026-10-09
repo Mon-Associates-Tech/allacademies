@@ -31,8 +31,8 @@ class MockExamPdfController extends Controller
         $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
 
         return view(
-            'mock-exam.pdf.exam',
-            $this->viewService->examData($mockExam, $fontSize)
+            'mock-exam.pdf.mock-exam-preview',  // Changed to the correct view
+            $this->viewService->mockExamOverviewData($mockExam, $fontSize)
         );
     }
 
@@ -73,6 +73,55 @@ class MockExamPdfController extends Controller
         ));
     }
 
+    /**
+     * Direct exam content for users coming from subscription dashboard (without preview wrapper)
+     */
+    public function previewSubjectExamPageFromSubscription(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
+    {
+        // Check if user has access through subscription
+        $this->ensureSubscriptionAccess($mockExam, $subjectExam);
+
+        $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
+
+        return view(
+            'mock-exam.pdf.subject-exam',
+            $this->viewService->subjectExamData($subjectExam, $fontSize)
+        );
+    }
+
+    /**
+     * Preview page for users coming from subscription dashboard
+     */
+    public function previewPageFromSubscription(MockExam $mockExam): View
+    {
+        // Check if user has access through subscription
+        $this->ensureSubscriptionAccess($mockExam);
+
+        $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
+
+        return view('mock-exam.pdf.preview', [
+            'mockExam' => $mockExam,
+            'fontSize' => $fontSize,
+            'fromSubscription' => true
+        ]);
+    }
+
+    /**
+     * General mock exam preview for users coming from subscription dashboard
+     */
+    public function examFromSubscription(MockExam $mockExam): View
+    {
+        // Check if user has access through subscription
+        $this->ensureSubscriptionAccess($mockExam);
+
+        $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
+
+        return view(
+            'mock-exam.pdf.mock-exam-preview',
+            $this->viewService->mockExamOverviewData($mockExam, $fontSize)
+        );
+    }
+
     public function previewTemplateFrontPage(MockExamTemplate $template): View
     {
         abort_unless($template->user_id === auth()->id(), 403);
@@ -111,5 +160,25 @@ class MockExamPdfController extends Controller
         MockExamSubjectExam $subjectExam
     ): void {
         abort_unless($subjectExam->mock_exam_id === $mockExam->id, 404);
+    }
+
+    /**
+     * Check if the authenticated user has access to the mock exam through subscription
+     */
+    private function ensureSubscriptionAccess(MockExam $mockExam, ?MockExamSubjectExam $subjectExam = null): void
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+        
+        // Check if the user owns the mock exam
+        if ($mockExam->user_id === $user->id) {
+            return;
+        }
+        
+        // Check if the mock exam is linked to a subscription the user has
+        $hasAccessThroughSubscription = $mockExam->mockExamSubscription && 
+            $mockExam->mockExamSubscription->user_id === $user->id;
+        
+        abort_unless($hasAccessThroughSubscription, 403);
     }
 }

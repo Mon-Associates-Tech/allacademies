@@ -33,6 +33,28 @@ class MockExamPdfService
     }
 
     /**
+     * Data for the mock exam overview view.
+     */
+    public function mockExamOverviewData(MockExam $mockExam, float $fontSize = 10.5): array
+    {
+        $mockExam->load([
+            'subjectExams.academicSubject',
+            'subjectExams.academicLevel',
+            'subjectExams.sections.questions',
+            'subjectExams.template',
+            'user',
+        ]);
+
+        $this->resolveTemplates($mockExam);
+
+        return [
+            'mockExam' => $mockExam,
+            'fontSize' => $fontSize,
+            'identity' => $this->resolveIdentitySection(),
+        ];
+    }
+
+    /**
      * Data for the answer key view.
      */
     public function answerKeyData(MockExam $mockExam): array
@@ -114,55 +136,12 @@ class MockExamPdfService
         }
     }
 
-    private function resolveIdentitySection(): ?array
+    private function resolveIdentitySection(): ?MockExamUserIdentity
     {
-        $user = Auth::user();
-
-        if (! $user) {
+        if (! Auth::check()) {
             return null;
         }
 
-        $fields = MockExamIdentityField::ordered()->get();
-
-        if ($fields->isEmpty()) {
-            return null;
-        }
-
-        $identity = MockExamUserIdentity::where('user_id', $user->id)->first();
-
-        if (! $identity) {
-            return null;
-        }
-
-        $entries = $fields
-            ->map(function ($field) use ($identity) {
-                $value = $identity->valueFor($field->key);
-
-                return ($value !== null && $value !== '') ? [
-                    'type' => $field->type,
-                    'pretext' => $field->pretext,
-                    'value' => $value,
-                    'font_size' => $field->font_size,
-                    'same_row' => $field->same_row,
-                ] : null;
-            })
-            ->filter()
-            ->values();
-
-        if ($entries->isEmpty()) {
-            return null;
-        }
-
-        $rows = [];
-
-        foreach ($entries as $entry) {
-            if ($entry['same_row'] && $rows !== []) {
-                $rows[count($rows) - 1][] = $entry;
-            } else {
-                $rows[] = [$entry];
-            }
-        }
-
-        return ['rows' => $rows];
+        return MockExamUserIdentity::where('user_id', Auth::id())->first();
     }
 }

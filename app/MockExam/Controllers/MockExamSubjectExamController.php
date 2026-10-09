@@ -109,6 +109,7 @@ class MockExamSubjectExamController extends Controller
         $subjectExam->sections()->each(fn ($s) => $s->questions()->delete());
         $subjectExam->sections()->delete();
         $subjectExam->delete();
+        $this->creationService->syncUserMockSubjectsToActiveSubscriptions($mockExam->user_id);
 
         return redirect()
             ->route('mock-exams.show', $mockExam)

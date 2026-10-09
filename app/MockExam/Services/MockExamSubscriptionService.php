@@ -4,6 +4,7 @@ namespace App\MockExam\Services;
 
 use App\MockExam\Models\MockExamPricingTier;
 use App\MockExam\Models\MockExamSubmission;
+use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSubscription;
 use App\MockExam\Models\MockExamSubscriptionPayment;
 use App\MockExam\Models\MockExamSubscriptionPlan;
@@ -96,6 +97,8 @@ class MockExamSubscriptionService
             ]);
 
             $subscription->subjects()->sync($config['subject_ids']);
+            $this->syncUserMockSubjectsToActiveSubscriptions($user->id);
+            $this->linkExistingMockExamsToSubscription($subscription);
 
             $reference = 'MES-'.strtoupper(Str::random(12));
 
@@ -136,6 +139,58 @@ class MockExamSubscriptionService
         });
     }
 
+    public function syncUserMockSubjectsToActiveSubscriptions(int $userId): void
+    {
+        $mockSubjectIds = \App\MockExam\Models\MockExam::where('user_id', $userId)
+            ->with('subjectExams')
+            ->get()
+            ->flatMap(fn (\App\MockExam\Models\MockExam $exam) => array_merge(
+                $exam->subjectExams->pluck('academic_subject_id')->filter()->all(),
+                $exam->academic_subject_id ? [$exam->academic_subject_id] : []
+            ))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        foreach (MockExamSubscription::where('user_id', $userId)->active()->get() as $subscription) {
+            $currentIds = $subscription->subjects()->pluck('academic_subjects.id')->all();
+            $merged = array_values(array_unique(array_merge($currentIds, $mockSubjectIds)));
+            $subscription->subjects()->sync($merged);
+        }
+    }
+
+    /**
+     * Link existing mock exams to a subscription based on subject matching
+     */
+    public function linkExistingMockExamsToSubscription(MockExamSubscription $subscription): void
+    {
+        // Get all subjects in this subscription
+        $subscriptionSubjectIds = $subscription->subjects()->pluck('academic_subjects.id')->toArray();
+        
+        if (empty($subscriptionSubjectIds)) {
+            return;
+        }
+
+        // Find all mock exams that belong to the user and match the subscription subjects
+        $mockExams = MockExam::where('user_id', $subscription->user_id)
+            ->where(function ($query) use ($subscriptionSubjectIds) {
+                $query->whereIn('academic_subject_id', $subscriptionSubjectIds)
+                      ->orWhereHas('subjectExams', function ($subQuery) use ($subscriptionSubjectIds) {
+                          $subQuery->whereIn('academic_subject_id', $subscriptionSubjectIds);
+                      });
+            })
+            ->get();
+
+        // Update each matching mock exam to reference this subscription
+        foreach ($mockExams as $mockExam) {
+            // Only update if not already linked to another subscription
+            if (!$mockExam->mock_exam_subscription_id) {
+                $mockExam->update(['mock_exam_subscription_id' => $subscription->id]);
+            }
+        }
+    }
+
     /**
      * Verify and activate a subscription after Paystack callback.
      */
@@ -166,6 +221,9 @@ class MockExamSubscriptionService
 
         if ($status === 'success') {
             $payment->subscription->activate();
+            
+            // Link existing mock exams to the activated subscription
+            $this->linkExistingMockExamsToSubscription($payment->subscription);
 
             return ['success' => true, 'subscription' => $payment->subscription->fresh()];
         }
@@ -285,6 +343,8 @@ class MockExamSubscriptionService
             ]);
 
             $subscription->subjects()->sync($config['subject_ids']);
+            $this->syncUserMockSubjectsToActiveSubscriptions($targetUser->id);
+            $this->linkExistingMockExamsToSubscription($subscription);
 
             return $subscription;
         });
@@ -321,6 +381,8 @@ class MockExamSubscriptionService
             ]);
 
             $subscription->subjects()->sync($config['subject_ids']);
+            $this->syncUserMockSubjectsToActiveSubscriptions($targetUser->id);
+            $this->linkExistingMockExamsToSubscription($subscription);
 
             $reference = 'MES-OWN-'.strtoupper(Str::random(10));
 
@@ -446,7 +508,7 @@ class MockExamSubscriptionService
             ->get()
             ->filter(function ($submission) use ($identifier) {
                 $name = strtolower($submission->getParticipantName());
-                $email = strtolower($submission->getParticipantEmail());
+                $email = strtolower($subscription->getParticipantEmail());
                 $search = strtolower($identifier);
 
                 return str_contains($name, $search) || str_contains($email, $search);
