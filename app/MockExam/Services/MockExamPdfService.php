@@ -136,12 +136,55 @@ class MockExamPdfService
         }
     }
 
-    private function resolveIdentitySection(): ?MockExamUserIdentity
+    private function resolveIdentitySection(): ?array
     {
-        if (! Auth::check()) {
+        $user = Auth::user();
+
+        if (! $user) {
+            return null;
+        }
+        
+        $fields = MockExamIdentityField::ordered()->get();
+
+        if ($fields->isEmpty()) {
             return null;
         }
 
-        return MockExamUserIdentity::where('user_id', Auth::id())->first();
-    }
+        $identity = MockExamUserIdentity::where('user_id', $user->id)->first();
+
+        if (! $identity) {
+            return null;
+        }
+
+        $entries = $fields
+            ->map(function ($field) use ($identity) {
+                $value = $identity->valueFor($field->key);
+
+                return ($value !== null && $value !== '') ? [
+                    'type' => $field->type,
+                    'pretext' => $field->pretext,
+                    'value' => $value,
+                    'font_size' => $field->font_size,
+                    'same_row' => $field->same_row,
+                ] : null;
+            })
+            ->filter()
+            ->values();
+
+        if ($entries->isEmpty()) {
+            return null;
+        }
+
+        $rows = [];
+
+        foreach ($entries as $entry) {
+            if ($entry['same_row'] && $rows !== []) {
+                $rows[count($rows) - 1][] = $entry;
+            } else {
+                $rows[] = [$entry];
+            }
+        }
+
+        return ['rows' => $rows];
+}
 }
