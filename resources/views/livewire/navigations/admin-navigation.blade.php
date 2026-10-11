@@ -236,13 +236,6 @@
         >Create Exam
         </x-app.nav-item>--}}
 
-        <x-app.nav-item
-            href="{{ route('general-exams.subscription.dashboard') }}"
-            :active="Route::is('general-exams.subscription.dashboard')"
-            icon="heroicon-o-ticket"
-        >Mock Subscriptions
-        </x-app.nav-item>
-
 
         <x-app.nav-item
             href="{{ route('mock-exams.index') }}"
