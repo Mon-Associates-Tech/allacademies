@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\MockExam\Subscriptions\MockExamSubscriptionManager;
 use App\MockExam\Controllers\MockExamController;
 use App\MockExam\Controllers\MockExamGradeScaleController;
 use App\MockExam\Controllers\MockExamIdentityFieldController;
@@ -253,9 +254,11 @@ Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/sub
 */
 
 Route::middleware(['auth', 'verified', 'web'])->prefix('admin/mock-exams')->name('admin.mock-exams.')->group(function () {
-    Route::get('/subscriptions', function () {
-        return view('mock-exams.subscriptions.index');
-    })->name('subscriptions');
+    // Route::get('/subscriptions', function () {
+    //     return view('mock-exams.subscriptions.index');
+    // })->name('subscriptions');
+
+    Route::get('/subscriptions', MockExamSubscriptionManager::class)->name('subscriptions');
 
     Route::get('/pricing-tiers', function () {
         return view('mock-exams.pricing-tiers');

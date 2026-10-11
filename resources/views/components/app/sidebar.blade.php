@@ -388,10 +388,10 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
 
                         <li class="mb-0.5 last:mb-2" title="Mock Subscriptions">
                             <a :class="$store.sidebar.expanded ? 'py-2' : ''"
-                                class="block pl-3 rounded-lg transition {{ Route::is('mock-exams.subscription.*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                                class="block pl-3 rounded-lg transition {{ Route::is('mock-exams.subscription.dashboard') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                                 href="{{ route('mock-exams.subscription.dashboard') }}">
                                 <div class="flex items-center">
-                                    <svg class="shrink-0 fill-current {{ Route::is('mock-exams.subscription.*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                                    <svg class="shrink-0 fill-current {{ Route::is('mock-exams.subscription.dashboard') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
                                         xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                         viewBox="0 0 24 24">
                                         <!-- Ticket / Subscription Icon -->

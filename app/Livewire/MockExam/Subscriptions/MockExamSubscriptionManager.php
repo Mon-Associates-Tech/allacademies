@@ -48,6 +48,8 @@ class MockExamSubscriptionManager extends Component
 
     public float $calculatedPrice = 0;
 
+    public string $activeTab = 'subscriptions';
+
     public function mount(): void {}
 
     public function updatedSearch(): void

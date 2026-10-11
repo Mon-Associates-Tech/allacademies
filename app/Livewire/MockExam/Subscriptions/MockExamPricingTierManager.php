@@ -27,6 +27,9 @@ class MockExamPricingTierManager extends Component
 
     public bool $isActive = true;
 
+    public string $activeTab = 'tiers';
+    public bool $showHeader = true;
+
     public function mount(): void
     {
         $this->loadTiers();
@@ -133,6 +136,9 @@ class MockExamPricingTierManager extends Component
 
     public function render()
     {
-        return view('livewire.mock-exam.subscriptions.mock-exam-pricing-tier-manager');
+        
+        return view('livewire.mock-exam.subscriptions.mock-exam-pricing-tier-manager',[
+            'activeTab' => $this->activeTab,
+        ]);
     }
 }

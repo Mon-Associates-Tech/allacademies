@@ -244,12 +244,12 @@
         >Mock Exams
         </x-app.nav-item>
 
-{{--        <x-app.nav-item
-            href="{{ route('mock-exams.templates.index') }}"
-            :active="Route::is('mock-exams.templates.*')"
+       <x-app.nav-item
+            href="{{ route('admin.mock-exams.subscriptions') }}"
+            :active="Route::is('admin.mock-exams.subscriptions')"
             icon="heroicon-o-document-duplicate"
-        >Mock Exam Templates
-        </x-app.nav-item>--}}
+        >Mock Subscriptions
+        </x-app.nav-item>
 
         @if(auth()->user()->role === UserRole::OWNER)
             <x-app.nav-item
