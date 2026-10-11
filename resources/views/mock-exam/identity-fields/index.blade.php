@@ -7,6 +7,6 @@
     </x-mock-header>
     @livewire('mock-exam.identity-field-manager')
     <div>
-        @livewire('mock-exam.my-identity-form')
+        {{-- @livewire('mock-exam.user-identity-form') --}}
     </div>
 </x-layouts.app>

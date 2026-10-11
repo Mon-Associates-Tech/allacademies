@@ -1,7 +1,6 @@
 <div>
 <x-exam.header
-    eyebrow="FORM EI-01 · MY PRINTED BLOCK"
-    title="Exam Identity"
+    title=""
     sub="Saved once, reused every time — the block you configure below is stamped onto the top of every exam paper you generate."
     :lines="['MY', 'IDENTITY']"
     :fresh="(bool) session('success')"

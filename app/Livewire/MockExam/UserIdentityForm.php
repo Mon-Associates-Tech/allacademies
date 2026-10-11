@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class MyIdentityForm extends Component
+class UserIdentityForm extends Component
 {
     use WithFileUploads;
 
@@ -64,6 +64,6 @@ class MyIdentityForm extends Component
 
     public function render()
     {
-        return view('livewire.mock-exam.my-identity-form');
+        return view('livewire.mock-exam.user-identity-form');
     }
 }

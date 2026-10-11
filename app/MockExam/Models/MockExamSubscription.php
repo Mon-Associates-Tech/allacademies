@@ -164,4 +164,35 @@ class MockExamSubscription extends Model
     {
         $this->increment('participants_used', $count);
     }
+
+    // ==================== ACCESSORS / HELPERS ====================
+
+/**
+ * Get a distinct, descriptive title for the subscription dashboard.
+ */
+public function getDescriptiveTitleAttribute(): string
+{
+    $planName = $this->plan?->name ?? 'Mock Exam Subscription';
+    
+    // Safely resolve the group label whether it's an Enum instance or a raw string
+    $groupLabel = $this->user_group instanceof MockExamUserGroup 
+        ? $this->user_group->label() 
+        : ucfirst(str_replace('_', ' ', $this->user_group ?? 'individual'));
+        
+    $typeLabel = ucfirst($this->type ?? 'online');
+    $subjectCount = $this->subjects->count();
+    
+    // Fallback if no subjects are attached to this subscription yet
+    if ($subjectCount === 0) {
+        return "{$planName} ({$groupLabel} · {$typeLabel})";
+    }
+
+    // Show up to 2 subjects, then summarize the rest to keep the UI clean
+    $subjectsList = $this->subjects->take(2)->pluck('name')->join(', ');
+    if ($subjectCount > 2) {
+        $subjectsList .= ' & ' . ($subjectCount - 2) . ' more';
+    }
+
+    return "{$planName} — {$subjectsList} ({$groupLabel})";
+}
 }
