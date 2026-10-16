@@ -40,13 +40,13 @@
 
             {{-- Print-Only Header --}}
             <div class="hidden print:block border-b-2 border-slate-900 pb-4 mb-8">
-                <h1 class="text-2xl font-bold text-slate-900 font-serif uppercase tracking-wider">{{ $mockExam->title }}</h1>
-                <div class="flex justify-between items-center mt-2 text-sm text-slate-600 uppercase tracking-wide">
+                <h1 class="text-2xl print:text-4xl font-bold text-slate-900 font-serif uppercase tracking-wider">{{ $mockExam->title }}</h1>
+                <div class="flex justify-between items-center mt-2 text-sm print:text-base text-slate-600 uppercase tracking-wide">
                     <span>Answer Key / Marking Scheme</span>
                     <span>Generated: {{ now()->format('d M Y') }}</span>
                 </div>
                 <div
-                    class="mt-4 text-xs font-bold text-red-700 uppercase tracking-widest text-center border border-red-600 py-1">
+                    class="mt-4 text-xs print:text-sm font-bold text-red-700 uppercase tracking-widest text-center border border-red-600 py-1">
                     ⚠ Confidential – Instructor Use Only – Do Not Distribute ⚠
                 </div>
             </div>
@@ -65,9 +65,9 @@
 
                         {{-- Subject Header --}}
                         <div
-                            class="border-l-4 border-slate-900 bg-slate-900 text-white p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 print:bg-transparent print:text-black print:border-l-4 print:border-slate-700 print:p-0 print:border-b-2 print:pb-2">
-                            <h2 class="text-xl font-bold font-serif uppercase tracking-wide">{{ $se->getDisplayTitle() }}</h2>
-                            <span class="text-sm font-medium text-slate-300 print:text-slate-600">
+                            class="border-l-4 border-slate-900 bg-slate-900 text-white p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 print:bg-transparent print:text-black print:border-l-4 print:border-slate-700 print:p-0 print:border-b-3 print:pb-3 print:mb-4">
+                            <h2 class="text-xl print:text-3xl font-bold font-serif uppercase tracking-wide">{{ $se->getDisplayTitle() }}</h2>
+                            <span class="text-sm print:text-base font-medium text-slate-300 print:text-slate-600">
                                 Total: {{ number_format($se->sections->sum(fn($s) => $s->getTotalMarks()), 1) }} marks
                             </span>
                         </div>
@@ -80,18 +80,18 @@
                                 $essayQs = $allQs->filter(fn($q) => $q->isEssay())->values();
                             @endphp
 
-                            <div class="space-y-6 print:space-y-4">
+                            <div class="space-y-6 print:space-y-6">
                                 {{-- Section Header --}}
                                 <div class="flex justify-between items-end border-b-2 border-slate-300 pb-2">
-                                    <h3 class="text-lg font-bold text-slate-800 uppercase tracking-wide">{{ $section->title }}</h3>
-                                    <span class="text-sm text-slate-500 font-medium">
+                                    <h3 class="text-lg print:text-2xl font-bold text-slate-800 uppercase tracking-wide">{{ $section->title }}</h3>
+                                    <span class="text-sm print:text-base text-slate-500 font-medium">
                                         {{ number_format($section->getTotalMarks(), 1) }} marks
                                     </span>
                                 </div>
 
                                 {{-- Objective answers --}}
                                 @if($objQs->isNotEmpty())
-                                    <div class="columns-1 sm:columns-2 lg:columns-3 print:columns-3 gap-x-8">
+                                    <div class="columns-1 sm:columns-2 lg:columns-3 print:columns-2 gap-x-8">
                                         @foreach($objQs as $idx => $q)
                                             @php
                                                 $qNum = $idx + 1;
@@ -117,16 +117,16 @@
                                             @endphp
 
                                             <div
-                                                class="mb-2 break-inside-avoid flex items-baseline gap-2 border-b border-slate-100 pb-1 print:border-none">
-                <span class="w-8 shrink-0 font-mono text-sm text-slate-500">
+                                                class="mb-2 break-inside-avoid flex items-baseline gap-2 border-b border-slate-100 pb-1 print:border-none print:pb-2 print:mb-3">
+                <span class="w-8 shrink-0 font-mono text-sm print:text-lg text-slate-500">
                     {{ $qNum }}.
                 </span>
 
-                                                <span class="flex-1 font-serif {{ $ansClass }}">
+                                                <span class="flex-1 font-serif text-sm print:text-xl {{ $ansClass }}">
                     {{ $answer }}
                 </span>
 
-                                                <span class="text-xs text-slate-400 shrink-0">
+                                                <span class="text-xs print:text-base text-slate-400 shrink-0">
                     ({{ $q->marks }} mk)
                 </span>
                                             </div>
@@ -136,41 +136,41 @@
 
                                 {{-- Essay Answers --}}
                                 @if($essayQs->isNotEmpty())
-                                    <div class="space-y-6 print:space-y-4">
+                                    <div class="space-y-6 print:space-y-6">
                                         @foreach($essayQs as $eIdx => $question)
                                             <div
-                                                class="border border-slate-200 border-l-4 border-l-slate-600 rounded-sm p-5 bg-slate-50 print:bg-transparent print:border-slate-400 print:p-4 print:break-inside-avoid">
-                                                <div class="flex justify-between items-start gap-4 mb-3">
+                                                class="border border-slate-200 border-l-4 border-l-slate-600 rounded-sm p-5 bg-slate-50 print:bg-transparent print:border-slate-400 print:p-4 print:break-inside-avoid print:mb-6">
+                                                <div class="flex justify-between items-start gap-4 mb-3 print:mb-4">
                                                     <div class="flex items-start gap-2">
-                                                        <span class="font-bold text-slate-900 shrink-0">Q{{ $objQs->count() + $eIdx + 1 }}.</span>
-                                                        <p class="text-slate-800 text-sm leading-relafxed">
+                                                        <span class="font-bold text-slate-900 shrink-0 text-sm print:text-lg">Q{{ $objQs->count() + $eIdx + 1 }}.</span>
+                                                        <p class="text-slate-800 text-sm print:text-lg leading-relaxed">
                                                             <x-ui.latex :content="$question->question_text"/>
                                                         </p>
                                                     </div>
                                                     <span
-                                                        class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded shrink-0 print:bg-transparent print:border print:border-slate-400">
+                                                        class="text-xs print:text-sm font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded shrink-0 print:bg-transparent print:border print:border-slate-400">
                                                         [{{ $question->marks }} marks]
                                                     </span>
                                                 </div>
 
-                                                <div class="mt-4">
-                                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 border-b border-slate-200 pb-1">
+                                                <div class="mt-4 print:mt-6">
+                                                    <h4 class="text-xs print:text-sm font-bold text-slate-500 uppercase tracking-wider mb-1 border-b border-slate-200 pb-1">
                                                         Model Answer</h4>
                                                     @if($question->answer_explanation)
-                                                        <p class="text-slate-700 text-sm leading-rfelaxed">
+                                                        <p class="text-slate-700 text-sm print:text-lg leading-relaxed">
                                                             <x-ui.latex :content="$question->answer_explanation"/>
                                                         </p>
                                                     @else
-                                                        <p class="text-slate-400 text-sm italic">No model answer
+                                                        <p class="text-slate-400 text-sm print:text-lg italic">No model answer
                                                             stored.</p>
                                                     @endif
                                                 </div>
 
                                                 @if(!empty($question->answer_keywords))
-                                                    <div class="mt-3">
-                                                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                                    <div class="mt-3 print:mt-4">
+                                                        <h4 class="text-xs print:text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">
                                                             Key Terms / Keywords</h4>
-                                                        <p class="text-slate-600 text-xs italic">
+                                                        <p class="text-slate-600 text-xs print:text-base italic">
                                                             {{ implode('  ·  ', $question->answer_keywords) }}
                                                         </p>
                                                     </div>
@@ -201,7 +201,7 @@
     <style>
         @media print {
             @page {
-                margin: 15mm;
+                margin: 20mm 15mm;
             }
 
             html,
@@ -209,6 +209,7 @@
                 height: auto !important;
                 overflow: visible !important;
                 background: #fff !important;
+                font-size: 14pt !important;
             }
 
             /*
@@ -257,6 +258,116 @@
                 overflow: visible !important;
             }
 
+            /* ── GLOBAL: Scale up ALL text inside the answer key document ── */
+            .bg-white.shadow-sm {
+                font-size: 14pt !important;
+            }
+
+            /* ── PRINT HEADER ── */
+            .print-block h1 {
+                font-size: 24pt !important;
+            }
+            .print-block div span {
+                font-size: 12pt !important;
+            }
+
+            /* ── SUBJECT HEADERS ── */
+            /* Target: the border-l-4 bg-slate-900 subject header div */
+            .border-l-4.bg-slate-900 {
+                background: transparent !important;
+                color: #000 !important;
+                border-left: none !important;
+                border-bottom: 3px solid #1e293b !important;
+                padding: 0 0 8px 0 !important;
+                margin-bottom: 16px !important;
+            }
+            .border-l-4.bg-slate-900 h2 {
+                font-size: 20pt !important;
+                font-weight: 700 !important;
+            }
+            .border-l-4.bg-slate-900 span {
+                font-size: 12pt !important;
+            }
+
+            /* ── SECTION HEADERS ── */
+            /* Target: flex justify-between items-end border-b-2 (section header) */
+            .flex.justify-between.items-end.border-b-2 {
+                border-bottom: 2px solid #475569 !important;
+                padding-bottom: 6px !important;
+                margin-bottom: 12px !important;
+            }
+            .flex.justify-between.items-end.border-b-2 h3 {
+                font-size: 16pt !important;
+                font-weight: 700 !important;
+            }
+            .flex.justify-between.items-end.border-b-2 span {
+                font-size: 12pt !important;
+            }
+
+            /* ── OBJECTIVE ANSWER ROWS ── */
+            /* Target: each answer row (mb-2 break-inside-avoid flex items-baseline) */
+            .mb-2.break-inside-avoid.flex {
+                padding: 8px 0 !important;
+                margin-bottom: 8px !important;
+                border-bottom: 1px solid #cbd5e1 !important;
+                font-size: 14pt !important;
+            }
+            /* Question number inside answer row */
+            .mb-2.break-inside-avoid.flex span.w-8 {
+                font-size: 14pt !important;
+                font-weight: 700 !important;
+            }
+            /* Answer text inside answer row */
+            .mb-2.break-inside-avoid.flex .flex-1 {
+                font-size: 16pt !important;
+                font-weight: 700 !important;
+            }
+            /* Marks text inside answer row */
+            .mb-2.break-inside-avoid.flex span.shrink-0 {
+                font-size: 12pt !important;
+            }
+
+            /* ── ESSAY BLOCKS ── */
+            /* Target: essay question cards (border border-slate-200 border-l-4) */
+            .border.border-slate-200.border-l-4 {
+                padding: 16px !important;
+                margin-bottom: 20px !important;
+                border: 1px solid #94a3b8 !important;
+                border-left: 4px solid #475569 !important;
+                background: transparent !important;
+                page-break-inside: avoid !important;
+            }
+            /* Essay question number */
+            .border.border-slate-200.border-l-4 .font-bold.text-slate-900.shrink-0 {
+                font-size: 14pt !important;
+            }
+            /* Essay question text */
+            .border.border-slate-200.border-l-4 .text-slate-800 {
+                font-size: 14pt !important;
+                line-height: 1.6 !important;
+            }
+            /* Essay marks badge */
+            .border.border-slate-200.border-l-4 .font-bold.text-slate-500.bg-slate-200 {
+                font-size: 12pt !important;
+                background: transparent !important;
+                border: 1px solid #94a3b8 !important;
+            }
+            /* Model Answer heading */
+            .border.border-slate-200.border-l-4 h4 {
+                font-size: 12pt !important;
+            }
+            /* Model Answer text */
+            .border.border-slate-200.border-l-4 .text-slate-700,
+            .border.border-slate-200.border-l-4 .text-slate-400 {
+                font-size: 14pt !important;
+                line-height: 1.6 !important;
+            }
+            /* Keywords */
+            .border.border-slate-200.border-l-4 .text-slate-600.italic {
+                font-size: 12pt !important;
+            }
+
+            /* ── FOOTER ── */
             .print-footer {
                 position: fixed;
                 bottom: 0;
