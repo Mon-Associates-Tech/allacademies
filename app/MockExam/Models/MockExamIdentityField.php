@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class MockExamIdentityField extends Model
 {
-    protected $fillable = ['key', 'label', 'type', 'pretext', 'font_size', 'sort_order', 'same_row', 'is_required'];
+    protected $fillable = ['key', 'label', 'type', 'pretext', 'font_size', 'sort_order', 'same_row', 'is_required', 'is_readonly', 'admin_value'];
 
     protected function casts(): array
     {
-        return ['sort_order' => 'integer', 'font_size' => 'integer', 'same_row' => 'boolean', 'is_required' => 'boolean'];
+        return ['sort_order' => 'integer', 'font_size' => 'integer', 'same_row' => 'boolean', 'is_required' => 'boolean', 'is_readonly' => 'boolean'];
     }
 
     public function scopeOrdered($query)

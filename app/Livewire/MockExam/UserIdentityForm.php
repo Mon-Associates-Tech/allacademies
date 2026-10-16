@@ -12,12 +12,17 @@ class UserIdentityForm extends Component
     use WithFileUploads;
 
     public array $fields = [];
+    public array $readonlyFields = [];
     public array $values = [];
     public array $pendingUploads = [];
 
     public function mount(): void
     {
-        $this->fields = MockExamIdentityField::ordered()->get()->all();
+        $allFields = MockExamIdentityField::ordered()->get();
+
+        // Separate readonly (admin-provided) fields from user-editable fields
+        $this->readonlyFields = $allFields->filter(fn ($f) => $f->is_readonly)->all();
+        $this->fields = $allFields->reject(fn ($f) => $f->is_readonly)->all();
 
         $identity = MockExamUserIdentity::where('user_id', Auth::id())->first();
 

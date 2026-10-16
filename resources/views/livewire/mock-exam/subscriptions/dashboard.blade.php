@@ -562,11 +562,11 @@
                 </div>
             </div>
 
-            <div class="shrink-0">
+            <div class="shrink-0 flex flex-col sm:flex-row gap-2">
                 <a
                     href="{{ route('mock-exams.subject-exams.subscription-preview', [$mock, $subjectExam]) }}"
                     target="_blank"
-                    class="inline-flex items-center gap-1.5 rounded-md border border-primary/25 bg-primary/10 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-primary transition hover:bg-primary/15"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-md border border-primary/25 bg-primary/10 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-primary transition hover:bg-primary/15"
                 >
                     Open Preview
 
@@ -576,6 +576,23 @@
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                    </svg>
+                </a>
+
+                <a
+                    href="{{ route('mock-exams.subscription-preview.answer-key', $mock) }}"
+                    target="_blank"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-md border border-purple-500/25 bg-purple-500/10 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-purple-400 transition hover:bg-purple-500/15"
+                >
+                    Marking Scheme
+
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
                         />
                     </svg>
                 </a>

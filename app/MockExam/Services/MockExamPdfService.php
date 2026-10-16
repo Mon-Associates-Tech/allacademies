@@ -158,7 +158,12 @@ class MockExamPdfService
 
         $entries = $fields
             ->map(function ($field) use ($identity) {
-                $value = $identity->valueFor($field->key);
+                // For read-only fields, use the admin-provided value
+                if ($field->is_readonly && $field->admin_value) {
+                    $value = $field->admin_value;
+                } else {
+                    $value = $identity->valueFor($field->key);
+                }
 
                 return ($value !== null && $value !== '') ? [
                     'type' => $field->type,

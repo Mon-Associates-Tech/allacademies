@@ -1,10 +1,15 @@
 <x-print>
     {{-- ── SCREEN ONLY: Header & Actions ── --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 print:hidden">
+        @php
+            $backUrl = isset($fromSubscription) && $fromSubscription
+                ? route('mock-exams.subscription-preview', $mockExam)
+                : route('mock-exams.pdf.preview', $mockExam);
+        @endphp
         <x-mock-header
             :title="$mockExam->title . ' – Answer Key'"
             subtitle="Confidential Marking Scheme for Instructors"
-            :back-url="route('mock-exams.show', $mockExam)">
+            :back-url="$backUrl">
             <x-slot:actions>
                 <button onclick="window.print()"
                         class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg"

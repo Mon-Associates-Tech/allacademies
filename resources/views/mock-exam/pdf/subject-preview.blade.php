@@ -87,7 +87,9 @@
                         </button>
 
                         <a id="downloadBtn"
-                           href="{{ route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) }}?font_size={{ $fontSize }}"
+                           href="{{ isset($fromSubscription) && $fromSubscription
+                               ? route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) . '?font_size=' . $fontSize
+                               : route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) . '?font_size=' . $fontSize }}"
                            class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
                            style="background: rgba(201,162,39,0.15); color: #c9a227; border: 1px solid rgba(201,162,39,0.35); text-decoration: none;">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,6 +98,32 @@
                             </svg>
                             Download PDF
                         </a>
+
+                        @if(isset($fromSubscription) && $fromSubscription && Route::has('mock-exams.subscription-preview.answer-key'))
+                            <a id="answerKeyBtn"
+                               href="{{ route('mock-exams.subscription-preview.answer-key', $mockExam) }}"
+                               target="_blank"
+                               class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+                               style="background: rgba(124,58,237,0.12); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); text-decoration: none;">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                </svg>
+                                Marking Scheme
+                            </a>
+                        @elseif(Route::has('mock-exams.pdf.answer-key'))
+                            <a id="answerKeyBtn"
+                               href="{{ route('mock-exams.pdf.answer-key', $mockExam) }}"
+                               target="_blank"
+                               class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+                               style="background: rgba(124,58,237,0.12); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); text-decoration: none;">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                </svg>
+                                Marking Scheme
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -173,8 +201,13 @@
                 </div>
 
                 {{-- The iframe --}}
+                @php
+                    $previewRoute = isset($fromSubscription) && $fromSubscription
+                        ? route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam])
+                        : route('mock-exams.subject-exams.pdf.preview', [$mockExam, $subjectExam]);
+                @endphp
                 <iframe id="pdfPreview"
-                        src="{{ route('mock-exams.subject-exams.pdf.preview', [$mockExam, $subjectExam]) }}?font_size={{ $fontSize }}"
+                        src="{{ $previewRoute }}?font_size={{ $fontSize }}"
                         class="w-full border-0 block"
                         style="height: calc(100vh - 140px); min-height: 700px; background: #fff;"
                         title="PDF Preview">
@@ -188,6 +221,13 @@
 
     <script>
         let currentFontSize = {{ $fontSize }};
+        const isSubscription = {{ isset($fromSubscription) && $fromSubscription ? 'true' : 'false' }};
+        const previewRoute = isSubscription
+            ? '{{ route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) }}'
+            : '{{ route('mock-exams.subject-exams.pdf.preview', [$mockExam, $subjectExam]) }}';
+        const downloadRoute = isSubscription
+            ? '{{ route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) }}'
+            : '{{ route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) }}';
 
         function setFontSize(size) {
             currentFontSize = size;
@@ -226,10 +266,8 @@
             `;
 
             // Update iframe and download URL
-            const newUrl = '{{ route('mock-exams.subject-exams.pdf.preview', [$mockExam, $subjectExam]) }}?font_size=' + currentFontSize;
-            iframe.src = newUrl;
-
-            downloadBtn.href = '{{ route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) }}?font_size=' + currentFontSize;
+            iframe.src = previewRoute + '?font_size=' + currentFontSize;
+            downloadBtn.href = downloadRoute + '?font_size=' + currentFontSize;
 
             // Reset status after load
             iframe.onload = function() {

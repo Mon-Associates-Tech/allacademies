@@ -364,63 +364,6 @@
             margin: 0;
         }
 
-        .identity-section {
-            text-align: center;
-            padding-bottom: 8mm;
-            margin-bottom: 8mm;
-            border-bottom: 1px solid #000;
-        }
-
-        .identity-logo {
-            max-height: 18mm;
-            margin-bottom: 3mm;
-        }
-
-        .identity-line {
-            font-size: {{ ($fontSize ?? 11) + 1 }}pt;
-            font-weight: 600;
-            margin-bottom: 1.5mm;
-        }
-
-        .identity-pretext {
-            font-weight: 400;
-            color: #333;
-        }
-
-        .identity-section {
-            text-align: center;
-            padding-bottom: 8mm;
-            margin-bottom: 8mm;
-            border-bottom: 1px solid #000;
-        }
-
-        .identity-row {
-            display: table;
-            margin: 0 auto 2mm auto;
-        }
-
-        .identity-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .identity-row-cell {
-            display: table-cell;
-            vertical-align: middle;
-            padding: 0 3mm;
-        }
-
-        .identity-logo {
-            max-height: 18mm;
-        }
-
-        .identity-line {
-            font-weight: 600;
-        }
-
-        .identity-pretext {
-            font-weight: 400;
-            color: #333;
-        }
     </style>
 </head>
 <body>
@@ -448,25 +391,7 @@
 {{-- ══════════════════════════════════════════════════════════════
      PROFESSIONAL FRONT PAGE
      ═══════════════════════════════════════════════════════════════ -}
-@if(!empty($identity['rows']))
-    <div class="identity-section">
-        @foreach($identity['rows'] as $row)
-            <div class="identity-row">
-                @foreach($row as $item)
-                    <div class="identity-row-cell">
-                        @if($item['type'] === 'image')
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->path($item['value']) }}" class="identity-logo">
-                        @else
-                            <div class="identity-line" style="font-size: {{ $item['font_size'] ?? 14 }}pt;">
-                                @if($item['pretext'])<span class="identity-pretext">{{ $item['pretext'] }}</span> @endif{{ $item['value'] }}
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        @endforeach
-    </div>
-@endif
+@include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11, 'imageUrlStyle' => 'path', 'escapePretext' => true])
     @if($frontPageMode === 'upload' && !empty($frontPagePdfImages))
     @foreach($frontPagePdfImages as $imagePath)
         <div class="front-page-pdf">

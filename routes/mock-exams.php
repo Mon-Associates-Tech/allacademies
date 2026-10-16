@@ -103,9 +103,17 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/subject-exams/{subjectExam}/subscription-preview', [MockExamPdfController::class, 'previewSubjectExamPageFromSubscription'])
             ->name('subject-exams.subscription-preview');
 
-        // Subscription-based exam preview route
+        // Raw subject exam content for subscription iframe preview (also used for download)
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/subscription-preview/content', [MockExamPdfController::class, 'subjectExamFromSubscription'])
+            ->name('subject-exams.subscription-preview.content');
+
+        // Subscription-based full exam download (all subjects)
         Route::get('/{mockExam}/subscription-preview/download', [MockExamPdfController::class, 'examFromSubscription'])
             ->name('subscription-preview.download');
+
+        // Subscription-based answer key / marking scheme route
+        Route::get('/{mockExam}/subscription-preview/answer-key', [MockExamPdfController::class, 'answerKeyFromSubscription'])
+            ->name('subscription-preview.answer-key');
 
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');

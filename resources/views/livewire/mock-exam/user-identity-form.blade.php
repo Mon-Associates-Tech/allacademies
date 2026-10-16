@@ -8,15 +8,35 @@
 
 <x-exam.flash />
 
-@if(empty($fields))
+@php
+    $hasAnyFields = !empty($fields) || !empty($readonlyFields);
+@endphp
+@if(empty($hasAnyFields))
     <x-exam.empty
         title="No identity fields configured yet"
         description="Your administrator hasn't added any fields yet. Come back soon — you'll be able to fill in details like your school name, exam code, or logo."
     />
 @else
     @php
-        $imgField  = collect($fields)->first(fn ($f) => $f->type === 'image');
-        $nameField = collect($fields)->first(fn ($f) => $f->type !== 'image' && !empty($values[$f->key] ?? ''));
+        $allFields = array_merge($readonlyFields, $fields);
+        // For image fields: readonly uses admin_value, user fields use $values
+        $imgField = collect($allFields)->first(fn ($f) => $f->type === 'image');
+        $imgUrl = null;
+        if ($imgField) {
+            if ($imgField->is_readonly && $imgField->admin_value) {
+                $imgUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($imgField->admin_value);
+            } elseif (!empty($values[$imgField->key])) {
+                $imgUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($values[$imgField->key]);
+            }
+        }
+        // For name: prefer user-provided text, fall back to readonly text
+        $nameField = collect($allFields)->first(fn ($f) => $f->type !== 'image' && !empty($values[$f->key] ?? ''));
+        if (!$nameField) {
+            $nameField = collect($readonlyFields)->first(fn ($f) => $f->type === 'text' && !empty($f->admin_value));
+        }
+        $nameValue = $nameField
+            ? ($nameField->is_readonly ? $nameField->admin_value : ($values[$nameField->key] ?? ''))
+            : 'Your institution';
     @endphp
 
     <div class="grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_350px]">
@@ -30,6 +50,34 @@
                 </x-slot:header>
 
                 <div class="px-5">
+                    {{-- Read-only fields provided by admin --}}
+                    @if(!empty($readonlyFields))
+                        <div class="mb-4 rounded-lg border border-dashed border-line bg-surface-2/50 p-4">
+                            <p class="mb-3 font-mono text-[10.5px] tracking-[0.14em] text-muted">
+                                PROVIDED BY YOUR ADMINISTRATOR
+                            </p>
+                            @foreach($readonlyFields as $field)
+                                @if($field->type === 'image' && $field->admin_value)
+                                    <div class="mb-3 last:mb-0">
+                                        <p class="text-sm font-medium text-ink">{{ $field->label }}</p>
+                                        @if($field->pretext)
+                                            <p class="text-xs text-muted">{{ $field->pretext }}</p>
+                                        @endif
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($field->admin_value) }}" class="mt-1 h-16 rounded border border-line" />
+                                    </div>
+                                @elseif($field->type === 'text' && $field->admin_value)
+                                    <div class="mb-3 last:mb-0">
+                                        <p class="text-xs text-muted">{{ $field->label }}</p>
+                                        @if($field->pretext)
+                                            <p class="text-xs text-muted">{{ $field->pretext }}</p>
+                                        @endif
+                                        <p class="text-sm font-medium text-ink">{{ $field->admin_value }}</p>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+
                     @foreach($fields as $field)
                         @php($fid = 'ei-f-' . $field->key)
 
@@ -75,11 +123,17 @@
             </p>
 
             <x-exam.sheet
-                :logo="$imgField && !empty($values[$imgField->key])
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($values[$imgField->key])
-                    : null"
-                :title="$nameField ? $values[$nameField->key] : 'Your institution'"
+                :logo="$imgUrl"
+                :title="$nameValue"
             >
+                @foreach($readonlyFields as $pfield)
+                    @continue($pfield->type === 'image')
+                    @continue(empty($pfield->admin_value))
+                    <x-exam.sheet.row
+                        :label="$pfield->pretext ?: $pfield->label"
+                        :value="$pfield->admin_value"
+                    />
+                @endforeach
                 @foreach($fields as $pfield)
                     @continue($pfield->type === 'image')
                     <x-exam.sheet.row

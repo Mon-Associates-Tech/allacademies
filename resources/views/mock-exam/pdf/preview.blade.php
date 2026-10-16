@@ -102,7 +102,19 @@
                         Download Exam PDF
                     </a>
 
-                    @if(Route::has('mock-exams.pdf.answer-key'))
+                    @if(isset($fromSubscription) && $fromSubscription && Route::has('mock-exams.subscription-preview.answer-key'))
+                        <a id="downloadKeyBtn"
+                           href="{{ route('mock-exams.subscription-preview.answer-key', $mockExam) }}"
+                           target="_blank"
+                           class="w-full flex items-center justify-center gap-2 py-2 rounded-sm text-xs font-medium transition-all duration-100 hover:brightness-125"
+                           style="background: rgba(124,58,237,0.08); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); text-decoration: none;">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                            Marking Scheme
+                        </a>
+                    @elseif(Route::has('mock-exams.pdf.answer-key'))
                         <a id="downloadKeyBtn"
                            href="{{ route('mock-exams.pdf.answer-key', $mockExam) }}"
                            class="w-full flex items-center justify-center gap-2 py-2 rounded-sm text-xs font-medium transition-all duration-100 hover:brightness-125"
@@ -162,8 +174,13 @@
                 </div>
             </div>
 
+            @php
+                $iframeSrc = isset($fromSubscription) && $fromSubscription
+                    ? route('mock-exams.subscription-preview.download', $mockExam)
+                    : route('mock-exams.pdf.preview', $mockExam);
+            @endphp
             <iframe id="pdfPreview"
-                    src="{{ route('mock-exams.subject-exams.pdf.page', [$mockExam, $subjectExam]) }}?font_size={{ $fontSize }}"
+                    src="{{ $iframeSrc }}?font_size={{ $fontSize }}"
                     class="w-full border-0 block"
                     style="height: calc(100vh - 136px); min-height: 700px; background: #fff;"
                     title="PDF Preview">
@@ -198,12 +215,17 @@
         });
     }
 
+    const isSubscription = {{ isset($fromSubscription) && $fromSubscription ? 'true' : 'false' }};
+    const previewBaseUrl = isSubscription
+        ? `/mock-exams/${examId}/subscription-preview/download`
+        : `/mock-exams/${examId}/pdf/preview`;
+
     function updatePreview() {
         const sz = parseFloat(slider.value);
         syncUI();
         const status = document.getElementById('previewStatus');
         status.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-yellow-600 animate-pulse"></div><span class="text-xs text-slate-600">Loading…</span>';
-        iframe.src = `/mock-exams/${examId}/pdf/preview?font_size=${sz}`;
+        iframe.src = `${previewBaseUrl}?font_size=${sz}`;
         iframe.onload = () => {
             status.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-600"></div><span class="text-xs text-slate-600">Live</span>';
         };

@@ -56,12 +56,44 @@
                         <input type="checkbox" wire:model="isRequired" class="h-4 w-4 rounded border-line-strong accent-primary focus:ring-primary/20" />
                         Required <span class="font-bold text-accent">*</span>
                     </label>
+                    <label class="flex cursor-pointer items-center gap-2.5 text-sm text-ink-soft">
+                        <input type="checkbox" wire:model.live="isReadonly" class="h-4 w-4 rounded border-line-strong accent-primary focus:ring-primary/20" />
+                        Read-only (admin provides value)
+                    </label>
                 </div>
+
+                @if($isReadonly)
+                    <div class="space-y-3 border-t border-dashed border-line pt-4">
+                        <p class="font-mono text-[10.5px] tracking-wide text-muted">
+                            ADMIN VALUE · PROVIDED BY YOU
+                        </p>
+
+                        @if($type === 'text')
+                            <x-exam.field bare label="Default Value" required>
+                                <x-exam.input wire:model="adminValue" placeholder="AllAcademies" />
+                            </x-exam.field>
+                        @elseif($type === 'image')
+                            <x-exam.field bare label="Upload Image" required>
+                                <x-exam.dropzone
+                                    id="admin-image-upload"
+                                    :model="'pendingAdminImage'"
+                                    :current="$adminValue && empty($pendingAdminImage) && !$adminImageRemoved
+                                        ? \Illuminate\Support\Facades\Storage::disk('public')->url($adminValue)
+                                        : null"
+                                    :pending="!empty($pendingAdminImage)"
+                                    remove-action="removeAdminImage"
+                                    remove-key=""
+                                    tag="ADMIN IMAGE"
+                                />
+                            </x-exam.field>
+                        @endif
+                    </div>
+                @endif
             </form>
 
             <x-slot:footer>
                 <div class="flex gap-2">
-                    <x-exam.button type="submit" wire:click="save">
+                    <x-exam.button wire:click="save">
                         {{ $editingId ? 'Update' : 'Add Field' }}
                     </x-exam.button>
                     @if($editingId)
@@ -80,7 +112,7 @@
             @if(empty($fields))
                 <x-exam.empty compact title="No fields yet" description="Add one on the left to start building the exam header." />
             @else
-                <x-exam.table :headers="['Order', 'Key', 'Label', 'Type', 'Row', 'Pretext', '']">
+                <x-exam.table :headers="['Order', 'Key', 'Label', 'Type', 'Readonly', 'Row', 'Pretext', '']">
                     @foreach($fields as $field)
                         <tr wire:key="field-{{ $field->id }}" class="transition hover:bg-surface-2/60">
                             <td class="px-4 py-3">
@@ -101,6 +133,13 @@
                                 <x-exam.badge :tone="$field->type === 'image' ? 'warn' : 'primary'">
                                     {{ ucfirst($field->type) }}{{ $field->type === 'text' && $field->font_size ? ' · ' . $field->font_size . 'pt' : '' }}
                                 </x-exam.badge>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($field->is_readonly)
+                                    <x-exam.badge tone="accent">READ-ONLY</x-exam.badge>
+                                @else
+                                    <span class="font-mono text-[10.5px] tracking-wide text-muted">USER</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 font-mono text-[10.5px] tracking-wide text-muted">
                                 {{ $field->same_row ? '↳ SAME ROW' : 'NEW ROW' }}
