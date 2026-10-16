@@ -115,7 +115,7 @@ class MockExamSubscriptionManager extends Component
         $this->showAllocationForm = true;
     }
 
-    public function allocate(MockExamSubscriptionService $service): void
+    public function allocate(MockExamSubscriptionService $service)
     {
         $this->validate([
             'selectedUserId'     => 'required|exists:users,id',
@@ -147,10 +147,14 @@ class MockExamSubscriptionManager extends Component
             } else {
                 $result = $service->initiateOwnerPayment($owner, $targetUser, $config);
                 if ($result['authorization_url']) {
-                    $this->redirect($result['authorization_url']);
+                    return redirect($result['authorization_url']);
                 }
             }
         } catch (\Throwable $e) {
+            \Log::error('Mock exam owner subscription allocation failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
             $this->dispatch('flash', type: 'error', message: $e->getMessage());
         }
     }

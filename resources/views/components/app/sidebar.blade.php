@@ -45,10 +45,10 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
                         class="rounded-full w-full h-full"></x-avatar>
                 </div>
                 <div x-show="$store.sidebar.expanded" class="sidebar-text">
-                    <h1 class="text-center text-lg font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}
-                    </h1>
-                    <h2 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">
-                        {{ auth()->user()->email }}</h2>
+                    <h3 class="text-center text-sm font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}
+                    </h3>
+                    <h4 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">
+                        {{ auth()->user()->email }}</h4>
 
                     @php
                         // Use the centralized helper function
@@ -58,18 +58,18 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
 
                     @if ($currentSchool)
                         <div class="mt-1 text-center">
-                            <span
+                            <span style="font-size: 0.525rem;"
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3" />
                                 </svg>
-                                {{ $currentSchool->name }}
+                                {{ $currentSchool?->name }}
                             </span>
                         </div>
                     @elseif($viewingAllSchools && (auth()->user()->hasRole('owner') || auth()->user()->isSuperAdmin()))
                         <div class="mt-1 text-center">
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                            <span style="font-size: 0.525rem;"
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full  font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor"
                                     viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3" />
@@ -79,12 +79,12 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
                         </div>
                     @elseif(auth()->user()->school)
                         <div class="mt-1 text-center">
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                            <span style="font-size: 0.525rem;"
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full  font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3" />
                                 </svg>
-                                {{ auth()->user()->school->name }}
+                                {{ auth()->user()->school?->name }}
                             </span>
                         </div>
                     @endif

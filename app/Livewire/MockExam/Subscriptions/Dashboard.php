@@ -288,7 +288,7 @@ protected function tabSessionKey(): string
             ->value('id');
     }
 
-    public function purchase(MockExamSubscriptionService $service): void
+    public function purchase(MockExamSubscriptionService $service)
     {
         if (! $this->requireAuth('Please sign in to purchase a mock exam subscription.')) {
             return;
@@ -314,16 +314,21 @@ protected function tabSessionKey(): string
             ]);
 
             if (! empty($result['authorization_url'])) {
-                $this->redirect($result['authorization_url']);
+                return redirect($result['authorization_url']);
             }
         } catch (\Throwable $e) {
+            \Log::error('Mock exam subscription purchase failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             $this->addError('planId', $e->getMessage());
         }
     }
 
     // ==================== PENDING PAYMENT ACTIONS ====================
 
-    public function retryPayment(int $subscriptionId, MockExamSubscriptionService $service): void
+    public function retryPayment(int $subscriptionId, MockExamSubscriptionService $service)
     {
         $subscription = MockExamSubscription::with('subjects')->findOrFail($subscriptionId);
         abort_unless($subscription->user_id === auth()->id(), 403);
@@ -331,8 +336,7 @@ protected function tabSessionKey(): string
         $payment = $subscription->payments()->where('status', 'pending')->latest()->first();
 
         if ($payment && $payment->paystack_access_code) {
-            $this->redirect('https://checkout.paystack.com/' . $payment->paystack_access_code);
-            return;
+            return redirect('https://checkout.paystack.com/' . $payment->paystack_access_code);
         }
 
         try {
@@ -348,9 +352,14 @@ protected function tabSessionKey(): string
             ]);
 
             if (! empty($result['authorization_url'])) {
-                $this->redirect($result['authorization_url']);
+                return redirect($result['authorization_url']);
             }
         } catch (\Throwable $e) {
+            \Log::error('Mock exam subscription retry payment failed', [
+                'user_id' => auth()->id(),
+                'subscription_id' => $subscriptionId,
+                'error' => $e->getMessage(),
+            ]);
             $this->dispatch('flash', type: 'error', message: $e->getMessage());
         }
     }
@@ -418,7 +427,7 @@ protected function tabSessionKey(): string
         }
     }
 
-    public function processTopUp(MockExamSubscriptionService $service): void
+    public function processTopUp(MockExamSubscriptionService $service)
     {
         if (! $this->requireAuth()) {
             return;
@@ -433,9 +442,14 @@ protected function tabSessionKey(): string
             $result = $service->initiateTopUp(auth()->user(), $subscription, $this->additionalParticipants);
 
             if (! empty($result['authorization_url'])) {
-                $this->redirect($result['authorization_url']);
+                return redirect($result['authorization_url']);
             }
         } catch (\Throwable $e) {
+            \Log::error('Mock exam subscription top-up payment failed', [
+                'user_id' => auth()->id(),
+                'subscription_id' => $this->topUpSubscriptionId,
+                'error' => $e->getMessage(),
+            ]);
             $this->addError('additionalParticipants', $e->getMessage());
         }
     }

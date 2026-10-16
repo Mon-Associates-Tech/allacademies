@@ -196,7 +196,7 @@ class GeneralExamSubscriptionDashboard extends Component
             : 0;
     }
 
-    public function purchase(GeneralExamSubscriptionService $service): void
+    public function purchase(GeneralExamSubscriptionService $service)
     {
         $this->validate([
             'planId' => 'required|exists:general_exam_subscription_plans,id',
@@ -216,9 +216,13 @@ class GeneralExamSubscriptionDashboard extends Component
             ]);
 
             if ($result['authorization_url']) {
-                $this->redirect($result['authorization_url']);
+                return redirect($result['authorization_url']);
             }
         } catch (\Throwable $e) {
+            \Log::error('General exam subscription purchase failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
             session()->flash('error', $e->getMessage());
         }
     }
@@ -253,7 +257,7 @@ class GeneralExamSubscriptionDashboard extends Component
         }
     }
 
-    public function processTopUp(GeneralExamSubscriptionService $service): void
+    public function processTopUp(GeneralExamSubscriptionService $service)
     {
         $this->validate(['additionalParticipants' => 'required|integer|min:1']);
 
@@ -262,9 +266,14 @@ class GeneralExamSubscriptionDashboard extends Component
             $result = $service->initiateTopUp(auth()->user(), $subscription, $this->additionalParticipants);
 
             if ($result['authorization_url']) {
-                $this->redirect($result['authorization_url']);
+                return redirect($result['authorization_url']);
             }
         } catch (\Throwable $e) {
+            \Log::error('General exam subscription top-up failed', [
+                'user_id' => auth()->id(),
+                'subscription_id' => $this->topUpSubscriptionId,
+                'error' => $e->getMessage(),
+            ]);
             session()->flash('error', $e->getMessage());
         }
     }

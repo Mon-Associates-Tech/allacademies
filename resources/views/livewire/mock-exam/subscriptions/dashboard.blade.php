@@ -59,8 +59,8 @@
 
                             <x-exam.field bare label="Delivery Type">
                                 <x-exam.select wire:model.live="type">
-                                    <option value="print">Print</option>
-                                    <option value="online">Online</option>
+                                    <option selected value="print">Print</option>
+                                    <option disabled value="online">Online</option>
                                 </x-exam.select>
                             </x-exam.field>
                         </div>
@@ -123,6 +123,10 @@
                             <p class="mt-1.5 text-xs text-muted">Total generations = selected subjects × cycles per
                                 subject.</p>
                         </x-exam.field>
+
+                        @error('planId')
+                            <p class="font-mono text-[11.5px] text-accent">▲ {{ $message }}</p>
+                        @enderror
 
                         @if ($calculatedPrice > 0)
                             <x-exam.callout>

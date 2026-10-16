@@ -88,21 +88,21 @@ Route::middleware(['web', 'auth'])
 
 // Subject exam HTML views.
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'subjectExam'])
-->name('subject-exams.pdf.preview');
+            ->name('subject-exams.pdf.preview');
 
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExam'])
             ->name('subject-exams.pdf.download');
 
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])
             ->name('subject-exams.pdf.page');
-            
+
         // Subscription-based preview routes
         Route::get('/{mockExam}/subscription-preview', [MockExamPdfController::class, 'previewPageFromSubscription'])
             ->name('subscription-preview');
-            
+
         Route::get('/{mockExam}/subject-exams/{subjectExam}/subscription-preview', [MockExamPdfController::class, 'previewSubjectExamPageFromSubscription'])
             ->name('subject-exams.subscription-preview');
-            
+
         // Subscription-based exam preview route
         Route::get('/{mockExam}/subscription-preview/download', [MockExamPdfController::class, 'examFromSubscription'])
             ->name('subscription-preview.download');
@@ -200,15 +200,6 @@ Route::middleware('web')
         Route::post('/{mockExam}/proctor-event', [MockExamProctoringController::class, 'recordEvent'])->name('proctor-event');
     });
 
-// ─── PDF Rendering Routes (Secured via Signed URLs for Browsershot) ──────────
-Route::prefix('pdf-render')->name('mock-exams.pdf.render.')->group(function () {
-    // This route returns raw HTML for Browsershot to consume
-    Route::get('/subject-exam/{mockExam}/{subjectExam}', [MockExamPdfController::class, 'renderSubjectExamHtml'])
-        ->name('subject-exam')
-        ->middleware('signed'); // Ensures only valid, signed requests can access this
-});
-
-
 /*
 |--------------------------------------------------------------------------
 | Subscription Routes (Authentication Required)
@@ -254,10 +245,6 @@ Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/sub
 */
 
 Route::middleware(['auth', 'verified', 'web'])->prefix('admin/mock-exams')->name('admin.mock-exams.')->group(function () {
-    // Route::get('/subscriptions', function () {
-    //     return view('mock-exams.subscriptions.index');
-    // })->name('subscriptions');
-
     Route::get('/subscriptions', MockExamSubscriptionManager::class)->name('subscriptions');
 
     Route::get('/pricing-tiers', function () {

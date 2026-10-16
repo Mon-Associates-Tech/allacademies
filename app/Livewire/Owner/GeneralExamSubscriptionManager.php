@@ -109,7 +109,7 @@ class GeneralExamSubscriptionManager extends Component
         $this->showAllocationForm = true;
     }
 
-    public function allocate(GeneralExamSubscriptionService $service): void
+    public function allocate(GeneralExamSubscriptionService $service)
     {
         $this->validate([
             'selectedUserId' => 'required|exists:users,id',
@@ -139,10 +139,14 @@ class GeneralExamSubscriptionManager extends Component
             } else {
                 $result = $service->initiateOwnerPayment($owner, $targetUser, $config);
                 if ($result['authorization_url']) {
-                    $this->redirect($result['authorization_url']);
+                    return redirect($result['authorization_url']);
                 }
             }
         } catch (\Throwable $e) {
+            \Log::error('General exam owner subscription allocation failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
             $this->dispatch('flash', type: 'error', message: $e->getMessage());
         }
     }
