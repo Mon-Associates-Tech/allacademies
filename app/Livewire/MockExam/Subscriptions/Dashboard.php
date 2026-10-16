@@ -232,17 +232,18 @@ protected function tabSessionKey(): string
 
     // ==================== PURCHASE FLOW ====================
 
-    public function updatedPlanId(): void { $this->recalculatePrice(); }
+    public function updatedPlanId(): void
+    {
+        $plan = MockExamSubscriptionPlan::find($this->planId);
+        if ($plan) {
+            $this->type = $plan->type;
+        }
+        $this->recalculatePrice();
+    }
     public function updatedUserGroup(): void { $this->recalculatePrice(); }
     public function updatedSelectedSubjectIds(): void { $this->recalculatePrice(); }
     public function updatedParticipantCount(): void { $this->recalculatePrice(); }
     public function updatedMaxExams(): void { $this->recalculatePrice(); }
-    
-    public function updatedType(): void
-    {
-        $this->planId = $this->resolvePlanId($this->type);
-        $this->recalculatePrice();
-    }
 
     public function recalculatePrice(): void
     {
@@ -273,11 +274,9 @@ protected function tabSessionKey(): string
             'selectedAcademicGroupId', 'selectedAcademicLevelId',
             'participantCount', 'maxExams', 'calculatedPrice',
         ]);
-        $this->type = 'print';
         $this->userGroup = 'individual';
         $this->participantCount = 30;
         $this->maxExams = 1;
-        $this->planId = $this->resolvePlanId('print');
         $this->showPurchaseForm = true;
     }
 
@@ -668,7 +667,7 @@ public function openTopUpForm(int $subscriptionId): void
             'mockSubmissions'          => $mockSubmissions,
             'mockAuditLogs'            => $mockAuditLogs,
             'editingMockSubmission'    => $editingMockSubmission,
-            'mockPlans'                => MockExamSubscriptionPlan::active()->where('type', $this->type)->get(),
+            'mockPlans'                => MockExamSubscriptionPlan::active()->get(),
             'selectedPricingTier'      => $this->selectedPricingTier,
             'userGroupOptions'         => $this->userGroupOptions,
         ]);

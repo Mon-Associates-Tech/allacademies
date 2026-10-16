@@ -8,14 +8,16 @@ enum MockExamUserGroup: string
     case School        = 'school';
     case LocalGovt     = 'local_government';
     case Organization  = 'organization';
+    case Other         = 'other';
 
     public function label(): string
     {
         return match ($this) {
             self::Individual   => 'Individual',
             self::School       => 'School',
-            self::LocalGovt    => 'Local Government',
+            self::LocalGovt    => 'District Assembly',
             self::Organization => 'Organization / NGO',
+            self::Other        => 'Other',
         };
     }
 

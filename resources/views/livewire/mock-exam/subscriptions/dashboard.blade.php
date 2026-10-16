@@ -49,18 +49,23 @@
 
                     <div class="space-y-5 p-5">
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <x-exam.field bare label="Subscription Plan">
+                                <x-exam.select wire:model.live="planId">
+                                    <option value="0">Select a plan…</option>
+                                    @foreach ($mockPlans as $plan)
+                                        <option value="{{ $plan->id }}">{{ $plan->name }}</option>
+                                    @endforeach
+                                </x-exam.select>
+                                @if ($mockPlans->isEmpty())
+                                    <p class="mt-1.5 text-xs text-muted">No active plans available. Contact your administrator to create subscription plans.</p>
+                                @endif
+                            </x-exam.field>
+
                             <x-exam.field bare label="I am subscribing as">
                                 <x-exam.select wire:model.live="userGroup">
                                     @foreach ($userGroupOptions as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
-                                </x-exam.select>
-                            </x-exam.field>
-
-                            <x-exam.field bare label="Delivery Type">
-                                <x-exam.select wire:model.live="type">
-                                    <option selected value="print">Print</option>
-                                    <option disabled value="online">Online</option>
                                 </x-exam.select>
                             </x-exam.field>
                         </div>
