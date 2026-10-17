@@ -34,6 +34,8 @@ public string $activeTab = 'subscriptions';
     public string $sortBy = 'created_at';
     #[Url]
     public string $sortDirection = 'desc';
+    #[Url(as: 'exam_type', except: 'all')]
+    public string $examTypeFilter = 'all';
 
     // ── Purchase form ──────────────────────────────────────────────────────────
     public bool $showPurchaseForm = false;
@@ -542,13 +544,25 @@ protected function tabSessionKey(): string
             'plan',
             'subjects',
             'grantedBy',
-            'mockExams:id,mock_exam_subscription_id,title,status,delivery_type',
+            'mockExams',
         ])->get();
 
         foreach ($subscriptions as $subscription) {
-            $subscription->load('mockExams.subjectExams:id,mock_exam_id,academic_subject_id,title,duration_in_minutes');
-            $subscription->load('mockExams.subjectExams.academicSubject:id,name');
+            $subscription->load('mockExams.subjectExams.academicSubject');
             $subscription->load('mockExams.subjectExams.sections.questions');
+
+            // Filter mock exams by source type
+            if ($this->examTypeFilter !== 'all') {
+                $subscription->setRelation(
+                    'mockExams',
+                    $subscription->mockExams->filter(fn ($exam) => ($exam->source_type ?? 'template') === $this->examTypeFilter)
+                );
+            }
+        }
+
+        // When filtering by exam type, hide subscriptions with no matching exams
+        if ($this->examTypeFilter !== 'all') {
+            $subscriptions = $subscriptions->filter(fn ($sub) => $sub->mockExams->isNotEmpty());
         }
 
         return $subscriptions;

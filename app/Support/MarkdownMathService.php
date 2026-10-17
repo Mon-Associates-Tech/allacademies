@@ -185,9 +185,13 @@ class MarkdownMathService
      * banks generated elsewhere. Strip the backticks when they exactly wrap a
      * complete math delimiter pair, so the expression reaches extractMath() as
      * plain $...$ / \(...\) / \[...\] rather than being fenced off as code.
+     *
+     * Also handle bare backtick-wrapped math (`x^2`) that has no inner delimiters
+     * — convert to $...$ so extractMath() can find and render it.
      */
     private function unwrapBacktickedMath(string $text): string
     {
+        // First, strip backticks wrapping existing math delimiters
         $patterns = [
             '/`(\$\$.+?\$\$)`/s',
             '/`(\\\\\[.+?\\\\\])`/s',
@@ -198,6 +202,11 @@ class MarkdownMathService
         foreach ($patterns as $pattern) {
             $text = preg_replace($pattern, '$1', $text);
         }
+
+        // Then, convert bare backtick-wrapped math (`x^2`) to $...$
+        // Match single backticks not containing $, \[, \], \(, \), or newlines
+        $text = preg_replace('/`([^`$\n\\\\][^`\n]*)`/', '$$1$', $text);
+        $text = preg_replace('/`([^`\n])`/', '$$1$', $text);
 
         return $text;
     }

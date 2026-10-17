@@ -25,7 +25,7 @@ const md = new MarkdownIt({
                      // double spacing. Flip to false if you see that.
 }).use(tm, {
     engine: katex,
-    delimiters: ['dollars', 'brackets', 'backticks'], // $...$ / $$...$$ AND \(...\) / \[...\]
+    delimiters: ['dollars', 'brackets'], // $...$ / $$...$$ AND \(...\) / \[...\]
     katexOptions: {
         throwOnError: false,
         strict: false,
@@ -53,11 +53,22 @@ window.renderMarkdownWithMath = function(content) {
                             // runs — code-span content is never recursively re-tokenized by
                                 // any markdown engine, so this MUST run on the raw string, before
                                     // md.render() is called, or it has no effect.
+                    //
+                    // First, handle backticks wrapping existing math delimiters ($...$, $$...$$,
+                    // \[...\], \(...\)) — just strip the backticks so texmath sees the delimiters.
+                    //
+                    // Then, handle bare backtick-wrapped math (`x^2`) that has no inner delimiters
+                    // — convert to $...$ so texmath can render it. This must come after the
+                    // delimiter-stripping passes so we don't double-wrap `$x^2$` inside backticks.
                                         const unwrapped = decodedContent
                         .replace(/`(\$\$[\s\S]+?\$\$)`/g, '$1')
                     .replace(/`(\\\[[\s\S]+?\\\])`/g, '$1')
                     .replace(/`(\\\([\s\S]+?\\\))`/g, '$1')
-                    .replace(/`(\$[^`$\n]+?\$)`/g, '$1');
+                    .replace(/`(\$[^`$\n]+?\$)`/g, '$1')
+                    // Bare backtick math: `x^2` → $x^2$
+                    // Match single backticks not containing $, \[, \], \(, \), or newlines
+                    .replace(/`([^`$\n\\][^`\n]*)`/g, '$$1$')
+                    .replace(/`([^`\n])`/g, '$$1$');
 
                // texmath requires no whitespace immediately inside a delimiter, or it
                    // fails to close the span and greedily merges into the next one instead

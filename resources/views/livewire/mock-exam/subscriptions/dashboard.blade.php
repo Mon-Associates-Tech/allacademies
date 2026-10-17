@@ -16,7 +16,16 @@
             <div class="mb-5 flex items-center justify-between gap-4">
                 <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">MY SUBSCRIPTIONS ·
                     {{ count($mockSubscriptions) }}</p>
-                <x-exam.button type="button" wire:click="openPurchaseForm">+ New Subscription</x-exam.button>
+                <div class="flex gap-2">
+                    <a href="{{ route('mock-exams.generate.custom.index') }}"
+                       class="inline-flex items-center gap-1.5 rounded-md border border-purple-300 bg-purple-50 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-purple-700 transition hover:bg-purple-100 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                        </svg>
+                        Create Custom Exam
+                    </a>
+                    <x-exam.button type="button" wire:click="openPurchaseForm">+ New Subscription</x-exam.button>
+                </div>
             </div>
 
             <!-- Search and Filter Controls -->
@@ -27,6 +36,12 @@
                 </div>
 
                 <div class="flex gap-2">
+                    <x-exam.select wire:model.live="examTypeFilter">
+                        <option value="all">All Exams</option>
+                        <option value="template">Mocks (Template)</option>
+                        <option value="custom">Term Exams (Custom)</option>
+                    </x-exam.select>
+
                     <x-exam.select wire:model.live="sortBy">
                         <option value="created_at">Date Created</option>
                         <option value="plan.name">Plan Name</option>
@@ -187,7 +202,7 @@
 
             {{-- Subscriptions list --}}
             <div class="grid gap-4">
-                @forelse($mockSubscriptions as $sub)
+                @forelse($mockSubscriptions as $index => $sub)
                     @php
                         $statusValue =
                             $sub->status instanceof \App\MockExam\Models\MockExamSubscriptionStatus
@@ -243,13 +258,8 @@
 
                     <article wire:key="sub-{{ $sub->id }}"
                         class="animate-rise relative overflow-hidden rounded-xl border border-line bg-surface shadow-[0_1px_2px_rgba(20,24,34,0.04)] transition hover:border-primary/30 hover:shadow-md">
-                        {{-- Top status accent --}}
-                        <div
-                            class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r {{ $accentClasses }}">
-                        </div>
-
-                        <div class="p-5">
-                            <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                        <div class="p-4">
+                            <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                                 {{-- Main subscription info --}}
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2">
@@ -257,12 +267,6 @@
                                             title="{{ $title }}">
                                             {{ $title }}
                                         </h3>
-
-                                        <span
-                                            class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $statusClasses }}">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                            {{ ucfirst($statusValue) }}
-                                        </span>
 
                                         <span
                                             class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/15">
@@ -275,193 +279,47 @@
                                         </span>
                                     </div>
 
-                                    <p class="mt-2 font-mono text-[10.5px] tracking-[0.14em] text-muted">
-                                        SUBSCRIPTION #{{ $sub->id }}
+                                    <p class="mt-1.5 font-mono text-[10.5px] tracking-[0.14em] text-muted">
+                                        #{{ $index + 1 }} · SUBSCRIPTION #{{ $sub->id }}
                                         · {{ strtoupper($sub->plan->name ?? 'PLAN') }}
-                                        ·
-                                        {{ $sub->granted_by ? 'GRANTED BY ' . strtoupper($sub->grantedBy->name ?? 'OWNER') : 'SELF-PURCHASED' }}
+                                        · {{ $subjectCount }} subject{{ $subjectCount !== 1 ? 's' : '' }}
+                                        · {{ $examUsed }}/{{ $allowedExamGenerations }} exams used
                                     </p>
 
-                                    {{-- Summary cards --}}
-                                    <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                                        <div class="rounded-lg border border-line bg-surface-2/70 p-3">
+                                    {{-- Exam progress bar --}}
+                                    <div class="mt-3">
+                                        <div class="flex items-center justify-between gap-4 mb-1.5">
                                             <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                Subjects</p>
-                                            <p class="mt-1 text-sm font-semibold text-ink">{{ $subjectCount }}</p>
-                                            <p class="mt-0.5 truncate text-xs text-muted"
-                                                title="{{ $sub->subjects->pluck('name')->join(', ') }}">
-                                                {{ $subjectPreview ?: 'None attached' }}
+                                                Exam Generations
+                                            </p>
+                                            <p class="font-mono text-[10.5px] text-muted">
+                                                {{ $examRemaining }} remaining
                                             </p>
                                         </div>
-
-                                        <div class="rounded-lg border border-line bg-surface-2/70 p-3">
-                                            <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                Exam Cycles</p>
-                                            <p class="mt-1 text-sm font-semibold text-ink">
-                                                {{ $cyclesPerSubject }} / subject
-                                            </p>
-                                            <p class="mt-0.5 text-xs text-muted">
-                                                {{ $allowedExamGenerations }} total allowed
-                                            </p>
+                                        <div class="h-1.5 w-full overflow-hidden rounded-full bg-line">
+                                            <div class="h-full rounded-full bg-primary transition-all"
+                                                style="width: {{ $examPercent }}%"></div>
                                         </div>
-
-                                        <div class="rounded-lg border border-line bg-surface-2/70 p-3">
-                                            <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                Participants</p>
-
-                                            @if ($sub->type === 'online')
-                                                <p class="mt-1 text-sm font-semibold text-ink">
-                                                    {{ $participantsUsed }}/{{ $participantSlots }}
-                                                </p>
-                                                <p class="mt-0.5 text-xs text-muted">
-                                                    {{ $slotRemaining }} slot{{ $slotRemaining !== 1 ? 's' : '' }}
-                                                    remaining
-                                                </p>
-                                            @else
-                                                <p class="mt-1 text-sm font-semibold text-ink">Print-based</p>
-                                                <p class="mt-0.5 text-xs text-muted">No participant slots required</p>
-                                            @endif
-                                        </div>
-
-                                        <div class="rounded-lg border border-line bg-surface-2/70 p-3">
-                                            <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                Expires</p>
-                                            <p class="mt-1 text-sm font-semibold text-ink">
-                                                {{ $sub->expires_at ? $sub->expires_at->format('M j, Y') : 'Never' }}
-                                            </p>
-                                            <p class="mt-0.5 text-xs text-muted">
-                                                @if ($sub->expires_at)
-                                                    {{ $sub->expires_at->isPast() ? 'Expired' : 'Until expiry' }}
-                                                @else
-                                                    No expiry date
-                                                @endif
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {{-- Usage progress --}}
-                                    <div class="mt-4 grid gap-3 lg:grid-cols-2">
-                                        <div class="rounded-lg border border-line bg-surface-2/70 p-3">
-                                            <div class="flex items-center justify-between gap-4">
-                                                <p
-                                                    class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                    Exam Generations
-                                                </p>
-                                                <p class="font-mono text-[10.5px] text-muted">
-                                                    {{ $examUsed }}/{{ $allowedExamGenerations }}
-                                                </p>
-                                            </div>
-
-                                            <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line">
-                                                <div class="h-full rounded-full bg-primary transition-all"
-                                                    style="width: {{ $examPercent }}%"></div>
-                                            </div>
-
-                                            <p class="mt-2 text-xs text-muted">
-                                                @if ($examRemaining > 0)
-                                                    {{ $examRemaining }} exam
-                                                    generation{{ $examRemaining !== 1 ? 's' : '' }} remaining
-                                                @else
-                                                    Exam generation limit reached
-                                                @endif
-                                            </p>
-                                        </div>
-
-                                        @if ($sub->type === 'online')
-                                            <div class="rounded-lg border border-line bg-surface-2/70 p-3">
-                                                <div class="flex items-center justify-between gap-4">
-                                                    <p
-                                                        class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                        Participant Slots
-                                                    </p>
-                                                    <p class="font-mono text-[10.5px] text-muted">
-                                                        {{ $participantsUsed }}/{{ $participantSlots }}
-                                                    </p>
-                                                </div>
-
-                                                <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line">
-                                                    <div class="h-full rounded-full bg-primary transition-all"
-                                                        style="width: {{ $slotPercent }}%"></div>
-                                                </div>
-
-                                                <p class="mt-2 text-xs text-muted">
-                                                    @if ($slotRemaining > 0)
-                                                        {{ $slotRemaining }} participant
-                                                        slot{{ $slotRemaining !== 1 ? 's' : '' }} remaining
-                                                    @else
-                                                        No participant slots remaining
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        @else
-                                            <div class="rounded-lg border border-line bg-surface-2/70 p-3">
-                                                <p
-                                                    class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                    Delivery Mode
-                                                </p>
-                                                <p class="mt-2 text-sm font-semibold text-ink">Print Subscription</p>
-                                                <p class="mt-1 text-xs text-muted">
-                                                    Physical exam materials are generated under this subscription.
-                                                </p>
-                                            </div>
-                                        @endif
                                     </div>
                                 </div>
 
                                 {{-- Actions panel --}}
-                                <aside class="w-full shrink-0 xl:w-[220px]">
-                                    <div class="rounded-xl border border-line bg-surface-2/70 p-3">
-                                        <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                            Quick Actions
-                                        </p>
+                                <aside class="shrink-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <x-exam.button type="button" size="xs"
+                                            wire:click="openSubscriptionDetails({{ $sub->id }})">
+                                            Details
+                                        </x-exam.button>
 
-                                        <div class="mt-3 grid gap-2">
-                                            <x-exam.button type="button" size="xs"
-                                                wire:click="openSubscriptionDetails({{ $sub->id }})">
-                                                Open
-                                            </x-exam.button>
-
-                                            @if ($statusValue === 'pending')
-                                                <x-exam.button type="button" size="xs" variant="outline"
-                                                    wire:click="retryPayment({{ $sub->id }})">
-                                                    Pay Now
-                                                </x-exam.button>
-                                            @endif
-
-                                            @if ($sub->type === 'online' && $statusValue === 'active')
-                                                <x-exam.button type="button" size="xs" variant="outline"
-                                                    wire:click="openTopUpForm({{ $sub->id }})">
-                                                    Top Up Slots
-                                                </x-exam.button>
-                                            @endif
-
-                                            @if (in_array($statusValue, ['active', 'pending']))
-                                                <x-exam.button type="button" size="xs" variant="danger"
-                                                    wire:click="confirmCancel({{ $sub->id }})">
-                                                    Cancel
-                                                </x-exam.button>
-                                            @endif
-                                        </div>
-
-                                        <div class="mt-3 rounded-md border border-line bg-surface p-3">
-                                            <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                Status
-                                            </p>
-
-                                            <p class="mt-1 text-xs leading-relaxed text-muted">
-                                                @if ($statusValue === 'active')
-                                                    This subscription is active and available for exam generation.
-                                                @elseif($statusValue === 'pending')
-                                                    Payment is pending. Complete payment to activate this subscription.
-                                                @elseif($statusValue === 'expired')
-                                                    This subscription has expired.
-                                                @elseif($statusValue === 'cancelled')
-                                                    This subscription has been cancelled.
-                                                @else
-                                                    This subscription is currently unavailable.
-                                                @endif
-                                            </p>
-                                        </div>
+                                        @if ($statusValue === 'active' && $examRemaining > 0)
+                                            <a href="{{ route('mock-exams.generate.custom.index') }}"
+                                               class="inline-flex items-center justify-center gap-1.5 rounded-md bg-purple-500/10 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-purple-600 transition hover:bg-purple-500/20 dark:text-purple-300">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                                </svg>
+                                                Custom Exam
+                                            </a>
+                                        @endif
                                     </div>
                                 </aside>
                             </div>
@@ -474,11 +332,16 @@
                                         class="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 [&::-webkit-details-marker]:hidden">
                                         <div>
                                             <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-                                                Mocks under this subscription
+                                                @if ($examTypeFilter === 'template')
+                                                    Mocks under this subscription
+                                                @elseif($examTypeFilter === 'custom')
+                                                    Term Exams under this subscription
+                                                @else
+                                                    Exams under this subscription
+                                                @endif
                                             </p>
                                             <p class="mt-0.5 text-sm font-semibold text-ink">
-                                                {{ $sub->mockExams->count() }} mock
-                                                exam{{ $sub->mockExams->count() !== 1 ? 's' : '' }}
+                                                {{ $sub->mockExams->count() }} exam{{ $sub->mockExams->count() !== 1 ? 's' : '' }}
                                             </p>
                                         </div>
 
@@ -511,10 +374,23 @@
                                                             class="inline-flex items-center rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted ring-1 ring-inset ring-line">
                                                             {{ ucfirst($mock->delivery_type) }}
                                                         </span>
+
+                                                        @if ($mock->source_type === 'custom')
+                                                            <span
+                                                                class="inline-flex items-center rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-medium text-purple-600 ring-1 ring-inset ring-purple-500/20">
+                                                                Term Exam
+                                                            </span>
+                                                        @else
+                                                            <span
+                                                                class="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600 ring-1 ring-inset ring-blue-500/20">
+                                                                Mock
+                                                            </span>
+                                                        @endif
                                                     </div>
 
                                                     <p class="mt-1 font-mono text-[10.5px] text-muted">
-                                                        {{ $mock->subjectExams->count() }} subject
+                                                        Created {{ $mock->created_at->format('M j, Y \a\t g:i A') }}
+                                                        · {{ $mock->subjectExams->count() }} subject
                                                         exam{{ $mock->subjectExams->count() !== 1 ? 's' : '' }}
                                                         ·
                                                         {{ $mock->subjectExams->sum(fn($se) => $se->sections->count()) }}
@@ -871,14 +747,36 @@
                             Overview
                         </p>
 
-                        <p class="mt-1 text-base font-semibold text-ink">
-                            {{ $detailsTitle }}
-                        </p>
+                        <div class="mt-1 flex flex-wrap items-center gap-2">
+                            <p class="text-base font-semibold text-ink">
+                                {{ $detailsTitle }}
+                            </p>
+
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $detailsStatusClasses }}">
+                                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                {{ ucfirst($detailsStatus) }}
+                            </span>
+                        </div>
 
                         <p class="mt-1 text-xs text-muted">
                             Subscription #{{ $details->id }}
                             · {{ $detailsGroupLabel }}
                             · {{ ucfirst($details->type ?? 'print') }}
+                        </p>
+
+                        <p class="mt-2 text-xs leading-relaxed text-muted">
+                            @if ($detailsStatus === 'active')
+                                This subscription is active and available for exam generation.
+                            @elseif($detailsStatus === 'pending')
+                                Payment is pending. Complete payment to activate this subscription.
+                            @elseif($detailsStatus === 'expired')
+                                This subscription has expired.
+                            @elseif($detailsStatus === 'cancelled')
+                                This subscription has been cancelled.
+                            @else
+                                This subscription is currently unavailable.
+                            @endif
                         </p>
 
                         @if ($details->plan?->description)

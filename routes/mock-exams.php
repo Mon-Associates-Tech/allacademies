@@ -9,6 +9,7 @@ use App\MockExam\Controllers\MockExamParticipantController;
 use App\MockExam\Controllers\MockExamPdfController;
 use App\MockExam\Controllers\MockExamProctoringController;
 use App\MockExam\Controllers\MockExamResultController;
+use App\MockExam\Controllers\MockExamCustomExamController;
 use App\MockExam\Controllers\MockExamSelfServeController;
 use App\MockExam\Controllers\MockExamSubjectExamController;
 use App\MockExam\Controllers\MockExamTakingController;
@@ -129,6 +130,15 @@ Route::middleware(['auth', 'verified', 'web'])
     ->group(function () {
         Route::get('/', [MockExamSelfServeController::class, 'index'])->name('index');
         Route::post('/{template}', [MockExamSelfServeController::class, 'generate'])->name('store');
+
+        // Custom exam generator – user builds their own exam from scratch
+        Route::prefix('custom')->name('custom.')->group(function () {
+            Route::get('/', [MockExamCustomExamController::class, 'index'])->name('index');
+            Route::get('/{academicSubject}/configure', [MockExamCustomExamController::class, 'configure'])->name('configure');
+            Route::post('/{academicSubject}/preview', [MockExamCustomExamController::class, 'preview'])->name('preview');
+            Route::get('/{academicSubject}/preview', [MockExamCustomExamController::class, 'showPreview'])->name('preview.show');
+            Route::post('/{academicSubject}/confirm', [MockExamCustomExamController::class, 'confirm'])->name('confirm');
+        });
     });
 
 // ─── Template Management Routes ───────────────────────────────────────────────

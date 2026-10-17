@@ -192,6 +192,23 @@
                         this.$el.innerHTML = window.renderMarkdownWithMath(markdownContent);
                     }
                 }
+                // Strip backticks wrapping math delimiters in HTML content so KaTeX
+                // can find the $...$, $$...$$, \(...\), \[...\] patterns.
+                // Authors habitually wrap math in backticks (`$x^2$`), treating it
+                // like inline code. This also handles bare backtick-wrapped math
+                // (`x^2`) by converting to $...$.
+                if (this.$el && this.$el.innerHTML) {
+                    let inner = this.$el.innerHTML;
+                    // Strip backticks wrapping existing math delimiters
+                    inner = inner.replace(/`(\$\$[\s\S]+?\$\$)`/g, '$1')
+                                 .replace(/`(\\\[[\s\S]+?\\\])`/g, '$1')
+                                 .replace(/`(\\\([\s\S]+?\\\))`/g, '$1')
+                                 .replace(/`(\$[^`$\n]+?\$)`/g, '$1')
+                                 // Bare backtick math: `x^2` → $x^2$
+                                 .replace(/`([^`$\n\\][^`\n]*)`/g, '$$1$')
+                                 .replace(/`([^`\n])`/g, '$$1$');
+                    this.$el.innerHTML = inner;
+                }
                 if (isInline) {
                     this.$el.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div').forEach((el) => {
                         while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);

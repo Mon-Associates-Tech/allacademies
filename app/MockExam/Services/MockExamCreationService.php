@@ -16,6 +16,32 @@ class MockExamCreationService
         private readonly MockExamQuestionService $questionService
     ) {}
 
+    /**
+     * Ensure a value is a scalar string, not an array from Livewire wire:model on named form fields.
+     */
+    private function ensureString($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_array($value)) {
+            // Handle rich-editor format ['down' => '...', 'up' => '...']
+            if (array_key_exists('down', $value)) {
+                return $value['down'] ?? null;
+            }
+            if (array_key_exists('up', $value)) {
+                return $value['up'] ?? null;
+            }
+            // Handle numeric array from duplicate POST values
+            $first = $value[0] ?? null;
+            return is_string($first) ? $first : implode(' ', array_filter($value, 'is_string'));
+        }
+        return (string) $value;
+    }
+
     // ─── MockExam CRUD ───────────────────────────────────────────────────────
 
     public function createExam(int $userId, array $payload): MockExam
@@ -29,9 +55,10 @@ class MockExamCreationService
             'instructions'                => $payload['instructions'] ?? null,
             'status'                      => $payload['status'] ?? 'draft',
             'delivery_type'               => $payload['delivery_type'] ?? 'online',
+            'source_type'                 => $payload['source_type'] ?? 'template',
             'participant_mode'            => $payload['participant_mode'] ?? 'general',
             'configured_match_mode'       => $payload['configured_match_mode'] ?? 'any',
-            'participant_required_fields' => $payload['participant_required_fields'] ?? ['name', 'email'],
+            'participant_required_fields' => json_encode($payload['participant_required_fields'] ?? ['name', 'email']),
             'email_verification_required' => (bool) ($payload['email_verification_required'] ?? false),
             'result_visibility'           => $payload['result_visibility'] ?? 'manual_release',
             'results_release_datetime'    => $payload['results_release_datetime'] ?? null,
@@ -109,7 +136,9 @@ class MockExamCreationService
             'delivery_type'               => $payload['delivery_type'] ?? $exam->delivery_type,
             'participant_mode'            => $payload['participant_mode'] ?? $exam->participant_mode,
             'configured_match_mode'       => $payload['configured_match_mode'] ?? 'any',
-            'participant_required_fields' => $payload['participant_required_fields'] ?? $exam->participant_required_fields,
+            'participant_required_fields' => is_array($payload['participant_required_fields'] ?? $exam->participant_required_fields)
+                ? json_encode($payload['participant_required_fields'] ?? $exam->participant_required_fields)
+                : ($payload['participant_required_fields'] ?? $exam->participant_required_fields),
             'email_verification_required' => (bool) ($payload['email_verification_required'] ?? false),
             'result_visibility'           => $payload['result_visibility'] ?? $exam->result_visibility,
             'results_release_datetime'    => $payload['results_release_datetime'] ?? null,
@@ -144,8 +173,8 @@ class MockExamCreationService
                 'instructions'        => $payload['instructions'] ?? null,
                 'order'               => $order,
                 'duration_in_minutes' => $payload['duration_in_minutes'] ?? null,
-                'topic_ids'           => $payload['topic_ids'] ?? [],
-                'subtopic_ids'        => $payload['subtopic_ids'] ?? [],
+                'topic_ids'           => json_encode($payload['topic_ids'] ?? []),
+                'subtopic_ids'        => json_encode($payload['subtopic_ids'] ?? []),
             ]);
 
             $totalCreated = 0;
@@ -156,22 +185,22 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
                 $sectionSubtopicIds = $sectionData['subtopic_ids'] ?? [];
 
                 $section = $subjectExam->sections()->create([
-                    'title'              => $sectionData['title'],
-                    'instructions'       => $sectionData['instructions'] ?? null,
+                    'title'              => $this->ensureString($sectionData['title'] ?? null),
+                    'instructions'       => $this->ensureString($sectionData['instructions'] ?? null),
                     'order'              => $idx + 1,
-                    'question_type'      => $sectionData['question_type'],
+                    'question_type'      => $this->ensureString($sectionData['question_type'] ?? null),
                     'question_count'     => (int) ($sectionData['question_count'] ?? 0),
                     'marks_per_question' => (float) ($sectionData['marks_per_question'] ?? 1),
                     'is_randomized'      => (bool) ($sectionData['is_randomized'] ?? false),
-                    'topic_ids'          => $sectionTopicIds,
-                    'subtopic_ids'       => $sectionSubtopicIds,
+                    'topic_ids'          => json_encode($sectionTopicIds),
+                    'subtopic_ids'       => json_encode($sectionSubtopicIds),
                     'insert_blank_page'        => (bool) ($sectionData['insert_blank_page'] ?? false),
-                    'blank_page_text'          => $sectionData['blank_page_text'] ?? null,
-                    'attachment_original_name' => $sectionData['attachment_original_name'] ?? null,
-                    'attachment_extension'     => $sectionData['attachment_extension'] ?? null,
-                    'attachment_text'          => $sectionData['attachment_text'] ?? null,
-                    'attachment_image_path'    => $sectionData['attachment_image_path'] ?? null,
-                    'attachment_pdf_images'    => $sectionData['attachment_pdf_images'] ?? null,
+                    'blank_page_text'          => $this->ensureString($sectionData['blank_page_text'] ?? null),
+                    'attachment_original_name' => $this->ensureString($sectionData['attachment_original_name'] ?? null),
+                    'attachment_extension'     => $this->ensureString($sectionData['attachment_extension'] ?? null),
+                    'attachment_text'          => $this->ensureString($sectionData['attachment_text'] ?? null),
+                    'attachment_image_path'    => $this->ensureString($sectionData['attachment_image_path'] ?? null),
+                    'attachment_pdf_images'    => is_array($sectionData['attachment_pdf_images'] ?? null) ? json_encode($sectionData['attachment_pdf_images']) : ($sectionData['attachment_pdf_images'] ?? null),
                 ]);
 
                 // Per-section filters take priority; fall back to subject-exam-level
@@ -226,8 +255,8 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
                 'title'               => $payload['title'] ?? null,
                 'instructions'        => $payload['instructions'] ?? null,
                 'duration_in_minutes' => $payload['duration_in_minutes'] ?? null,
-                'topic_ids'           => $payload['topic_ids'] ?? [],
-                'subtopic_ids'        => $payload['subtopic_ids'] ?? [],
+                'topic_ids'           => json_encode($payload['topic_ids'] ?? []),
+                'subtopic_ids'        => json_encode($payload['subtopic_ids'] ?? []),
                 'template_id'         => $payload['template_id'] ?? null, // Update template_id if provided
             ]);
 
@@ -243,22 +272,22 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
                             $sectionTopicIds    = $sectionData['topic_ids'] ?? [];
                 $sectionSubtopicIds = $sectionData['subtopic_ids'] ?? [];
             $section = $subjectExam->sections()->create([
-                    'title'              => $sectionData['title'],
-                    'instructions'       => $sectionData['instructions'] ?? null,
+                    'title'              => $this->ensureString($sectionData['title'] ?? null),
+                    'instructions'       => $this->ensureString($sectionData['instructions'] ?? null),
                     'order'              => $idx + 1,
-                    'question_type'      => $sectionData['question_type'],
+                    'question_type'      => $this->ensureString($sectionData['question_type'] ?? null),
                     'question_count'     => (int) ($sectionData['question_count'] ?? 0),
                     'marks_per_question' => (float) ($sectionData['marks_per_question'] ?? 1),
                     'is_randomized'      => (bool) ($sectionData['is_randomized'] ?? false),
-                    'topic_ids'          => $sectionTopicIds,
-                    'subtopic_ids'       => $sectionSubtopicIds,
+                    'topic_ids'          => json_encode($sectionTopicIds),
+                    'subtopic_ids'       => json_encode($sectionSubtopicIds),
                     'insert_blank_page'        => (bool) ($sectionData['insert_blank_page'] ?? false),
-                    'blank_page_text'          => $sectionData['blank_page_text'] ?? null,
-                    'attachment_original_name' => $sectionData['attachment_original_name'] ?? null,
-                    'attachment_extension'     => $sectionData['attachment_extension'] ?? null,
-                    'attachment_text'          => $sectionData['attachment_text'] ?? null,
-                    'attachment_image_path'    => $sectionData['attachment_image_path'] ?? null,
-                    'attachment_pdf_images'    => $sectionData['attachment_pdf_images'] ?? null,
+                    'blank_page_text'          => $this->ensureString($sectionData['blank_page_text'] ?? null),
+                    'attachment_original_name' => $this->ensureString($sectionData['attachment_original_name'] ?? null),
+                    'attachment_extension'     => $this->ensureString($sectionData['attachment_extension'] ?? null),
+                    'attachment_text'          => $this->ensureString($sectionData['attachment_text'] ?? null),
+                    'attachment_image_path'    => $this->ensureString($sectionData['attachment_image_path'] ?? null),
+                    'attachment_pdf_images'    => is_array($sectionData['attachment_pdf_images'] ?? null) ? json_encode($sectionData['attachment_pdf_images']) : ($sectionData['attachment_pdf_images'] ?? null),
                 ]);
 
                 $created = $this->questionService->pullQuestionsForSection(

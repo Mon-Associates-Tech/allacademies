@@ -28,6 +28,7 @@ class MockExam extends Model
         'access_code',
         'status',
         'delivery_type',
+        'source_type',
         'participant_mode',
         'configured_match_mode',
         'participant_required_fields',
