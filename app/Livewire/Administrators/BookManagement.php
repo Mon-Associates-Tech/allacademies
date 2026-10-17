@@ -94,8 +94,8 @@ class BookManagement extends Component
         'additionalInfo' => 'nullable|string',
         'annualSubscriptionFee' => 'nullable|numeric|min:0|max:999999.99',
         'subscriptionConditions' => 'nullable|string',
-        'coverImage' => 'nullable|image|max:2048', // 2MB Max
-        'pdfFile' => 'nullable|mimes:pdf|max:10240', // 10MB Max
+        'coverImage' => 'nullable|image|max:20480', // 20MB Max
+        'pdfFile' => 'nullable|mimes:pdf|max:102400', // 100MB Max
     ];
 
     protected $listeners = ['refreshBooks' => '$refresh', 'bookSaved' => '$refresh'];
