@@ -19,7 +19,7 @@
                     </div>
                     <div>
                         <h4 class="text-lg font-bold text-gray-900">Book Cover Image</h4>
-                        <p class="text-sm text-gray-600">Upload an eye-catching cover (PNG, JPG, GIF up to 2MB)</p>
+                        <p class="text-sm text-gray-600">Upload an eye-catching cover (PNG, JPG, GIF up to 20MB)</p>
                     </div>
                 </div>
                 <div class="flex items-start space-x-6">
@@ -70,7 +70,7 @@
                     </div>
                     <div class="flex-1">
                         <h5 class="font-bold text-gray-900">Book PDF @if($hasSoftcopy)<span class="text-red-500">*</span>@endif</h5>
-                        <p class="text-xs text-gray-500">Main book content (PDF up to 10MB)</p>
+                        <p class="text-xs text-gray-500">Main book content (PDF up to 100MB)</p>
                     </div>
                 </div>
                 @if($existingPdfFile && !$pdfFile)
@@ -99,7 +99,7 @@
                     </div>
                     <div class="flex-1">
                         <h5 class="font-bold text-gray-900">Sample PDF</h5>
-                        <p class="text-xs text-gray-500">Preview for readers (PDF up to 5MB)</p>
+                        <p class="text-xs text-gray-500">Preview for readers (PDF up to 50MB)</p>
                     </div>
                 </div>
                 @if($existingSamplePdfFile && !$samplePdfFile && !$removeSamplePdfFile)
@@ -150,7 +150,7 @@
                     </div>
                     <div>
                         <h5 class="font-bold text-gray-900">Video Book</h5>
-                        <p class="text-xs text-gray-600">MP4, AVI, MOV (100MB)</p>
+                        <p class="text-xs text-gray-600">MP4, AVI, MOV (500MB)</p>
                     </div>
                 </div>
                 @if($existingSingleVideo && !$singleVideo)
@@ -223,11 +223,11 @@
                             </svg>
                             <span class="text-sm font-bold text-gray-900">Upload New Chapter Audio</span>
                         </div>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Select Chapter</label>
-                                <select wire:model.live="selectedChapterForAudio" 
+                                <select wire:model.live="selectedChapterForAudio"
                                         class="w-full px-4 py-2.5 border-2 border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                                     <option value="">Choose a chapter...</option>
                                     @foreach($this->availableChapters as $chapter)
@@ -236,7 +236,7 @@
                                 </select>
                                 @error('selectedChapterForAudio') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
-                            
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Upload Audio File(s)</label>
                                 <input type="file" wire:model="newChapterAudios" accept=".mp3,.wav,.m4a" multiple
@@ -251,7 +251,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         @if(!$selectedChapterForAudio)
                             <p class="mt-3 text-xs text-amber-600 bg-amber-50 rounded-lg p-2 border border-amber-200">
                                 ⚠️ Please select a chapter first before uploading audio files
@@ -347,11 +347,11 @@
                             </svg>
                             <span class="text-sm font-bold text-gray-900">Upload New Chapter Video</span>
                         </div>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Select Chapter</label>
-                                <select wire:model.live="selectedChapterForVideo" 
+                                <select wire:model.live="selectedChapterForVideo"
                                         class="w-full px-4 py-2.5 border-2 border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm">
                                     <option value="">Choose a chapter...</option>
                                     @foreach($this->availableChapters as $chapter)
@@ -360,7 +360,7 @@
                                 </select>
                                 @error('selectedChapterForVideo') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
-                            
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Upload Video File(s)</label>
                                 <input type="file" wire:model="newChapterVideos" accept=".mp4,.avi,.mov" multiple
@@ -375,7 +375,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         @if(!$selectedChapterForVideo)
                             <p class="mt-3 text-xs text-amber-600 bg-amber-50 rounded-lg p-2 border border-amber-200">
                                 ⚠️ Please select a chapter first before uploading video files
@@ -409,7 +409,7 @@
                                     </div>
                                     <div class="flex items-center space-x-2">
                                         @if(isset($videoData['file']))
-                                            <a href="{{ str_starts_with($videoData['file'], 'http') ? $videoData['file'] : asset('storage/' . $videoData['file']) }}" 
+                                            <a href="{{ str_starts_with($videoData['file'], 'http') ? $videoData['file'] : asset('storage/' . $videoData['file']) }}"
                                                target="_blank"
                                                class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

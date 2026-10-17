@@ -289,7 +289,7 @@
                                                     </label>
                                                     <p class="pl-1">or drag and drop</p>
                                                 </div>
-                                                <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 2MB</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 20MB</p>
                                             </div>
                                         </div>
 
@@ -335,7 +335,7 @@
                                                         <input type="file" wire:model="pdfFile" accept=".pdf" class="sr-only">
                                                     </label>
                                                 </div>
-                                                <p class="text-xs text-gray-500">PDF files only, up to 10MB</p>
+                                                <p class="text-xs text-gray-500">PDF files only, up to 100MB</p>
                                             </div>
                                         </div>
 
