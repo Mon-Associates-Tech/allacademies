@@ -163,18 +163,21 @@ class MockExamCreationService
         return DB::transaction(function () use ($mockExam, $payload) {
             $order = $mockExam->subjectExams()->count() + 1;
 
+            $usesRandomQuestions = (bool) ($payload['uses_random_questions'] ?? false);
+
             $subjectExam = $mockExam->subjectExams()->create([
-                'mock_exam_id'        => $mockExam->id,
-                'template_id'         => $payload['template_id'] ?? null, // Include template_id if provided
-                'academic_group_id'   => $payload['academic_group_id'],
-                'academic_level_id'   => $payload['academic_level_id'],
-                'academic_subject_id' => $payload['academic_subject_id'],
-                'title'               => $payload['title'] ?? null,
-                'instructions'        => $payload['instructions'] ?? null,
-                'order'               => $order,
-                'duration_in_minutes' => $payload['duration_in_minutes'] ?? null,
-                'topic_ids'           => json_encode($payload['topic_ids'] ?? []),
-                'subtopic_ids'        => json_encode($payload['subtopic_ids'] ?? []),
+                'mock_exam_id'            => $mockExam->id,
+                'template_id'             => $payload['template_id'] ?? null, // Include template_id if provided
+                'academic_group_id'       => $payload['academic_group_id'],
+                'academic_level_id'       => $payload['academic_level_id'],
+                'academic_subject_id'     => $payload['academic_subject_id'],
+                'title'                   => $payload['title'] ?? null,
+                'instructions'            => $payload['instructions'] ?? null,
+                'order'                   => $order,
+                'duration_in_minutes'     => $payload['duration_in_minutes'] ?? null,
+                'topic_ids'               => json_encode($payload['topic_ids'] ?? []),
+                'subtopic_ids'            => json_encode($payload['subtopic_ids'] ?? []),
+                'uses_random_questions'   => $usesRandomQuestions,
             ]);
 
             $totalCreated = 0;
@@ -205,18 +208,21 @@ foreach (($payload['sections'] ?? []) as $idx => $sectionData) {
 
                 // Per-section filters take priority; fall back to subject-exam-level
                 // filters for older, non-template flows that don't set them per section.
-                $created = $this->questionService->pullQuestionsForSection(
-                    $section,
-                    $sectionSubtopicIds ?: ($payload['subtopic_ids'] ?? []),
-                    $sectionTopicIds ?: ($payload['topic_ids'] ?? []),
-                    (int) $payload['academic_subject_id']
-                );
+                // Skip question persistence when using random questions per submission.
+                if (!$usesRandomQuestions) {
+                    $created = $this->questionService->pullQuestionsForSection(
+                        $section,
+                        $sectionSubtopicIds ?: ($payload['subtopic_ids'] ?? []),
+                        $sectionTopicIds ?: ($payload['topic_ids'] ?? []),
+                        (int) $payload['academic_subject_id']
+                    );
 
-                $totalCreated += $created;
-                $requested     = (int) ($sectionData['question_count'] ?? 0);
+                    $totalCreated += $created;
+                    $requested     = (int) ($sectionData['question_count'] ?? 0);
 
-                if ($created < $requested) {
-                    $warnings[] = "Section \"{$sectionData['title']}\": requested {$requested} question(s), found {$created}.";
+                    if ($created < $requested) {
+                        $warnings[] = "Section \"{$sectionData['title']}\": requested {$requested} question(s), found {$created}.";
+                    }
                 }
             }
 

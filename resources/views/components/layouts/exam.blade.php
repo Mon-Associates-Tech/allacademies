@@ -31,6 +31,7 @@
         }
     </script>
 
+    @livewireScriptConfig
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
@@ -168,6 +169,7 @@
 
     <script>
         document.addEventListener('alpine:initializing', () => {
+            const Alpine = window.Alpine;
             Alpine.store('darkMode', {
                 on: false,
                 init() {
@@ -185,6 +187,5 @@
     </script>
     @stack('scripts')
     @stack('exam-sync-scripts')
-    @livewireScriptConfig
 </body>
 </html>

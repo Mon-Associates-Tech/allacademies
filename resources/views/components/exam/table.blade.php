@@ -13,7 +13,7 @@
                     @endforeach
                 </tr>
                 </thead>
-            @endif
+            @endisset
             <tbody class="divide-y divide-line">{{ $slot }}</tbody>
         </table>
     </div>

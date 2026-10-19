@@ -89,6 +89,7 @@ class MockExamPdfService
             'subjectExam' => $subjectExam,
             'fontSize' => $fontSize,
             'identity' => $this->resolveIdentitySection(),
+            'layoutConfig' => $subjectExam->layout_config ?? [],
         ];
     }
 

@@ -37,6 +37,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        // Increase PHP upload limits EARLY in the lifecycle for Livewire file uploads (PDFs up to 100MB)
+        // Must be in register() so it runs before any request processing, including the upload-file endpoint
+        ini_set('upload_max_filesize', '100M');
+        ini_set('post_max_size', '110M');
+        ini_set('max_execution_time', '300');
+        ini_set('max_input_time', '300');
+        ini_set('memory_limit', '256M');
+
         // Previously registered an ErrorNotificationService for custom error emails.
         // This was removed to restore Laravel's default exception handling behavior.
 

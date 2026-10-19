@@ -27,6 +27,7 @@ class MockExamTemplate extends Model
         'default_duration_minutes',
         'sections_config',
         'front_page_config',
+        'uses_random_questions',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class MockExamTemplate extends Model
             'sections_config'          => 'array',
             'default_duration_minutes' => 'integer',
             'front_page_config'       => 'array',
+            'uses_random_questions'   => 'boolean',
         ];
     }
 
@@ -158,13 +160,14 @@ class MockExamTemplate extends Model
     public function toSubjectExamPayload(): array
     {
         return [
-            'academic_group_id'   => $this->academic_group_id,
-            'academic_level_id'   => $this->academic_level_id,
-            'academic_subject_id' => $this->academic_subject_id,
-            'title'               => $this->name,
-            'instructions'        => $this->description,
-            'duration_in_minutes' => $this->default_duration_minutes,
-            'sections'            => $this->sections_config ?? [],
+            'academic_group_id'     => $this->academic_group_id,
+            'academic_level_id'     => $this->academic_level_id,
+            'academic_subject_id'   => $this->academic_subject_id,
+            'title'                 => $this->name,
+            'instructions'          => $this->description,
+            'duration_in_minutes'   => $this->default_duration_minutes,
+            'sections'              => $this->sections_config ?? [],
+            'uses_random_questions' => (bool) ($this->uses_random_questions ?? false),
         ];
     }
 }

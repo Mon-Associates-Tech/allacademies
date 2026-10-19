@@ -33,7 +33,8 @@ export default defineConfig({
                 'resources/js/paint.js',
                 'resources/js/exam-sync.js',
                 'resources/js/exam-timer.js',
-
+                // 'resources/js/tiptap-editor.js',
+                // 'resources/js/layout-editor.js',
             ],
             refresh: true,
         }),

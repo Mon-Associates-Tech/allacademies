@@ -118,6 +118,30 @@ class BookForm extends Component
 
     public $removeSamplePdfFile = false;
 
+    public $removePdfFile = false;
+
+    public $removeCoverImage = false;
+
+    public $removeSingleAudioFile = false;
+
+    public $removeSingleVideoFile = false;
+
+    // Audio/Video toggles
+    public bool $hasAudio = false;
+
+    public bool $hasVideo = false;
+
+    // Track when files have been uploaded and stored
+    public bool $pdfFileUploaded = false;
+
+    public bool $coverImageUploaded = false;
+
+    public bool $samplePdfFileUploaded = false;
+
+    public bool $singleAudioUploaded = false;
+
+    public bool $singleVideoUploaded = false;
+
     // Step 5: Publishing
     public $status = 'draft';
 
@@ -145,7 +169,131 @@ class BookForm extends Component
             $this->loadBookData();
         }
 
+        // Restore form data from session if available (survives page reloads)
+        $this->restoreFromSession();
+
         $this->loadData();
+    }
+
+    /**
+     * Save current form data to session for persistence across page reloads.
+     */
+    public function saveToSession(): void
+    {
+        $sessionKey = $this->book
+            ? "book_form_{$this->book->id}"
+            : 'book_form_create';
+
+        session()->put($sessionKey, [
+            'currentStep' => $this->currentStep,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'authorId' => $this->authorId,
+            'bookCategoryIds' => $this->bookCategoryIds,
+            'ageGroups' => $this->ageGroups,
+            'academicGroupIds' => $this->academicGroupIds,
+            'academicLevelIds' => $this->academicLevelIds,
+            'academicSubjectIds' => $this->academicSubjectIds,
+            'edition' => $this->edition,
+            'publisher' => $this->publisher,
+            'pages' => $this->pages,
+            'hasHardcopy' => $this->hasHardcopy,
+            'hasSoftcopy' => $this->hasSoftcopy,
+            'annualSubscriptionFee' => $this->annualSubscriptionFee,
+            'additionalInfo' => $this->additionalInfo,
+            'tableOfContents' => $this->tableOfContents,
+            'status' => $this->status,
+            'hasAudio' => $this->hasAudio,
+            'hasVideo' => $this->hasVideo,
+            'pdfFileUploaded' => $this->pdfFileUploaded,
+            'coverImageUploaded' => $this->coverImageUploaded,
+            'samplePdfFileUploaded' => $this->samplePdfFileUploaded,
+            'singleAudioUploaded' => $this->singleAudioUploaded,
+            'singleVideoUploaded' => $this->singleVideoUploaded,
+            'existingPdfFile' => $this->existingPdfFile,
+            'existingCoverImage' => $this->existingCoverImage,
+            'existingSamplePdfFile' => $this->existingSamplePdfFile,
+            'existingSingleAudio' => $this->existingSingleAudio,
+            'existingSingleVideo' => $this->existingSingleVideo,
+            'chapterAudios' => $this->chapterAudios,
+            'chapterVideos' => $this->chapterVideos,
+            'removePdfFile' => $this->removePdfFile,
+            'removeCoverImage' => $this->removeCoverImage,
+            'removeSamplePdfFile' => $this->removeSamplePdfFile,
+            'removeSingleAudioFile' => $this->removeSingleAudioFile,
+            'removeSingleVideoFile' => $this->removeSingleVideoFile,
+        ]);
+    }
+
+    /**
+     * Restore form data from session if available.
+     */
+    public function restoreFromSession(): void
+    {
+        $sessionKey = $this->book
+            ? "book_form_{$this->book->id}"
+            : 'book_form_create';
+
+        $data = session()->get($sessionKey);
+
+        if (!$data) {
+            return;
+        }
+
+        // Only restore if not already loaded from book (edit mode)
+        if ($this->book && $this->book->exists) {
+            return;
+        }
+
+        $this->currentStep = $data['currentStep'] ?? 1;
+        $this->title = $data['title'] ?? null;
+        $this->slug = $data['slug'] ?? null;
+        $this->authorId = $data['authorId'] ?? null;
+        $this->bookCategoryIds = $data['bookCategoryIds'] ?? [];
+        $this->ageGroups = $data['ageGroups'] ?? [];
+        $this->academicGroupIds = $data['academicGroupIds'] ?? [];
+        $this->academicLevelIds = $data['academicLevelIds'] ?? [];
+        $this->academicSubjectIds = $data['academicSubjectIds'] ?? [];
+        $this->edition = $data['edition'] ?? null;
+        $this->publisher = $data['publisher'] ?? null;
+        $this->pages = $data['pages'] ?? null;
+        $this->hasHardcopy = $data['hasHardcopy'] ?? false;
+        $this->hasSoftcopy = $data['hasSoftcopy'] ?? false;
+        $this->annualSubscriptionFee = $data['annualSubscriptionFee'] ?? 0;
+        $this->additionalInfo = $data['additionalInfo'] ?? null;
+        $this->tableOfContents = $data['tableOfContents'] ?? [];
+        $this->status = $data['status'] ?? 'draft';
+        $this->hasAudio = $data['hasAudio'] ?? false;
+        $this->hasVideo = $data['hasVideo'] ?? false;
+        $this->pdfFileUploaded = $data['pdfFileUploaded'] ?? false;
+        $this->coverImageUploaded = $data['coverImageUploaded'] ?? false;
+        $this->samplePdfFileUploaded = $data['samplePdfFileUploaded'] ?? false;
+        $this->singleAudioUploaded = $data['singleAudioUploaded'] ?? false;
+        $this->singleVideoUploaded = $data['singleVideoUploaded'] ?? false;
+        $this->existingPdfFile = $data['existingPdfFile'] ?? null;
+        $this->existingCoverImage = $data['existingCoverImage'] ?? null;
+        $this->existingSamplePdfFile = $data['existingSamplePdfFile'] ?? null;
+        $this->existingSingleAudio = $data['existingSingleAudio'] ?? null;
+        $this->existingSingleVideo = $data['existingSingleVideo'] ?? null;
+        $this->chapterAudios = $data['chapterAudios'] ?? [];
+        $this->chapterVideos = $data['chapterVideos'] ?? [];
+        $this->removePdfFile = $data['removePdfFile'] ?? false;
+        $this->removeCoverImage = $data['removeCoverImage'] ?? false;
+        $this->removeSamplePdfFile = $data['removeSamplePdfFile'] ?? false;
+        $this->removeSingleAudioFile = $data['removeSingleAudioFile'] ?? false;
+        $this->removeSingleVideoFile = $data['removeSingleVideoFile'] ?? false;
+    }
+
+    /**
+     * Clear session data for this form.
+     */
+    public function clearSession(): void
+    {
+        $sessionKey = $this->book
+            ? "book_form_{$this->book->id}"
+            : 'book_form_create';
+
+        session()->forget($sessionKey);
     }
 
     private function authorizeEdit(): void
@@ -236,6 +384,57 @@ class BookForm extends Component
         }
     }
 
+    // File upload hooks — store immediately and set flags so "Processing..." spinner disappears
+    public function updatedPdfFile(): void
+    {
+        if ($this->pdfFile) {
+            $path = $this->pdfFile->store('book-pdfs', 'public');
+            $this->existingPdfFile = $path;
+            $this->pdfFileUploaded = true;
+            $this->reset('pdfFile');
+        }
+    }
+
+    public function updatedCoverImage(): void
+    {
+        if ($this->coverImage) {
+            $path = $this->coverImage->store('book-covers', 'public');
+            $this->existingCoverImage = $path;
+            $this->coverImageUploaded = true;
+            $this->reset('coverImage');
+        }
+    }
+
+    public function updatedSamplePdfFile(): void
+    {
+        if ($this->samplePdfFile) {
+            $path = $this->samplePdfFile->store('book-samples', 'public');
+            $this->existingSamplePdfFile = $path;
+            $this->samplePdfFileUploaded = true;
+            $this->reset('samplePdfFile');
+        }
+    }
+
+    public function updatedSingleAudio(): void
+    {
+        if ($this->singleAudio) {
+            $path = $this->singleAudio->store('book-audios', 'public');
+            $this->existingSingleAudio = $path;
+            $this->singleAudioUploaded = true;
+            $this->reset('singleAudio');
+        }
+    }
+
+    public function updatedSingleVideo(): void
+    {
+        if ($this->singleVideo) {
+            $path = $this->singleVideo->store('book-videos', 'public');
+            $this->existingSingleVideo = $path;
+            $this->singleVideoUploaded = true;
+            $this->reset('singleVideo');
+        }
+    }
+
     public function generateTableOfContents(): void
     {
         if (!$this->pages) {
@@ -263,6 +462,27 @@ class BookForm extends Component
 
         if ($this->currentStep < $this->totalSteps) {
             $this->currentStep++;
+            $this->saveToSession();
+        }
+    }
+
+    public function previousStep(): void
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+            $this->saveToSession();
+        }
+    }
+
+    public function goToStep(int $step): void
+    {
+        if ($step >= 1 && $step <= $this->totalSteps) {
+            // Validate all steps before the target step
+            for ($i = 1; $i < $step; $i++) {
+                $this->validateStep($i);
+            }
+            $this->currentStep = $step;
+            $this->saveToSession();
         }
     }
 
@@ -285,36 +505,12 @@ class BookForm extends Component
             ],
             4 => [
                 'coverImage' => 'nullable|image|max:10240',
-                'pdfFile' => 'nullable|mimes:pdf|max:102400',
-                'samplePdfFile' => 'nullable|mimes:pdf|max:51200',
-                'singleAudio' => 'nullable|mimes:mp3,wav,m4a|max:51200',
-                'singleVideo' => 'nullable|mimes:mp4,avi,mov|max:102400',
-                'newChapterAudios.*' => 'nullable|mimes:mp3,wav,m4a|max:51200',
-                'newChapterVideos.*' => 'nullable|mimes:mp4,avi,mov|max:102400',
             ],
             default => [],
         };
 
         if (!empty($rules)) {
             $this->validate($rules);
-        }
-    }
-
-    public function previousStep(): void
-    {
-        if ($this->currentStep > 1) {
-            $this->currentStep--;
-        }
-    }
-
-    public function goToStep(int $step): void
-    {
-        if ($step >= 1 && $step <= $this->totalSteps) {
-            // Validate all steps before the target step
-            for ($i = 1; $i < $step; $i++) {
-                $this->validateStep($i);
-            }
-            $this->currentStep = $step;
         }
     }
 
@@ -454,7 +650,7 @@ class BookForm extends Component
             return;
         }
 
-        if ($this->hasSoftcopy && !$this->pdfFile && (!$this->book || !$this->existingPdfFile)) {
+        if ($this->hasSoftcopy && !$this->pdfFile && !$this->existingPdfFile) {
             $this->addError('pdfFile', 'PDF file is required for softcopy books.');
             $this->currentStep = 4;
 
@@ -533,6 +729,8 @@ class BookForm extends Component
             session()->flash('success', $message);
         });
 
+        // Clear session data after successful submission
+        $this->clearSession();
         $this->cancel();
     }
 
@@ -543,7 +741,14 @@ class BookForm extends Component
                 Storage::disk('public')->delete($this->existingCoverImage);
             }
 
-            return $this->coverImage->store('book-covers', 'public');
+            $path = $this->coverImage->store('book-covers', 'public');
+            $this->existingCoverImage = $path;
+            $this->coverImageUploaded = true;
+            return $path;
+        }
+
+        if ($this->coverImageUploaded) {
+            return $this->existingCoverImage;
         }
 
         return $this->book ? $this->existingCoverImage : null;
@@ -556,7 +761,14 @@ class BookForm extends Component
                 Storage::disk('public')->delete($this->existingPdfFile);
             }
 
-            return $this->pdfFile->store('book-pdfs', 'public');
+            $path = $this->pdfFile->store('book-pdfs', 'public');
+            $this->existingPdfFile = $path;
+            $this->pdfFileUploaded = true;
+            return $path;
+        }
+
+        if ($this->pdfFileUploaded) {
+            return $this->existingPdfFile;
         }
 
         return $this->book ? $this->existingPdfFile : null;
@@ -569,7 +781,14 @@ class BookForm extends Component
                 Storage::disk('public')->delete($this->existingSamplePdfFile);
             }
 
-            return $this->samplePdfFile->store('book-samples', 'public');
+            $path = $this->samplePdfFile->store('book-samples', 'public');
+            $this->existingSamplePdfFile = $path;
+            $this->samplePdfFileUploaded = true;
+            return $path;
+        }
+
+        if ($this->samplePdfFileUploaded) {
+            return $this->existingSamplePdfFile;
         }
 
         return $this->book ? $this->existingSamplePdfFile : null;
@@ -582,7 +801,14 @@ class BookForm extends Component
                 Storage::disk('public')->delete($this->existingSingleAudio);
             }
 
-            return $this->singleAudio->store('book-audios', 'public');
+            $path = $this->singleAudio->store('book-audios', 'public');
+            $this->existingSingleAudio = $path;
+            $this->singleAudioUploaded = true;
+            return $path;
+        }
+
+        if ($this->singleAudioUploaded) {
+            return $this->existingSingleAudio;
         }
 
         return $this->book ? $this->existingSingleAudio : null;
@@ -595,7 +821,14 @@ class BookForm extends Component
                 Storage::disk('public')->delete($this->existingSingleVideo);
             }
 
-            return $this->singleVideo->store('book-videos', 'public');
+            $path = $this->singleVideo->store('book-videos', 'public');
+            $this->existingSingleVideo = $path;
+            $this->singleVideoUploaded = true;
+            return $path;
+        }
+
+        if ($this->singleVideoUploaded) {
+            return $this->existingSingleVideo;
         }
 
         return $this->book ? $this->existingSingleVideo : null;
@@ -627,6 +860,46 @@ class BookForm extends Component
     {
         $this->removeSamplePdfFile = true;
         $this->existingSamplePdfFile = null;
+    }
+
+    public function removeExistingCoverImage(): void
+    {
+        if ($this->existingCoverImage && Storage::disk('public')->exists($this->existingCoverImage)) {
+            Storage::disk('public')->delete($this->existingCoverImage);
+        }
+        $this->removeCoverImage = true;
+        $this->existingCoverImage = null;
+        $this->coverImageUploaded = false;
+    }
+
+    public function removeExistingPdfFile(): void
+    {
+        if ($this->existingPdfFile && Storage::disk('public')->exists($this->existingPdfFile)) {
+            Storage::disk('public')->delete($this->existingPdfFile);
+        }
+        $this->removePdfFile = true;
+        $this->existingPdfFile = null;
+        $this->pdfFileUploaded = false;
+    }
+
+    public function removeExistingSingleAudioFile(): void
+    {
+        if ($this->existingSingleAudio && Storage::disk('public')->exists($this->existingSingleAudio)) {
+            Storage::disk('public')->delete($this->existingSingleAudio);
+        }
+        $this->removeSingleAudioFile = true;
+        $this->existingSingleAudio = null;
+        $this->singleAudioUploaded = false;
+    }
+
+    public function removeExistingSingleVideoFile(): void
+    {
+        if ($this->existingSingleVideo && Storage::disk('public')->exists($this->existingSingleVideo)) {
+            Storage::disk('public')->delete($this->existingSingleVideo);
+        }
+        $this->removeSingleVideoFile = true;
+        $this->existingSingleVideo = null;
+        $this->singleVideoUploaded = false;
     }
 
     public function addChapterAudio(): void

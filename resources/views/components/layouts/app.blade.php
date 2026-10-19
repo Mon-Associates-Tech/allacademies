@@ -57,6 +57,7 @@
     <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> -->
 
     <!-- Scripts & Styles -->
+    @livewireScriptConfig
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
     @stack('styles')
@@ -229,7 +230,6 @@
 </script>
 
 <!-- Scripts -->
-@livewireScriptConfig
 
 <script>
     // Initialize a global initSubscriptions function so Alpine can call it during component parsing
@@ -279,7 +279,8 @@
 
 <script>
     document.addEventListener('alpine:initializing', () => {
-        // Define stores
+        // Define stores using window.Alpine (exposed by Vite ES module)
+        const Alpine = window.Alpine;
         // Delete confirmation store
         Alpine.store('deleteForm', {
             open: false,

@@ -10,6 +10,7 @@
 @push('head')
     <script>
         document.addEventListener('alpine:initializing', () => {
+            const Alpine = window.Alpine;
             Alpine.store('deleteForm', {
                 open: false,
                 title: null,

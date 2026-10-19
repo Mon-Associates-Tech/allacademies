@@ -27,9 +27,9 @@
         --c-line: 42 49 65;
         --c-line-strong: 59 67 86;
         --c-accent: 224 96 76;
-        --c-primary: 233 235 241;
-        --c-primary-hi: 255 255 255;
-        --c-on-primary: 21 26 38;
+        --c-primary: 34 139 130;
+        --c-primary-hi: 45 160 148;
+        --c-on-primary: 247 246 240;
         --c-ok: 76 192 138;
         --c-warn: 226 164 84;
     }

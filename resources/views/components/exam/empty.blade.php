@@ -14,4 +14,5 @@
     @if($description)
         <p class="mx-auto mt-1.5 max-w-[44ch] text-[13.5px] leading-relaxed text-ink-soft">{{ $description }}</p>
     @endif
+    {{ $slot }}
 </div>

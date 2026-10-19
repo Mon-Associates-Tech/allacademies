@@ -123,6 +123,7 @@ class MockExamTemplateController extends Controller
             'description' => $payload['description'] ?? null,
             'is_active' => (bool) ($payload['is_active'] ?? true),
             'default_duration_minutes' => $payload['default_duration_minutes'] ?? null,
+            'uses_random_questions' => (bool) ($payload['uses_random_questions'] ?? false),
             'sections_config' => $payload['sections_config'],
             'front_page_config' => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
         ]);
@@ -151,6 +152,7 @@ class MockExamTemplateController extends Controller
             'description' => $payload['description'] ?? null,
             'is_active' => (bool) ($payload['is_active'] ?? true),
             'default_duration_minutes' => $payload['default_duration_minutes'] ?? null,
+            'uses_random_questions' => (bool) ($payload['uses_random_questions'] ?? false),
             'sections_config' => $payload['sections_config'],
             'front_page_config' => $this->decodeFrontPageConfig($payload['front_page_config'] ?? null),
         ]);
@@ -288,6 +290,7 @@ class MockExamTemplateController extends Controller
             'sections_config.*.attachment_pdf_images' => ['nullable', 'string'],
             // Passed as a JSON string from the hidden input in configure.blade.php
             'front_page_config' => ['nullable', 'string'],
+            'uses_random_questions' => ['nullable', 'boolean'],
         ]);
 
         return $data;

@@ -6,6 +6,7 @@ use App\Http\Middleware\ApplyUserPreferences;
 use App\Http\Middleware\CheckDefaultPassword;
 use App\Http\Middleware\CheckSuspended;
 use App\Http\Middleware\EnsureUserIsParent;
+use App\Http\Middleware\IncreaseUploadLimits;
 use App\Http\Middleware\TrackUserLoginActivity;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -20,6 +21,7 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
+//        IncreaseUploadLimits::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,

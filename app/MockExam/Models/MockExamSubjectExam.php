@@ -23,13 +23,17 @@ class MockExamSubjectExam extends Model
         'duration_in_minutes',
         'topic_ids',
         'subtopic_ids',
+        'layout_config',
+        'uses_random_questions',
     ];
 
     protected function casts(): array
     {
         return [
-            'topic_ids'    => 'array',
-            'subtopic_ids' => 'array',
+            'topic_ids'             => 'array',
+            'subtopic_ids'          => 'array',
+            'layout_config'         => 'array',
+            'uses_random_questions' => 'boolean',
         ];
     }
 
@@ -63,6 +67,18 @@ class MockExamSubjectExam extends Model
     public function sections(): HasMany
     {
         return $this->hasMany(MockExamSection::class)->orderBy('order');
+    }
+
+    public function submissionQuestions(): HasMany
+    {
+        return $this->hasMany(MockExamSubmissionQuestion::class);
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    public function usesRandomQuestions(): bool
+    {
+        return (bool) $this->uses_random_questions;
     }
 
     // ─── Aggregates ───────────────────────────────────────────────────────────

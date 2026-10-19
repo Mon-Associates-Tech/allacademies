@@ -311,6 +311,7 @@
             height: 100%;
         }
     </style>
+    @livewireScriptConfig
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
     @livewireStyles
@@ -626,6 +627,7 @@
 <!-- Alpine.js stores -->
 <script>
     document.addEventListener('alpine:initializing', () => {
+        const Alpine = window.Alpine;
         // Dark mode store
         Alpine.store('darkMode', {
             on: false,
@@ -658,6 +660,5 @@
     });
 </script>
 
-@livewireScriptConfig
 </body>
 </html>

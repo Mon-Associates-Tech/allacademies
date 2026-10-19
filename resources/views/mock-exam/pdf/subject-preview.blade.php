@@ -64,6 +64,105 @@
                 </div>
             
 
+                {{-- Choice Layout Card --}}
+                <div class="overflow-hidden rounded-sm shadow-lg"
+                     style="background: #0f172a; border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="px-4 py-3 flex items-center gap-2"
+                         style="border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M4 6h16M4 12h16M4 18h7"/>
+                        </svg>
+                        <span class="text-xs font-semibold text-slate-300 uppercase tracking-widest">Choice Layout</span>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        @php
+                            $choiceLayout = $subjectExam->layout_config['choiceLayout'] ?? 'vertical';
+                        @endphp
+                        <button onclick="setChoiceLayout('vertical')"
+                                id="choiceLayoutVertical"
+                                class="choice-layout-btn w-full flex items-center gap-3 py-2.5 px-3 rounded-sm text-sm font-semibold transition-all duration-150 {{ $choiceLayout === 'vertical' ? 'ring-2 ring-blue-500' : '' }}"
+                                style="background: {{ $choiceLayout === 'vertical' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)' }};
+                                       color: {{ $choiceLayout === 'vertical' ? '#60a5fa' : '#94a3b8' }};
+                                       border: 1px solid {{ $choiceLayout === 'vertical' ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)' }};">
+                            <span class="flex flex-col gap-0.5 text-xs" style="min-width: 60px;">
+                                <span>a.</span>
+                                <span>b.</span>
+                                <span>c.</span>
+                                <span>d.</span>
+                            </span>
+                            <span class="text-xs opacity-70">Vertical</span>
+                        </button>
+
+                        <button onclick="setChoiceLayout('horizontal')"
+                                id="choiceLayoutHorizontal"
+                                class="choice-layout-btn w-full flex items-center gap-3 py-2.5 px-3 rounded-sm text-sm font-semibold transition-all duration-150 {{ $choiceLayout === 'horizontal' ? 'ring-2 ring-blue-500' : '' }}"
+                                style="background: {{ $choiceLayout === 'horizontal' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)' }};
+                                       color: {{ $choiceLayout === 'horizontal' ? '#60a5fa' : '#94a3b8' }};
+                                       border: 1px solid {{ $choiceLayout === 'horizontal' ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)' }};">
+                            <span class="flex flex-row gap-2 text-xs" style="min-width: 60px;">
+                                <span>a.</span>
+                                <span>b.</span>
+                                <span>c.</span>
+                                <span>d.</span>
+                            </span>
+                            <span class="text-xs opacity-70">Horizontal</span>
+                        </button>
+
+                        <button onclick="setChoiceLayout('grid')"
+                                id="choiceLayoutGrid"
+                                class="choice-layout-btn w-full flex items-center gap-3 py-2.5 px-3 rounded-sm text-sm font-semibold transition-all duration-150 {{ $choiceLayout === 'grid' ? 'ring-2 ring-blue-500' : '' }}"
+                                style="background: {{ $choiceLayout === 'grid' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)' }};
+                                       color: {{ $choiceLayout === 'grid' ? '#60a5fa' : '#94a3b8' }};
+                                       border: 1px solid {{ $choiceLayout === 'grid' ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)' }};">
+                            <span class="grid grid-cols-2 gap-0.5 gap-x-3 text-xs" style="min-width: 60px;">
+                                <span>a.</span>
+                                <span>b.</span>
+                                <span>c.</span>
+                                <span>d.</span>
+                            </span>
+                            <span class="text-xs opacity-70">Grid (2×2)</span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Edit Layout Card --}}
+                <div class="overflow-hidden rounded-sm shadow-lg"
+                     style="background: #0f172a; border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="px-4 py-3 flex items-center gap-2"
+                         style="border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <span class="text-xs font-semibold text-slate-300 uppercase tracking-widest">Layout Editor</span>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <button id="editLayoutBtn" onclick="toggleEditMode()"
+                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+                                style="background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit Layout
+                        </button>
+
+                        <button id="saveLayoutBtn" onclick="saveLayoutFromPreview()"
+                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+                                style="background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3);"
+                                style="display: none;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Save Layout
+                        </button>
+
+                        <div id="layoutSaveStatus" class="text-xs text-center" style="color: #94a3b8; display: none;"></div>
+                    </div>
+                </div>
+
                 {{-- Actions Card --}}
                 <div class="overflow-hidden rounded-sm shadow-lg"
                      style="background: #0f172a; border: 1px solid rgba(255,255,255,0.07);">
@@ -86,18 +185,22 @@
                             Refresh Preview
                         </button>
 
-                        <a id="downloadBtn"
-                           href="{{ isset($fromSubscription) && $fromSubscription
-                               ? route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) . '?font_size=' . $fontSize
-                               : route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) . '?font_size=' . $fontSize }}"
-                           class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
-                           style="background: rgba(201,162,39,0.15); color: #c9a227; border: 1px solid rgba(201,162,39,0.35); text-decoration: none;">
+                        <x-exam.button
+                            type="button"
+                            variant="primary"
+                            clientLoading
+                            data-download-url="{{ isset($fromSubscription) && $fromSubscription
+                                ? route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) . '?font_size=' . $fontSize
+                                : route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) . '?font_size=' . $fontSize }}"
+                            loading="Generating PDF..."
+                            id="downloadBtn"
+                            class="w-full">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                             Download PDF
-                        </a>
+                        </x-exam.button>
 
                         @if(isset($fromSubscription) && $fromSubscription && Route::has('mock-exams.subscription-preview.answer-key'))
                             <a id="answerKeyBtn"
@@ -221,13 +324,123 @@
 
     <script>
         let currentFontSize = {{ $fontSize }};
+        let editMode = false;
         const isSubscription = {{ isset($fromSubscription) && $fromSubscription ? 'true' : 'false' }};
         const previewRoute = isSubscription
             ? '{{ route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) }}'
             : '{{ route('mock-exams.subject-exams.pdf.preview', [$mockExam, $subjectExam]) }}';
+        const editRoute = isSubscription
+            ? null
+            : '{{ route('mock-exams.subject-exams.pdf.edit', [$mockExam, $subjectExam]) }}';
+        const saveLayoutRoute = isSubscription
+            ? null
+            : '{{ route('mock-exams.subject-exams.layout.save', [$mockExam, $subjectExam]) }}';
         const downloadRoute = isSubscription
             ? '{{ route('mock-exams.subject-exams.subscription-preview.content', [$mockExam, $subjectExam]) }}'
             : '{{ route('mock-exams.subject-exams.pdf.download', [$mockExam, $subjectExam]) }}';
+
+        function toggleEditMode() {
+            const iframe = document.getElementById('pdfPreview');
+            const editBtn = document.getElementById('editLayoutBtn');
+            const saveBtn = document.getElementById('saveLayoutBtn');
+            const status = document.getElementById('previewStatus');
+
+            if (!editRoute) return;
+
+            editMode = !editMode;
+
+            if (editMode) {
+                // Switch to editable preview
+                iframe.src = editRoute + '?font_size=' + currentFontSize;
+                editBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Viewing
+                `;
+                editBtn.style.background = 'rgba(239,68,68,0.15)';
+                editBtn.style.color = '#f87171';
+                editBtn.style.border = '1px solid rgba(239,68,68,0.3)';
+                saveBtn.style.display = 'flex';
+                status.innerHTML = `
+                    <div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                    <span class="text-xs text-slate-500">Edit Mode</span>
+                `;
+            } else {
+                // Switch back to normal preview
+                iframe.src = previewRoute + '?font_size=' + currentFontSize;
+                editBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit Layout
+                `;
+                editBtn.style.background = 'rgba(59,130,246,0.15)';
+                editBtn.style.color = '#60a5fa';
+                editBtn.style.border = '1px solid rgba(59,130,246,0.3)';
+                saveBtn.style.display = 'none';
+                status.innerHTML = `
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                    <span class="text-xs text-slate-500">Live</span>
+                `;
+            }
+        }
+
+        function saveLayoutFromPreview() {
+            const iframe = document.getElementById('pdfPreview');
+            const statusEl = document.getElementById('layoutSaveStatus');
+            const saveBtn = document.getElementById('saveLayoutBtn');
+
+            if (!iframe.contentWindow || !saveLayoutRoute) return;
+
+            saveBtn.disabled = true;
+            statusEl.style.display = 'block';
+            statusEl.textContent = 'Saving...';
+            statusEl.style.color = '#fbbf24';
+
+            // Call save in the iframe
+            iframe.contentWindow.postMessage({ action: 'saveLayout' }, '*');
+
+            // Fallback: directly call the save endpoint via the iframe's LayoutEditor
+            setTimeout(() => {
+                try {
+                    const container = iframe.contentWindow.document.getElementById('examContainer');
+                    if (container && iframe.contentWindow.LayoutEditor) {
+                        const config = iframe.contentWindow.LayoutEditor.collectLayoutConfig(container);
+                        fetch(saveLayoutRoute, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            },
+                            body: JSON.stringify({ layout_config: config }),
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            statusEl.textContent = 'Saved!';
+                            statusEl.style.color = '#34d399';
+                            saveBtn.disabled = false;
+                            setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+                        })
+                        .catch(err => {
+                            statusEl.textContent = 'Save failed!';
+                            statusEl.style.color = '#f87171';
+                            saveBtn.disabled = false;
+                        });
+                    } else {
+                        statusEl.textContent = 'Editor not ready';
+                        statusEl.style.color = '#f87171';
+                        saveBtn.disabled = false;
+                    }
+                } catch(e) {
+                    statusEl.textContent = 'Cross-origin error';
+                    statusEl.style.color = '#f87171';
+                    saveBtn.disabled = false;
+                }
+            }, 500);
+        }
 
         function setFontSize(size) {
             currentFontSize = size;
@@ -251,9 +464,48 @@
             updatePreview();
         }
 
+        function setChoiceLayout(layout) {
+            // Update button styles
+            document.querySelectorAll('.choice-layout-btn').forEach(btn => {
+                btn.style.background = 'rgba(255,255,255,0.03)';
+                btn.style.color = '#94a3b8';
+                btn.style.border = '1px solid rgba(255,255,255,0.08)';
+                btn.classList.remove('ring-2', 'ring-blue-500');
+            });
+
+            const activeBtn = document.getElementById('choiceLayout' + layout.charAt(0).toUpperCase() + layout.slice(1));
+            if (activeBtn) {
+                activeBtn.style.background = 'rgba(59,130,246,0.15)';
+                activeBtn.style.color = '#60a5fa';
+                activeBtn.style.border = '1px solid rgba(59,130,246,0.4)';
+                activeBtn.classList.add('ring-2', 'ring-blue-500');
+            }
+
+            // Save to backend
+            fetch(saveLayoutRoute, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                },
+                body: JSON.stringify({
+                    layout_config: {
+                        choiceLayout: layout,
+                    },
+                }),
+            })
+            .then(r => r.json())
+            .then(() => {
+                updatePreview();
+            })
+            .catch(err => {
+                console.error('Failed to save choice layout:', err);
+            });
+        }
+
         function updatePreview() {
             const iframe = document.getElementById('pdfPreview');
-            const downloadBtn = document.getElementById('downloadBtn');
             const status = document.getElementById('previewStatus');
 
             // Show loading status
@@ -267,7 +519,10 @@
 
             // Update iframe and download URL
             iframe.src = previewRoute + '?font_size=' + currentFontSize;
-            downloadBtn.href = downloadRoute + '?font_size=' + currentFontSize;
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.dataset.downloadUrl = downloadRoute + '?font_size=' + currentFontSize;
+            }
 
             // Reset status after load
             iframe.onload = function() {
@@ -277,5 +532,40 @@
                 `;
             };
         }
+
+        // Client loading buttons — show loading spinner before triggering download
+        (function() {
+            document.querySelectorAll('[data-client-loading="true"]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = btn.dataset.downloadUrl;
+                    if (!url) return;
+
+                    // Show loading state
+                    const defaultEl = btn.querySelector('.client-btn-default');
+                    const loadingEl = btn.querySelector('.client-btn-loading');
+                    if (defaultEl) defaultEl.classList.add('hidden');
+                    if (loadingEl) loadingEl.classList.remove('hidden');
+                    btn.disabled = true;
+
+                    // Trigger download via hidden anchor so the page doesn't navigate away
+                    setTimeout(function() {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+
+                        // Reset button state after a short delay
+                        setTimeout(function() {
+                            if (defaultEl) defaultEl.classList.remove('hidden');
+                            if (loadingEl) loadingEl.classList.add('hidden');
+                            btn.disabled = false;
+                        }, 1000);
+                    }, 100);
+                });
+            });
+        })();
     </script>
 </x-layouts.app>

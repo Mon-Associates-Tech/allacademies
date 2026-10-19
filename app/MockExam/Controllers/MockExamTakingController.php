@@ -8,6 +8,7 @@ use App\MockExam\Models\MockExamParticipant;
 use App\MockExam\Models\MockExamSubmission;
 use App\MockExam\Services\MockExamGradingService;
 use App\MockExam\Services\MockExamParticipantService;
+use App\MockExam\Services\MockExamQuestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ class MockExamTakingController extends Controller
 {
     public function __construct(
         private readonly MockExamParticipantService $participantService,
-        private readonly MockExamGradingService     $gradingService
+        private readonly MockExamGradingService     $gradingService,
+        private readonly MockExamQuestionService    $questionService
     ) {}
 
     // ─── Join page ────────────────────────────────────────────────────────────
@@ -165,6 +167,9 @@ class MockExamTakingController extends Controller
 
         if (! $submission->started_at) {
             $submission->start();
+
+            // Select random questions per submission if the exam uses random questions
+            $this->selectQuestionsForSubmission($exam, $submission);
         }
 
         $exam->load(['subjectExams.academicSubject', 'subjectExams.sections']);
@@ -209,7 +214,7 @@ class MockExamTakingController extends Controller
             $submission->update(['randomized_question_order' => $randomOrder]);
         }
 
-        $questions = $section->getQuestionsForParticipant($randomOrder[$sectionKey] ?? null);
+        $questions = $this->loadQuestionsForSection($submission, $section, $randomOrder[$sectionKey] ?? null);
         $responses = $submission->responses ?? [];
 
         return view('mock-exam.take.section', compact(
@@ -413,5 +418,61 @@ class MockExamTakingController extends Controller
             ->max('attempt_number');
 
         return ($lastAttempt ?? 0) + 1;
+    }
+
+    /**
+     * Select random questions for each section of the submission.
+     */
+    private function selectQuestionsForSubmission(MockExam $exam, MockExamSubmission $submission): void
+    {
+        $exam->load(['subjectExams.sections']);
+
+        foreach ($exam->subjectExams as $subjectExam) {
+            if (! $subjectExam->usesRandomQuestions()) {
+                continue;
+            }
+
+            foreach ($subjectExam->sections as $section) {
+                $this->questionService->pullQuestionsForSubmission(
+                    $submission,
+                    $section,
+                    $section->subtopic_ids ?? [],
+                    $section->topic_ids ?? [],
+                    (int) $subjectExam->academic_subject_id
+                );
+            }
+        }
+    }
+
+    /**
+     * Load questions for a section, using per-submission questions if available.
+     */
+    private function loadQuestionsForSection(
+        MockExamSubmission $submission,
+        $section,
+        ?array $randomOrder
+    ) {
+        // Check if this section's subject exam uses random questions
+        $subjectExam = $section->subjectExam;
+        if ($subjectExam && $subjectExam->usesRandomQuestions()) {
+            // Load per-submission questions
+            $questions = \App\MockExam\Models\MockExamSubmissionQuestion::where(
+                'mock_exam_submission_id',
+                $submission->id
+            )
+                ->where('mock_exam_section_id', $section->id)
+                ->orderBy('order')
+                ->get();
+
+            // Apply random order if section is randomized
+            if ($section->is_randomized && $randomOrder) {
+                $questions = $questions->sortBy(fn ($q) => array_search($q->id, $randomOrder));
+            }
+
+            return $questions;
+        }
+
+        // Fall back to the existing behavior
+        return $section->getQuestionsForParticipant($randomOrder);
     }
 }

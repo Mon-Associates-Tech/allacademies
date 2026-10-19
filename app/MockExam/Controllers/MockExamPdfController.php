@@ -7,7 +7,12 @@ use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSubjectExam;
 use App\MockExam\Models\MockExamTemplate;
 use App\MockExam\Services\MockExamPdfService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Spatie\Browsershot\Browsershot;
 
 class MockExamPdfController extends Controller
 {
@@ -59,6 +64,107 @@ class MockExamPdfController extends Controller
         );
     }
 
+    /**
+     * Generate and download the subject exam as a PDF file using Browsershot.
+     */
+    public function subjectExamDownload(MockExam $mockExam, MockExamSubjectExam $subjectExam): Response
+    {
+        $this->ensureOwner($mockExam);
+        $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
+
+        $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
+        $data = $this->viewService->subjectExamData($subjectExam, $fontSize);
+
+        // Inline all images as base64 data URIs so Browsershot doesn't need network access
+        $this->inlineImagesForPdf($subjectExam, $data);
+
+        $html = view('mock-exam.pdf.subject-exam-pdf', $data)->render();
+
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectExam->getDisplayTitle()) . '.pdf';
+
+        $pdf = Browsershot::html($html)
+            ->emulateMedia('print')
+            ->showBackground()
+            ->format('A4')
+            ->margins(15, 15, 15, 15)
+            ->noSandbox()
+            ->setOption('args', ['--disable-dev-shm-usage'])
+            ->timeout(120)
+            ->pdf();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Convert all image storage paths to base64 data URIs so Browsershot
+     * can render the PDF without fetching external resources.
+     */
+    private function inlineImagesForPdf(MockExamSubjectExam $subjectExam, array &$data): void
+    {
+        // Front page PDF images (from template upload mode)
+        $frontPageConfig = $subjectExam->template->front_page_config ?? null;
+        if (!empty($frontPageConfig['attachment_pdf_images'])) {
+            $images = $frontPageConfig['attachment_pdf_images'];
+            foreach ($images as $i => $path) {
+                $images[$i] = $this->toBase64DataUri($path);
+            }
+            $frontPageConfig['attachment_pdf_images'] = $images;
+            $subjectExam->template->front_page_config = $frontPageConfig;
+        }
+
+        // Section attachment images
+        foreach ($subjectExam->sections as $section) {
+            // PDF attachment images (array)
+            if (!empty($section->attachment_pdf_images)) {
+                $images = $section->attachment_pdf_images;
+                foreach ($images as $i => $path) {
+                    $images[$i] = $this->toBase64DataUri($path);
+                }
+                $section->attachment_pdf_images = $images;
+            }
+
+            // Single image attachment
+            if (!empty($section->attachment_image_path)) {
+                $section->attachment_image_path = $this->toBase64DataUri($section->attachment_image_path);
+            }
+        }
+
+        // Identity section images (logos)
+        if (!empty($data['identity']['rows'])) {
+            foreach ($data['identity']['rows'] as &$row) {
+                foreach ($row as &$item) {
+                    if (isset($item['type']) && $item['type'] === 'image' && !empty($item['value'])) {
+                        $item['value'] = $this->toBase64DataUri($item['value']);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Read a file from public storage and return it as a base64 data URI.
+     */
+    private function toBase64DataUri(string $path): string
+    {
+        if (str_starts_with($path, 'data:')) {
+            return $path; // already a data URI
+        }
+
+        $fullPath = Storage::disk('public')->path($path);
+        if (!file_exists($fullPath)) {
+            return ''; // return empty if file not found
+        }
+
+        $content = file_get_contents($fullPath);
+        $mimeType = mime_content_type($fullPath);
+        $base64 = base64_encode($content);
+
+        return 'data:' . $mimeType . ';base64,' . $base64;
+    }
+
     public function previewSubjectExamPage(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
     {
         $this->ensureOwner($mockExam);
@@ -71,6 +177,46 @@ class MockExamPdfController extends Controller
             'subjectExam',
             'fontSize'
         ));
+    }
+
+    /**
+     * Serve the editable version of the subject exam preview.
+     */
+    public function editableSubjectExam(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
+    {
+        $this->ensureOwner($mockExam);
+        $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
+
+        $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
+
+        return view('mock-exam.pdf.subject-exam-editable', [
+            'subjectExam' => $subjectExam,
+            'fontSize'    => $fontSize,
+            'layoutConfig' => $subjectExam->layout_config ?? [],
+        ]);
+    }
+
+    /**
+     * Save layout config for a subject exam.
+     */
+    public function saveLayout(Request $request, MockExam $mockExam, MockExamSubjectExam $subjectExam): JsonResponse
+    {
+        $this->ensureOwner($mockExam);
+        $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
+
+        $validated = $request->validate([
+            'layout_config' => 'required|array',
+        ]);
+
+        // Merge incoming config with existing config to preserve section-level settings
+        $existingConfig = $subjectExam->layout_config ?? [];
+        $mergedConfig = array_merge($existingConfig, $validated['layout_config']);
+
+        $subjectExam->update([
+            'layout_config' => $mergedConfig,
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
     /**

@@ -132,13 +132,13 @@
 
     {{-- ── App assets ─────────────────────────────────────────────────────────── --}}
     <style>[x-cloak] { display: none !important; }</style>
+    @livewireScriptConfig
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
     @livewireStyles
 </head>
 <body {{ $attributes->merge(['class' => 'antialiased bg-gray-100']) }}>
     {{ $slot }}
-    @livewireScriptConfig
     @stack('scripts')
 </body>
 </html>

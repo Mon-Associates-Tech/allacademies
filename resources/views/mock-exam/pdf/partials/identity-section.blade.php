@@ -54,7 +54,10 @@
                 @foreach ($row as $item)
                     <div class="identity-row-cell">
                         @if ($item['type'] === 'image')
-                            @if ($imageUrlStyle === 'path')
+                            @if (str_starts_with($item['value'], 'data:'))
+                                <img alt="logo" src="{{ $item['value'] }}"
+                                    class="identity-logo">
+                            @elseif ($imageUrlStyle === 'path')
                                 <img alt="logo" src="{{ \Illuminate\Support\Facades\Storage::disk('public')->path($item['value']) }}"
                                     class="identity-logo">
                             @else

@@ -4,6 +4,8 @@ namespace App\MockExam\Services;
 
 use App\MockExam\Models\MockExamQuestion;
 use App\MockExam\Models\MockExamSection;
+use App\MockExam\Models\MockExamSubmission;
+use App\MockExam\Models\MockExamSubmissionQuestion;
 use App\Models\AcademicSubtopic;
 use App\Models\AcademicTopic;
 use App\Models\EssayQuestion;
@@ -205,6 +207,66 @@ class MockExamQuestionService
     }
 
     /**
+     * Pull questions from the source bank for a submission and persist them
+     * to mock_exam_submission_questions so each participant gets unique questions.
+     * Returns the count of questions actually created.
+     */
+    public function pullQuestionsForSubmission(
+        MockExamSubmission $submission,
+        MockExamSection $section,
+        array $subtopicIds,
+        array $topicIds,
+        int $academicSubjectId
+    ): int {
+        $resolved = $this->resolveTopicAndSubtopicIds($subtopicIds, $topicIds, $academicSubjectId);
+
+        if (empty($resolved['subtopic_ids']) && empty($resolved['topic_ids'])) {
+            Log::warning('MockExamQuestionService: no topics or subtopics resolved for submission', [
+                'submission_id'      => $submission->id,
+                'section_id'         => $section->id,
+                'subtopic_ids'       => $subtopicIds,
+                'topic_ids'          => $topicIds,
+                'academic_subject_id'=> $academicSubjectId,
+            ]);
+            return 0;
+        }
+
+        $typeCounts = $this->buildTypeCounts($section);
+
+        $order   = 1;
+        $created = 0;
+
+        foreach ($typeCounts as $type => $count) {
+            if ($count <= 0) {
+                continue;
+            }
+
+            $sourceQuestions = $this->fetchSourceQuestions(
+                $type,
+                $resolved['subtopic_ids'],
+                $resolved['topic_ids'],
+                $count
+            );
+
+            foreach ($sourceQuestions as $source) {
+                try {
+                    $this->persistSubmissionQuestion($submission, $section, $source, $type, $order++);
+                    $created++;
+                } catch (\Throwable $e) {
+                    Log::error('MockExamQuestionService: failed to persist submission question', [
+                        'submission_id' => $submission->id,
+                        'source_type'   => $type,
+                        'source_id'     => $source->id,
+                        'error'         => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        return $created;
+    }
+
+    /**
      * Snapshot a source question into mock_exam_questions.
      * Uses the HasQuestionAndAnswer trait methods on the source model to
      * extract clean text regardless of the Mark cast.
@@ -242,6 +304,45 @@ class MockExamQuestionService
             'marks'                => (float) ($source->score ?? $section->marks_per_question),
             'order'                => $order,
             'difficulty_level'     => $source->difficulty_level ?? null,
+        ]);
+    }
+
+    /**
+     * Snapshot a source question into mock_exam_submission_questions for a specific submission.
+     */
+    private function persistSubmissionQuestion(
+        MockExamSubmission $submission,
+        MockExamSection $section,
+        Model $source,
+        string $type,
+        int $order
+    ): MockExamSubmissionQuestion {
+        $processed = $source->processQuestionModel($source);
+
+        $questionText = $processed['question'] ?? '';
+        $answer       = $processed['answer']   ?? null;
+        $options      = $processed['options']  ?? [];
+
+        $keywords = null;
+        if (isset($source->keywords)) {
+            $keywords = is_array($source->keywords)
+                ? $source->keywords
+                : (is_string($source->keywords) ? json_decode($source->keywords, true) : null);
+        }
+
+        return MockExamSubmissionQuestion::create([
+            'mock_exam_submission_id' => $submission->id,
+            'mock_exam_section_id'    => $section->id,
+            'source_question_id'      => $source->id,
+            'source_type'             => $type,
+            'question_text'           => $questionText,
+            'options'                 => ! empty($options) ? $options : null,
+            'correct_answer'          => $type !== 'essay' ? $answer : null,
+            'answer_explanation'      => $type === 'essay'  ? $answer : null,
+            'answer_keywords'         => $keywords,
+            'marks'                   => (float) ($source->score ?? $section->marks_per_question),
+            'order'                   => $order,
+            'difficulty_level'        => $source->difficulty_level ?? null,
         ]);
     }
 }

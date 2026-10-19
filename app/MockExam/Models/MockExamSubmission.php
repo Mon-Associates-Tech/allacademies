@@ -5,6 +5,7 @@ namespace App\MockExam\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MockExamSubmission extends Model
 {
@@ -70,6 +71,11 @@ class MockExamSubmission extends Model
     public function gradedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'graded_by');
+    }
+
+    public function questions(): HasMany
+    {
+        return $this->hasMany(MockExamSubmissionQuestion::class, 'mock_exam_submission_id');
     }
 
     // ─── Status helpers ───────────────────────────────────────────────────────
@@ -154,13 +160,25 @@ class MockExamSubmission extends Model
     public function autoGrade(string $grade): void
     {
         $exam      = $this->mockExam;
-        $questions = MockExamQuestion::whereIn(
-            'mock_exam_section_id',
-            MockExamSection::whereIn(
-                'mock_exam_subject_exam_id',
-                MockExamSubjectExam::where('mock_exam_id', $exam->id)->pluck('id')
-            )->pluck('id')
-        )->get();
+
+        // Check if any subject exam uses random questions (per-submission questions)
+        $hasRandomQuestions = MockExamSubjectExam::where('mock_exam_id', $exam->id)
+            ->where('uses_random_questions', true)
+            ->exists();
+
+        if ($hasRandomQuestions) {
+            // Use per-submission questions
+            $questions = $this->questions()->get();
+        } else {
+            // Use fixed questions from mock_exam_questions
+            $questions = MockExamQuestion::whereIn(
+                'mock_exam_section_id',
+                MockExamSection::whereIn(
+                    'mock_exam_subject_exam_id',
+                    MockExamSubjectExam::where('mock_exam_id', $exam->id)->pluck('id')
+                )->pluck('id')
+            )->get();
+        }
 
         $totalScore    = 0.0;
         $totalMarks    = 0.0;

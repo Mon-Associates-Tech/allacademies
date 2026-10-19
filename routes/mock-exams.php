@@ -91,11 +91,19 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'subjectExam'])
             ->name('subject-exams.pdf.preview');
 
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExam'])
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/download', [MockExamPdfController::class, 'subjectExamDownload'])
             ->name('subject-exams.pdf.download');
 
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])
             ->name('subject-exams.pdf.page');
+
+        // Editable preview (layout editor)
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/edit', [MockExamPdfController::class, 'editableSubjectExam'])
+            ->name('subject-exams.pdf.edit');
+
+        // Save layout config
+        Route::post('/{mockExam}/subject-exams/{subjectExam}/layout', [MockExamPdfController::class, 'saveLayout'])
+            ->name('subject-exams.layout.save');
 
         // Subscription-based preview routes
         Route::get('/{mockExam}/subscription-preview', [MockExamPdfController::class, 'previewPageFromSubscription'])

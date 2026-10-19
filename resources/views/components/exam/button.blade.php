@@ -1,4 +1,4 @@
-@props(['target' => null, 'loading' => 'Saving…', 'variant' => 'primary'])
+@props(['target' => null, 'loading' => 'Saving…', 'variant' => 'primary', 'clientLoading' => false])
 
 @php
     $variants = [
@@ -17,10 +17,16 @@
 <button
     {{ $attributes->merge(['class' => "inline-flex items-center justify-center whitespace-nowrap rounded px-5 py-2.5 text-[13.5px] font-semibold tracking-wide transition hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-0 disabled:cursor-wait disabled:opacity-65 disabled:hover:translate-y-0 motion-reduce:transition-none {$variantClass}"]) }}
     @if($target) wire:loading.attr="disabled" wire:target="{{ $target }}" @endif
+    @if($clientLoading) data-client-loading="true" @endif
 >
     @if($target)
         <span wire:loading.remove wire:target="{{ $target }}">{{ $slot }}</span>
         <span wire:loading wire:target="{{ $target }}">
+            <span class="mr-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent align-[-2px]"></span>{{ $loading }}
+        </span>
+    @elseif($clientLoading)
+        <span class="client-btn-default inline-flex items-center">{{ $slot }}</span>
+        <span class="client-btn-loading hidden inline-flex items-center">
             <span class="mr-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent align-[-2px]"></span>{{ $loading }}
         </span>
     @else

@@ -46,6 +46,8 @@ class BookManagement extends Component
 
     public $existingPdf;
 
+    public $removePdfFile = false;
+
     public $annualSubscriptionFee = 0;
 
     public $subscriptionConditions;
@@ -156,8 +158,11 @@ class BookManagement extends Component
 
         // Handle PDF file
         $pdfPath = $book->pdf_file;
-        if ($this->pdfFile) {
-            // Delete old PDF if exists
+        if ($this->removePdfFile) {
+            // User removed the existing PDF
+            $pdfPath = null;
+        } elseif ($this->pdfFile) {
+            // New PDF uploaded
             if ($pdfPath && Storage::disk('public')->exists($pdfPath)) {
                 Storage::disk('public')->delete($pdfPath);
             }
@@ -288,6 +293,15 @@ class BookManagement extends Component
     {
         $this->showForm = false;
         $this->resetForm();
+    }
+
+    public function removeExistingPdfFile()
+    {
+        if ($this->existingPdf) {
+            Storage::disk('public')->delete($this->existingPdf);
+        }
+        $this->removePdfFile = true;
+        $this->existingPdf = null;
     }
 
     public function sortBy($field)
