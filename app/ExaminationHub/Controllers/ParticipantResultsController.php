@@ -258,6 +258,7 @@ class ParticipantResultsController extends Controller
 
         try {
             $pdf = Browsershot::html($html)
+                ->setIncludePath('$PATH:/usr/local/bin')
                 ->setContentUrl($request->root())
                 ->showBackground()
                 ->landscape()

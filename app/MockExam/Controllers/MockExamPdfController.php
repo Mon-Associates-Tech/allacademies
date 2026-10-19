@@ -83,6 +83,7 @@ class MockExamPdfController extends Controller
         $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectExam->getDisplayTitle()) . '.pdf';
 
         $pdf = Browsershot::html($html)
+            ->setIncludePath('$PATH:/usr/local/bin')
             ->emulateMedia('print')
             ->showBackground()
             ->format('A4')

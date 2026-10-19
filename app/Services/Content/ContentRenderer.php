@@ -42,6 +42,7 @@ class ContentRenderer
         ])->render();
 
         $browsershot = Browsershot::html($html)
+            ->setIncludePath('$PATH:/usr/local/bin')
             ->noSandbox()
             ->emulateMedia('print')
             ->showBackground()
