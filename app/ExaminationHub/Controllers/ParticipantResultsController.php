@@ -259,6 +259,7 @@ class ParticipantResultsController extends Controller
         try {
             $pdf = Browsershot::html($html)
                 ->setIncludePath('$PATH:/usr/local/bin')
+                ->setNodeEnv(['PUPPETEER_CACHE_DIR' => '/usr/local/share/puppeteer'])
                 ->setContentUrl($request->root())
                 ->showBackground()
                 ->landscape()

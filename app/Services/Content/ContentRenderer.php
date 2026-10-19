@@ -43,6 +43,7 @@ class ContentRenderer
 
         $browsershot = Browsershot::html($html)
             ->setIncludePath('$PATH:/usr/local/bin')
+            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => '/usr/local/share/puppeteer'])
             ->noSandbox()
             ->emulateMedia('print')
             ->showBackground()
