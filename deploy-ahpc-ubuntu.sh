@@ -122,7 +122,8 @@ server {
     error_log  /var/log/nginx/ahpc.error.log warn;
 
     # ── Upload size ───────────────────────────────────────────────────────────
-    client_max_body_size 64M;
+    # Allow uploads up to 100MB (for PDF books, audio, video)
+    client_max_body_size 100M;
 
     # ── Laravel front-controller ──────────────────────────────────────────────
     location / {
@@ -248,6 +249,82 @@ if [[ -f "$APP_DIR/.env" ]]; then
 fi
 
 # ==============================================================================
+#  7. NODE.JS & PUPPETEER — required by Spatie Browsershot for PDF generation
+# ==============================================================================
+section "Node.js and Puppeteer"
+
+if ! command -v node &>/dev/null; then
+    info "Installing Node.js and Chromium dependencies..."
+    apt-get update -qq
+    apt-get install -y nodejs npm \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libdrm2 \
+        libgbm1 \
+        libgtk-3-0 \
+        libnspr4 \
+        libnss3 \
+        libx11-xcb1 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxrandr2 \
+        libxshmfence1 \
+        libpango-1.0-0 \
+        libcairo2 \
+        libasound2t64 \
+        libxss1 \
+        libglib2.0-0 \
+        libdbus-1-3
+    ok "Node.js installed: $(node --version)"
+else
+    info "Node.js already installed: $(node --version)"
+fi
+
+# Set a system-wide Puppeteer cache directory so all users (root, deploy, www-data)
+# share the same Chromium installation. PHP-FPM runs as www-data, so without this,
+# Puppeteer would look in /var/www/.cache/puppeteer and not find the browser.
+export PUPPETEER_CACHE_DIR=/usr/local/share/puppeteer
+mkdir -p "$PUPPETEER_CACHE_DIR"
+
+# Install Puppeteer globally for Browsershot
+if ! npx puppeteer --version &>/dev/null; then
+    info "Installing Puppeteer..."
+    npm install -g puppeteer \
+        && ok "Puppeteer installed" \
+        || warn "Puppeteer install failed — PDF generation may not work"
+else
+    info "Puppeteer already installed"
+fi
+
+# Install chrome-headless-shell explicitly to the shared cache directory
+npx puppeteer browsers install chrome-headless-shell \
+    || warn "chrome-headless-shell install failed — PDF generation may not work"
+
+# Make the cache directory world-readable so www-data can access it
+chmod -R a+rX "$PUPPETEER_CACHE_DIR"
+
+# Set PUPPETEER_CACHE_DIR in PHP-FPM environment so BrowserShot can find Chromium
+PHP_FPM_POOL_CONF=$(find /etc/php -name 'www.conf' -path '*/pool.d/*' | head -1)
+if [[ -n "$PHP_FPM_POOL_CONF" && -f "$PHP_FPM_POOL_CONF" ]]; then
+    sed -i '/^env\[PUPPETEER_CACHE_DIR\]/d' "$PHP_FPM_POOL_CONF"
+    echo 'env[PUPPETEER_CACHE_DIR] = /usr/local/share/puppeteer' >> "$PHP_FPM_POOL_CONF"
+    ok "PUPPETEER_CACHE_DIR set in PHP-FPM pool config"
+    
+    # Increase PHP upload limits for large file uploads (PDF books, audio, video)
+    PHP_INI=$(find /etc/php -name 'php.ini' -path '*/fpm/*' | head -1)
+    if [[ -n "$PHP_INI" && -f "$PHP_INI" ]]; then
+        sed -i 's/^upload_max_filesize = .*/upload_max_filesize = 100M/' "$PHP_INI"
+        sed -i 's/^post_max_size = .*/post_max_size = 110M/' "$PHP_INI"
+        sed -i 's/^max_execution_time = .*/max_execution_time = 300/' "$PHP_INI"
+        sed -i 's/^max_input_time = .*/max_input_time = 300/' "$PHP_INI"
+        ok "PHP upload limits increased to 100MB"
+    fi
+fi
+
+ok "Puppeteer cache: $PUPPETEER_CACHE_DIR"
+
+# ==============================================================================
 #  7. COMPOSER
 # ==============================================================================
 section "Composer dependencies"
@@ -267,7 +344,7 @@ else
 fi
 
 # ==============================================================================
-#  8. LARAVEL CACHES
+#  9. LARAVEL CACHES
 # ==============================================================================
 section "Laravel optimisation"
 
@@ -280,7 +357,7 @@ sudo -u "${WEB_USER}" php artisan view:cache \
     && ok "view:cache"   || warn "view:cache failed"
 
 # ==============================================================================
-#  9. HOSTNAME
+#  10. HOSTNAME
 # ==============================================================================
 section "Setting hostname"
 
@@ -299,7 +376,7 @@ echo "127.0.1.1   ${APP_HOSTNAME}.local ${APP_HOSTNAME}" >> /etc/hosts
 ok "/etc/hosts updated"
 
 # ==============================================================================
-#  10. AVAHI — mDNS so LAN devices reach http://ahpc.local automatically
+#  11. AVAHI — mDNS so LAN devices reach http://ahpc.local automatically
 #
 #  This is the only "network" change the script makes.
 #  Avahi announces this machine's hostname over mDNS (port 5353/udp multicast).
@@ -346,7 +423,7 @@ systemctl restart avahi-daemon
 ok "avahi-daemon running — ${APP_HOSTNAME}.local is now visible on the LAN"
 
 # ==============================================================================
-#  11. FIREWALL
+#  12. FIREWALL
 # ==============================================================================
 section "Firewall"
 
@@ -359,7 +436,7 @@ else
 fi
 
 # ==============================================================================
-#  12. NGINX — test and reload
+#  13. NGINX — test and reload
 # ==============================================================================
 section "Testing and reloading Nginx"
 
@@ -374,7 +451,7 @@ systemctl is-active --quiet "$FPM_SERVICE" \
     || { systemctl restart "$FPM_SERVICE" && ok "$FPM_SERVICE restarted"; }
 
 # ==============================================================================
-#  13. SMOKE TEST
+#  14. SMOKE TEST
 # ==============================================================================
 section "Smoke test"
 
@@ -389,7 +466,7 @@ case "$HTTP_CODE" in
 esac
 
 # ==============================================================================
-#  14. SUMMARY
+#  15. SUMMARY
 # ==============================================================================
 SERVER_IP=$(ip route get 1.1.1.1 2>/dev/null \
     | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}' | head -1)

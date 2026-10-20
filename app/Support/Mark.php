@@ -13,6 +13,7 @@ class Mark implements Castable, Wireable, JsonSerializable
 {
     public ?string $summary;
     public ?HtmlString $html;
+    public ?string $renderHash = null;
 
     public function __construct(
         public ?string $up,
@@ -45,6 +46,18 @@ class Mark implements Castable, Wireable, JsonSerializable
         // caller gives raw source + optional format.
         if (array_key_exists('raw', $array) && is_string($array['raw'])) {
             $format = $array['format'] ?? static::detectFormat($array['raw']);
+
+            // Cache hit: if we have stored rendered HTML and a matching render hash,
+            // skip the expensive Node.js render and reuse the cached result.
+            $down = $array['down'] ?? null;
+            $renderHash = $array['render_hash'] ?? null;
+            if (is_string($down) && trim($down) !== '' && is_string($renderHash)) {
+                $expectedHash = static::renderHash($array['raw'], $format);
+                if ($renderHash === $expectedHash) {
+                    $upText = $array['up'] ?? static::toPlainText($down);
+                    return new static($upText, $down, $array['raw'], $format);
+                }
+            }
 
             return $format === 'markdown'
                 ? static::fromMarkdown($array['raw'])
@@ -100,7 +113,9 @@ class Mark implements Castable, Wireable, JsonSerializable
         $html = app(MarkdownMathService::class)->render($markdown);
         $text ??= static::toPlainText($html);
 
-        return new static($text, $html, $markdown, 'markdown');
+        $mark = new static($text, $html, $markdown, 'markdown');
+        $mark->renderHash = static::renderHash($markdown, 'markdown');
+        return $mark;
     }
 
     public static function fromHtml(?string $html, ?string $text = null): static
@@ -122,6 +137,7 @@ class Mark implements Castable, Wireable, JsonSerializable
             'down' => $this->down,
             'raw' => $this->raw,
             'format' => $this->format,
+            'render_hash' => $this->renderHash,
         ];
     }
 
@@ -156,6 +172,16 @@ class Mark implements Castable, Wireable, JsonSerializable
         }
 
         return 'markdown';
+    }
+
+    /**
+     * Compute a hash of the raw source used as a cache key for rendered HTML.
+     * When the raw source hasn't changed, the stored render_hash matches and we
+     * skip the expensive Node.js render, reusing the cached HTML instead.
+     */
+    public static function renderHash(string $raw, string $format): string
+    {
+        return hash('xxh128', $raw . '|' . $format);
     }
 
     public static function toPlainText(?string $html): ?string

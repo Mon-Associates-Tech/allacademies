@@ -1,8 +1,8 @@
-@props(['headers' => []])
+@props(['headers' => [], 'tableAttributes' => null, 'scrollable' => true])
 
 <section {{ $attributes->merge(['class' => 'overflow-hidden rounded-md border border-line bg-surface shadow-[0_1px_2px_rgba(20,24,34,0.04),0_18px_40px_-30px_rgba(20,24,34,0.25)]']) }}>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div class="{{ $scrollable ? 'overflow-x-auto' : 'overflow-hidden' }}">
+        <table class="w-full text-sm" {{ $tableAttributes }}>
             @isset($head)
                 <thead>{{ $head }}</thead>
             @elseif(count($headers))
