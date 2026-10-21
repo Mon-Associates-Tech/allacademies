@@ -333,7 +333,7 @@
         .fp-heading-h1 {
             font-size: {{ ($fontSize ?? 11) + 9 }}pt;
             font-weight: 700;
-            text-transform: uppercase;
+            /*text-transform: uppercase;*/
             letter-spacing: 0.06em;
             color: #111827;
             line-height: 1.35;
@@ -352,7 +352,7 @@
             font-size: {{ ($fontSize ?? 11) + 1 }}pt;
             font-weight: 600;
             color: #4b5563;
-            text-transform: uppercase;
+            /*text-transform: uppercase;*/
             letter-spacing: 0.08em;
             line-height: 1.4;
         }
