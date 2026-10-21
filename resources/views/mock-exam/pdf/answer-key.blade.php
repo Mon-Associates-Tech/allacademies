@@ -34,19 +34,27 @@
     </div>
 
     {{-- ── DOCUMENT CONTENT (Screen & Print Optimized) ── --}}
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 print:max-w-none print:px-0">
         <div
-            class="bg-white shadow-sm border border-slate-200 rounded-sm p-8 sm:p-12 print:shadow-none print:border-none print:p-0 print:max-w-none print:bg-transparent">
+            class="bg-white shadow-sm border border-slate-200 rounded-sm p-8 sm:p-12 print:shadow-none print:border-none print:p-0 print:max-w-none print:bg-transparent print:w-full print:overflow-visible">
 
             {{-- Print-Only Header --}}
             <div class="hidden print:block border-b-2 border-slate-900 pb-4 mb-8">
-                <h1 class="text-2xl print:text-4xl font-bold text-slate-900 font-serif uppercase tracking-wider">{{ $mockExam->title }}</h1>
-                <div class="flex justify-between items-center mt-2 text-sm print:text-base text-slate-600 uppercase tracking-wide">
-                    <span>Answer Key / Marking Scheme</span>
-                    <span>Generated: {{ now()->format('d M Y') }}</span>
-                </div>
+                @if(isset($subjectExam) && $subjectExam)
+                    <h1 class="text-2xl print:text-4xl font-bold text-slate-900 font-serif uppercase tracking-wider">{{ $subjectExam->getDisplayTitle() }}</h1>
+                    <div class="flex justify-between items-center mt-2 text-sm print:text-base text-slate-600 uppercase tracking-wide">
+                        <span>{{ $mockExam->title }} — Answer Key</span>
+                        <span>Generated: {{ now()->format('d M Y') }}</span>
+                    </div>
+                @else
+                    <h1 class="text-2xl print:text-4xl font-bold text-slate-900 font-serif uppercase tracking-wider">{{ $mockExam->title }}</h1>
+                    <div class="flex justify-between items-center mt-2 text-sm print:text-base text-slate-600 uppercase tracking-wide">
+                        <span>Answer Key / Marking Scheme</span>
+                        <span>Generated: {{ now()->format('d M Y') }}</span>
+                    </div>
+                @endif
                 <div
-                    class="mt-4 text-xs print:text-sm font-bold text-red-700 uppercase tracking-widest text-center border border-red-600 py-1">
+                    class="mt-4 text-xs print:text-base font-bold text-red-700 uppercase tracking-widest text-center border border-red-600 py-1">
                     ⚠ Confidential – Instructor Use Only – Do Not Distribute ⚠
                 </div>
             </div>
@@ -54,20 +62,29 @@
             {{-- Screen-Only Title --}}
             <div class="print:hidden mb-8 border-b border-slate-200 pb-6">
                 <h1 class="text-3xl font-bold text-slate-900 font-serif tracking-tight">{{ $mockExam->title }}</h1>
+                @if(isset($subjectExam) && $subjectExam)
+                    <p class="text-slate-500 mt-1 text-lg">{{ $subjectExam->getDisplayTitle() }}</p>
+                @endif
                 <p class="text-slate-500 mt-2 uppercase tracking-widest text-sm font-medium">Answer Key / Marking
                     Scheme</p>
             </div>
 
             {{-- Subject Exams --}}
             <div class="space-y-12 print:space-y-0">
-                @foreach($mockExam->subjectExams as $seIdx => $se)
+                @php
+                    // If a single subject exam is specified, only render that one
+                    $subjectExamsToRender = isset($subjectExam) && $subjectExam
+                        ? collect([$subjectExam])
+                        : $mockExam->subjectExams;
+                @endphp
+                @foreach($subjectExamsToRender as $seIdx => $se)
                     <div class="{{ $seIdx > 0 ? 'print:break-before-page' : '' }} space-y-8 print:space-y-6">
 
                         {{-- Subject Header --}}
                         <div
                             class="border-l-4 border-slate-900 bg-slate-900 text-white p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 print:bg-transparent print:text-black print:border-l-4 print:border-slate-700 print:p-0 print:border-b-3 print:pb-3 print:mb-4">
-                            <h2 class="text-xl print:text-3xl font-bold font-serif uppercase tracking-wide">{{ $se->getDisplayTitle() }}</h2>
-                            <span class="text-sm print:text-base font-medium text-slate-300 print:text-slate-600">
+                            <h2 class="text-xl print:text-4xl font-bold font-serif uppercase tracking-wide">{{ $se->getDisplayTitle() }}</h2>
+                            <span class="text-sm print:text-lg font-medium text-slate-300 print:text-slate-600">
                                 Total: {{ number_format($se->sections->sum(fn($s) => $s->getTotalMarks()), 1) }} marks
                             </span>
                         </div>
@@ -83,8 +100,8 @@
                             <div class="space-y-6 print:space-y-6">
                                 {{-- Section Header --}}
                                 <div class="flex justify-between items-end border-b-2 border-slate-300 pb-2">
-                                    <h3 class="text-lg print:text-2xl font-bold text-slate-800 uppercase tracking-wide">{{ $section->title }}</h3>
-                                    <span class="text-sm print:text-base text-slate-500 font-medium">
+                                    <h3 class="text-lg print:text-3xl font-bold text-slate-800 uppercase tracking-wide">{{ $section->title }}</h3>
+                                    <span class="text-sm print:text-lg text-slate-500 font-medium">
                                         {{ number_format($section->getTotalMarks(), 1) }} marks
                                     </span>
                                 </div>
@@ -118,15 +135,15 @@
 
                                             <div
                                                 class="mb-2 break-inside-avoid flex items-baseline gap-2 border-b border-slate-100 pb-1 print:border-none print:pb-2 print:mb-3">
-                <span class="w-8 shrink-0 font-mono text-sm print:text-lg text-slate-500">
+                <span class="w-8 shrink-0 font-mono text-sm print:text-xl text-slate-500">
                     {{ $qNum }}.
                 </span>
 
-                                                <span class="flex-1 font-serif text-sm print:text-xl {{ $ansClass }}">
+                                                <span class="flex-1 font-serif text-sm print:text-2xl {{ $ansClass }}">
                     {{ $answer }}
                 </span>
 
-                                                <span class="text-xs print:text-base text-slate-400 shrink-0">
+                                                <span class="text-xs print:text-lg text-slate-400 shrink-0">
                     ({{ $q->marks }} mk)
                 </span>
                                             </div>
@@ -142,35 +159,35 @@
                                                 class="border border-slate-200 border-l-4 border-l-slate-600 rounded-sm p-5 bg-slate-50 print:bg-transparent print:border-slate-400 print:p-4 print:break-inside-avoid print:mb-6">
                                                 <div class="flex justify-between items-start gap-4 mb-3 print:mb-4">
                                                     <div class="flex items-start gap-2">
-                                                        <span class="font-bold text-slate-900 shrink-0 text-sm print:text-lg">Q{{ $objQs->count() + $eIdx + 1 }}.</span>
-                                                        <p class="text-slate-800 text-sm print:text-lg leading-relaxed">
+                                                        <span class="font-bold text-slate-900 shrink-0 text-sm print:text-xl">Q{{ $objQs->count() + $eIdx + 1 }}.</span>
+                                                        <p class="text-slate-800 text-sm print:text-xl leading-relaxed">
                                                             <x-ui.latex :content="$question->question_text"/>
                                                         </p>
                                                     </div>
                                                     <span
-                                                        class="text-xs print:text-sm font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded shrink-0 print:bg-transparent print:border print:border-slate-400">
+                                                        class="text-xs print:text-base font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded shrink-0 print:bg-transparent print:border print:border-slate-400">
                                                         [{{ $question->marks }} marks]
                                                     </span>
                                                 </div>
 
                                                 <div class="mt-4 print:mt-6">
-                                                    <h4 class="text-xs print:text-sm font-bold text-slate-500 uppercase tracking-wider mb-1 border-b border-slate-200 pb-1">
+                                                    <h4 class="text-xs print:text-base font-bold text-slate-500 uppercase tracking-wider mb-1 border-b border-slate-200 pb-1">
                                                         Model Answer</h4>
                                                     @if($question->answer_explanation)
-                                                        <p class="text-slate-700 text-sm print:text-lg leading-relaxed">
+                                                        <p class="text-slate-700 text-sm print:text-xl leading-relaxed">
                                                             <x-ui.latex :content="$question->answer_explanation"/>
                                                         </p>
                                                     @else
-                                                        <p class="text-slate-400 text-sm print:text-lg italic">No model answer
+                                                        <p class="text-slate-400 text-sm print:text-xl italic">No model answer
                                                             stored.</p>
                                                     @endif
                                                 </div>
 
                                                 @if(!empty($question->answer_keywords))
                                                     <div class="mt-3 print:mt-4">
-                                                        <h4 class="text-xs print:text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                                        <h4 class="text-xs print:text-base font-bold text-slate-500 uppercase tracking-wider mb-1">
                                                             Key Terms / Keywords</h4>
-                                                        <p class="text-slate-600 text-xs print:text-base italic">
+                                                        <p class="text-slate-600 text-xs print:text-lg italic">
                                                             {{ implode('  ·  ', $question->answer_keywords) }}
                                                         </p>
                                                     </div>
@@ -209,7 +226,7 @@
                 height: auto !important;
                 overflow: visible !important;
                 background: #fff !important;
-                font-size: 14pt !important;
+                font-size: 12pt !important;
             }
 
             /*
@@ -258,17 +275,31 @@
                 overflow: visible !important;
             }
 
+            /* Prevent right-side clipping — constrain all containers to page width */
+            .max-w-5xl,
+            [class*="max-w-"] {
+                max-width: none !important;
+                width: 100% !important;
+            }
+
+            /* Ensure images render in PDF */
+            img {
+                max-width: 100% !important;
+                height: auto !important;
+                page-break-inside: avoid !important;
+            }
+
             /* ── GLOBAL: Scale up ALL text inside the answer key document ── */
             .bg-white.shadow-sm {
-                font-size: 14pt !important;
+                font-size: 16pt !important;
             }
 
             /* ── PRINT HEADER ── */
             .print-block h1 {
-                font-size: 24pt !important;
+                font-size: 28pt !important;
             }
             .print-block div span {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
             }
 
             /* ── SUBJECT HEADERS ── */
@@ -282,11 +313,11 @@
                 margin-bottom: 16px !important;
             }
             .border-l-4.bg-slate-900 h2 {
-                font-size: 20pt !important;
+                font-size: 24pt !important;
                 font-weight: 700 !important;
             }
             .border-l-4.bg-slate-900 span {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
             }
 
             /* ── SECTION HEADERS ── */
@@ -297,11 +328,11 @@
                 margin-bottom: 12px !important;
             }
             .flex.justify-between.items-end.border-b-2 h3 {
-                font-size: 16pt !important;
+                font-size: 20pt !important;
                 font-weight: 700 !important;
             }
             .flex.justify-between.items-end.border-b-2 span {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
             }
 
             /* ── OBJECTIVE ANSWER ROWS ── */
@@ -310,21 +341,21 @@
                 padding: 8px 0 !important;
                 margin-bottom: 8px !important;
                 border-bottom: 1px solid #cbd5e1 !important;
-                font-size: 14pt !important;
+                font-size: 16pt !important;
             }
             /* Question number inside answer row */
             .mb-2.break-inside-avoid.flex span.w-8 {
-                font-size: 14pt !important;
+                font-size: 16pt !important;
                 font-weight: 700 !important;
             }
             /* Answer text inside answer row */
             .mb-2.break-inside-avoid.flex .flex-1 {
-                font-size: 16pt !important;
+                font-size: 20pt !important;
                 font-weight: 700 !important;
             }
             /* Marks text inside answer row */
             .mb-2.break-inside-avoid.flex span.shrink-0 {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
             }
 
             /* ── ESSAY BLOCKS ── */
@@ -339,32 +370,32 @@
             }
             /* Essay question number */
             .border.border-slate-200.border-l-4 .font-bold.text-slate-900.shrink-0 {
-                font-size: 14pt !important;
+                font-size: 16pt !important;
             }
             /* Essay question text */
             .border.border-slate-200.border-l-4 .text-slate-800 {
-                font-size: 14pt !important;
+                font-size: 16pt !important;
                 line-height: 1.6 !important;
             }
             /* Essay marks badge */
             .border.border-slate-200.border-l-4 .font-bold.text-slate-500.bg-slate-200 {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
                 background: transparent !important;
                 border: 1px solid #94a3b8 !important;
             }
             /* Model Answer heading */
             .border.border-slate-200.border-l-4 h4 {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
             }
             /* Model Answer text */
             .border.border-slate-200.border-l-4 .text-slate-700,
             .border.border-slate-200.border-l-4 .text-slate-400 {
-                font-size: 14pt !important;
+                font-size: 16pt !important;
                 line-height: 1.6 !important;
             }
             /* Keywords */
             .border.border-slate-200.border-l-4 .text-slate-600.italic {
-                font-size: 12pt !important;
+                font-size: 14pt !important;
             }
 
             /* ── FOOTER ── */
@@ -375,7 +406,7 @@
                 right: 0;
                 border-top: 1px solid #cbd5e1;
                 padding: 8px 24px;
-                font-size: 10pt;
+                font-size: 12pt;
                 color: #64748b;
                 display: flex;
                 justify-content: space-between;

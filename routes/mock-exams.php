@@ -87,6 +87,13 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKey'])
             ->name('pdf.answer-key');
 
+        Route::get('/{mockExam}/pdf/answer-key/download', [MockExamPdfController::class, 'answerKeyDownload'])
+            ->name('pdf.answer-key.download');
+
+        // Subject-level answer key PDF download (single subject only)
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/answer-key/download', [MockExamPdfController::class, 'subjectAnswerKeyDownload'])
+            ->name('subject-exams.pdf.answer-key.download');
+
 // Subject exam HTML views.
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'subjectExam'])
             ->name('subject-exams.pdf.preview');
@@ -123,6 +130,14 @@ Route::middleware(['web', 'auth'])
         // Subscription-based answer key / marking scheme route
         Route::get('/{mockExam}/subscription-preview/answer-key', [MockExamPdfController::class, 'answerKeyFromSubscription'])
             ->name('subscription-preview.answer-key');
+
+        // Subscription-based answer key PDF download
+        Route::get('/{mockExam}/subscription-preview/answer-key/download', [MockExamPdfController::class, 'answerKeyDownloadFromSubscription'])
+            ->name('subscription-preview.answer-key.download');
+
+        // Subscription-based subject-level answer key PDF download
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/subscription-preview/answer-key/download', [MockExamPdfController::class, 'subjectAnswerKeyDownloadFromSubscription'])
+            ->name('subject-exams.subscription-preview.answer-key.download');
 
         // Quick generate from template
         Route::post('/{mockExam}/quick-generate', [MockExamTemplateController::class, 'quickGenerate'])->name('quick-generate');

@@ -457,11 +457,10 @@
                 </a>
 
                 <a
-                    href="{{ route('mock-exams.subscription-preview.answer-key', $mock) }}"
-                    target="_blank"
+                    href="{{ route('mock-exams.subscription-preview.answer-key.download', $mock) }}"
                     class="inline-flex items-center justify-center gap-1.5 rounded-md border border-purple-500/25 bg-purple-500/10 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-purple-400 transition hover:bg-purple-500/15"
                 >
-                    Marking Scheme
+                    Download Marking Scheme
 
                     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path

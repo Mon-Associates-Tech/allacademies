@@ -56,17 +56,32 @@ class MockExamPdfService
 
     /**
      * Data for the answer key view.
+     * If $subjectExam is provided, only that subject's data is included.
      */
-    public function answerKeyData(MockExam $mockExam): array
+    public function answerKeyData(MockExam $mockExam, ?MockExamSubjectExam $subjectExam = null): array
     {
         $mockExam->load([
             'subjectExams.academicSubject',
             'subjectExams.sections.questions',
+            'subjectExams.template',
         ]);
 
-        return [
+        $data = [
             'mockExam' => $mockExam,
         ];
+
+        if ($subjectExam !== null) {
+            // Ensure template is loaded for the single subject exam
+            if (!$subjectExam->relationLoaded('template')) {
+                $subjectExam->load('template');
+            }
+            if (!$subjectExam->relationLoaded('academicSubject')) {
+                $subjectExam->load('academicSubject');
+            }
+            $data['subjectExam'] = $subjectExam;
+        }
+
+        return $data;
     }
 
     /**

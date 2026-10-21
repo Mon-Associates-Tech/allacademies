@@ -85,7 +85,15 @@ class MockExamSubjectExam extends Model
 
     public function getDisplayTitle(): string
     {
-        return $this->title ?? $this->academicSubject?->name ?? 'Subject Exam';
+        // If a custom title is set and it differs from the template name, use it
+        if (!empty($this->title)) {
+            // If the title matches the template name, prefer the academic subject name
+            if ($this->template !== null && $this->title === $this->template->name) {
+                return $this->academicSubject?->name ?? 'Subject Exam';
+            }
+            return $this->title;
+        }
+        return $this->academicSubject?->name ?? 'Subject Exam';
     }
 
     public function getTotalMarks(): float

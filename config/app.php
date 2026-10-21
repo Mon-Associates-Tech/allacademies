@@ -223,4 +223,16 @@ return [
     'license_secret'  => env('LICENSE_HMAC_SECRET'),
     'license_binary'  => env('LICENSE_BINARY_PATH', '/usr/local/bin/license_guard'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Puppeteer Cache Directory
+    |--------------------------------------------------------------------------
+    |
+    | The directory where Puppeteer stores the Chrome/Chromium binaries.
+    | Defaults to the production path; override via .env for local development.
+    |
+    */
+
+    'puppeteer_cache_dir' => env('PUPPETEER_CACHE_DIR', '/usr/local/share/puppeteer'),
+
 ];

@@ -9,7 +9,7 @@ use App\MockExam\Models\MockExamTemplate;
 use App\MockExam\Services\MockExamPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Spatie\Browsershot\Browsershot;
@@ -51,6 +51,82 @@ class MockExamPdfController extends Controller
         );
     }
 
+    /**
+     * Generate and download the answer key / marking scheme as a PDF file.
+     */
+    public function answerKeyDownload(MockExam $mockExam): Response
+    {
+        $this->ensureOwner($mockExam);
+
+        $data = $this->viewService->answerKeyData($mockExam);
+        $this->inlineImagesForAnswerKey($data);
+        $html = view('mock-exam.pdf.answer-key', $data)->render();
+
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title) . '-answer-key.pdf';
+
+        $pdf = Browsershot::html($html)
+            ->setIncludePath('$PATH:/usr/local/bin')
+            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
+            ->emulateMedia('print')
+            ->showBackground()
+            ->format('A4')
+            ->margins(15, 15, 15, 15)
+            ->noSandbox()
+            ->setOption('args', ['--disable-dev-shm-usage'])
+            ->timeout(120)
+            ->pdf();
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('X-Accel-Buffering: no');
+        echo $pdf;
+        exit;
+    }
+
+    /**
+     * Download answer key for a single subject exam only.
+     */
+    public function subjectAnswerKeyDownload(MockExam $mockExam, MockExamSubjectExam $subjectExam): Response
+    {
+        $this->ensureOwner($mockExam);
+        $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
+
+        // Load sections, questions, template, and academic subject
+        $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
+        $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
+        $this->inlineImagesForAnswerKey($data);
+        $html = view('mock-exam.pdf.answer-key', $data)->render();
+
+        $subjectName = $subjectExam->getDisplayTitle();
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName) . '-answer-key.pdf';
+
+        $pdf = Browsershot::html($html)
+            ->setIncludePath('$PATH:/usr/local/bin')
+            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
+            ->emulateMedia('print')
+            ->showBackground()
+            ->format('A4')
+            ->margins(15, 15, 15, 15)
+            ->noSandbox()
+            ->setOption('args', ['--disable-dev-shm-usage'])
+            ->timeout(120)
+            ->pdf();
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('X-Accel-Buffering: no');
+        echo $pdf;
+        exit;
+    }
+
     public function subjectExam(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
     {
         $this->ensureOwner($mockExam);
@@ -72,32 +148,84 @@ class MockExamPdfController extends Controller
         $this->ensureOwner($mockExam);
         $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
 
+        // Increase limits for large PDF generation with base64 images
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');
+
+        // Flush any output buffers to prevent partial response issues
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Ensure template and academic subject are loaded for getDisplayTitle()
+        $subjectExam->loadMissing(['template', 'academicSubject']);
+
         $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
         $data = $this->viewService->subjectExamData($subjectExam, $fontSize);
 
         // Inline all images as base64 data URIs so Browsershot doesn't need network access
         $this->inlineImagesForPdf($subjectExam, $data);
 
-        $html = view('mock-exam.pdf.subject-exam-pdf', $data)->render();
+        try {
+            $html = view('mock-exam.pdf.subject-exam-pdf', $data)->render();
+        } catch (\Throwable $e) {
+            \Log::error('Subject exam PDF view rendering failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'subjectExam' => $subjectExam->id,
+            ]);
+            return response('Error generating PDF: ' . $e->getMessage(), 500, [
+                'Content-Type' => 'text/plain',
+            ]);
+        }
 
         $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectExam->getDisplayTitle()) . '.pdf';
 
-        $pdf = Browsershot::html($html)
-            ->setIncludePath('$PATH:/usr/local/bin')
-            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => '/usr/local/share/puppeteer'])
-            ->emulateMedia('print')
-            ->showBackground()
-            ->format('A4')
-            ->margins(15, 15, 15, 15)
-            ->noSandbox()
-            ->setOption('args', ['--disable-dev-shm-usage'])
-            ->timeout(120)
-            ->pdf();
+        try {
+            $pdf = Browsershot::html($html)
+                ->setIncludePath('$PATH:/usr/local/bin')
+                ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
+                ->emulateMedia('print')
+                ->showBackground()
+                ->format('A4')
+                ->margins(15, 15, 15, 15)
+                ->noSandbox()
+                ->setOption('args', ['--disable-dev-shm-usage'])
+                ->timeout(120)
+                ->pdf();
+        } catch (\Throwable $e) {
+            \Log::error('Browsershot PDF generation failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'subjectExam' => $subjectExam->id,
+                'htmlLength' => strlen($html),
+            ]);
+            return response('Error generating PDF: ' . $e->getMessage(), 500, [
+                'Content-Type' => 'text/plain',
+            ]);
+        }
 
-        return response($pdf, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        if (empty($pdf)) {
+            \Log::error('Browsershot returned empty PDF', [
+                'subjectExam' => $subjectExam->id,
+                'htmlLength' => strlen($html),
+            ]);
+            return response('Error: PDF generation produced empty output', 500, [
+                'Content-Type' => 'text/plain',
+            ]);
+        }
+
+        // Write PDF directly to response without buffering
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('X-Accel-Buffering: no');
+        echo $pdf;
+        exit;
     }
 
     /**
@@ -107,14 +235,16 @@ class MockExamPdfController extends Controller
     private function inlineImagesForPdf(MockExamSubjectExam $subjectExam, array &$data): void
     {
         // Front page PDF images (from template upload mode)
-        $frontPageConfig = $subjectExam->template->front_page_config ?? null;
-        if (!empty($frontPageConfig['attachment_pdf_images'])) {
-            $images = $frontPageConfig['attachment_pdf_images'];
-            foreach ($images as $i => $path) {
-                $images[$i] = $this->toBase64DataUri($path);
+        if ($subjectExam->template !== null) {
+            $frontPageConfig = $subjectExam->template->front_page_config ?? null;
+            if (!empty($frontPageConfig['attachment_pdf_images'])) {
+                $images = $frontPageConfig['attachment_pdf_images'];
+                foreach ($images as $i => $path) {
+                    $images[$i] = $this->toBase64DataUri($path);
+                }
+                $frontPageConfig['attachment_pdf_images'] = $images;
+                $subjectExam->template->front_page_config = $frontPageConfig;
             }
-            $frontPageConfig['attachment_pdf_images'] = $images;
-            $subjectExam->template->front_page_config = $frontPageConfig;
         }
 
         // Section attachment images
@@ -165,6 +295,79 @@ class MockExamPdfController extends Controller
         $base64 = base64_encode($content);
 
         return 'data:' . $mimeType . ';base64,' . $base64;
+    }
+
+    /**
+     * Inline images in question text and answer fields for Browsershot PDF rendering.
+     * This scans all questions in the answer key data and replaces storage image URLs
+     * with base64 data URIs.
+     */
+    private function inlineImagesForAnswerKey(array &$data): void
+    {
+        $mockExam = $data['mockExam'];
+        $subjectExam = $data['subjectExam'] ?? null;
+
+        // Determine which subject exams to process
+        $subjectExams = [];
+        if ($subjectExam !== null) {
+            $subjectExams[] = $subjectExam;
+        } else {
+            foreach ($mockExam->subjectExams as $se) {
+                $subjectExams[] = $se;
+            }
+        }
+
+        foreach ($subjectExams as $se) {
+            foreach ($se->sections as $section) {
+                foreach ($section->questions as $question) {
+                    // Inline images in question_text
+                    if (!empty($question->question_text)) {
+                        $question->question_text = $this->inlineStorageImagesInHtml($question->question_text);
+                    }
+                    // Inline images in answer_explanation
+                    if (!empty($question->answer_explanation)) {
+                        $question->answer_explanation = $this->inlineStorageImagesInHtml($question->answer_explanation);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Replace storage image URLs in HTML content with base64 data URIs.
+     */
+    private function inlineStorageImagesInHtml(string $html): string
+    {
+        // Match <img> tags with src attributes containing storage paths
+        return preg_replace_callback(
+            '/<img([^>]*?)src=["\']([^"\']+)["\']([^>]*>)/i',
+            function ($matches) {
+                $beforeSrc = $matches[1];
+                $src = $matches[2];
+                $afterSrc = $matches[3];
+
+                // Skip data URIs, external URLs, and relative URLs that aren't storage paths
+                if (str_starts_with($src, 'data:') || str_starts_with($src, 'http') || str_starts_with($src, '//')) {
+                    return $matches[0];
+                }
+
+                // Check if it's a storage path (starts with storage/ or matches public disk path)
+                $path = ltrim($src, '/');
+                $fullPath = Storage::disk('public')->path($path);
+
+                if (!file_exists($fullPath)) {
+                    return $matches[0]; // leave as-is if file not found
+                }
+
+                $dataUri = $this->toBase64DataUri($path);
+                if ($dataUri) {
+                    return '<img' . $beforeSrc . 'src="' . $dataUri . '"' . $afterSrc;
+                }
+
+                return $matches[0];
+            },
+            $html
+        );
     }
 
     public function previewSubjectExamPage(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
@@ -292,6 +495,82 @@ class MockExamPdfController extends Controller
             'mock-exam.pdf.answer-key',
             $this->viewService->answerKeyData($mockExam)
         )->with('fromSubscription', true);
+    }
+
+    /**
+     * Download answer key / marking scheme as PDF for subscription users.
+     */
+    public function answerKeyDownloadFromSubscription(MockExam $mockExam): Response
+    {
+        $this->ensureSubscriptionAccess($mockExam);
+
+        $data = $this->viewService->answerKeyData($mockExam);
+        $this->inlineImagesForAnswerKey($data);
+        $html = view('mock-exam.pdf.answer-key', $data)->render();
+
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title) . '-answer-key.pdf';
+
+        $pdf = Browsershot::html($html)
+            ->setIncludePath('$PATH:/usr/local/bin')
+            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
+            ->emulateMedia('print')
+            ->showBackground()
+            ->format('A4')
+            ->margins(15, 15, 15, 15)
+            ->noSandbox()
+            ->setOption('args', ['--disable-dev-shm-usage'])
+            ->timeout(120)
+            ->pdf();
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('X-Accel-Buffering: no');
+        echo $pdf;
+        exit;
+    }
+
+    /**
+     * Download answer key for a single subject exam for subscription users.
+     */
+    public function subjectAnswerKeyDownloadFromSubscription(MockExam $mockExam, MockExamSubjectExam $subjectExam): Response
+    {
+        $this->ensureSubscriptionAccess($mockExam);
+        $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
+
+        // Load sections, questions, template, and academic subject
+        $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
+        $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
+        $this->inlineImagesForAnswerKey($data);
+        $html = view('mock-exam.pdf.answer-key', $data)->render();
+
+        $subjectName = $subjectExam->getDisplayTitle();
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName) . '-answer-key.pdf';
+
+        $pdf = Browsershot::html($html)
+            ->setIncludePath('$PATH:/usr/local/bin')
+            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
+            ->emulateMedia('print')
+            ->showBackground()
+            ->format('A4')
+            ->margins(15, 15, 15, 15)
+            ->noSandbox()
+            ->setOption('args', ['--disable-dev-shm-usage'])
+            ->timeout(120)
+            ->pdf();
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('X-Accel-Buffering: no');
+        echo $pdf;
+        exit;
     }
 
     public function previewTemplateFrontPage(MockExamTemplate $template): View

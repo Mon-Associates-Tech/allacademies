@@ -310,11 +310,12 @@
 
         .front-page-frame {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             width: 100%;
-            height: 267mm;
-            padding: 14mm 16mm;
+            min-height: 267mm;
+            height: auto;
+            padding: 10mm 16mm;
         }
 
         .front-page-content {
@@ -322,7 +323,7 @@
         }
 
         .fp-block {
-            margin-bottom: 10mm;
+            margin-bottom: 6mm;
         }
 
         .fp-block:last-child {
@@ -359,12 +360,34 @@
 
         /* Rich text */
         .fp-richtext {
-            max-width: 130mm;
+            max-width: 160mm;
             margin: 0 auto;
             text-align: left;
             font-size: {{ $fontSize ?? 11 }}pt;
             line-height: 1.7;
             color: #374151;
+            width: 100%;
+        }
+
+        /* Images inside rich text must not shrink surrounding text */
+        .fp-richtext img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 2mm auto;
+        }
+
+        /* Ensure text inside rich text is never squeezed by images */
+        .fp-richtext p,
+        .fp-richtext div,
+        .fp-richtext h1,
+        .fp-richtext h2,
+        .fp-richtext h3,
+        .fp-richtext h4,
+        .fp-richtext h5,
+        .fp-richtext h6 {
+            max-width: 100%;
+            word-wrap: break-word;
         }
 
         /* Image */
@@ -373,7 +396,8 @@
             border: 1px solid #e5e7eb;
             padding: 2mm;
             background: #fff;
-            max-width: 100%;
+            max-width: 160mm;
+            width: 100%;
         }
 
         /* Divider */
@@ -446,8 +470,8 @@
         /* Identity section */
         .identity-section {
             text-align: center;
-            padding-bottom: 8mm;
-            margin-bottom: 8mm;
+            padding-bottom: 4mm;
+            margin-bottom: 4mm;
         }
 
         .identity-row {
@@ -518,7 +542,7 @@
 
 {{-- ── PDF Content ──────────────────────────────────────────────────────────── --}}
 @php
-    $paperSubjectName = $subjectExam->academicSubject->name ?? 'Subject Exam';
+    $paperSubjectName = $subjectExam->academicSubject?->name ?? 'Subject Exam';
     $paperSectionCount = $subjectExam->sections->count();
     $paperQuestionCount = $subjectExam->sections->sum(fn($section) => $section->questions->count());
     $paperTotalMarks = number_format($subjectExam->sections->sum(fn($section) => $section->getTotalMarks()), 1);
@@ -528,7 +552,7 @@
 <div class="print-content">
     {{-- Front Page if subject exam has template with front page config --}}
     @php
-        $frontPageConfig = $subjectExam->template->front_page_config ?? null;
+        $frontPageConfig = ($subjectExam->template !== null) ? ($subjectExam->template->front_page_config ?? null) : null;
         $frontPageMode = $frontPageConfig['mode'] ?? (!empty($frontPageConfig['content']) ? 'editor' : null);
         $frontPagePdfImages = $frontPageMode === 'upload' ? $frontPageConfig['attachment_pdf_images'] ?? [] : [];
     @endphp

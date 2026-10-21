@@ -202,29 +202,27 @@
                             Download PDF
                         </x-exam.button>
 
-                        @if(isset($fromSubscription) && $fromSubscription && Route::has('mock-exams.subscription-preview.answer-key'))
+                        @if(isset($fromSubscription) && $fromSubscription && Route::has('mock-exams.subject-exams.subscription-preview.answer-key.download'))
                             <a id="answerKeyBtn"
-                               href="{{ route('mock-exams.subscription-preview.answer-key', $mockExam) }}"
-                               target="_blank"
+                               href="{{ route('mock-exams.subject-exams.subscription-preview.answer-key.download', [$mockExam, $subjectExam]) }}"
                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
                                style="background: rgba(124,58,237,0.12); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); text-decoration: none;">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                                 </svg>
-                                Marking Scheme
+                                Download Marking Scheme
                             </a>
-                        @elseif(Route::has('mock-exams.pdf.answer-key'))
+                        @elseif(Route::has('mock-exams.subject-exams.pdf.answer-key.download'))
                             <a id="answerKeyBtn"
-                               href="{{ route('mock-exams.pdf.answer-key', $mockExam) }}"
-                               target="_blank"
+                               href="{{ route('mock-exams.subject-exams.pdf.answer-key.download', [$mockExam, $subjectExam]) }}"
                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
                                style="background: rgba(124,58,237,0.12); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); text-decoration: none;">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                                 </svg>
-                                Marking Scheme
+                                Download Marking Scheme
                             </a>
                         @endif
                     </div>

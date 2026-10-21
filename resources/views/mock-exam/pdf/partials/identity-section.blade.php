@@ -13,8 +13,8 @@
     <style>
         .identity-section {
             text-align: center;
-            padding-bottom: 8mm;
-            margin-bottom: 8mm;
+            padding-bottom: 4mm;
+            margin-bottom: 4mm;
         }
 
         .identity-row {
