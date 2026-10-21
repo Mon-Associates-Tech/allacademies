@@ -261,7 +261,7 @@ class MockExamPdfController extends Controller
     public function previewPageFromSubscription(MockExam $mockExam)
     {
         $this->ensureSubscriptionAccess($mockExam);
-        return redirect()->route('mock-exams.subscription.dashboard');
+        return redirect()->route('user.mock-exams.subscription.dashboard');
     }
 
     /**
@@ -341,16 +341,16 @@ class MockExamPdfController extends Controller
     {
         $user = auth()->user();
         abort_unless($user, 403);
-        
+
         // Check if the user owns the mock exam
         if ($mockExam->user_id === $user->id) {
             return;
         }
-        
+
         // Check if the mock exam is linked to a subscription the user has
-        $hasAccessThroughSubscription = $mockExam->mockExamSubscription && 
+        $hasAccessThroughSubscription = $mockExam->mockExamSubscription &&
             $mockExam->mockExamSubscription->user_id === $user->id;
-        
+
         abort_unless($hasAccessThroughSubscription, 403);
     }
 }

@@ -17,7 +17,7 @@
             <div class="text-sm text-amber-800 dark:text-amber-200">
                 <p class="font-medium">No active subscription yet</p>
                 <p class="mt-1">You'll need an active mock exam subscription for a subject before you can generate an exam in it.</p>
-                <a href="{{ route('mock-exams.subscription.dashboard') }}" class="mt-2 inline-block font-medium text-amber-900 underline dark:text-amber-100">
+                <a href="{{ route('user.mock-exams.subscription.dashboard') }}" class="mt-2 inline-block font-medium text-amber-900 underline dark:text-amber-100">
                     View subscription plans →
                 </a>
             </div>
@@ -110,7 +110,7 @@
                             </form>
                         @else
                             <a
-                            href="{{ route('mock-exams.subscription.dashboard') }}"
+                            href="{{ route('user.mock-exams.subscription.dashboard') }}"
                             class="block w-full border border-slate-300 px-4 py-2 text-center text-sm font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400"
                             style="border-radius: 2px;"
                             >

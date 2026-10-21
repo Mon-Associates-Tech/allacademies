@@ -232,7 +232,7 @@ Route::middleware('web')
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/subscriptions')->name('mock-exams.subscription.')->group(function () {
+Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/subscriptions')->name('user.mock-exams.subscription.')->group(function () {
     // Teacher subscription dashboard
     Route::get('/', function () {
         return view('mock-exams.subscriptions.dashboard');
@@ -242,12 +242,12 @@ Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/sub
     Route::get('/payment/callback', function (MockExamSubscriptionService $service) {
         $reference = request('reference');
         if (! $reference) {
-            return redirect()->route('mock-exams.subscription.dashboard')->with('error', 'No payment reference found.');
+            return redirect()->route('user.mock-exams.subscription.dashboard')->with('error', 'No payment reference found.');
         }
 
         $payment = MockExamSubscriptionPayment::where('paystack_reference', $reference)->first();
         if (! $payment) {
-            return redirect()->route('mock-exams.subscription.dashboard')->with('error', 'Payment record not found.');
+            return redirect()->route('user.mock-exams.subscription.dashboard')->with('error', 'Payment record not found.');
         }
 
         if ($payment->payment_type === 'topup') {
@@ -257,10 +257,10 @@ Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/sub
         }
 
         if ($result['success']) {
-            return redirect()->route('mock-exams.subscription.dashboard')->with('success', 'Payment successful! Your subscription is now active.');
+            return redirect()->route('user.mock-exams.subscription.dashboard')->with('success', 'Payment successful! Your subscription is now active.');
         }
 
-        return redirect()->route('mock-exams.subscription.dashboard')->with('error', 'Payment could not be verified. Please contact support.');
+        return redirect()->route('user.mock-exams.subscription.dashboard')->with('error', 'Payment could not be verified. Please contact support.');
     })->name('payment.callback');
 });
 
@@ -271,7 +271,7 @@ Route::middleware(['auth', 'verified', 'web'])->prefix('dashboard/mock-exams/sub
 */
 
 Route::middleware(['auth', 'verified', 'web'])->prefix('admin/mock-exams')->name('admin.mock-exams.')->group(function () {
-    Route::get('/subscriptions', MockExamSubscriptionManager::class)->name('subscriptions');
+    Route::get('/subscriptions', MockExamSubscriptionManager::class)->name('subscriptions.index');
 
     Route::get('/pricing-tiers', function () {
         return view('mock-exams.pricing-tiers');

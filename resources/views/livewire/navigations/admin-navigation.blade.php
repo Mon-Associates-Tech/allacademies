@@ -1,6 +1,6 @@
 @php use App\Enums\UserRole; @endphp
 
-<div class="space-y-6" x-data="{ sidebarExpanded: $store.sidebar.expanded }">
+<div class="space-y-4" x-data="{ sidebarExpanded: $store.sidebar.expanded }">
     {{-- ═══════════════════════════════════════════════════════════
          SECTION: Dashboard & Overview
      ═══════════════════════════════════════════════════════════ --}}
@@ -245,8 +245,8 @@
         </x-app.nav-item>
 
        <x-app.nav-item
-            href="{{ route('admin.mock-exams.subscriptions') }}"
-            :active="Route::is('admin.mock-exams.subscriptions')"
+            href="{{ route('admin.mock-exams.subscriptions.index') }}"
+            :active="Route::is('admin.mock-exams.subscriptions.index')"
             icon="heroicon-o-document-duplicate"
         >Mock Subscriptions
         </x-app.nav-item>

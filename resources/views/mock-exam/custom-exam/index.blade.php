@@ -17,7 +17,7 @@
             <div class="text-sm text-amber-800 dark:text-amber-200">
                 <p class="font-medium">No active subscription yet</p>
                 <p class="mt-1">You'll need an active mock exam subscription for a subject before you can create a custom exam.</p>
-                <a href="{{ route('mock-exams.subscription.dashboard') }}" class="mt-2 inline-block font-medium text-amber-900 underline dark:text-amber-100">
+                <a href="{{ route('user.mock-exams.subscription.dashboard') }}" class="mt-2 inline-block font-medium text-amber-900 underline dark:text-amber-100">
                     View subscription plans →
                 </a>
             </div>

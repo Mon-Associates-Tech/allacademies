@@ -5,9 +5,9 @@
     // For raw SVG icons, use <x-slot:iconSlot> — color is handled automatically
 ])
 
-<li {{ $attributes->only(['class', 'title']) }}>
+<li class="mb-0.5 {{ $attributes->get('class', '') }}" {{ $attributes->only('title') }}>
     <a
-        :class="sidebarExpanded ? 'py-2' : ''"
+        :class="$store.sidebar.expanded ? 'py-2' : 'py-1.5'"
         href="{{ $href }}"
         class="block pl-3 rounded-lg transition {{ $active
             ? 'bg-violet-500 text-white font-bold'

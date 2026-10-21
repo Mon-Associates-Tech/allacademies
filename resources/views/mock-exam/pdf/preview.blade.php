@@ -20,7 +20,7 @@
                 </div>
             </div>
             @if(isset($fromSubscription) && $fromSubscription)
-                <x-ui.button href="{{ route('mock-exams.subscription.dashboard') }}" variant="ghost" size="sm" icon="arrow-left">
+                <x-ui.button href="{{ route('user.mock-exams.subscription.dashboard') }}" variant="ghost" size="sm" icon="arrow-left">
                     Back to My Subscriptions
                 </x-ui.button>
             @else
