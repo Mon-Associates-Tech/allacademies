@@ -34,7 +34,7 @@ class MockExamSubscriptionManager extends Component
 
     public string $type = 'print';
 
-    public string $userGroup = 'individual';
+    public string $userGroup = 'teacher';
 
     public string $subjectSearch = '';
 
@@ -110,7 +110,7 @@ class MockExamSubscriptionManager extends Component
         $this->allocationMode = 'grant';
         $this->participantCount = 30;
         $this->type = 'print';
-        $this->userGroup = 'individual';
+        $this->userGroup = 'teacher';
         $this->maxExams = 1;
         $this->showAllocationForm = true;
     }
@@ -121,7 +121,7 @@ class MockExamSubscriptionManager extends Component
             'selectedUserId'     => 'required|exists:users,id',
             'planId'             => 'required|exists:mock_exam_subscription_plans,id',
             'type'               => 'required|in:online,print',
-            'userGroup'          => 'required|in:individual,school,local_government,organization',
+            'userGroup'          => 'required|in:teacher,school,local_government,organization',
             'selectedSubjectIds' => 'required|array|min:1|distinct',
             'participantCount'   => 'required_if:type,online|integer|min:1',
             'maxExams'           => 'required|integer|min:1',

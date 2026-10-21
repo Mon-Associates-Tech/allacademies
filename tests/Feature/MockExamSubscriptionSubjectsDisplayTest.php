@@ -61,7 +61,7 @@ class MockExamSubscriptionSubjectsDisplayTest extends TestCase
             'user_id' => $user->id,
             'mock_exam_subscription_plan_id' => $plan->id,
             'type' => 'print',
-            'user_group' => 'individual',
+            'user_group' => 'teacher',
             'status' => MockExamSubscriptionStatus::Active,
             'participant_slots' => 30,
             'participants_used' => 0,

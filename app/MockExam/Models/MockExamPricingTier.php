@@ -35,9 +35,9 @@ class MockExamPricingTier extends Model
 
     /**
      * Find the best-matching tier for a subject count and user group.
-     * Falls back to the highest available tier for that group, then to 'individual'.
+     * Falls back to the highest available tier for that group, then to 'teacher'.
      */
-    public static function forSubjectCountAndGroup(int $count, string $userGroup = 'individual'): ?self
+    public static function forSubjectCountAndGroup(int $count, string $userGroup = 'teacher'): ?self
     {
         $find = fn (string $group) => self::active()
             ->where('user_group', $group)
@@ -45,12 +45,12 @@ class MockExamPricingTier extends Model
             ->orderByDesc('subject_count')
             ->first();
 
-        return $find($userGroup) ?? ($userGroup !== 'individual' ? $find('individual') : null);
+        return $find($userGroup) ?? ($userGroup !== 'teacher' ? $find('teacher') : null);
     }
 
     /** @deprecated Use forSubjectCountAndGroup() */
     public static function forSubjectCount(int $count): ?self
     {
-        return self::forSubjectCountAndGroup($count, 'individual');
+        return self::forSubjectCountAndGroup($count, 'teacher');
     }
 }

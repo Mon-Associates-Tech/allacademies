@@ -173,15 +173,15 @@ class MockExamSubscription extends Model
 public function getDescriptiveTitleAttribute(): string
 {
     $planName = $this->plan?->name ?? 'Mock Exam Subscription';
-    
+
     // Safely resolve the group label whether it's an Enum instance or a raw string
-    $groupLabel = $this->user_group instanceof MockExamUserGroup 
-        ? $this->user_group->label() 
-        : ucfirst(str_replace('_', ' ', $this->user_group ?? 'individual'));
-        
+    $groupLabel = $this->user_group instanceof MockExamUserGroup
+        ? $this->user_group->label()
+        : ucfirst(str_replace('_', ' ', $this->user_group ?? 'teacher'));
+
     $typeLabel = ucfirst($this->type ?? 'online');
     $subjectCount = $this->subjects->count();
-    
+
     // Fallback if no subjects are attached to this subscription yet
     if ($subjectCount === 0) {
         return "{$planName} ({$groupLabel} · {$typeLabel})";

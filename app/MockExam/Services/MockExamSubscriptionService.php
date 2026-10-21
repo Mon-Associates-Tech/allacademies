@@ -33,7 +33,7 @@ class MockExamSubscriptionService
         return $plan->calculatePrice(
             $config['subject_count'],
             $config['participant_count'] ?? 0,
-            $config['user_group'] ?? 'individual',
+            $config['user_group'] ?? 'teacher',
             max(1, (int) ($config['exam_cycles'] ?? $config['max_exams'] ?? 1))
         );
     }
@@ -77,7 +77,7 @@ class MockExamSubscriptionService
     {
         $plan = MockExamSubscriptionPlan::findOrFail($config['plan_id']);
         $subjectCount = count($config['subject_ids']);
-        $userGroup = $config['user_group'] ?? 'individual';
+        $userGroup = $config['user_group'] ?? 'teacher';
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
         $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup, $examCyclesPerSubject);
         if ($amount <= 0) {
@@ -167,7 +167,7 @@ class MockExamSubscriptionService
     {
         // Get all subjects in this subscription
         $subscriptionSubjectIds = $subscription->subjects()->pluck('academic_subjects.id')->toArray();
-        
+
         if (empty($subscriptionSubjectIds)) {
             return;
         }
@@ -221,7 +221,7 @@ class MockExamSubscriptionService
 
         if ($status === 'success') {
             $payment->subscription->activate();
-            
+
             // Link existing mock exams to the activated subscription
             $this->linkExistingMockExamsToSubscription($payment->subscription);
 
@@ -324,7 +324,7 @@ class MockExamSubscriptionService
     {
         $plan = MockExamSubscriptionPlan::findOrFail($config['plan_id']);
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
-        $userGroup = $config['user_group'] ?? 'individual';
+        $userGroup = $config['user_group'] ?? 'teacher';
 
         return DB::transaction(function () use ($owner, $targetUser, $plan, $config, $examCyclesPerSubject, $userGroup) {
             $subscription = MockExamSubscription::create([
@@ -359,7 +359,7 @@ class MockExamSubscriptionService
     {
         $plan = MockExamSubscriptionPlan::findOrFail($config['plan_id']);
         $subjectCount = count($config['subject_ids']);
-        $userGroup = $config['user_group'] ?? 'individual';
+        $userGroup = $config['user_group'] ?? 'teacher';
         $examCyclesPerSubject = max(1, (int) ($config['max_exams'] ?? 1));
         $amount = $plan->calculatePrice($subjectCount, $config['participant_count'] ?? 0, $userGroup, $examCyclesPerSubject);
         if ($amount <= 0) {

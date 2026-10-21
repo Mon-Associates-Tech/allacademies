@@ -17,7 +17,7 @@ class MockExamPricingTierManager extends Component
 
     public string $name = '';
 
-    public string $userGroup = 'individual';
+    public string $userGroup = 'teacher';
 
     public int $subjectCount = 1;
 
@@ -56,7 +56,7 @@ class MockExamPricingTierManager extends Component
             'pricePerStudent', 'printFlatRate', 'isActive',
         ]);
         $this->isActive = true;
-        $this->userGroup = 'individual';
+        $this->userGroup = 'teacher';
         $this->showForm = true;
     }
 
@@ -68,7 +68,7 @@ class MockExamPricingTierManager extends Component
         $this->name = (string) ($tier->name ?? '');
         $this->userGroup = $tier->user_group instanceof MockExamUserGroup
             ? $tier->user_group->value
-            : (string) ($tier->user_group ?? 'individual');
+            : (string) ($tier->user_group ?? 'teacher');
         $this->subjectCount = (int) $tier->subject_count;
         $this->pricePerStudent = (string) $tier->price_per_student;
         $this->printFlatRate = (string) $tier->print_flat_rate;
@@ -84,7 +84,7 @@ class MockExamPricingTierManager extends Component
                 'required', 'string', 'max:255',
                 Rule::unique('mock_exam_pricing_tiers', 'name')->ignore($this->editingId),
             ],
-            'userGroup'       => 'required|in:individual,school,local_government,organization',
+            'userGroup'       => 'required|in:teacher,school,local_government,organization',
             'subjectCount'    => 'required|integer|min:1|max:20',
             'pricePerStudent' => 'required|numeric|min:0',
             'printFlatRate'   => 'required|numeric|min:0',
@@ -136,7 +136,7 @@ class MockExamPricingTierManager extends Component
 
     public function render()
     {
-        
+
         return view('livewire.mock-exam.subscriptions.mock-exam-pricing-tier-manager',[
             'activeTab' => $this->activeTab,
         ]);

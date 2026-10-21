@@ -19,7 +19,7 @@ class MockExamPricingTierSeeder extends Seeder
     public function run(): void
     {
         $groups = [
-            'individual' => [
+            'teacher' => [
                 // subject_count => [price_per_student, print_flat_rate]
                 1  => [12.00, 100.00],
                 2  => [10.50,  90.00],
@@ -73,9 +73,9 @@ class MockExamPricingTierSeeder extends Seeder
         foreach ($groups as $group => $tiers) {
             foreach ($tiers as $subjectCount => [$pricePerStudent, $printFlatRate]) {
                 $label = match ($group) {
-                    'individual'      => 'Individual',
+                    'teacher'      => 'Teacher',
                     'school'          => 'School',
-                    'local_government'=> 'Local Government',
+                    'local_government'=> 'District Assembly',
                     'organization'    => 'Organization',
                 };
 
