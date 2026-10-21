@@ -4,7 +4,7 @@ namespace App\MockExam\Models;
 
 enum MockExamUserGroup: string
 {
-    case Individual    = 'individual';
+    case Teacher    = 'teacher';
     case School        = 'school';
     case LocalGovt     = 'local_government';
     case Organization  = 'organization';
@@ -13,7 +13,7 @@ enum MockExamUserGroup: string
     public function label(): string
     {
         return match ($this) {
-            self::Individual   => 'Individual',
+            self::Teacher   => 'Teacher',
             self::School       => 'School',
             self::LocalGovt    => 'District Assembly',
             self::Organization => 'Organization / NGO',

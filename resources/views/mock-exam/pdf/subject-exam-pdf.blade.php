@@ -131,7 +131,7 @@
             font-size: {{ ($fontSize ?? 11) + 1 }}pt;
             font-weight: 600;
             color: #1f2937;
-            text-transform: uppercase;
+            /*text-transform: uppercase;*/
             letter-spacing: 0.025em;
         }
 
@@ -147,7 +147,7 @@
             font-style: italic;
             margin-bottom: 0.75rem;
             padding: 0.5rem;
-            border-left: 2px solid #f59e0b;
+            /*border-left: 2px solid #f59e0b;*/
         }
 
         .question-block {
@@ -578,13 +578,13 @@
                             <x-ui.latex :content="$section->title" display="true"/>
                         @endif
                     </div>
-                    <div class="section-meta hidden">
-                        {{ $section->questions->count() }} questions •
-                        {{ number_format($section->getTotalMarks(), 1) }} marks
-                        @if ($section->question_type !== 'mixed')
-                            • {{ ucwords(str_replace('_', ' ', $section->question_type)) }}
-                        @endif
-                    </div>
+{{--                    <div class="section-meta hidden">--}}
+{{--                        {{ $section->questions->count() }} questions •--}}
+{{--                        {{ number_format($section->getTotalMarks(), 1) }} marks--}}
+{{--                        @if ($section->question_type !== 'mixed')--}}
+{{--                            • {{ ucwords(str_replace('_', ' ', $section->question_type)) }}--}}
+{{--                        @endif--}}
+{{--                    </div>--}}
                 </div>
 
                 @if ($section->instructions)
