@@ -10,7 +10,9 @@ use App\Models\StudentAcademicProgression;
 use App\Models\StudentIdCard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Request as RequestFacade;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Browsershot\Browsershot;
 
 class StudentManagementController extends Controller
 {
@@ -155,12 +157,74 @@ class StudentManagementController extends Controller
             'configuration.academicPeriod',
         ]);
 
-        $pdf = Pdf::loadView('reports.report-card-pdf', [
-            'reportCard' => $reportCard,
-            'school' => $reportCard->student->school,
-        ]);
+        $school = $reportCard->student->school;
 
-        return $pdf->stream("report-card-{$reportCard->student->user->name}-{$reportCard->term}.pdf");
+        // Inline the built Tailwind CSS so Puppeteer doesn't need to fetch external assets
+        $tailwindCss = '';
+        $manifestPath = public_path('build/manifest.json');
+        if (file_exists($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true);
+            $cssFile = $manifest['resources/css/app.css']['file'] ?? null;
+            if ($cssFile) {
+                $cssPath = public_path('build/' . $cssFile);
+                if (file_exists($cssPath)) {
+                    $tailwindCss = file_get_contents($cssPath);
+                }
+            }
+        }
+
+        // Pre-compute inline image data URIs for Puppeteer
+        $inlineImage = function ($relativePath) {
+            if (empty($relativePath)) return '';
+            $fullPath = public_path($relativePath);
+            if (!file_exists($fullPath)) return '';
+            $mime = mime_content_type($fullPath);
+            $content = file_get_contents($fullPath);
+            return 'data:' . $mime . ';base64,' . base64_encode($content);
+        };
+
+        $logoPath = !empty($school?->logo) ? 'storage/' . $school->logo : 'img/logo.png';
+        $logoUrl = $inlineImage($logoPath);
+
+        // Pre-compute signature data URIs
+        $configuration = $reportCard->configuration;
+        $classTeacherSigUri = $configuration?->class_teacher_signature_path
+            ? $inlineImage('storage/' . $configuration->class_teacher_signature_path)
+            : '';
+        $principalSigUri = $configuration?->principal_signature_path
+            ? $inlineImage('storage/' . $configuration->principal_signature_path)
+            : '';
+
+        $html = view('reports.report-card-pdf', [
+            'reportCard' => $reportCard,
+            'school' => $school,
+            'tailwindCss' => $tailwindCss,
+            'logoUrl' => $logoUrl,
+            'classTeacherSigUri' => $classTeacherSigUri,
+            'principalSigUri' => $principalSigUri,
+        ])->render();
+
+        try {
+            $pdf = Browsershot::html($html)
+                ->setIncludePath('$PATH:/usr/local/bin')
+                ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
+                ->showBackground()
+                ->noSandbox()
+                ->pdf();
+
+            return response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="report-card-'.$reportCard->student->user->name.'-'.$reportCard->term.'.pdf"',
+            ]);
+        } catch (\Throwable $e) {
+            // Fallback to DomPDF if BrowserShot fails
+            $pdf = Pdf::loadView('reports.report-card-pdf', [
+                'reportCard' => $reportCard,
+                'school' => $school,
+            ]);
+
+            return $pdf->stream("report-card-{$reportCard->student->user->name}-{$reportCard->term}.pdf");
+        }
     }
 
     public function import(Request $request)

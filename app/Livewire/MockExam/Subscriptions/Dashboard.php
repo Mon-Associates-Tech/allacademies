@@ -41,7 +41,7 @@ public string $activeTab = 'subscriptions';
     public bool $showPurchaseForm = false;
     public int $planId = 0;
     public string $type = 'print';
-    public string $userGroup = 'individual';
+    public string $userGroup = 'teacher';
     public array $selectedSubjectIds = [];
     public string $subjectSearch = '';
     public ?int $selectedAcademicGroupId = null;
@@ -82,7 +82,7 @@ public string $activeTab = 'subscriptions';
     public string $performanceSearch = '';
     public array $performanceResults = [];
 
-    
+
 
 protected array $allowedTabs = [
     'subscriptions',
@@ -276,7 +276,7 @@ protected function tabSessionKey(): string
             'selectedAcademicGroupId', 'selectedAcademicLevelId',
             'participantCount', 'maxExams', 'calculatedPrice',
         ]);
-        $this->userGroup = 'individual';
+        $this->userGroup = 'teacher';
         $this->participantCount = 30;
         $this->maxExams = 1;
         $this->showPurchaseForm = true;
@@ -298,7 +298,7 @@ protected function tabSessionKey(): string
         $this->validate([
             'planId'             => 'required|exists:mock_exam_subscription_plans,id',
             'type'               => 'required|in:online,print',
-            'userGroup'          => 'required|in:individual,school,local_government,organization',
+            'userGroup'          => 'required|in:teacher,school,local_government,organization',
             'selectedSubjectIds' => 'required|array|min:1|distinct',
             'participantCount'   => 'required_if:type,online|integer|min:1',
             'maxExams'           => 'required|integer|min:1',

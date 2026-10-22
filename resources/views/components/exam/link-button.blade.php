@@ -13,4 +13,4 @@
     $toneClass = $tones[$tone] ?? $tones['primary'];
 @endphp
 
-<button type="button" {{ $attributes->merge(['class' => "whitespace-nowrap border-b border-dashed border-transparent font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 {$toneClass}"]) }}>{{ $slot }}</button>
+<button type="button" {{ $attributes->merge(['class' => "inline-flex items-center whitespace-nowrap border-b border-dashed border-transparent font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 {$toneClass}"]) }}>{{ $slot }}</button>

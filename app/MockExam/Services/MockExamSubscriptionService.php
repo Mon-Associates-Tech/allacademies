@@ -122,7 +122,7 @@ class MockExamSubscriptionService
                     'payment_id' => $payment->id,
                     'type' => 'mock_exam_subscription',
                 ],
-                'callback_url' => route('mock-exams.subscription.payment.callback'),
+                'callback_url' => route('user.mock-exams.subscription.payment.callback'),
             ]);
 
             $payment->update([
@@ -264,7 +264,7 @@ class MockExamSubscriptionService
                 'type' => 'mock_exam_subscription_topup',
                 'additional_participants' => $additionalParticipants,
             ],
-            'callback_url' => route('mock-exams.subscription.payment.callback'),
+            'callback_url' => route('user.mock-exams.subscription.payment.callback'),
         ]);
 
         $payment->update([
@@ -407,7 +407,7 @@ class MockExamSubscriptionService
                     'type' => 'mock_exam_subscription',
                     'on_behalf_of' => $targetUser->id,
                 ],
-                'callback_url' => route('mock-exams.subscription.payment.callback'),
+                'callback_url' => route('user.mock-exams.subscription.payment.callback'),
             ]);
 
             $payment->update([
@@ -508,7 +508,7 @@ class MockExamSubscriptionService
             ->get()
             ->filter(function ($submission) use ($identifier) {
                 $name = strtolower($submission->getParticipantName());
-                $email = strtolower($subscription->getParticipantEmail());
+                $email = strtolower($submission->getParticipantEmail());
                 $search = strtolower($identifier);
 
                 return str_contains($name, $search) || str_contains($email, $search);
