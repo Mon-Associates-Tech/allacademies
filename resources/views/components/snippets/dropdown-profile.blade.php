@@ -9,7 +9,7 @@
         @click.prevent="open = !open"
         :aria-expanded="open"
     >
-        <x-avatar text-size="text-xs" :name="auth()->user()->name" avatar="{{ Auth::user()->avatar }}"
+        <x-avatar text-size="text-xs" :name="auth()->user()?->name" avatar="{{ Auth::user()?->avatar }}"
                   class="w-6 h-6 rounded-full mx-auto"/>
         <svg class="w-5 h-5 transition-transform duration-200 ml-2"
              :class="open ? 'rotate-180' : ''"
@@ -35,14 +35,14 @@
         <div
             class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-100 dark:border-gray-700">
             <div class="flex items-center space-x-3">
-                <x-avatar :name="auth()->user()->name" avatar="{{ Auth::user()->avatar }}"
+                <x-avatar :name="auth()->user()?->name" avatar="{{ Auth::user()?->avatar }}"
                           class="w-12 h-12 rounded-full mx-auto"/>
                 <div class="flex-1 min-w-0">
-                    <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ Auth::user()->name }}</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ Auth::user()->email }}</p>
+                    <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ Auth::user()?->name }}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ Auth::user()?->email }}</p>
                     <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full !text-capitalize text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mt-1">
-                        {{ Auth::user()->role }}
+                        {{ Auth::user()?->role }}}
                     </span>
                 </div>
             </div>
@@ -108,7 +108,7 @@
                         <span>Dashboard</span>
                     </a>
 
-                    @if(in_array(Auth::user()->role->value, ['admin', 'owner','moderator', 'teacher', 'author', 'librarian', 'student', 'guest']))
+                    @if(in_array(Auth::user()?->role?->value, ['admin', 'owner','moderator', 'teacher', 'author', 'librarian', 'student', 'guest']))
                         <a href="{{ route('subscriptions.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div
@@ -123,7 +123,7 @@
                         </a>
                     @endif
 
-                    @if(in_array(Auth::user()->role->value, ['admin', 'owner', 'moderator',]))
+                    @if(in_array(Auth::user()?->role?->value, ['admin', 'owner', 'moderator',]))
                         <a href="{{ route('academic-groups.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div
@@ -138,7 +138,7 @@
                         </a>
                     @endif
 
-                    @if(in_array(Auth::user()->role->value, ['admin', 'owner']))
+                    @if(in_array(Auth::user()?->role?->value, ['admin', 'owner']))
                         <a href="{{ route('users.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div
@@ -196,7 +196,7 @@
                         <span>Profile</span>
                     </a>
 
-                    @if(in_array(Auth::user()->role->value, ['admin', 'owner', 'moderator', 'guest', 'teacher']))
+                    @if(in_array(Auth::user()?->role?->value, ['admin', 'owner', 'moderator', 'guest', 'teacher']))
                         <a href="{{ route('teams.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div
@@ -211,7 +211,7 @@
                         </a>
                     @endif
 
-                    @if(in_array(Auth::user()->role->value, ['admin', 'owner']))
+                    @if(in_array(Auth::user()?->role?->value, ['admin', 'owner']))
                         <a href="{{ route('audit-teams.index') }}"
                            class="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group">
                             <div

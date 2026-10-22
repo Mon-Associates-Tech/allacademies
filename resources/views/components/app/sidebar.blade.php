@@ -41,14 +41,14 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
             x-init="$nextTick(() => { const active = $el.querySelector('.bg-violet-500'); if (active) active.scrollIntoView({ block: 'center', behavior: 'instant' }); })">
             <div class="lg:pt-6">
                 <div :class="$store.sidebar.open ? 'w-16 h-16' : 'w-12 h-12'" class="mx-auto mb-2">
-                    <x-avatar :name="auth()->user()->name" avatar="{{ auth()->user()->avatar }}"
+                    <x-avatar :name="auth()->user()?->name" avatar="{{ auth()->user()?->avatar }}"
                         class="rounded-full w-full h-full"></x-avatar>
                 </div>
                 <div x-show="$store.sidebar.expanded" class="sidebar-text">
-                    <h3 class="text-center text-sm font-bold text-gray-800 dark:text-white">{{ auth()->user()->name }}
+                    <h3 class="text-center text-sm font-bold text-gray-800 dark:text-white">{{ auth()->user()?->name }}
                     </h3>
                     <h4 class="text-center text-xs text-gray-500 -mt-1 tracking-tight dark:text-gray-400">
-                        {{ auth()->user()->email }}</h4>
+                        {{ auth()->user()?->email }}</h4>
 
                     @php
                         // Use the centralized helper function
@@ -77,14 +77,14 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
                                 All Schools
                             </span>
                         </div>
-                    @elseif(auth()->user()->school)
+                    @elseif(auth()->user()?->school)
                         <div class="mt-1 text-center">
                             <span style="font-size: 0.525rem;"
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full  font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                                 <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                                     <circle cx="4" cy="4" r="3" />
                                 </svg>
-                                {{ auth()->user()->school?->name }}
+                                {{ auth()->user()?->school?->name }}
                             </span>
                         </div>
                     @endif
@@ -98,7 +98,7 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
                     use App\Enums\UserRole;
 
                     // Get role value for comparison
-                    $userRole = auth()->user()->role;
+                    $userRole = auth()->user()?->role;
                     $roleValue = $userRole instanceof UserRole ? $userRole->value : $userRole;
                     $generalExamAccessRoles = config('access.general_exams.access_roles', [
                         'admin',
@@ -159,7 +159,7 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
                     {{-- ═══════════════════════════════════════════════════════════
                          SECTION: Sponsorships
                      ═══════════════════════════════════════════════════════════ --}}
-                    @if (in_array(auth()->user()->role->value, ['owner', 'admin', 'accountant']))
+                    @if (in_array(auth()->user()?->role?->value, ['owner', 'admin', 'accountant']))
                         <x-app.nav-section id="sidebar-nav-sponsorships" label="Sponsorships" :open="true">
                             <x-app.nav-item
                                 href="{{ route('sponsorships.projects.index') }}"
