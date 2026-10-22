@@ -60,7 +60,7 @@ class MockExamPdfController extends Controller
 
         $data = $this->viewService->answerKeyData($mockExam);
         $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key', $data)->render();
+        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
         $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title) . '-answer-key.pdf';
 
@@ -99,7 +99,7 @@ class MockExamPdfController extends Controller
         $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
         $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
         $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key', $data)->render();
+        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
         $subjectName = $subjectExam->getDisplayTitle();
         $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName) . '-answer-key.pdf';
@@ -506,7 +506,7 @@ class MockExamPdfController extends Controller
 
         $data = $this->viewService->answerKeyData($mockExam);
         $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key', $data)->render();
+        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
         $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title) . '-answer-key.pdf';
 
@@ -545,7 +545,7 @@ class MockExamPdfController extends Controller
         $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
         $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
         $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key', $data)->render();
+        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
         $subjectName = $subjectExam->getDisplayTitle();
         $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName) . '-answer-key.pdf';

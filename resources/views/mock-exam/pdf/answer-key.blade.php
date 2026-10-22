@@ -161,7 +161,7 @@
                                                     <div class="flex items-start gap-2">
                                                         <span class="font-bold text-slate-900 shrink-0 text-sm print:text-xl">Q{{ $objQs->count() + $eIdx + 1 }}.</span>
                                                         <p class="text-slate-800 text-sm print:text-xl leading-relaxed">
-                                                            <x-ui.latex :content="$question->question_text"/>
+                                                            <x-ui.latex :content="$question->question_text" :pdf="true"/>
                                                         </p>
                                                     </div>
                                                     <span
@@ -175,7 +175,7 @@
                                                         Model Answer</h4>
                                                     @if($question->answer_explanation)
                                                         <p class="text-slate-700 text-sm print:text-xl leading-relaxed">
-                                                            <x-ui.latex :content="$question->answer_explanation"/>
+                                                            <x-ui.latex :content="$question->answer_explanation" :pdf="true"/>
                                                         </p>
                                                     @else
                                                         <p class="text-slate-400 text-sm print:text-xl italic">No model answer
