@@ -28,9 +28,24 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
         public readonly array  $conversationHistory,
     ) {}
 
+    /**
+     * Safe log wrapper — if the log file is unwritable (e.g. permission mismatch
+     * between the queue worker user and the web server user), the job continues
+     * instead of crashing with an uncaught StreamHandler exception.
+     */
+    protected function safeLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            Log::$level($message, $context);
+        } catch (\Throwable $e) {
+            // Logging failed (e.g. permission denied on log file).
+            // Silently ignore — the job still stores results in the database.
+        }
+    }
+
     public function handle(ResearchAssistantService $service): void
     {
-        Log::info('ProcessResearchAssistantMessageJob started', [
+        $this->safeLog('info', 'ProcessResearchAssistantMessageJob started', [
             'user_message_id' => $this->userMessageId,
             'user_id' => $this->userId,
             'conversation_id' => $this->conversationId,
@@ -39,7 +54,7 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
         $user = User::find($this->userId);
 
         if (! $user) {
-            Log::warning('ProcessResearchAssistantMessageJob: user not found', [
+            $this->safeLog('warning', 'ProcessResearchAssistantMessageJob: user not found', [
                 'user_id' => $this->userId,
             ]);
             return;
@@ -49,13 +64,13 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
         auth()->setUser($user);
 
         try {
-            Log::info('ProcessResearchAssistantMessageJob: calling processRequest', [
+            $this->safeLog('info', 'ProcessResearchAssistantMessageJob: calling processRequest', [
                 'user_message_id' => $this->userMessageId,
             ]);
 
             $response = $service->processRequest($this->parameters, $this->conversationHistory);
 
-            Log::info('ProcessResearchAssistantMessageJob: processRequest completed', [
+            $this->safeLog('info', 'ProcessResearchAssistantMessageJob: processRequest completed', [
                 'user_message_id' => $this->userMessageId,
                 'success' => $response['success'] ?? false,
                 'has_error' => isset($response['error']),
@@ -91,7 +106,7 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
                 ]);
             }
         } catch (\Throwable $e) {
-            Log::error('ProcessResearchAssistantMessageJob failed', [
+            $this->safeLog('error', 'ProcessResearchAssistantMessageJob failed', [
                 'user_message_id' => $this->userMessageId,
                 'error'           => $e->getMessage(),
             ]);

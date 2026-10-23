@@ -275,6 +275,9 @@ find "$NEW_PROJECT_DIR" -type f -exec chmod 644 {} \;
 if [[ -d "${NEW_PROJECT_DIR}/storage" ]]; then
     chmod -R 775 "${NEW_PROJECT_DIR}/storage"
     find "${NEW_PROJECT_DIR}/storage" -type d -exec chmod g+s {} \;
+    # Ensure log files are group-writable so both the queue worker (deploy) and
+    # PHP-FPM (www-data) can write to the same log files
+    find "${NEW_PROJECT_DIR}/storage/logs" -type f -exec chmod 664 {} \; 2>/dev/null || true
 fi
 if [[ -d "${NEW_PROJECT_DIR}/bootstrap/cache" ]]; then
     chmod -R 775 "${NEW_PROJECT_DIR}/bootstrap/cache"
@@ -360,6 +363,8 @@ SUPCONF
 
 mkdir -p "${NEW_PROJECT_DIR}/storage/logs"
 chown -R "${DEPLOY_USER}:www-data" "${NEW_PROJECT_DIR}/storage/logs"
+chmod -R 775 "${NEW_PROJECT_DIR}/storage/logs"
+find "${NEW_PROJECT_DIR}/storage/logs" -type f -exec chmod 664 {} \; 2>/dev/null || true
 
 supervisorctl reread
 supervisorctl update
