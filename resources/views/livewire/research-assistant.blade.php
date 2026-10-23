@@ -5,7 +5,8 @@
     sidebarHistoryOpen: false,
     sidebarParametersOpen: false,
     messageRows: 3,
-        pageScroller: null,
+    messageInputDisabled: {{ $this->messageInputDisabled ? 'true' : 'false' }},
+    pageScroller: null,
 
     init() {
        // app.blade.php's own content area (x-ref='contentarea') is the single
@@ -303,7 +304,7 @@
                                     class="inline-block max-w-full {{ $message['role'] === 'user' ? 'bg-[var(--ra-surface-2)] text-[var(--ra-ink)] rounded-3xl rounded-tr-lg' : 'text-[var(--ra-ink)]' }}">
                                     <div class="{{ $message['role'] === 'user' ? 'px-4 py-2.5' : 'px-1' }}">
                                         <div wire:ignore
-                                             class="ra-prose prose prose-sm max-w-none {{ $message['role'] === 'user' ? '' : 'prose-slate dark:prose-invert' }}">
+                                             class="ra-prose prose prose-lg max-w-none {{ $message['role'] === 'user' ? '' : 'prose-slate dark:prose-invert' }}">
                                             @if (is_string($message['content']))
                                                 <x-ui.latex :content="$message['content']"/>
 
@@ -409,7 +410,7 @@
                             <textarea x-ref="messageInput"
                                       wire:model="message"
                                       @input="adjustMessageRows()"
-                                      @keydown.enter="if (!$event.shiftKey && !{{ $this->messageInputDisabled ? 'true' : 'false' }}) { $wire.sendMessage(); $event.preventDefault(); }"
+                                      @keydown.enter="if (!$event.shiftKey && !messageInputDisabled) { $wire.sendMessage(); $event.preventDefault(); }"
                                       rows="1"
                                       class="ra-prose flex-1 w-full px-3 py-3 bg-transparent border-0 focus:ring-0 text-[var(--ra-ink)] placeholder-[var(--ra-muted)] text-sm resize-none min-h-[52px] max-h-[160px] overflow-y-auto leading-relaxed"
                                       placeholder="{{ $this->messageInputDisabled ? 'Subscribe to chat...' : 'Ask anything...' }}"
