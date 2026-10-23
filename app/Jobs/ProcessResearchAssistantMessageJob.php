@@ -58,6 +58,11 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
             Log::info('ProcessResearchAssistantMessageJob: processRequest completed', [
                 'user_message_id' => $this->userMessageId,
                 'success' => $response['success'] ?? false,
+                'has_error' => isset($response['error']),
+                'error_message' => $response['error'] ?? null,
+                'content_length' => isset($response['content']) ? strlen($response['content']) : null,
+                'content_preview' => isset($response['content']) ? substr($response['content'], 0, 200) : null,
+                'has_usage' => isset($response['usage']),
             ]);
 
             if ($response['success']) {

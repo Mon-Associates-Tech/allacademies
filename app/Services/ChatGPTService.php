@@ -11,7 +11,6 @@ class ChatGPTService
 {
     use ResponseExtraction;
 
-    protected mixed $apiKey;
     protected $model = 'gpt-4.1-nano';
 
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
@@ -22,9 +21,27 @@ class ChatGPTService
 
     public function __construct(TokenUsageService $tokenUsageService)
     {
-        $this->apiKey = config('services.openai.key') ?? config('openai.openai.api_key');
         $this->tokenUsageService = $tokenUsageService;
-        $this->model = config('openai.openai.model') ?: 'gpt-4.1-nano';
+        $this->model = config('openai.openai.model') ?: config('openai.openai.default_model') ?: 'gpt-4.1-nano';
+    }
+
+    /**
+     * Resolve the API key dynamically on each request.
+     * In long-running queue workers the constructor runs once at process start,
+     * so reading config() there can return a stale value after config:cache.
+     */
+    protected function resolveApiKey(): ?string
+    {
+        $key = config('services.openai.key') ?? config('openai.openai.api_key');
+
+        if (empty($key)) {
+            Log::error('ChatGPTService: OPENAI_API_KEY is not configured', [
+                'services_openai_key' => config('services.openai.key') ? 'present' : 'missing',
+                'openai_openai_api_key' => config('openai.openai.api_key') ? 'present' : 'missing',
+            ]);
+        }
+
+        return $key;
     }
 
     /**
@@ -71,16 +88,43 @@ class ChatGPTService
         $requestType = $options['request_type'] ?? 'chat';
         unset($requestData['request_type']);
 
+        $apiKey = $this->resolveApiKey();
+
+        Log::info('ChatGPTService sendChatRequest', [
+            'model' => $requestData['model'] ?? 'default',
+            'api_key_present' => ! empty($apiKey),
+            'api_key_prefix' => $apiKey ? substr($apiKey, 0, 10) . '...' : 'NULL',
+            'endpoint' => $this->textEndpoint,
+            'input_message_count' => is_array($requestData['input'] ?? null) ? count($requestData['input']) : 0,
+        ]);
+
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
-                $response = Http::withToken($this->apiKey)
+                $response = Http::withToken($apiKey)
                     ->timeout($timeout)
                     ->connectTimeout(10)
                     ->post($this->textEndpoint, $requestData);
 
+                Log::info('ChatGPTService HTTP response received', [
+                    'status' => $response->status(),
+                    'successful' => $response->successful(),
+                    'body_length' => strlen($response->body()),
+                ]);
+
                 if ($response->successful()) {
                     $responseData = $response->json();
                     $usage = $responseData['usage'] ?? null;
+
+                    $extractedContent = $this->extractContent($responseData);
+
+                    // If content extraction returned empty, log the raw response for debugging
+                    if (empty($extractedContent)) {
+                        Log::warning('ChatGPTService: empty content extracted from successful response', [
+                            'response_keys' => array_keys($responseData),
+                            'has_output' => isset($responseData['output']),
+                            'raw_response_preview' => substr(json_encode($responseData), 0, 500),
+                        ]);
+                    }
 
                     // Handle usage logging
                     if ($user && $usage) {
@@ -94,7 +138,7 @@ class ChatGPTService
 
                     return [
                         'success' => true,
-                        'content' => $this->extractContent($responseData),
+                        'content' => $extractedContent,
                         'usage' => $usage,
                         'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-4',
                     ];
@@ -181,8 +225,10 @@ class ChatGPTService
     {
         $user = auth()->user();
 
+        $apiKey = $this->resolveApiKey();
+
         try {
-            $response = Http::withToken($this->apiKey)
+            $response = Http::withToken($apiKey)
                 ->post($this->imageEndpoint, array_merge([
                     'model' => $model,
                     'prompt' => $prompt,
