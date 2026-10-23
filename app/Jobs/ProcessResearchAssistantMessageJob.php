@@ -30,9 +30,18 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
 
     public function handle(ResearchAssistantService $service): void
     {
+        Log::info('ProcessResearchAssistantMessageJob started', [
+            'user_message_id' => $this->userMessageId,
+            'user_id' => $this->userId,
+            'conversation_id' => $this->conversationId,
+        ]);
+
         $user = User::find($this->userId);
 
         if (! $user) {
+            Log::warning('ProcessResearchAssistantMessageJob: user not found', [
+                'user_id' => $this->userId,
+            ]);
             return;
         }
 
@@ -40,7 +49,16 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
         auth()->setUser($user);
 
         try {
+            Log::info('ProcessResearchAssistantMessageJob: calling processRequest', [
+                'user_message_id' => $this->userMessageId,
+            ]);
+
             $response = $service->processRequest($this->parameters, $this->conversationHistory);
+
+            Log::info('ProcessResearchAssistantMessageJob: processRequest completed', [
+                'user_message_id' => $this->userMessageId,
+                'success' => $response['success'] ?? false,
+            ]);
 
             if ($response['success']) {
                 $content = $response['content'];

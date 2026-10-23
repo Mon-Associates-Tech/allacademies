@@ -91,8 +91,13 @@ class ResearchAssistant extends Component
 
     public ?int $pendingUserMessageId = null;
 
+    public ?int $pendingMessageSentAt = null;
+
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
+
+    // Timeout in seconds after which we give up waiting for a response
+    protected const RESPONSE_TIMEOUT_SECONDS = 300;
 
     protected $chatService;
 
@@ -308,6 +313,7 @@ class ResearchAssistant extends Component
         ];
 
         $this->pendingUserMessageId = $userRow->id;
+        $this->pendingMessageSentAt = time();
         $this->isLoading = true;
         $this->message = '';
         $this->fileContent = '';
@@ -332,10 +338,22 @@ class ResearchAssistant extends Component
             return;
         }
 
+        // Safety timeout: if we've been waiting too long, give up and show an error
+        if ($this->pendingMessageSentAt !== null &&
+            (time() - $this->pendingMessageSentAt) > self::RESPONSE_TIMEOUT_SECONDS) {
+            $this->errors[] = 'The request took too long to process. Please try again.';
+            $this->isLoading = false;
+            $this->pendingUserMessageId = null;
+            $this->pendingMessageSentAt = null;
+            $this->dispatch('scroll-to-bottom');
+            return;
+        }
+
         $userRow = AcademicChatMessage::find($this->pendingUserMessageId);
         if (! $userRow) {
             $this->isLoading = false;
             $this->pendingUserMessageId = null;
+            $this->pendingMessageSentAt = null;
             return;
         }
 
@@ -368,6 +386,7 @@ class ResearchAssistant extends Component
 
         $this->isLoading = false;
         $this->pendingUserMessageId = null;
+        $this->pendingMessageSentAt = null;
         $this->loadConversationHistory();
         $this->dispatch('scroll-to-bottom');
     }
