@@ -595,7 +595,7 @@
         .ra-shell .ra-prose,
         .ra-shell .ra-prose p,
         .ra-shell .ra-prose li {
-            font-family: 'Lora', Georgia, serif;
+            /*font-family: 'Lora', Georgia, serif;*/
         }
 
         @keyframes fade-in {
