@@ -150,14 +150,14 @@
                                             </div>
 
                                             <div class="flex items-center space-x-3">
-                                                @can('administrate')
+                                                @can('own')
                                                     <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
                                                         {{ $topic['questions_count'] }} total
                                                     </span>
                                                 @endcan
 
                                                 <div class="flex items-center space-x-2">
-                                                    @can('administrate')
+                                                    @can('own')
                                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $count($topic, $section['type']) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
                                                             {{ $count($topic, $section['type']) }} available
                                                         </span>
@@ -201,7 +201,7 @@
                                                         </div>
 
                                                         <div class="flex items-center space-x-2">
-                                                            @can('administrate')
+                                                            @can('own')
                                                                 <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded">
                                                                     {{ $subcount($subtopic, $section['type']) }} available
                                                                 </span>
