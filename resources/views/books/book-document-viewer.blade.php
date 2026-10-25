@@ -383,11 +383,19 @@
 
         {{-- 6: annotation toolbar row --}}
         <div
-            class="flexed hidden items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            class="flex items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <button @click="toggleDrawMode()"
                     :class="drawMode ? 'bg-amber-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600'"
                     class="px-3 py-1.5 text-xs font-medium rounded-lg">
                 <span x-text="drawMode ? 'Drawing… click page to place' : 'Add highlight box'"></span>
+            </button>
+            <button onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: { name: 'book-notes', zIndex: 'z-[60]' } }))"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+                    title="Notes">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Notes
             </button>
             <span class="text-xs hidden text-gray-500 dark:text-gray-400">
                 Use the PDF.js toolbar for highlight / ink / text — they auto-save.
@@ -457,4 +465,16 @@
             </div>
         </aside>
     </div>
+
+    {{-- Book Notes Modal --}}
+    <x-modal-component name="book-notes" size="5xl" title="Book Notes" z-index="z-[60]">
+        @livewire('books.book-notes-manager', ['book' => $book])
+
+        <x-slot name="actions">
+            <button @click="$dispatch('close-modal', {name: 'book-notes'})"
+                    class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                Close
+            </button>
+        </x-slot>
+    </x-modal-component>
 </x-layouts.app>

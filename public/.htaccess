@@ -3,6 +3,11 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    # Serve .mjs files with the correct MIME type for ES modules (required by PDF.js)
+    <IfModule mod_mime.c>
+        AddType text/javascript .mjs
+    </IfModule>
+
     RewriteEngine On
 
     # Handle Authorization Header

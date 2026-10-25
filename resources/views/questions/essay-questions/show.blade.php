@@ -72,7 +72,7 @@
                     <div class="prose dark:prose-invert max-w-none p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600">
                         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Question</h3>
                         <div>
-                            <x-prose-content :content="$essayQuestion->question->down" />
+                            <x-ui.latex :content="$essayQuestion->question->down" />
 {{--                            <span x-html="marked.parse(@js($essayQuestion->question->down))"></span>--}}
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                             <div>
 
                                 <span>
-                                    <x-prose-content :content="$essayQuestion->answer" />
+                                    <x-ui.latex :content="$essayQuestion->answer" />
                                 </span>
 
 {{--                                <span x-html="marked.parse(@js($essayQuestion->answer))"></span>--}}

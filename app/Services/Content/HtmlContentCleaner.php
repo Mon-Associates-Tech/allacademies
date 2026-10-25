@@ -32,7 +32,7 @@ class HtmlContentCleaner
         // Fallback: basic tag allowlist.
         $html = strip_tags(
             $html,
-            '<p><br><strong><em><b><i><u><sup><sub><span><ul><ol><li><table><thead><tbody><tr><th><td><a>'
+            '<p><br><strong><em><b><i><u><sup><sub><span><ul><ol><li><table><thead><tbody><tr><th><td><a><img>'
         );
 
         // Rough fallback cleanup for dangerous attributes.

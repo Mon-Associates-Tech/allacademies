@@ -38,7 +38,8 @@
                         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-0 px-4 py-3 hover:bg-surface-2/60 transition-colors">
                             <div class="min-w-0 pr-4">
                                 <div class="text-ink line-clamp-3" title="{{ strip_tags($essayQuestion->question->up) }}">
-                                    {{ strip_tags($essayQuestion->question->up) }}
+{{--                                    {{ strip_tags($essayQuestion->question->up) }}--}}
+                                    <x-ui.latex :content="$essayQuestion->question->down" />
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2 mt-2">
                                     <x-exam.badge tone="ok">

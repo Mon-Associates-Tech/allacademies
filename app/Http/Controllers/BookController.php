@@ -564,7 +564,7 @@ class BookController extends Controller
         ]);
     }
 
-    public function streamFile(Book $book): StreamedResponse
+    public function streamFile(Book $book)
     {
         $user = Auth::user();
         abort_unless($this->canReadBook($user, $book), 403);
@@ -574,33 +574,58 @@ class BookController extends Controller
             $samplePath = public_path('sample.pdf');
             abort_unless(file_exists($samplePath), 404, 'PDF file not found');
 
-            return response()->stream(function () use ($samplePath): void {
-                $stream = fopen($samplePath, 'rb');
-                fpassthru($stream);
-                fclose($stream);
-            }, 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="sample.pdf"',
-            ]);
+            return $this->streamWithRangeSupport($samplePath, 'sample.pdf');
         }
 
         if (! Storage::disk('public')->exists($path)) {
             abort(404, 'PDF file not found');
         }
 
-        $stream = Storage::disk('public')->readStream($path);
-        if (! $stream) {
-            abort(404, 'Unable to open PDF file');
-        }
+        $fullPath = Storage::disk('public')->path($path);
+        return $this->streamWithRangeSupport($fullPath, basename($path));
+    }
 
+    /**
+     * Stream a PDF file with HTTP Range request support (required by PDF.js).
+     */
+    protected function streamWithRangeSupport(string $filePath, string $filename)
+    {
+        $fileSize = filesize($filePath);
         $headers = [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+            'Content-Disposition' => 'inline; filename="'.htmlspecialchars($filename).'"',
+            'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'private, max-age=0, must-revalidate',
-            'Pragma' => 'public',
         ];
 
-        return response()->stream(function () use ($stream): void {
+        // Handle Range requests (PDF.js uses range requests to load PDFs in chunks)
+        $range = $_SERVER['HTTP_RANGE'] ?? null;
+        if ($range) {
+            preg_match('/bytes=(\d+)-(\d*)/', $range, $matches);
+            $start = (int) $matches[1];
+            $end = $matches[2] ? (int) $matches[2] : $fileSize - 1;
+            $length = $end - $start + 1;
+
+            $headers['Content-Range'] = "bytes {$start}-{$end}/{$fileSize}";
+            $headers['Content-Length'] = $length;
+            $headers['Content-Disposition'] = 'inline; filename="'.htmlspecialchars($filename).'"';
+
+            return response()->stream(function () use ($filePath, $start, $length): void {
+                $stream = fopen($filePath, 'rb');
+                fseek($stream, $start);
+                while ($length > 0 && !feof($stream)) {
+                    $chunkSize = min(8192, $length);
+                    echo fread($stream, $chunkSize);
+                    $length -= $chunkSize;
+                }
+                fclose($stream);
+            }, 206, $headers);
+        }
+
+        $headers['Content-Length'] = $fileSize;
+
+        return response()->stream(function () use ($filePath): void {
+            $stream = fopen($filePath, 'rb');
             fpassthru($stream);
             fclose($stream);
         }, 200, $headers);
