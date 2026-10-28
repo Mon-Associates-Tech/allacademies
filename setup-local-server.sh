@@ -40,7 +40,7 @@ NEW_PROJECT_DIR="/home/${DEPLOY_USER}/sites/${APP_NAME}"
 
 # If the project is not already on this machine, set a git URL to clone it
 # (cloned as the deploy user; private repos need a deploy key or token URL).
-REPO_URL=""
+REPO_URL="https://github.com/Mon-Associates-Tech/allacademies"
 
 DB_NAME="${APP_NAME}"
 DB_USER="${APP_NAME}_app"
