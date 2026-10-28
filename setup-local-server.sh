@@ -2,29 +2,23 @@
 #
 # setup-local-server.sh
 # Provisions an Ubuntu 26 LTS LAN server to serve the AHPC Laravel app at
-# https://ahpc.internal  (no public domain, no Let's Encrypt).
+# http://ahpc.internal  (plain HTTP — no certificates, no HTTPS).
 #
-# Run as root:  bash setup-local-server.sh
+# Run with root privileges:  sudo bash setup-local-server.sh
 #
 # What it does:
-#   1. System update + base packages
+#   1. System update + base packages (including openssh-server)
 #   2. Creates a non-root 'deploy' user (sudo + www-data group)
 #   3. Installs & configures MariaDB (app DB + user on BOTH localhost and 127.0.0.1)
 #   4. Installs & configures Redis (localhost-only, password protected)
 #   5. Ensures PHP-FPM + required extensions (uses existing PHP if present)
-#   6. Moves (or clones) the project into /home/deploy/sites/ahpc
-#   7. Creates a local Certificate Authority + server cert for ahpc.internal
-#   8. Configures Nginx (HTTP -> HTTPS redirect, Laravel on 443)
-#   9. Configures Supervisor queue workers
-#  10. Configures UFW firewall
-#  11. Writes credentials to /root/ahpc-credentials.txt and prints client setup steps
+#   6. Clones the 'ahpc' git branch into /home/deploy/sites/ahpc
+#   7. Configures Nginx to serve the app over HTTP on port 80
+#   8. Configures Supervisor queue workers
+#   9. Configures UFW firewall
+#  10. Writes credentials to /root/ahpc-credentials.txt and prints next steps
 #
 # Safe to re-run: most steps check for existing state before acting.
-#
-# NOTE ON SSL: Let's Encrypt/certbot cannot issue certificates for private
-# names like *.internal (it must validate ownership over the public internet).
-# This script creates a private CA instead. Install ca.crt once on each client
-# device and browsers will trust https://ahpc.internal with no warnings.
 
 set -euo pipefail
 
@@ -35,12 +29,18 @@ APP_NAME="ahpc"
 DOMAIN="ahpc.internal"
 
 DEPLOY_USER="deploy"
-OLD_PROJECT_DIR="/root/sites/${APP_NAME}"
 NEW_PROJECT_DIR="/home/${DEPLOY_USER}/sites/${APP_NAME}"
 
-# If the project is not already on this machine, set a git URL to clone it
-# (cloned as the deploy user; private repos need a deploy key or token URL).
-REPO_URL="https://github.com/Mon-Associates-Tech/allacademies"
+# Git repository to clone, and the branch to check out.
+# Leave REPO_URL empty to be prompted for it at run time.
+# Private repos: use a token URL (https://<token>@github.com/org/repo.git)
+# or set up a deploy key for the deploy user first.
+REPO_URL=""
+REPO_BRANCH="ahpc"
+
+# Fallback: if the project already sits on this machine (and no REPO_URL is
+# given), it is moved from here into NEW_PROJECT_DIR instead of cloned.
+OLD_PROJECT_DIR="/root/sites/${APP_NAME}"
 
 DB_NAME="${APP_NAME}"
 DB_USER="${APP_NAME}_app"
@@ -53,7 +53,6 @@ QUEUE_WORKER_PROCESSES=2
 # Optional: restrict web access to your LAN, e.g. "192.168.1.0/24". Empty = allow all.
 LAN_SUBNET=""
 
-SSL_DIR="/etc/ssl/${APP_NAME}"
 CREDS_FILE="/root/${APP_NAME}-credentials.txt"
 
 # ============================================================
@@ -63,7 +62,7 @@ log()  { echo -e "\n\033[1;32m==>\033[0m \033[1m$1\033[0m"; }
 warn() { echo -e "\033[1;33m[warn]\033[0m $1"; }
 die()  { echo -e "\033[1;31m[error]\033[0m $1"; exit 1; }
 
-[[ $EUID -eq 0 ]] || die "This script must be run as root."
+[[ $EUID -eq 0 ]] || die "This script must be run as root (use sudo)."
 
 LAN_IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}' | head -1 || true)"
 [[ -n "$LAN_IP" ]] || LAN_IP="$(hostname -I | awk '{print $1}')"
@@ -209,22 +208,41 @@ if ! command -v composer >/dev/null 2>&1; then
 fi
 
 # ============================================================
-# 6. PROJECT FILES
+# 6. PROJECT FILES — clone the 'ahpc' branch
 # ============================================================
 log "Placing project files"
 mkdir -p "/home/${DEPLOY_USER}/sites"
 chown "${DEPLOY_USER}:${DEPLOY_USER}" "/home/${DEPLOY_USER}/sites"
 
 if [[ -d "$NEW_PROJECT_DIR" ]]; then
-    warn "${NEW_PROJECT_DIR} already exists — skipping move, will just fix permissions."
-elif [[ -d "$OLD_PROJECT_DIR" ]]; then
-    rsync -a --remove-source-files "$OLD_PROJECT_DIR"/ "$NEW_PROJECT_DIR"/
-    find "$OLD_PROJECT_DIR" -type d -empty -delete || true
-    log "Moved project from ${OLD_PROJECT_DIR} to ${NEW_PROJECT_DIR}"
-elif [[ -n "$REPO_URL" ]]; then
-    sudo -u "$DEPLOY_USER" git clone "$REPO_URL" "$NEW_PROJECT_DIR"
+    warn "${NEW_PROJECT_DIR} already exists — not cloning again."
+    if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
+        CURRENT_BRANCH="$(sudo -u "$DEPLOY_USER" git -C "$NEW_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+        if [[ "$CURRENT_BRANCH" != "$REPO_BRANCH" ]]; then
+            warn "Existing checkout is on branch '${CURRENT_BRANCH}', not '${REPO_BRANCH}'."
+            warn "Switch manually if needed: cd ${NEW_PROJECT_DIR} && git checkout ${REPO_BRANCH}"
+        fi
+    fi
 else
-    die "Project not found at ${NEW_PROJECT_DIR} or ${OLD_PROJECT_DIR}, and REPO_URL is empty. Set one and re-run."
+    if [[ -z "$REPO_URL" && ! -d "$OLD_PROJECT_DIR" && -t 0 ]]; then
+        read -rp "Git repository URL to clone (branch '${REPO_BRANCH}'): " REPO_URL
+    fi
+
+    if [[ -n "$REPO_URL" ]]; then
+        log "Cloning branch '${REPO_BRANCH}' from ${REPO_URL}"
+        sudo -u "$DEPLOY_USER" git clone --branch "$REPO_BRANCH" "$REPO_URL" "$NEW_PROJECT_DIR"
+    elif [[ -d "$OLD_PROJECT_DIR" ]]; then
+        warn "No REPO_URL given — moving existing project from ${OLD_PROJECT_DIR}."
+        rsync -a --remove-source-files "$OLD_PROJECT_DIR"/ "$NEW_PROJECT_DIR"/
+        find "$OLD_PROJECT_DIR" -type d -empty -delete || true
+    else
+        die "No project found. Set REPO_URL at the top of this script (branch '${REPO_BRANCH}') and re-run."
+    fi
+fi
+
+# The permission fixes below change file modes; stop git from reporting those as edits.
+if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
+    sudo -u "$DEPLOY_USER" git -C "$NEW_PROJECT_DIR" config core.fileMode false
 fi
 
 log "Fixing ownership and permissions"
@@ -242,93 +260,20 @@ done
 mkdir -p "${NEW_PROJECT_DIR}/storage/logs"
 chown -R "${DEPLOY_USER}:www-data" "${NEW_PROJECT_DIR}/storage/logs"
 
-# ============================================================
-# 7. LOCAL CERTIFICATE AUTHORITY + SERVER CERT
-# ============================================================
-log "Setting up local CA and certificate for ${DOMAIN}"
-mkdir -p "$SSL_DIR"
-chmod 755 "$SSL_DIR"
-
-if [[ ! -f "${SSL_DIR}/ca.key" || ! -f "${SSL_DIR}/ca.crt" ]]; then
-    openssl genrsa -out "${SSL_DIR}/ca.key" 4096
-    openssl req -x509 -new -nodes -sha256 -days 3650 \
-        -key "${SSL_DIR}/ca.key" \
-        -subj "/O=AHPC/CN=AHPC Local CA" \
-        -out "${SSL_DIR}/ca.crt"
-    chmod 600 "${SSL_DIR}/ca.key"
-    log "Created local CA (valid 10 years)"
-else
-    warn "Local CA already exists, reusing it."
-fi
-
-# Regenerate the server cert if missing, expiring within 30 days, or the LAN IP changed
-NEED_CERT=1
-if [[ -f "${SSL_DIR}/server.crt" ]] \
-   && openssl x509 -checkend 2592000 -noout -in "${SSL_DIR}/server.crt" >/dev/null \
-   && openssl x509 -noout -ext subjectAltName -in "${SSL_DIR}/server.crt" | grep -q "${LAN_IP}"; then
-    NEED_CERT=0
-fi
-
-if [[ $NEED_CERT -eq 1 ]]; then
-    openssl genrsa -out "${SSL_DIR}/server.key" 2048
-    openssl req -new -key "${SSL_DIR}/server.key" \
-        -subj "/O=AHPC/CN=${DOMAIN}" \
-        -out "${SSL_DIR}/server.csr"
-    cat > "${SSL_DIR}/server.ext" <<EXT
-authorityKeyIdentifier=keyid,issuer
-basicConstraints=CA:FALSE
-keyUsage=digitalSignature,keyEncipherment
-extendedKeyUsage=serverAuth
-subjectAltName=DNS:${DOMAIN},IP:${LAN_IP}
-EXT
-    openssl x509 -req -in "${SSL_DIR}/server.csr" \
-        -CA "${SSL_DIR}/ca.crt" -CAkey "${SSL_DIR}/ca.key" -CAcreateserial \
-        -out "${SSL_DIR}/server.crt" -days 825 -sha256 \
-        -extfile "${SSL_DIR}/server.ext"
-    chmod 600 "${SSL_DIR}/server.key"
-    rm -f "${SSL_DIR}/server.csr"
-    log "Issued server certificate (valid 825 days) for ${DOMAIN} and ${LAN_IP}"
-else
-    warn "Server certificate is still valid, keeping it."
-fi
-
 # Resolve the domain on this machine too
 grep -q "[[:space:]]${DOMAIN}\$" /etc/hosts || echo "127.0.0.1 ${DOMAIN}" >> /etc/hosts
 
 # ============================================================
-# 8. NGINX SERVER BLOCKS
+# 7. NGINX SERVER BLOCK (HTTP only)
 # ============================================================
 log "Writing Nginx config for ${DOMAIN}"
 NGINX_SITE="/etc/nginx/sites-available/${DOMAIN}"
 
 cat > "$NGINX_SITE" <<NGINXCONF
-# HTTP: serve the CA certificate for easy client install, redirect everything else to HTTPS
 server {
-    listen 80;
-    listen [::]:80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name ${DOMAIN} ${LAN_IP};
-
-    location = /${APP_NAME}-local-ca.crt {
-        alias ${SSL_DIR}/ca.crt;
-        default_type application/x-x509-ca-cert;
-    }
-
-    location / {
-        return 301 https://\$host\$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
-    server_name ${DOMAIN} ${LAN_IP};
-
-    ssl_certificate     ${SSL_DIR}/server.crt;
-    ssl_certificate_key ${SSL_DIR}/server.key;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 1d;
 
     root ${NEW_PROJECT_DIR}/public;
     index index.php index.html;
@@ -337,11 +282,6 @@ server {
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
-
-    location = /${APP_NAME}-local-ca.crt {
-        alias ${SSL_DIR}/ca.crt;
-        default_type application/x-x509-ca-cert;
-    }
 
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
@@ -376,7 +316,7 @@ nginx -t
 systemctl reload nginx
 
 # ============================================================
-# 9. SUPERVISOR — QUEUE WORKER
+# 8. SUPERVISOR — QUEUE WORKER
 # ============================================================
 log "Writing Supervisor config for queue worker"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/${APP_NAME}-worker.conf"
@@ -403,20 +343,19 @@ supervisorctl update
 supervisorctl restart "${APP_NAME}-worker:*" || true
 
 # ============================================================
-# 10. FIREWALL
+# 9. FIREWALL
 # ============================================================
 log "Configuring UFW firewall"
 ufw allow OpenSSH
 if [[ -n "$LAN_SUBNET" ]]; then
     ufw allow from "$LAN_SUBNET" to any port 80 proto tcp
-    ufw allow from "$LAN_SUBNET" to any port 443 proto tcp
 else
-    ufw allow 'Nginx Full'
+    ufw allow 80/tcp
 fi
 ufw --force enable
 
 # ============================================================
-# 11. SUMMARY
+# 10. SUMMARY
 # ============================================================
 log "Writing credentials to ${CREDS_FILE} (root-only readable)"
 cat > "$CREDS_FILE" <<EOF
@@ -424,9 +363,9 @@ AHPC local server provisioning summary
 Generated: $(date)
 
 Deploy user:      ${DEPLOY_USER} (passwordless sudo, member of www-data)
-Project path:     ${NEW_PROJECT_DIR}
+Project path:     ${NEW_PROJECT_DIR}  (branch: ${REPO_BRANCH})
 LAN IP:           ${LAN_IP}
-URL:              https://${DOMAIN}
+URL:              http://${DOMAIN}
 
 Database name:    ${DB_NAME}
 Database user:    ${DB_USER}
@@ -434,11 +373,9 @@ Database pass:    ${DB_PASS}
 
 Redis password:   ${REDIS_PASS}
 
-CA certificate:   ${SSL_DIR}/ca.crt   (install on client devices)
-CA download URL:  http://${DOMAIN}/${APP_NAME}-local-ca.crt
-
 Add to ${NEW_PROJECT_DIR}/.env (values unquoted):
-  APP_URL=https://${DOMAIN}
+  APP_URL=http://${DOMAIN}
+  SESSION_SECURE_COOKIE=false
 
   DB_CONNECTION=mysql
   DB_HOST=127.0.0.1
@@ -460,7 +397,7 @@ log "DONE"
 cat <<SUMMARY
 
 ────────────────────────────────────────────────────────
-  Provisioning complete for ${DOMAIN}
+  Provisioning complete for ${DOMAIN} (HTTP, branch '${REPO_BRANCH}')
 ────────────────────────────────────────────────────────
   Credentials saved to: ${CREDS_FILE} (root only)
 
@@ -476,18 +413,18 @@ cat <<SUMMARY
     9. php artisan config:clear && php artisan config:cache
    10. sudo supervisorctl restart ${APP_NAME}-worker:*
 
-  Client device steps (every PC/phone that will open the site):
-    A. Make ${DOMAIN} resolve to ${LAN_IP}, either:
-         - add this line to the hosts file:  ${LAN_IP}  ${DOMAIN}
-           (Windows: C:\\Windows\\System32\\drivers\\etc\\hosts, as Administrator;
-            macOS/Linux: /etc/hosts)
-         - or add a DNS record on your router / local DNS server
-    B. Trust the local CA so the browser shows no warning:
-         download http://${DOMAIN}/${APP_NAME}-local-ca.crt and install it as a
-         Trusted Root Certification Authority (Windows: double-click > Install
-         Certificate > Local Machine > Trusted Root; Android/iOS: install as a
-         CA certificate from settings).
+  Because the site is served over plain HTTP, make sure the app does not
+  force HTTPS (e.g. URL::forceScheme('https') in AppServiceProvider, or a
+  production-only HTTPS redirect), and that SESSION_SECURE_COOKIE is not
+  true — otherwise logins will fail.
 
-  Then open: https://${DOMAIN}
+  Client device step (every PC/phone that will open the site):
+    Make ${DOMAIN} resolve to ${LAN_IP}, either:
+      - add this line to the hosts file:  ${LAN_IP}  ${DOMAIN}
+        (Windows: C:\\Windows\\System32\\drivers\\etc\\hosts, as Administrator;
+         macOS/Linux: /etc/hosts)
+      - or add a DNS record on your router / local DNS server
+
+  Then open: http://${DOMAIN}   (or http://${LAN_IP})
 ────────────────────────────────────────────────────────
 SUMMARY
