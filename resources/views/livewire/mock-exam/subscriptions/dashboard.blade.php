@@ -22,7 +22,7 @@
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                         </svg>
-                        Create Custom Exam
+                        Create Terminal Exam
                     </a>
                     <x-exam.button type="button" wire:click="openPurchaseForm">+ New Subscription</x-exam.button>
                 </div>
@@ -39,7 +39,7 @@
                     <x-exam.select wire:model.live="examTypeFilter">
                         <option value="all">All Exams</option>
                         <option value="template">Mocks (Template)</option>
-                        <option value="custom">Term Exams (Custom)</option>
+                        <option value="custom">Terminal Exams (Custom)</option>
                     </x-exam.select>
 
                     <x-exam.select wire:model.live="sortBy">
@@ -318,7 +318,7 @@
                                                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                                                 </svg>
-                                                Custom Exam
+                                                Terminal Exam
                                             </a>
                                         @endif
                                     </div>
@@ -336,7 +336,7 @@
                                                 @if ($examTypeFilter === 'template')
                                                     Mocks under this subscription
                                                 @elseif($examTypeFilter === 'custom')
-                                                    Term Exams under this subscription
+                                                    Terminal Exams under this subscription
                                                 @else
                                                     Exams under this subscription
                                                 @endif

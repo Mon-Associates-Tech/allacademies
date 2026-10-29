@@ -1,62 +1,66 @@
 <x-layouts.app>
-    <div class="relative overflow-hidden" style="border-radius: 2px;">
-        <div class="absolute inset-x-0 top-0 h-1 bg-purple-500"></div>
-        <div class="bg-gradient-to-r from-[#0c1f3f] via-[#132a52] to-[#0c1f3f] px-6 py-10 sm:px-10">
-            <h1 class="text-2xl sm:text-3xl font-semibold text-white">Create a Custom Exam</h1>
-            <p class="mt-2 max-w-2xl text-sm text-slate-300">
-                Build your own exam from scratch — pick a subject, configure sections, select topics, and generate a printable PDF.
-            </p>
-        </div>
-    </div>
+    <x-exam.page>
+        <x-exam.header
+            eyebrow="TERMINAL EXAM · BUILD FROM SCRATCH"
+            title="Create Terminal Exam"
+            color="ok"
+            sub="Build your own exam from scratch — pick a subject, configure sections, select topics, and generate a printable PDF."
+        />
 
-    @if ($subscriptions->isEmpty())
-        <div class="mt-6 flex items-start gap-3 border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-900/20" style="border-radius: 2px;">
-            <svg class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-            <div class="text-sm text-amber-800 dark:text-amber-200">
-                <p class="font-medium">No active subscription yet</p>
-                <p class="mt-1">You'll need an active mock exam subscription for a subject before you can create a custom exam.</p>
-                <a href="{{ route('user.mock-exams.subscription.dashboard') }}" class="mt-2 inline-block font-medium text-amber-900 underline dark:text-amber-100">
-                    View subscription plans →
-                </a>
-            </div>
-        </div>
-    @else
-        <div class="mt-8">
-            <div class="max-w-2xl">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Select a Subject</h2>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Choose a subject from your active subscriptions to start building your custom exam.
-                </p>
+        @if ($subscriptions->isEmpty())
+            <x-exam.callout tone="warn">
+                <div class="flex items-start gap-3">
+                    <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                    <div>
+                        <p class="font-semibold">No active subscription yet</p>
+                        <p class="mt-1 text-sm text-ink-soft">You'll need an active mock exam subscription for a subject before you can create a custom exam.</p>
+                        <a href="{{ route('user.mock-exams.subscription.dashboard') }}"
+                           class="mt-3 inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-primary hover:text-primary-hi">
+                            View subscription plans
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </x-exam.callout>
+        @else
+            <div class="animate-rise">
+                <div class="mb-5 flex items-center justify-between gap-4">
+                    <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">
+                        AVAILABLE SUBJECTS · {{ $subjects->count() }}
+                    </p>
+                </div>
 
-                <div class="mt-6 grid grid-cols-1 gap-4">
+                <div class="grid grid-cols-1 gap-4">
                     @foreach ($subjects as $subject)
-                        <div class="flex items-center justify-between border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900" style="border-radius: 2px;">
-                            <div>
-                                <h3 class="text-base font-semibold text-slate-900 dark:text-white">
-                                    {{ $subject->name }}
-                                </h3>
-                                <div class="mt-1 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                    <span>{{ $subject->code }}</span>
-                                    <span>·</span>
-                                    <span>{{ $subject->academicLevel->name }}</span>
-                                    <span>·</span>
-                                    <span>{{ $subject->academicLevel->academicGroup->name }}</span>
+                        <x-exam.card :padded="false">
+                            <div class="flex items-center justify-between gap-4 p-5">
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="font-display text-base font-bold text-ink">
+                                        {{ $subject->name }}
+                                    </h3>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                                        <x-exam.badge>{{ $subject->code }}</x-exam.badge>
+                                        <x-exam.badge>{{ $subject->academicLevel->name }}</x-exam.badge>
+                                        <x-exam.badge>{{ $subject->academicLevel->academicGroup->name }}</x-exam.badge>
+                                    </div>
                                 </div>
+                                <a href="{{ route('mock-exams.generate.custom.configure', ['academicSubject' => $subject]) }}">
+                                    <x-exam.button>
+                                        <svg class="mr-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                        </svg>
+                                        Configure Exam
+                                    </x-exam.button>
+                                </a>
                             </div>
-                            <a href="{{ route('mock-exams.generate.custom.configure', ['academicSubject' => $subject]) }}"
-                               class="inline-flex items-center gap-1 bg-[#0c1f3f] px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500"
-                               style="border-radius: 2px;">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                                </svg>
-                                Configure Exam
-                            </a>
-                        </div>
+                        </x-exam.card>
                     @endforeach
                 </div>
             </div>
-        </div>
-    @endif
+        @endif
+    </x-exam.page>
 </x-layouts.app>
