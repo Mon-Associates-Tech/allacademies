@@ -57,10 +57,16 @@ class ExamPackageBuilder
         // Sign with Ed25519
         $signature = $this->sign($checksum);
 
-        return array_merge($payload, [
+        // Add checksum and signature, then re-sort the full package
+        $package = array_merge($payload, [
             'checksum' => $checksum,
             'signature' => $signature,
         ]);
+
+        // Re-sort the full package so compress() produces the same JSON
+        $this->sortArrayRecursive($package);
+
+        return $package;
     }
 
     /**
@@ -292,11 +298,12 @@ class ExamPackageBuilder
 
     /**
      * Sort array keys recursively for deterministic JSON output.
+     * Uses SORT_STRING to ensure consistent ordering across PHP versions.
      */
     protected function sortArrayRecursive(array &$array): void
     {
         $keys = array_keys($array);
-        sort($keys);
+        sort($keys, SORT_STRING);
         $sorted = [];
         foreach ($keys as $key) {
             $value = &$array[$key];

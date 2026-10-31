@@ -241,7 +241,7 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
-        // Verify checksum
+        // Decompress the package
         $decompressed = @gzdecode($payload);
         if ($decompressed === false) {
             $error = "Failed to decompress package for {$examUuid}.";
@@ -249,16 +249,7 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
-        $calculatedChecksum = hash('sha256', $decompressed);
-        if (!hash_equals($remoteChecksum, $calculatedChecksum)) {
-            $error = "Checksum mismatch for {$examUuid} revision {$remoteRevision}.";
-            Log::error('PullAgent: ' . $error);
-            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
-        }
-
-        Log::info('PullAgent: Checksum verified', ['exam_uuid' => $examUuid]);
-
-        // Verify signature
+        // Parse the package JSON
         $packageData = json_decode($decompressed, true);
         if (!$packageData) {
             $error = "Invalid JSON in package for {$examUuid}.";
@@ -266,6 +257,20 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
+        // Verify checksum: compare the checksum embedded in the package with the manifest's checksum
+        $embeddedChecksum = $packageData['checksum'] ?? '';
+        if (!hash_equals($remoteChecksum, $embeddedChecksum)) {
+            $error = "Checksum mismatch for {$examUuid} revision {$remoteRevision}.";
+            Log::error('PullAgent: ' . $error, [
+                'remote_checksum' => $remoteChecksum,
+                'embedded_checksum' => $embeddedChecksum,
+            ]);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
+        }
+
+        Log::info('PullAgent: Checksum verified', ['exam_uuid' => $examUuid]);
+
+        // Verify signature: the signature was created over the checksum
         $signature = base64_decode($packageData['signature'] ?? '');
         $publicKeyBytes = base64_decode($publicKey);
 
@@ -275,7 +280,7 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
-        if (!sodium_crypto_sign_verify_detached($signature, $calculatedChecksum, $publicKeyBytes)) {
+        if (!sodium_crypto_sign_verify_detached($signature, $embeddedChecksum, $publicKeyBytes)) {
             $error = "Signature verification failed for {$examUuid} revision {$remoteRevision}.";
             Log::error('PullAgent: ' . $error);
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
