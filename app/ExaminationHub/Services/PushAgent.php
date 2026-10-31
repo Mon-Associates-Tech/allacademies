@@ -62,6 +62,9 @@ class PushAgent
                 'items_ok' => ($submissionResult['ingested'] ?? 0) + ($proctoringResult['ingested'] ?? 0),
             ]);
 
+            // Report push status to central via heartbeat so last_push_at is tracked
+            $this->reportHeartbeat($centralUrl, $token, 'push');
+
             return [
                 'submissions' => $submissionResult,
                 'proctoring' => $proctoringResult,
@@ -360,5 +363,43 @@ class PushAgent
         // Schedule retry via SyncRetryJob with serializable operation name
         \App\ExaminationHub\Jobs\SyncRetryJob::dispatch($operation)
             ->delay(now()->addSeconds($delay));
+    }
+
+    /**
+     * Report heartbeat to central so last_push_at / last_pull_at is tracked.
+     */
+    protected function reportHeartbeat(string $centralUrl, string $token, string $direction): void
+    {
+        try {
+            $centerUuid = \App\ExaminationHub\Models\Center::where('id', config('center.center_id'))->value('uuid');
+            if (!$centerUuid) {
+                return;
+            }
+
+            $body = [
+                'center_uuid' => $centerUuid,
+                'app_version' => config('center.app_version', '1.0.0'),
+            ];
+
+            if ($direction === 'push') {
+                $body['last_push_at'] = now()->toIso8601String();
+            } else {
+                $body['last_pull_at'] = now()->toIso8601String();
+            }
+
+            $signature = hash_hmac('sha256', json_encode($body), $token);
+
+            Http::timeout(10)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $token,
+                    'X-Signature' => $signature,
+                    'X-Timestamp' => (string) time(),
+                    'X-App-Version' => config('center.app_version', '1.0.0'),
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($centralUrl . '/api/sync/v1/heartbeat', $body);
+        } catch (\Exception $e) {
+            Log::warning("PushAgent: Heartbeat failed: " . $e->getMessage());
+        }
     }
 }

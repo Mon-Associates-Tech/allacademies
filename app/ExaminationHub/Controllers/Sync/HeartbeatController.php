@@ -23,6 +23,7 @@ class HeartbeatController
             'center_uuid' => 'required|string',
             'app_version' => 'required|string',
             'last_pull_at' => 'nullable|date',
+            'last_push_at' => 'nullable|date',
             'backlog_size' => 'nullable|integer|min:0',
         ]);
 
@@ -40,11 +41,20 @@ class HeartbeatController
             );
         }
 
-        $center->update([
+        $updateData = [
             'last_seen_at' => now(),
-            'last_pull_at' => $validated['last_pull_at'] ?? $center->last_pull_at,
             'app_version' => $validated['app_version'],
-        ]);
+        ];
+
+        if (isset($validated['last_pull_at'])) {
+            $updateData['last_pull_at'] = $validated['last_pull_at'];
+        }
+
+        if (isset($validated['last_push_at'])) {
+            $updateData['last_push_at'] = $validated['last_push_at'];
+        }
+
+        $center->update($updateData);
 
         return response()->json([
             'status' => 'ok',
