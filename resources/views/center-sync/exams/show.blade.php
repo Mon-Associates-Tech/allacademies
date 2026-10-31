@@ -28,13 +28,9 @@
                                 </button>
                             </form>
                         @else
-                            <a href="{{ route('center-sync.exams.revise-form', $exam) }}"
-                               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-sm bg-gradient-to-br from-amber-600 to-amber-400 shadow-[0_2px_10px_rgba(217,119,6,0.3)] hover:from-amber-700 hover:to-amber-500 transition-all">
-                                Revise
-                            </a>
                             <a href="{{ route('center-sync.corrections.show', $exam) }}"
-                               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all border border-slate-200/50 rounded-sm bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800">
-                                Corrections
+                               class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-sm bg-gradient-to-br from-amber-600 to-amber-400 shadow-[0_2px_10px_rgba(217,119,6,0.3)] hover:from-amber-700 hover:to-amber-500 transition-all">
+                                Republish
                             </a>
                             <form method="POST" action="{{ route('center-sync.exams.release-results', $exam) }}" class="inline">
                                 @csrf

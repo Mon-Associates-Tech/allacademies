@@ -16,7 +16,7 @@
                 </a>
                 <h1 class="text-2xl font-bold text-white leading-snug"
                     style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
-                    Grading Corrections — {{ $exam->title }}
+                    Republish Exam
                 </h1>
                 <p class="text-slate-400 mt-2 text-sm">Edit questions, answer keys, marks, and exclusions. Changes will create a new revision that centers will pull automatically.</p>
             </div>

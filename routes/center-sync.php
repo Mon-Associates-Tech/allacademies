@@ -56,12 +56,10 @@ if (config('center.role') === 'central') {
     Route::patch('/centers/{center}/toggle-active', [CenterManagementController::class, 'toggleActive'])->name('centers.toggle-active');
     Route::post('/centers/{center}/regenerate-token', [CenterManagementController::class, 'regenerateToken'])->name('centers.regenerate-token');
 
-    // ── Exam Publish / Revise ───────────────────────────────────────────────
+    // ── Exam Publish / Republish ────────────────────────────────────────────
     Route::get('/exams', [ExamPublishController::class, 'index'])->name('exams.index');
     Route::get('/exams/{exam}', [ExamPublishController::class, 'show'])->name('exams.show');
     Route::post('/exams/{exam}/publish', [ExamPublishController::class, 'publish'])->name('exams.publish');
-    Route::get('/exams/{exam}/revise', [ExamPublishController::class, 'reviseForm'])->name('exams.revise-form');
-    Route::post('/exams/{exam}/revise', [ExamPublishController::class, 'revise'])->name('exams.revise');
     Route::post('/exams/{exam}/release-results', [ExamPublishController::class, 'releaseResults'])->name('exams.release-results');
 
     // ── Sync Status (Center staff view) ─────────────────────────────────────

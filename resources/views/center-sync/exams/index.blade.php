@@ -117,7 +117,7 @@
                                         <span class="text-slate-300 dark:text-slate-600">|</span>
                                         <a class="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
                                            href="{{ route('center-sync.corrections.show', $exam) }}">
-                                            Corrections
+                                            Republish
                                         </a>
                                     @endif
                                 </div>
