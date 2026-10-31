@@ -4,6 +4,7 @@ namespace App\ExaminationHub\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamSyncState extends Model
 {
@@ -75,5 +76,13 @@ class ExamSyncState extends Model
         $this->update([
             'applied_state_version' => $stateVersion,
         ]);
+    }
+
+    /**
+     * Get the exam associated with this sync state.
+     */
+    public function exam(): BelongsTo
+    {
+        return $this->belongsTo(GeneralExam::class, 'exam_uuid', 'uuid');
     }
 }

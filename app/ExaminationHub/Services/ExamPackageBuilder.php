@@ -276,6 +276,9 @@ class ExamPackageBuilder
      */
     public function toCanonicalJson(array $data): string
     {
+        // Sort keys recursively for deterministic output
+        $this->sortArrayRecursive($data);
+
         // JSON_UNESCAPED_UNICODE ensures UTF-8 characters are not escaped
         // JSON_PRESERVE_ZERO_FRACTION ensures 1.0 stays as 1.0, not 1
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
@@ -285,6 +288,24 @@ class ExamPackageBuilder
         }
 
         return $json;
+    }
+
+    /**
+     * Sort array keys recursively for deterministic JSON output.
+     */
+    protected function sortArrayRecursive(array &$array): void
+    {
+        $keys = array_keys($array);
+        sort($keys);
+        $sorted = [];
+        foreach ($keys as $key) {
+            $value = &$array[$key];
+            if (is_array($value)) {
+                $this->sortArrayRecursive($value);
+            }
+            $sorted[$key] = $value;
+        }
+        $array = $sorted;
     }
 
     /**
