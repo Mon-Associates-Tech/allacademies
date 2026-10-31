@@ -101,6 +101,8 @@ class ExamPackageBuilder
         return [
             'title' => $exam->title,
             'description' => $exam->description,
+            'type' => $exam->type ?? 'examination',
+            'delivery_type' => $exam->delivery_type ?? 'online',
             'starts_at' => $exam->starts_at?->toIso8601String(),
             'ends_at' => $exam->ends_at?->toIso8601String(),
             'duration_in_minutes' => (int) $exam->duration_in_minutes,
