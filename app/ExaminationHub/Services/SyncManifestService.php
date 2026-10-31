@@ -48,8 +48,8 @@ class SyncManifestService
             ])
             ->whereIn('revision', function ($query) {
                 $query->select(DB::raw('MAX(revision)'))
-                    ->from('exam_packages as ep2')
-                    ->whereColumn('ep2.exam_uuid', 'exam_packages.exam_uuid');
+                    ->from('general_exam_packages as ep2')
+                    ->whereColumn('ep2.exam_uuid', 'general_exam_packages.exam_uuid');
             })
             ->orderBy('exam_uuid')
             ->get()

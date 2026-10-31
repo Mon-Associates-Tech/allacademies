@@ -468,7 +468,7 @@ class ExamPackageBuilderTest extends TestCase
         $this->assertNotNull($exam->grading_scale);
 
         // Verify package is stored
-        $this->assertDatabaseHas('exam_packages', [
+        $this->assertDatabaseHas('general_exam_packages', [
             'exam_uuid' => $exam->uuid,
             'revision' => 1,
         ]);
@@ -506,7 +506,7 @@ class ExamPackageBuilderTest extends TestCase
         $exam->refresh();
         $this->assertEquals(2, $exam->revision);
 
-        $this->assertDatabaseHas('exam_packages', [
+        $this->assertDatabaseHas('general_exam_packages', [
             'exam_uuid' => $exam->uuid,
             'revision' => 2,
         ]);
