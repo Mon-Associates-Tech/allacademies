@@ -239,10 +239,22 @@ class CenterSyncController
         $agent = app(PullAgent::class);
         $result = $agent->pull();
 
-        if (isset($result['error'])) {
-            return back()->with('error', 'Pull failed: ' . $result['error']);
+        if (!$result['success']) {
+            $errors = $result['errors'] ?? ['Unknown error'];
+            return back()->with('error', 'Pull failed: ' . implode(', ', $errors));
         }
 
-        return back()->with('success', 'Pull completed successfully.');
+        $message = "Pull completed: {$result['pulled']} exam(s) pulled.";
+        if (!empty($result['details'])) {
+            $successCount = 0;
+            foreach ($result['details'] as $detail) {
+                if (($detail['status'] ?? '') === 'success') {
+                    $successCount++;
+                }
+            }
+            $message .= " {$successCount} exam(s) applied successfully.";
+        }
+
+        return back()->with('success', $message);
     }
 }

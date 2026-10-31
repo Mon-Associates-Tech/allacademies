@@ -428,40 +428,74 @@
                 </div>
             </div>
 
-            {{-- ── EXAM SYNC STATES ── --}}
-            @if($examSyncStates->isNotEmpty())
-                <div class="bg-white dark:bg-slate-900 overflow-hidden"
-                     style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                        <div class="w-1 h-5"
-                             style="background: linear-gradient(180deg, #065f46, #059669); border-radius: 1px;"></div>
-                        <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider"
-                            style="letter-spacing: 0.1em;">Exam Sync State</h2>
+            {{-- ── PULLED EXAMS ── --}}
+            <div class="bg-white dark:bg-slate-900 overflow-hidden"
+                 style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <div class="w-1 h-5"
+                         style="background: linear-gradient(180deg, #065f46, #059669); border-radius: 1px;"></div>
+                    <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider"
+                        style="letter-spacing: 0.1em;">Pulled Exams</h2>
+                    <span class="ml-auto text-xs text-slate-400 dark:text-slate-500">{{ $examSyncStates->count() }} exam(s)</span>
+                </div>
+                @if($examSyncStates->isEmpty())
+                    <div class="px-5 py-12 text-center">
+                        <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m-6-8h6M6 6h12l1 16H5L6 6z"/>
+                        </svg>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No exams pulled yet. Run a pull to sync exams from central.</p>
+                        <form method="POST" action="{{ route('center-sync.sync.pull') }}" class="inline mt-3">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Pull Now
+                            </button>
+                        </form>
                     </div>
+                @else
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Exam</th>
-                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Applied Revision</th>
-                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">State Version</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Access Code</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Revision</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Applied At</th>
                             </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
                                 @foreach($examSyncStates as $state)
                                     <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
-                                        <td class="px-6 py-3.5 font-semibold text-slate-800 dark:text-slate-200">{{ $state->exam?->title ?? $state->exam_uuid }}</td>
+                                        <td class="px-6 py-3.5 font-semibold text-slate-800 dark:text-slate-200">{{ $state->exam?->title ?? 'Unknown' }}</td>
+                                        <td class="px-6 py-3.5 text-center">
+                                            @if($state->exam?->access_code)
+                                                <span class="px-2 py-0.5 text-xs font-mono font-medium rounded-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ $state->exam->access_code }}</span>
+                                            @else
+                                                <span class="text-slate-400 dark:text-slate-500 text-xs">—</span>
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-3.5 text-center text-slate-700 dark:text-slate-300 font-medium">{{ $state->applied_revision }}</td>
-                                        <td class="px-6 py-3.5 text-center text-slate-700 dark:text-slate-300">{{ $state->applied_state_version }}</td>
-                                        <td class="px-6 py-3.5 text-slate-700 dark:text-slate-300">{{ $state->applied_at?->diffForHumans() }}</td>
+                                        <td class="px-6 py-3.5 text-center">
+                                            @if($state->exam)
+                                                <span class="px-2 py-0.5 text-xs font-medium rounded-sm
+                                                    {{ $state->exam->status === 'published' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' }}">
+                                                    {{ ucfirst($state->exam->status) }}
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400 dark:text-slate-500 text-xs">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-3.5 text-slate-700 dark:text-slate-300 text-xs">{{ $state->applied_at?->diffForHumans() }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                </div>
-            @endif
+                @endif
+            </div>
 
             {{-- ── FAILED SYNCS ── --}}
             @if($failedSyncs->isNotEmpty())

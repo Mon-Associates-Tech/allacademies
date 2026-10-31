@@ -28,9 +28,19 @@ class ExamDashboardService implements ExamDashboardServiceInterface
             $sortDirection = 'desc';
         }
 
-        $query = GeneralExam::where('user_id', $userId)
-            ->with('academicSubject') // Eager load to prevent N+1 queries in Blade
+        $query = GeneralExam::with('academicSubject')
             ->withCount(['sections', 'questions', 'submissions']);
+
+        // On center instances, show all exams (including pulled ones with null user_id)
+        $role = config('center.role', 'central');
+        if ($role === 'center') {
+            // Center staff see all exams, including those pulled from central
+            $query->where(function ($q) {
+                $q->whereNull('user_id')->orWhere('user_id', $userId);
+            });
+        } else {
+            $query->where('user_id', $userId);
+        }
 
         // Safe sorting by relationship name using a subquery
         if ($sortBy === 'subject') {
@@ -67,7 +77,16 @@ class ExamDashboardService implements ExamDashboardServiceInterface
 
     public function summaryForOwner(int $userId): array
     {
-        $examIds = GeneralExam::where('user_id', $userId)->pluck('id');
+        $query = GeneralExam::query();
+        $role = config('center.role', 'central');
+        if ($role === 'center') {
+            $query->where(function ($q) use ($userId) {
+                $q->whereNull('user_id')->orWhere('user_id', $userId);
+            });
+        } else {
+            $query->where('user_id', $userId);
+        }
+        $examIds = $query->pluck('id');
         if ($examIds->isEmpty()) {
             return [
                 'total_exams' => 0,
@@ -96,7 +115,15 @@ class ExamDashboardService implements ExamDashboardServiceInterface
             ->orderBy('date')
             ->pluck('count', 'date');
 
-        $examStatusDistribution = GeneralExam::where('user_id', $userId)
+        $statusQuery = GeneralExam::query();
+        if ($role === 'center') {
+            $statusQuery->where(function ($q) use ($userId) {
+                $q->whereNull('user_id')->orWhere('user_id', $userId);
+            });
+        } else {
+            $statusQuery->where('user_id', $userId);
+        }
+        $examStatusDistribution = $statusQuery
             ->selectRaw("SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft")
             ->selectRaw("SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published")
             ->selectRaw("SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived")

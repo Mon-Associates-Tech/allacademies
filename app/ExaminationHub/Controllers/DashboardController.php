@@ -18,6 +18,29 @@ class DashboardController extends Controller
 
     public function __construct(private readonly ExamDashboardServiceInterface $dashboardService) {}
 
+    /**
+     * Get subject IDs from exams visible to the current user.
+     * On center instances, includes pulled exams (null user_id).
+     */
+    private function getExamSubjectIds()
+    {
+        $query = GeneralExam::query();
+        $role = config('center.role', 'central');
+        $userId = (int) auth()->id();
+
+        if ($role === 'center') {
+            $query->where(function ($q) use ($userId) {
+                $q->whereNull('user_id')->orWhere('user_id', $userId);
+            });
+        } else {
+            $query->where('user_id', $userId);
+        }
+
+        return $query->whereNotNull('academic_subject_id')
+            ->distinct()
+            ->pluck('academic_subject_id');
+    }
+
     public function index(Request $request): View
     {
         $filters = [
@@ -28,12 +51,9 @@ class DashboardController extends Controller
             'sort_direction' => $request->string('sort_direction')->toString(),
         ];
 
-        // Fetch subjects that belong to exams owned by this user for the filter dropdown
-        $userSubjectIds = GeneralExam::where('user_id', (int) auth()->id())
-            ->whereNotNull('academic_subject_id')
-            ->distinct()
-            ->pluck('academic_subject_id');
-            
+        // Fetch subjects for the filter dropdown — center instances include pulled exams
+        $userSubjectIds = $this->getExamSubjectIds();
+
         $availableSubjects = AcademicSubject::whereIn('id', $userSubjectIds)->orderBy('name')->get();
 
         return view('examination-hub.dashboard.index', [
@@ -46,7 +66,7 @@ class DashboardController extends Controller
 
     public function show(GeneralExam $exam): View
     {
-        $this->ensureOwnerAccess($exam);
+        $this->ensureMonitorAccess($exam);
         $exam->loadCount([
             'sections',
             'questions as questions_count' => fn ($q) => $q->where('excluded_from_grading', false),
@@ -92,12 +112,9 @@ class DashboardController extends Controller
             'view'           => $request->string('view')->toString() ?: 'list', // 'list' or 'table'
         ];
 
-        // Fetch subjects that belong to exams owned by this user for the filter dropdown
-        $userSubjectIds = GeneralExam::where('user_id', (int) auth()->id())
-            ->whereNotNull('academic_subject_id')
-            ->distinct()
-            ->pluck('academic_subject_id');
-            
+        // Fetch subjects for the filter dropdown — center instances include pulled exams
+        $userSubjectIds = $this->getExamSubjectIds();
+
         $availableSubjects = AcademicSubject::whereIn('id', $userSubjectIds)->orderBy('name')->get();
 
         return view('examination-hub.dashboard.manage', [
