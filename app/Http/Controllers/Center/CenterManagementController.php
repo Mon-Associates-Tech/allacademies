@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Center;
 
 use App\ExaminationHub\Models\Center;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -59,12 +58,12 @@ class CenterManagementController
             'is_active' => 'boolean',
         ]);
 
-        $token = Str::random(64);
+        $token = Center::generateToken();
 
         $center = Center::create([
             'code' => $validated['code'],
             'name' => $validated['name'],
-            'token_hash' => Hash::make($token),
+            'token_hash' => Center::hashToken($token),
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -132,10 +131,10 @@ class CenterManagementController
      */
     public function regenerateToken(Center $center)
     {
-        $token = Str::random(64);
+        $token = Center::generateToken();
 
         $center->update([
-            'token_hash' => Hash::make($token),
+            'token_hash' => Center::hashToken($token),
         ]);
 
         // Store the plain token for one-time display

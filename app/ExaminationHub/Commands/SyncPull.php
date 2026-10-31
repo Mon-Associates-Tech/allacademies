@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
  */
 class SyncPull extends Command
 {
-    protected $signature = 'sync:pull';
+    protected $signature = 'sync:pull {--force : Bypass the pull interval check}';
     protected $description = 'Pull exam packages from central server';
 
     public function __construct(
@@ -32,20 +32,22 @@ class SyncPull extends Command
             return Command::SUCCESS;
         }
 
-        // Check if pull interval has elapsed
-        $lastPull = \App\ExaminationHub\Models\SyncRun::where('direction', 'pull')
-            ->orderByDesc('started_at')
-            ->value('started_at');
+        // Check if pull interval has elapsed (skip if --force)
+        if (!$this->option('force')) {
+            $lastPull = \App\ExaminationHub\Models\SyncRun::where('direction', 'pull')
+                ->orderByDesc('started_at')
+                ->value('started_at');
 
-        $intervalMinutes = config('center.pull_interval_minutes', 5);
+            $intervalMinutes = config('center.pull_interval_minutes', 5);
 
-        if ($lastPull) {
-            $lastPullTime = \Illuminate\Support\Carbon::parse($lastPull);
-            if ($lastPullTime->gt(now()->subMinutes($intervalMinutes))) {
-                $wait = $lastPullTime->addMinutes($intervalMinutes)->diffInSeconds(now(), false);
-                $this->info("Skipping pull: next pull in {$wait}s (interval: {$intervalMinutes}min).");
+            if ($lastPull) {
+                $lastPullTime = \Illuminate\Support\Carbon::parse($lastPull);
+                if ($lastPullTime->gt(now()->subMinutes($intervalMinutes))) {
+                    $wait = $lastPullTime->addMinutes($intervalMinutes)->diffInSeconds(now(), false);
+                    $this->info("Skipping pull: next pull in {$wait}s (interval: {$intervalMinutes}min).");
 
-                return Command::SUCCESS;
+                    return Command::SUCCESS;
+                }
             }
         }
 
