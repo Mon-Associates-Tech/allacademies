@@ -26,9 +26,9 @@ class ExamPackageBuilderTest extends TestCase
         parent::setUp();
 
         // Generate test keys for signing
-        $keyPair = sodium_crypto_sign_keypair();
-        $publicKey = sodium_crypto_sign_publickey($keyPair);
-        $privateKey = sodium_crypto_sign_secretkey($keyPair);
+        $keyPair = \sodium_crypto_sign_keypair();
+        $publicKey = \sodium_crypto_sign_publickey($keyPair);
+        $privateKey = \sodium_crypto_sign_secretkey($keyPair);
 
         config([
             'center.central_private_key' => base64_encode($privateKey),
@@ -88,7 +88,7 @@ class ExamPackageBuilderTest extends TestCase
                 'general_exam_id' => $exam->id,
                 'general_exam_section_id' => $section->id,
                 'type' => 'multiple_choice',
-                'question' => json_encode(['up' => "Question {$i + 1}?", 'down' => "Question {$i + 1}?"]),
+                'question' => json_encode(['up' => 'Question ' . ($i + 1) . '?', 'down' => 'Question ' . ($i + 1) . '?']),
                 'options' => [
                     ['key' => 'A', 'value' => json_encode(['up' => 'Option A', 'down' => 'Option A'])],
                     ['key' => 'B', 'value' => json_encode(['up' => 'Option B', 'down' => 'Option B'])],
@@ -107,9 +107,9 @@ class ExamPackageBuilderTest extends TestCase
         for ($i = 0; $i < 2; $i++) {
             GeneralExamConfiguredParticipant::create([
                 'general_exam_id' => $exam->id,
-                'name' => "Candidate {$i + 1}",
-                'email' => "candidate{$i + 1}@test.com",
-                'unique_code' => "IDX{$i + 1}",
+                'name' => 'Candidate ' . ($i + 1),
+                'email' => 'candidate' . ($i + 1) . '@test.com',
+                'unique_code' => 'IDX' . ($i + 1),
                 'is_active' => true,
             ]);
         }
@@ -273,7 +273,7 @@ class ExamPackageBuilderTest extends TestCase
         $signature = base64_decode($package['signature']);
 
         $this->assertTrue(
-            sodium_crypto_sign_verify_detached($signature, $package['checksum'], $publicKey)
+            \sodium_crypto_sign_verify_detached($signature, $package['checksum'], $publicKey)
         );
     }
 

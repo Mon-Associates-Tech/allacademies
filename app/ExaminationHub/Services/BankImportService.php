@@ -287,7 +287,7 @@ class BankImportService
         $publicKey = base64_decode($publicKeyBase64);
         $signature = base64_decode($bundle['signature']);
 
-        if (!sodium_crypto_sign_verify_detached($signature, $bundle['checksum'], $publicKey)) {
+        if (!\sodium_crypto_sign_verify_detached($signature, $bundle['checksum'], $publicKey)) {
             throw new \RuntimeException('Bundle signature verification failed. The bundle may be tampered or from an untrusted source.');
         }
     }

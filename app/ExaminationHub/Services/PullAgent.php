@@ -280,7 +280,7 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
-        if (!sodium_crypto_sign_verify_detached($signature, $embeddedChecksum, $publicKeyBytes)) {
+        if (!\sodium_crypto_sign_verify_detached($signature, $embeddedChecksum, $publicKeyBytes)) {
             $error = "Signature verification failed for {$examUuid} revision {$remoteRevision}.";
             Log::error('PullAgent: ' . $error);
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];

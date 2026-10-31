@@ -36,9 +36,9 @@ class GenerateSyncKeys extends Command
         $this->newLine();
 
         // Generate the key pair using native PHP sodium_* functions
-        $keyPair = sodium_crypto_sign_keypair();
-        $publicKey = sodium_crypto_sign_publickey($keyPair);
-        $privateKey = sodium_crypto_sign_secretkey($keyPair);
+        $keyPair = \sodium_crypto_sign_keypair();
+        $publicKey = \sodium_crypto_sign_publickey($keyPair);
+        $privateKey = \sodium_crypto_sign_secretkey($keyPair);
 
         // Base64 encode for storage
         $publicKeyBase64 = base64_encode($publicKey);
@@ -70,8 +70,8 @@ class GenerateSyncKeys extends Command
 
         // Verify the keys work
         $testMessage = 'package integrity test';
-        $signature = sodium_crypto_sign_detached($testMessage, $privateKey);
-        $verified = sodium_crypto_sign_verify_detached($signature, $testMessage, $publicKey);
+        $signature = \sodium_crypto_sign_detached($testMessage, $privateKey);
+        $verified = \sodium_crypto_sign_verify_detached($signature, $testMessage, $publicKey);
 
         if ($verified) {
             $this->info('Verification test: PASSED ✓');
