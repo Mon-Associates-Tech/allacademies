@@ -2,6 +2,7 @@
 
 namespace App\ExaminationHub\Controllers;
 
+use App\ExaminationHub\Jobs\ChunkedRegradeJob;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSubmission;
@@ -29,24 +30,24 @@ class ExamQuestionController extends Controller
             'award_marks_on_exclusion' => $nowExcluded ? (bool) $request->boolean('award_marks') : false,
         ]);
 
-        $submissions = $exam->submissions()
+        // Count submissions for the success message
+        $submissionCount = $exam->submissions()
             ->whereIn('status', [
                 GeneralExamSubmission::STATUS_SUBMITTED,
                 GeneralExamSubmission::STATUS_AUTO_GRADED,
                 GeneralExamSubmission::STATUS_MANUALLY_REVIEWED,
             ])
             ->whereNotNull('submitted_at')
-            ->get();
+            ->count();
 
-        foreach ($submissions as $submission) {
-            $this->gradingService->gradeSubmission($submission);
-        }
+        // Dispatch chunked regrade job instead of in-request loop
+        ChunkedRegradeJob::startForExam($exam->id);
 
         $action = $nowExcluded ? 'removed from' : 'restored to';
 
         return back()->with(
             'success',
-            "Question #{$question->order} {$action} grading. {$submissions->count()} submission(s) regraded."
+            "Question #{$question->order} {$action} grading. {$submissionCount} submission(s) will be regraded in the background."
         );
     }
 }

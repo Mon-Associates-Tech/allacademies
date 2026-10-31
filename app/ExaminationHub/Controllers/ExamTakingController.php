@@ -278,7 +278,7 @@ class ExamTakingController extends Controller
             'section'             => $section,
             'sectionIndex'        => $sectionIndex,
             'questions'           => $questions,
-            'responses'           => $submission->responses ?? [],
+            'responses'           => $submission->getAnswersArray(),
             'proctoringEnabled'   => (bool) $exam->proctoring_enabled,
             'proctoringSessionId' => session('exam_heartbeat_token'),
             'sectionTitle'        => $section->title,
@@ -315,9 +315,16 @@ class ExamTakingController extends Controller
             'section_index' => ['required', 'integer'],
         ]);
 
-        $exam->load(['sections' => fn ($q) => $q->orderBy('order')->with('questions')]);
-        $section         = $exam->sections->get($data['section_index']);
-        $isSingleSection = $exam->sections->count() === 1;
+        // Use the new submission_answers table — no need to load all sections
+        $submission->saveResponse($data['question_id'], $data['response']);
+
+        $section         = null;
+        $isSingleSection = false;
+        if ($exam->sections->isEmpty()) {
+            $exam->load(['sections' => fn ($q) => $q->orderBy('order')]);
+            $section         = $exam->sections->get($data['section_index']);
+            $isSingleSection = $exam->sections->count() === 1;
+        }
 
         // ── Server-side time enforcement (respects extra_time_minutes) ────────
         if ($isSingleSection && $exam->duration_in_minutes && $submission->started_at) {
@@ -358,14 +365,6 @@ class ExamTakingController extends Controller
             }
         }
 
-        $responses = $submission->responses ?? [];
-        $responses[$data['question_id']] = [
-            'response'    => $data['response'],
-            'answered_at' => now()->toIso8601String(),
-        ];
-
-        $submission->update(['responses' => $responses]);
-
         return $request->expectsJson()
             ? response()->json(['status' => 'saved', 'question_id' => $data['question_id']])
             : back()->with('success', 'Response saved.');
@@ -383,9 +382,7 @@ class ExamTakingController extends Controller
             return redirect()->route('examination-hub.take.completed', $exam);
         }
 
-        $hasResponses = ! empty($submission->responses)
-                        && is_array($submission->responses)
-                        && count($submission->responses) > 0;
+        $hasResponses = $submission->getAnsweredCount() > 0;
 
         DB::transaction(function () use ($submission, $hasResponses) {
             $timeTaken = $submission->started_at
@@ -495,6 +492,9 @@ class ExamTakingController extends Controller
         $totalQuestions      = 0;
         $answeredQuestions   = 0;
 
+        // Load all answers from submission_answers for this submission
+        $answersArray = $submission->getAnswersArray();
+
         foreach ($exam->sections as $sectionIndex => $section) {
             $sectionData = [
                 'index'     => $sectionIndex,
@@ -504,7 +504,7 @@ class ExamTakingController extends Controller
 
             foreach ($section->questions as $question) {
                 $totalQuestions++;
-                $isAnswered = isset($submission->responses[$question->id]);
+                $isAnswered = isset($answersArray[$question->id]);
 
                 if ($isAnswered) {
                     $answeredQuestions++;
@@ -515,7 +515,7 @@ class ExamTakingController extends Controller
                     'question_text' => $question->question_text,
                     'question_type' => $question->question_type,
                     'marks'         => $question->marks,
-                    'response'      => $submission->responses[$question->id]['response'] ?? null,
+                    'response'      => $answersArray[$question->id]['response'] ?? null,
                     'is_answered'   => $isAnswered,
                     'is_flagged'    => isset($submission->flagged_questions[$question->id]),
                 ];
@@ -745,6 +745,7 @@ class ExamTakingController extends Controller
     /**
      * Flush any pending responses the client sent as part of the final submit request.
      * Runs after the submission row is already written, so failures are non-fatal.
+     * Now upserts into submission_answers instead of rewriting the JSON column.
      */
     private function savePendingResponses(
         Request $request,
@@ -765,20 +766,13 @@ class ExamTakingController extends Controller
             ->flip()
             ->all(); // keyed by id for O(1) lookup
 
-        $responses = $submission->responses ?? [];
-
         foreach ($data['responses'] as $questionId => $response) {
             if (! is_numeric($questionId) || ! isset($validIds[(int) $questionId])) {
                 continue;
             }
 
-            $responses[(int) $questionId] = [
-                'response'    => (string) $response,
-                'answered_at' => now()->toIso8601String(),
-            ];
+            $submission->saveResponse((int) $questionId, (string) $response);
         }
-
-        $submission->update(['responses' => $responses]);
     }
 
     /**

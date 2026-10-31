@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ExaminationHub\Traits\HasUuid;
 use App\Traits\AcademicGroupLogs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ class AcademicSubtopic extends Model
 {
     use AcademicGroupLogs;
     use HasFactory;
+    use HasUuid;
 
     public function academicTopic(): BelongsTo
     {
@@ -24,6 +26,7 @@ class AcademicSubtopic extends Model
     }
 
     protected $fillable = [
+        'uuid',
         'name',
         'academic_topic_id',
         'slug',

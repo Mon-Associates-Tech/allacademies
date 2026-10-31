@@ -20,99 +20,158 @@ class GeneralExamGradingService
     /**
      * Grade a submission (auto-grade what's possible, mark others for review).
      *
-     * Scoring denominator
-     * ───────────────────
-     * If the parent exam has a `target_total_marks` set (e.g. 100), that value
-     * is used as the denominator so that results are always expressed out of
-     * the intended total — even when the exam has fewer physical questions
-     * than the target.  When `target_total_marks` is null, the live sum of
-     * question marks is used (original behaviour).
+     * Now uses McqGrader and reads from submission_answers table.
+     * Scoring denominator uses target_total_marks if set, otherwise the live
+     * sum of question marks.
      */
     public function gradeSubmission(GeneralExamSubmission $submission): GeneralExamSubmission
     {
         $assignment = $submission->assignment;
+        if (! $assignment) {
+            return $submission;
+        }
 
         // Eager-load questions once to avoid N+1 during grading loop
         $questions = $assignment->questions;
+        if ($questions->isEmpty()) {
+            $questions = $assignment->load('questions')->questions;
+        }
 
-        $rawScore            = 0;
-        $questionSum         = 0; // actual sum of question marks
+        // Load all answers from submission_answers for this submission
+        $answers = \App\ExaminationHub\Models\SubmissionAnswer::where(
+            'general_exam_submission_id',
+            $submission->id
+        )->get()->keyBy('general_exam_question_id');
+
+        $rawScoreHundredths   = 0;
+        $questionSumHundredths = 0; // actual sum of question marks
         $requiresManualReview = false;
-        $gradedResponses     = [];
+        $revision = $assignment->revision ?? 1;
 
         foreach ($questions as $question) {
             $questionId = $question->id;
+            $marksHundredths = \App\ExaminationHub\Services\McqGrader::toHundredths($question->marks ?? 0);
 
             // Excluded questions: removed from grading entirely.
-            // If award_marks_on_exclusion is set, full marks are given; otherwise skipped.
             if ($question->excluded_from_grading) {
                 $awardMarks = (bool) $question->award_marks_on_exclusion;
 
                 if ($awardMarks) {
-                    $questionSum += $question->marks;
-                    $rawScore    += $question->marks;
+                    $questionSumHundredths += $marksHundredths;
+                    $rawScoreHundredths    += $marksHundredths;
                 }
 
-                $gradedResponses[$questionId] = array_merge(
-                    $submission->responses[(string) $questionId] ?? [],
-                    [
-                        'points_earned'         => $awardMarks ? $question->marks : 0,
-                        'excluded_from_grading' => true,
-                        'award_marks_on_exclusion' => $awardMarks,
-                    ]
-                );
+                $answer = $answers->get($questionId);
+                if ($answer) {
+                    $answer->update([
+                        'is_correct' => null,
+                        'points_earned' => $awardMarks ? \App\ExaminationHub\Services\McqGrader::fromHundredths($marksHundredths) : 0,
+                        'graded_revision' => $revision,
+                    ]);
+                }
                 continue;
             }
 
-            $questionSum += $question->marks;
+            $questionSumHundredths += $marksHundredths;
 
-            $response = $submission->getResponse($questionId);
+            $answer = $answers->get($questionId);
+            $response = $answer?->response;
 
             if ($response !== null && $response !== '') {
-                $gradeResult  = $this->gradeQuestion($question, (string) $response);
-                $rawScore    += $gradeResult['points_earned'];
+                if ($question->canAutoGrade()) {
+                    // Use McqGrader for MCQ and True/False
+                    $questionData = [
+                        'correct_answer' => $question->correct_answer ?? '',
+                        'marks' => $question->marks ?? 0,
+                        'excluded_from_grading' => (bool) $question->excluded_from_grading,
+                        'award_marks_on_exclusion' => (bool) $question->award_marks_on_exclusion,
+                    ];
 
-                if ($gradeResult['requires_review'] ?? false) {
+                    if ($question->isMultipleChoice()) {
+                        $gradeResult = \App\ExaminationHub\Services\McqGrader::grade($questionData, $response);
+                    } else {
+                        $gradeResult = \App\ExaminationHub\Services\McqGrader::gradeTrueFalse($questionData, $response);
+                    }
+
+                    $rawScoreHundredths += $gradeResult['points_earned'];
+
+                    if ($answer) {
+                        $answer->update([
+                            'is_correct' => $gradeResult['is_correct'],
+                            'points_earned' => $gradeResult['points_earned_decimal'],
+                            'graded_revision' => $revision,
+                        ]);
+                    }
+                } else {
+                    // Essay, short answer — requires manual review
                     $requiresManualReview = true;
-                }
 
-                $gradedResponses[$questionId] = array_merge(
-                    $submission->responses[(string) $questionId] ?? [],
-                    $gradeResult
-                );
+                    if ($answer) {
+                        $answer->update([
+                            'is_correct' => null,
+                            'points_earned' => 0,
+                            'graded_revision' => $revision,
+                        ]);
+                    }
+                }
             } else {
-                $gradedResponses[$questionId] = [
-                    'response'      => null,
-                    'is_correct'    => false,
-                    'points_earned' => 0,
-                    'feedback'      => 'No answer provided',
-                ];
+                if ($answer) {
+                    $answer->update([
+                        'is_correct' => false,
+                        'points_earned' => 0,
+                        'graded_revision' => $revision,
+                    ]);
+                }
             }
         }
 
         // ── Denominator resolution ──────────────────────────────────────────
-        // Use the exam's configured target if set; fall back to question sum.
-        $effectiveTotal = $this->resolveEffectiveTotal($assignment, $questionSum);
+        $effectiveTotalHundredths = $this->resolveEffectiveTotalHundredths($assignment, $questionSumHundredths);
 
-        $percentage = $effectiveTotal > 0
-            ? ($rawScore / $effectiveTotal) * 100
-            : 0;
+        $percentageHundredths = \App\ExaminationHub\Services\McqGrader::percentage(
+            $rawScoreHundredths,
+            $effectiveTotalHundredths
+        );
+        $percentage = \App\ExaminationHub\Services\McqGrader::percentageToFloat($percentageHundredths);
 
         // Percentage can exceed 100 only if target < question sum — cap it.
-        $percentage = min(100, round($percentage, 2));
+        $percentage = min(100, $percentage);
+
+        $scoreDecimal = \App\ExaminationHub\Services\McqGrader::fromHundredths($rawScoreHundredths);
+        $totalMarksDecimal = \App\ExaminationHub\Services\McqGrader::fromHundredths($effectiveTotalHundredths);
+
+        // Resolve grade from the exam's embedded grading scale
+        $grade = \App\ExaminationHub\Services\GradeScale::resolve($percentage, $assignment->grading_scale);
 
         $submission->update([
-            'responses'              => $gradedResponses,
-            'score'                  => $rawScore,
-            'total_marks'            => $effectiveTotal,  // What the submission is marked out of
+            'score'                  => $scoreDecimal,
+            'total_marks'            => $totalMarksDecimal,
             'percentage'             => $percentage,
-            'grade'                  => $this->calculateGrade($percentage),
+            'grade'                  => $grade,
             'status'                 => GeneralExamSubmission::STATUS_AUTO_GRADED,
             'requires_manual_review' => $requiresManualReview,
             'graded_at'              => now(),
+            'graded_revision'        => $revision,
         ]);
 
+        // Increment sync_version so push agent knows this submission changed
+        $submission->increment('sync_version');
+
         return $submission->fresh();
+    }
+
+    /**
+     * Resolve effective total marks in integer hundredths.
+     */
+    protected function resolveEffectiveTotalHundredths(GeneralExam $exam, int $questionSumHundredths): int
+    {
+        $target = $exam->target_total_marks ?? null;
+
+        if ($target !== null && $target > 0) {
+            return \App\ExaminationHub\Services\McqGrader::toHundredths((float) $target);
+        }
+
+        return $questionSumHundredths > 0 ? $questionSumHundredths : 1; // guard divide-by-zero
     }
 
     /**
@@ -330,6 +389,8 @@ class GeneralExamGradingService
      * Points are capped at the question's own marks value.  The percentage
      * is recalculated against the submission's stored total_marks (which
      * already reflects target_total_marks if that was set at grading time).
+     *
+     * Now updates the submission_answers row instead of the responses JSON.
      */
     public function manualGradeQuestion(
         GeneralExamSubmission $submission,
@@ -344,33 +405,40 @@ class GeneralExamGradingService
             throw new \InvalidArgumentException("Question not found: {$questionId}");
         }
 
-        $points    = min($question->marks, max(0, $points));
-        $responses = $submission->responses ?? [];
-        $key       = (string) $questionId;
+        $points = min($question->marks, max(0, $points));
 
-        $responses[$key] = array_merge($responses[$key] ?? [], [
-            'points_earned'   => $points,
-            'manual_feedback' => $feedback,
-            'manually_graded' => true,
-            'graded_by'       => $graderId,
-            'graded_at'       => now()->toISOString(),
-            'is_correct'      => $points >= $question->marks * 0.7,
-        ]);
+        // Update the submission_answers row
+        $answer = \App\ExaminationHub\Models\SubmissionAnswer::where([
+            'general_exam_submission_id' => $submission->id,
+            'general_exam_question_id'   => $questionId,
+        ])->first();
 
+        if ($answer) {
+            $answer->update([
+                'points_earned' => $points,
+                'is_correct' => $points >= $question->marks * 0.7,
+            ]);
+        }
 
-        // Excluded questions must not contribute to the score
-        $totalScore = collect($responses)
-            ->filter(fn($r) => empty($r['excluded_from_grading']))
-            ->sum('points_earned');
+        // Recalculate total score from all answers
+        $totalScore = \App\ExaminationHub\Models\SubmissionAnswer::where(
+            'general_exam_submission_id',
+            $submission->id
+        )->sum('points_earned');
+
         $percentage = $submission->total_marks > 0
             ? min(100, ($totalScore / $submission->total_marks) * 100)
             : 0;
 
+        $grade = \App\ExaminationHub\Services\GradeScale::resolve(
+            $percentage,
+            $submission->assignment?->grading_scale
+        );
+
         $submission->update([
-            'responses'  => $responses,
             'score'      => $totalScore,
             'percentage' => round($percentage, 2),
-            'grade'      => $this->calculateGrade($percentage),
+            'grade'      => $grade,
             'status'     => GeneralExamSubmission::STATUS_MANUALLY_REVIEWED,
         ]);
 
@@ -539,19 +607,22 @@ class GeneralExamGradingService
 
         $questionAnalysis = [];
         foreach ($assignment->questions as $question) {
+            // Read from submission_answers instead of responses JSON
+            $answers = \App\ExaminationHub\Models\SubmissionAnswer::where(
+                'general_exam_question_id',
+                $question->id
+            )->whereIn('general_exam_submission_id', $gradedSubmissions->pluck('id'))->get();
+
             $correctCount  = 0;
             $totalAttempts = 0;
             $totalPoints   = 0;
 
-            foreach ($gradedSubmissions as $submission) {
-                $resp = $submission->responses[$question->id] ?? null;
-                if ($resp) {
-                    $totalAttempts++;
-                    if ($resp['is_correct'] ?? false) {
-                        $correctCount++;
-                    }
-                    $totalPoints += $resp['points_earned'] ?? 0;
+            foreach ($answers as $answer) {
+                $totalAttempts++;
+                if ($answer->is_correct === true) {
+                    $correctCount++;
                 }
+                $totalPoints += $answer->points_earned ?? 0;
             }
 
             $questionAnalysis[$question->id] = [
@@ -617,14 +688,7 @@ class GeneralExamGradingService
 
     protected function calculateGrade(float $percentage): string
     {
-        return match (true) {
-            $percentage >= 90 => 'A+',
-            $percentage >= 80 => 'A',
-            $percentage >= 70 => 'B',
-            $percentage >= 60 => 'C',
-            $percentage >= 50 => 'D',
-            default           => 'F',
-        };
+        return \App\ExaminationHub\Services\GradeScale::resolve($percentage, null);
     }
 
     protected function calculateMedian(array $values): float

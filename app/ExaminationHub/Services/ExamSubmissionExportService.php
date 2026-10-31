@@ -42,16 +42,21 @@ class ExamSubmissionExportService implements ExamSubmissionExportServiceInterfac
         int $timeAllowed,
         $questionSectionMap
     ): array {
-        $responses   = is_array($submission->responses) ? $submission->responses : [];
-        $correct     = collect($responses)->where('is_correct', true)->count();
-        $answered    = collect($responses)->filter(fn ($r) => !empty($r['response']))->count();
-        $incorrect   = collect($responses)->where('is_correct', false)->filter(fn ($r) => !empty($r['response']))->count();
-        $unanswered  = $questionCount - $answered;
+        // Load answers from submission_answers table
+        $answers = \App\ExaminationHub\Models\SubmissionAnswer::where(
+            'general_exam_submission_id',
+            $submission->id
+        )->get();
+
+        $correct    = $answers->where('is_correct', true)->count();
+        $answered   = $answers->whereNotNull('response')->count();
+        $incorrect  = $answers->where('is_correct', false)->count();
+        $unanswered = $questionCount - $answered;
 
         $sectionScores = [];
-        foreach ($responses as $questionId => $response) {
-            $sectionTitle = $questionSectionMap[(int) $questionId] ?? 'Unsectioned';
-            $sectionScores[$sectionTitle] = ($sectionScores[$sectionTitle] ?? 0) + (float) ($response['points_earned'] ?? 0);
+        foreach ($answers as $answer) {
+            $sectionTitle = $questionSectionMap[$answer->general_exam_question_id] ?? 'Unsectioned';
+            $sectionScores[$sectionTitle] = ($sectionScores[$sectionTitle] ?? 0) + (float) ($answer->points_earned ?? 0);
         }
 
         $sectionScoresFormatted = collect($sectionScores)

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GeneralExamQuestion extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\ExaminationHub\Traits\HasUuid;
 
     public const TYPE_MULTIPLE_CHOICE = 'multiple_choice';
     public const TYPE_TRUE_FALSE      = 'true_false';
@@ -20,6 +20,7 @@ class GeneralExamQuestion extends Model
     public const DIFFICULTY_HARD   = 'hard';
 
     protected $fillable = [
+        'uuid',
         'general_exam_id',
         'general_exam_section_id',
         'type',
@@ -40,6 +41,7 @@ class GeneralExamQuestion extends Model
         // PK in the source question-bank table (e.g. multiple_choice_questions.id).
         // NULL for AI-generated or manually authored questions.
         'source_question_id',
+        'source_question_uuid',
     ];
 
     protected function casts(): array

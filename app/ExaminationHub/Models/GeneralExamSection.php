@@ -12,9 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GeneralExamSection extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\ExaminationHub\Traits\HasUuid;
 
     protected $fillable = [
+        'uuid',
         'general_exam_id',
         'title',
         'description',

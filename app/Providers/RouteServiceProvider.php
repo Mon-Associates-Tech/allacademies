@@ -37,8 +37,17 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // Sync API routes for multi-center sync
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/sync.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            // Multi-center sync admin routes
+            Route::middleware('web')
+                ->group(base_path('routes/center-sync.php'));
         });
     }
 

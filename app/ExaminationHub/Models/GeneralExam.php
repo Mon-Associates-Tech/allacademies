@@ -11,13 +11,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\ExaminationHub\Models\ExamPackage;
 use Illuminate\Support\Str;
 
 class GeneralExam extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\ExaminationHub\Traits\HasUuid;
 
     protected $fillable = [
+        'uuid',
         'title',
         'description',
         'access_code',
@@ -63,6 +65,11 @@ class GeneralExam extends Model
         'status',
         'hardened_mode',
         'max_attempts',
+        // Sync columns
+        'revision',
+        'state_version',
+        'grading_scale',
+        'published_at',
     ];
 
     protected function casts(): array
@@ -92,6 +99,11 @@ class GeneralExam extends Model
             'hardened_mode' => 'boolean',
             'ai_generation_settings' => 'array',
             'participant_required_fields' => 'array',
+            // Sync columns
+            'revision' => 'integer',
+            'state_version' => 'integer',
+            'grading_scale' => 'array',
+            'published_at' => 'datetime',
         ];
     }
 
@@ -153,6 +165,11 @@ class GeneralExam extends Model
     public function submissions(): HasMany
     {
         return $this->hasMany(GeneralExamSubmission::class);
+    }
+
+    public function packages(): HasMany
+    {
+        return $this->hasMany(ExamPackage::class, 'exam_uuid', 'uuid');
     }
 
     public function configuredParticipants(): HasMany

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ExaminationHub\Traits\HasUuid;
 use App\Traits\AcademicGroupLogs;
 use App\Traits\Trackable;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +15,7 @@ class AcademicTopic extends Model
 {
     use AcademicGroupLogs;
     use HasFactory;
+    use HasUuid;
     use SoftDeletes;
     use Trackable;
 
@@ -21,6 +23,7 @@ class AcademicTopic extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
         'name',
         'academic_subject_id',
         'description',

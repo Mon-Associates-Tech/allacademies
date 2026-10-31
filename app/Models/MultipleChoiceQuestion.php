@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ExaminationHub\Traits\HasUuid;
 use App\Support\Mark;
 use App\Traits\HasQuestionAndAnswer;
 use App\Traits\QuestionOwnership;
@@ -16,6 +17,7 @@ class MultipleChoiceQuestion extends Model
 {
     use HasFactory;
     use HasQuestionAndAnswer;
+    use HasUuid;
     use QuestionOwnership;
     use SoftDeletes;
     use Trackable;
@@ -24,6 +26,7 @@ class MultipleChoiceQuestion extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
         'question',
         'option_a',
         'option_b',

@@ -13,9 +13,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GeneralExamParticipantGroup extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\ExaminationHub\Traits\HasUuid;
 
     protected $fillable = [
+        'uuid',
         'name',
         'parent_id',
         'description',

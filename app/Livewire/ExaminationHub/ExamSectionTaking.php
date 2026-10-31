@@ -61,7 +61,8 @@ class ExamSectionTaking extends Component
     protected function loadResponses(): void
     {
         $submission = $this->submission;
-        $savedResponses = $submission->responses ?? [];
+        // Load from submission_answers table, fallback to responses JSON
+        $savedResponses = $submission->getAnswersArray();
 
         foreach ($this->questions as $question) {
             if (isset($savedResponses[$question->id]['response'])) {
@@ -189,13 +190,8 @@ class ExamSectionTaking extends Component
             }
         }
 
-        $savedResponses = $submission->responses ?? [];
-        $savedResponses[$key] = [
-            'response' => $value,
-            'answered_at' => now()->toIso8601String(),
-        ];
-
-        $submission->update(['responses' => $savedResponses]);
+        // Use submission_answers table — upsert a single row
+        $submission->saveResponse((int) $key, $value);
 
         // Emit event for JavaScript auto-save tracking
         $this->dispatch('responseUpdated', questionId: $key, response: $value);

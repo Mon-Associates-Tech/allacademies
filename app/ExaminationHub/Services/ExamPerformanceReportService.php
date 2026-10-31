@@ -198,20 +198,27 @@ class ExamPerformanceReportService
                 $unansweredCount = 0;
                 $totalPointsEarned = 0;
 
+                // Load answers from submission_answers for this batch of submissions
+                $submissionIds = $examSubmissions->pluck('id')->toArray();
+                $answers = \App\ExaminationHub\Models\SubmissionAnswer::where(
+                    'general_exam_question_id',
+                    $question->id
+                )->whereIn('general_exam_submission_id', $submissionIds)->get()->keyBy('general_exam_submission_id');
+
                 foreach ($examSubmissions as $submission) {
                     $totalAttempts++;
-                    $response = $submission->responses[$question->id] ?? null;
+                    $answer = $answers->get($submission->id);
 
-                    if ($response === null || ! isset($response['response']) || $response['response'] === null) {
+                    if ($answer === null) {
                         $unansweredCount++;
                     } else {
-                        $isCorrect = $response['is_correct'] ?? false;
+                        $isCorrect = $answer->is_correct ?? false;
                         if ($isCorrect) {
                             $correctCount++;
                         } else {
                             $incorrectCount++;
                         }
-                        $totalPointsEarned += $response['points_earned'] ?? 0;
+                        $totalPointsEarned += $answer->points_earned ?? 0;
                     }
                 }
 

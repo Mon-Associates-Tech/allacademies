@@ -98,11 +98,8 @@ class HeartbeatController extends Controller
 
         $heartbeat = $this->monitoringService->processHeartbeat($heartbeat->session_token, $data);
 
-        // Compute questions_answered from submission ground truth
-        $answeredCount = count(array_filter(
-            $submission->responses ?? [],
-            fn ($r) => ! empty($r['response'] ?? $r)
-        ));
+        // Compute questions_answered from submission_answers table
+        $answeredCount = $submission->getAnsweredCount();
         if ($heartbeat->questions_answered !== $answeredCount) {
             $heartbeat->update(['questions_answered' => $answeredCount]);
             $heartbeat->questions_answered = $answeredCount;

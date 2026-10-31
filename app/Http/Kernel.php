@@ -86,5 +86,10 @@ class Kernel extends HttpKernel
         'assignment.session' => \App\Http\Middleware\AssignmentSessionMiddleware::class,
         'token.subscription' => \App\Http\Middleware\CheckTokenSubscription::class,
         'proctor.exam' => \App\Http\Middleware\ProctorExamMiddleware::class,
+        'center.read-only' => \App\ExaminationHub\Middleware\CenterReadOnly::class,
+        'center.scope' => \App\ExaminationHub\Middleware\CenterScope::class,
+        'sync.auth' => \App\ExaminationHub\Middleware\SyncAuth::class,
+        'sync.signature' => \App\ExaminationHub\Middleware\SyncSignature::class,
+        'sync.version' => \App\ExaminationHub\Middleware\SyncVersion::class,
     ];
 }

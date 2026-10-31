@@ -440,4 +440,51 @@
         </x-app.nav-section>
     @endcan
 
+    {{-- ═══════════════════════════════════════════════════════════
+         SECTION: Multi-Center Sync (Central Admin Only)
+     ═══════════════════════════════════════════════════════════ --}}
+    @if(config('center.role') === 'central')
+        <x-app.nav-section
+            id="admin-nav-center-sync"
+            label="Multi-Center Sync"
+            :open="true"
+            :bordered="true"
+        >
+            <x-app.nav-item
+                href="{{ route('center-sync.dashboard') }}"
+                :active="Route::is('center-sync.dashboard')"
+                icon="heroicon-o-squares-2x2"
+            >Dashboard
+            </x-app.nav-item>
+
+            <x-app.nav-item
+                href="{{ route('center-sync.centers.index') }}"
+                :active="Route::is('center-sync.centers.*')"
+                icon="heroicon-o-building-office-2"
+            >Centers
+            </x-app.nav-item>
+
+            <x-app.nav-item
+                href="{{ route('center-sync.exams.index') }}"
+                :active="Route::is('center-sync.exams.*')"
+                icon="heroicon-o-document-chart-bar"
+            >Published Exams
+            </x-app.nav-item>
+
+            <x-app.nav-item
+                href="{{ route('center-sync.sync.index') }}"
+                :active="Route::is('center-sync.sync.*')"
+                icon="heroicon-o-arrow-path"
+            >Sync Status
+            </x-app.nav-item>
+
+            <x-app.nav-item
+                href="{{ route('center-sync.bank.index') }}"
+                :active="Route::is('center-sync.bank.*')"
+                icon="heroicon-o-archive-box"
+            >Bank Backup
+            </x-app.nav-item>
+        </x-app.nav-section>
+    @endif
+
 </div>

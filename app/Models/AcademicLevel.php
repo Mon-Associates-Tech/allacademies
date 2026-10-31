@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ExaminationHub\Traits\HasUuid;
 use App\Traits\AcademicGroupLogs;
 use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
@@ -18,6 +19,7 @@ class AcademicLevel extends Model
     use AcademicGroupLogs;
     use ActivityLoggable;
     use HasFactory;
+    use HasUuid;
     use SoftDeletes;
     use Trackable;
     //    use BelongsToSchoolEnhanced;
@@ -26,6 +28,7 @@ class AcademicLevel extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
         'name',
         'label',
         'school_id',

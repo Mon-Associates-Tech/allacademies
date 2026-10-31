@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamProctoringLog extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\ExaminationHub\Traits\HasUuid;
 
     // Severity constants
     public const SEVERITY_LOW    = 'low';
@@ -29,11 +29,14 @@ class ExamProctoringLog extends Model
     public const EVENT_FACE_MISMATCH    = 'face_mismatch';
 
     protected $fillable = [
+        'uuid',
         'general_exam_submission_id',
         'event_type',
         'event_data',
         'severity',
         'occurred_at',
+        'center_id',
+        'synced_at',
     ];
 
     protected function casts(): array
@@ -41,6 +44,7 @@ class ExamProctoringLog extends Model
         return [
             'event_data'  => 'array',
             'occurred_at' => 'datetime',
+            'synced_at'   => 'datetime',
         ];
     }
 

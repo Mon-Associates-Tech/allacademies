@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GeneralExamConfiguredParticipant extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\ExaminationHub\Traits\HasUuid;
 
     protected $fillable = [
+        'uuid',
         'general_exam_id',
         'name',
         'email',

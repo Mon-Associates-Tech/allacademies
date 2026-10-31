@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class GeneralExamSubmission extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\ExaminationHub\Traits\HasUuid;
 
     public const STATUS_NOT_STARTED      = 'not_started';
     public const STATUS_IN_PROGRESS      = 'in_progress';
@@ -23,6 +23,7 @@ class GeneralExamSubmission extends Model
     public const STATUS_FINAL            = 'final';
 
     protected $fillable = [
+        'uuid',
         'general_exam_id',
         'participant_type',
         'participant_id',
@@ -67,6 +68,15 @@ class GeneralExamSubmission extends Model
         'attempt_number',
         'ip_address',
         'user_agent',
+        // Sync columns
+        'center_id',
+        'participant_index_number',
+        'graded_revision',
+        'sync_version',
+        'synced_version',
+        'central_score',
+        'parity_ok',
+        'parity_checked_at',
     ];
 
     protected function casts(): array
@@ -92,6 +102,13 @@ class GeneralExamSubmission extends Model
             'bonus_points'             => 'decimal:2',
             'bonus_granted_at'         => 'datetime',
             'bonus_granted_by'         => 'integer',
+            // Sync columns
+            'graded_revision'          => 'integer',
+            'sync_version'             => 'integer',
+            'synced_version'           => 'integer',
+            'central_score'            => 'decimal:2',
+            'parity_ok'                => 'boolean',
+            'parity_checked_at'        => 'datetime',
         ];
     }
 
@@ -137,6 +154,12 @@ class GeneralExamSubmission extends Model
     public function activeReadmissionGrant(): ?ExamReadmissionGrant
     {
         return ExamReadmissionGrant::activeForSubmission($this->id);
+    }
+
+    /** All per-answer rows for this submission. */
+    public function answers(): HasMany
+    {
+        return $this->hasMany(SubmissionAnswer::class, 'general_exam_submission_id');
     }
 
     // ─── Status Helpers ───────────────────────────────────────────────────────
@@ -273,105 +296,153 @@ class GeneralExamSubmission extends Model
 
     // ─── Response Management ──────────────────────────────────────────────────
 
+    /**
+     * Save a single answer — upserts one row in submission_answers.
+     * No longer rewrites the entire responses JSON column.
+     */
     public function saveResponse(int $questionId, mixed $response): void
     {
-        $responses = $this->responses ?? [];
-        $responses[$questionId] = [
-            'response'    => $response,
-            'answered_at' => now()->toISOString(),
-        ];
-        $this->update(['responses' => $responses]);
+        $question = GeneralExamQuestion::find($questionId);
+        if (! $question) {
+            return;
+        }
+
+        SubmissionAnswer::updateOrCreate(
+            [
+                'general_exam_submission_id' => $this->id,
+                'general_exam_question_id'   => $questionId,
+            ],
+            [
+                'question_uuid' => $question->uuid,
+                'response'      => strtoupper(trim((string) $response)),
+                'answered_at'   => now(),
+            ]
+        );
+
+        // Increment sync_version so push agent knows this submission changed
+        $this->increment('sync_version');
     }
 
+    /**
+     * Get a single answer by question ID from submission_answers.
+     * Falls back to the responses JSON column for backward compatibility.
+     */
     public function getResponse(int $questionId): mixed
     {
+        $answer = SubmissionAnswer::where([
+            'general_exam_submission_id' => $this->id,
+            'general_exam_question_id'   => $questionId,
+        ])->first();
+
+        if ($answer) {
+            return $answer->response;
+        }
+
+        // Fallback to responses JSON for backward compatibility
         return $this->responses[(string) $questionId]['response'] ?? null;
     }
 
+    /**
+     * Check if a question has been answered.
+     */
     public function hasAnswered(int $questionId): bool
     {
+        if (SubmissionAnswer::where([
+            'general_exam_submission_id' => $this->id,
+            'general_exam_question_id'   => $questionId,
+        ])->exists()) {
+            return true;
+        }
+
+        // Fallback to responses JSON
         return isset($this->responses[$questionId]);
     }
 
+    /**
+     * Get the count of answered questions.
+     */
     public function getAnsweredCount(): int
     {
+        $count = SubmissionAnswer::where(
+            'general_exam_submission_id',
+            $this->id
+        )->count();
+
+        if ($count > 0) {
+            return $count;
+        }
+
+        // Fallback to responses JSON
         return count($this->responses ?? []);
+    }
+
+    /**
+     * Get all answers for this submission as a keyed array.
+     * Returns [question_id => response] for compatibility with views.
+     */
+    public function getAnswersArray(): array
+    {
+        $answers = SubmissionAnswer::where(
+            'general_exam_submission_id',
+            $this->id
+        )->get();
+
+        $result = [];
+        foreach ($answers as $answer) {
+            $result[$answer->general_exam_question_id] = [
+                'response'    => $answer->response,
+                'answered_at' => $answer->answered_at?->toIso8601String(),
+            ];
+        }
+
+        return $result;
     }
 
     // ─── Grading ─────────────────────────────────────────────────────────────
 
+    /**
+     * Grade this submission using McqGrader and submission_answers.
+     * Delegates to ExamGradingService for the full grading pipeline.
+     */
     public function gradeSubmission(): void
     {
-        $assignment = $this->assignment;
-        $questions  = $assignment->questions;
-
-        $totalScore          = 0;
-        $totalMarks          = 0;
-        $requiresManualReview = false;
-        $gradedResponses     = [];
-
-        foreach ($questions as $question) {
-            $totalMarks += $question->marks;
-            $response    = $this->getResponse($question->id);
-
-            if ($response !== null) {
-                $gradeResult  = $question->gradeResponse((string) $response);
-                $totalScore  += $gradeResult['points_earned'];
-
-                if ($gradeResult['requires_review'] ?? false) {
-                    $requiresManualReview = true;
-                }
-
-                $gradedResponses[$question->id] = array_merge(
-                    $this->responses[$question->id] ?? [],
-                    $gradeResult
-                );
-            } else {
-                $gradedResponses[$question->id] = [
-                    'response'     => null,
-                    'is_correct'   => false,
-                    'points_earned' => 0,
-                    'feedback'     => 'No answer provided',
-                ];
-            }
-        }
-
-        $percentage = $totalMarks > 0 ? ($totalScore / $totalMarks) * 100 : 0;
-
-        $this->update([
-            'responses'             => $gradedResponses,
-            'score'                 => $totalScore,
-            'total_marks'           => $totalMarks,
-            'percentage'            => round($percentage, 2),
-            'grade'                 => $this->calculateGrade($percentage),
-            'status'                => self::STATUS_AUTO_GRADED,
-            'requires_manual_review' => $requiresManualReview,
-            'graded_at'             => now(),
-        ]);
+        $service = new \App\ExaminationHub\Services\ExamGradingService();
+        $service->grade($this);
     }
 
+    /**
+     * Manually grade a single question — updates the submission_answers row.
+     */
     public function manualGrade(int $questionId, float $points, ?string $feedback = null): void
     {
-        $responses = $this->responses ?? [];
+        $answer = SubmissionAnswer::where([
+            'general_exam_submission_id' => $this->id,
+            'general_exam_question_id'   => $questionId,
+        ])->first();
 
-        if (isset($responses[$questionId])) {
-            $responses[$questionId]['points_earned']    = $points;
-            $responses[$questionId]['manual_feedback']  = $feedback;
-            $responses[$questionId]['manually_graded']  = true;
+        if ($answer) {
+            $answer->update([
+                'points_earned' => $points,
+            ]);
         }
 
-        $totalScore = 0;
-        foreach ($responses as $response) {
-            $totalScore += $response['points_earned'] ?? 0;
-        }
+        // Recalculate total score from all answers
+        $totalScore = SubmissionAnswer::where(
+            'general_exam_submission_id',
+            $this->id
+        )->sum('points_earned');
 
         $percentage = $this->total_marks > 0 ? ($totalScore / $this->total_marks) * 100 : 0;
 
+        $grade = \App\ExaminationHub\Services\GradeScale::resolve(
+            $percentage,
+            $this->assignment?->grading_scale
+        );
+
         $this->update([
-            'responses'  => $responses,
             'score'      => $totalScore,
             'percentage' => round($percentage, 2),
-            'grade'      => $this->calculateGrade($percentage),
+            'grade'      => $grade,
         ]);
     }
 
@@ -386,26 +457,16 @@ class GeneralExamSubmission extends Model
         ]);
     }
 
+    /**
+     * Calculate grade from percentage using the exam's embedded grading scale.
+     * Falls back to the default scale if no grading scale is set.
+     */
     protected function calculateGrade(float $percentage): string
     {
-        $schoolId = auth()->user()?->school_id;
-        $levelId  = $this->assignment?->academic_level_id;
-
-        if ($schoolId) {
-            $gradeScale = ExaminationHubGradeScale::getForScore($percentage, $schoolId, $levelId);
-            if ($gradeScale) {
-                return $gradeScale->letter_grade;
-            }
-        }
-
-        return match (true) {
-            $percentage >= 90 => 'A+',
-            $percentage >= 80 => 'A',
-            $percentage >= 70 => 'B',
-            $percentage >= 60 => 'C',
-            $percentage >= 50 => 'D',
-            default           => 'F',
-        };
+        return \App\ExaminationHub\Services\GradeScale::resolve(
+            $percentage,
+            $this->assignment?->grading_scale
+        );
     }
 
     // ─── Violations ───────────────────────────────────────────────────────────

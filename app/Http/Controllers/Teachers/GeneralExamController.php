@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teachers;
 use App\Http\Controllers\Controller;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamSubmission;
+use App\ExaminationHub\Models\SubmissionAnswer;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 
@@ -103,9 +104,13 @@ class GeneralExamController extends Controller
             ]);
 
             foreach ($assignment->submissions as $submission) {
-                $gradedResponses = is_array($submission->responses) ? $submission->responses : [];
-                $correctCount = collect($gradedResponses)->filter(fn ($response) => ($response['is_correct'] ?? false) === true)->count();
-                $answeredCount = collect($gradedResponses)->filter(fn ($response) => array_key_exists('response', $response) && $response['response'] !== null && $response['response'] !== '')->count();
+                // Load answers from submission_answers table
+                $answers = SubmissionAnswer::where(
+                    'general_exam_submission_id',
+                    $submission->id
+                )->get();
+                $correctCount = $answers->where('is_correct', true)->count();
+                $answeredCount = $answers->whereNotNull('response')->count();
                 $incorrectCount = max(0, $answeredCount - $correctCount);
 
                 fputcsv($handle, [
