@@ -39,7 +39,7 @@ class SyncManifestService
      */
     protected function getExamList(): array
     {
-        return DB::table('exam_packages')
+        return DB::table('general_exam_packages')
             ->select([
                 'exam_uuid',
                 'revision',

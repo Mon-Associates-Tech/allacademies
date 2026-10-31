@@ -120,11 +120,14 @@ class PullAgent
     {
         try {
             $response = Http::withToken($token)
+                ->withHeaders($this->syncHeaders($token))
                 ->timeout(30)
                 ->get("{$centralUrl}/api/sync/v1/manifest");
 
             if (!$response->successful()) {
-                Log::error("PullAgent: Manifest fetch failed with status {$response->status()}");
+                Log::error("PullAgent: Manifest fetch failed with status {$response->status()}", [
+                    'body' => $response->body(),
+                ]);
                 return null;
             }
 
@@ -133,6 +136,19 @@ class PullAgent
             Log::error("PullAgent: Failed to connect to central: {$e->getMessage()}");
             return null;
         }
+    }
+
+    /**
+     * Build common sync API headers.
+     */
+    protected function syncHeaders(string $token): array
+    {
+        $appVersion = config('center.app_version', '1.0.0');
+        return [
+            'X-App-Version' => $appVersion,
+            'X-Timestamp' => (string) time(),
+            'X-Signature' => hash_hmac('sha256', '', $token),
+        ];
     }
 
     /**
@@ -219,6 +235,7 @@ class PullAgent
     {
         try {
             $response = Http::withToken($token)
+                ->withHeaders($this->syncHeaders($token))
                 ->timeout(120)
                 ->get("{$centralUrl}/api/sync/v1/exams/{$uuid}/revisions/{$revision}");
 
