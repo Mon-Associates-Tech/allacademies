@@ -20,7 +20,7 @@
                         {{ $exam->title }}
                     </h1>
                     <div class="flex gap-2">
-                        @if(!$exam->published_at)
+                        @if($exam->status !== 'published')
                             <form method="POST" action="{{ route('center-sync.exams.publish', $exam) }}" class="inline">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-sm bg-gradient-to-br from-emerald-600 to-emerald-400 shadow-[0_2px_10px_rgba(5,150,105,0.3)] hover:from-emerald-700 hover:to-emerald-500 transition-all">
@@ -80,7 +80,7 @@
                     <div class="flex justify-between items-center">
                         <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Status</dt>
                         <dd>
-                            @if($exam->published_at)
+                            @if($exam->status === 'published')
                                 <span class="px-2 py-0.5 text-xs font-medium rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Published</span>
                             @else
                                 <span class="px-2 py-0.5 text-xs font-medium rounded-sm bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Draft</span>
@@ -93,7 +93,7 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Published</dt>
-                        <dd class="text-sm text-slate-700 dark:text-slate-300">{{ $exam->published_at ? $exam->published_at->diffForHumans() : 'Not published' }}</dd>
+                        <dd class="text-sm text-slate-700 dark:text-slate-300">{{ $exam->published_at ? $exam->published_at->diffForHumans() : ($exam->status === 'published' ? 'Yes' : 'Not published') }}</dd>
                     </div>
                     <div class="flex justify-between items-center">
                         <dt class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Revisions</dt>

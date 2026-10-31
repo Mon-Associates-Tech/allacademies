@@ -28,10 +28,10 @@ class ExamPublishController
         if ($request->filled('status')) {
             switch ($request->status) {
                 case 'published':
-                    $query->whereNotNull('published_at');
+                    $query->where('status', 'published');
                     break;
                 case 'draft':
-                    $query->whereNull('published_at');
+                    $query->where('status', '!=', 'published');
                     break;
             }
         }
@@ -65,21 +65,20 @@ class ExamPublishController
      */
     public function publish(Request $request, GeneralExam $exam)
     {
-        $builder = app(ExamPackageBuilder::class);
         $publishService = app(ExamPublishService::class);
 
-        try {
-            $publishService->publish($exam, auth()->id());
+        $result = $publishService->publish($exam);
 
-            return redirect()
-                ->route('center-sync.exams.show', $exam)
-                ->with('success', 'Exam published successfully. Centers can now pull this exam.');
-        } catch (\Exception $e) {
+        if (!$result['success']) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to publish exam: ' . $e->getMessage());
+                ->with('error', implode(' ', $result['errors']));
         }
+
+        return redirect()
+            ->route('center-sync.exams.show', $exam)
+            ->with('success', 'Exam published successfully. Centers can now pull this exam.');
     }
 
     /**
@@ -87,7 +86,7 @@ class ExamPublishController
      */
     public function reviseForm(GeneralExam $exam)
     {
-        if (!$exam->published_at) {
+        if ($exam->status !== 'published') {
             return redirect()
                 ->route('center-sync.exams.show', $exam)
                 ->with('error', 'This exam has not been published yet.');
@@ -103,7 +102,7 @@ class ExamPublishController
      */
     public function revise(Request $request, GeneralExam $exam)
     {
-        if (!$exam->published_at) {
+        if ($exam->status !== 'published') {
             return redirect()
                 ->back()
                 ->with('error', 'This exam has not been published yet.');
@@ -159,18 +158,18 @@ class ExamPublishController
 
         // Create new revision
         $publishService = app(ExamPublishService::class);
-        try {
-            $publishService->revise($exam, auth()->id());
+        $result = $publishService->revise($exam);
 
-            return redirect()
-                ->route('center-sync.exams.show', $exam)
-                ->with('success', 'Revision created. Centers will pull the updated grading rules.');
-        } catch (\Exception $e) {
+        if (!$result['success']) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to create revision: ' . $e->getMessage());
+                ->with('error', implode(' ', $result['errors']));
         }
+
+        return redirect()
+            ->route('center-sync.exams.show', $exam)
+            ->with('success', 'Revision created. Centers will pull the updated grading rules.');
     }
 
     /**

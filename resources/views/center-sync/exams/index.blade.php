@@ -83,14 +83,14 @@
                         <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
                             <td class="px-6 py-3.5 font-semibold text-slate-800 dark:text-slate-200">{{ $exam->title }}</td>
                             <td class="px-6 py-3.5">
-                                @if($exam->published_at)
+                                @if($exam->status === 'published')
                                     <span class="px-2 py-0.5 text-xs font-medium rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Published</span>
                                 @else
                                     <span class="px-2 py-0.5 text-xs font-medium rounded-sm bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Draft</span>
                                 @endif
                             </td>
                             <td class="px-6 py-3.5 text-center text-slate-700 dark:text-slate-300 font-medium">{{ $exam->packages_count ?? 0 }}</td>
-                            <td class="px-6 py-3.5 text-slate-700 dark:text-slate-300">{{ $exam->published_at ? $exam->published_at->diffForHumans() : '-' }}</td>
+                            <td class="px-6 py-3.5 text-slate-700 dark:text-slate-300">{{ $exam->published_at ? $exam->published_at->diffForHumans() : ($exam->status === 'published' ? 'Yes' : '-') }}</td>
                             <td class="px-6 py-3.5">
                                 <span class="inline-flex items-center justify-center text-xs font-mono font-medium px-2.5 py-1 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300" style="border-radius: 2px;">
                                     {{ $exam->access_code ?? '-' }}
@@ -105,7 +105,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                         </svg>
                                     </a>
-                                    @if(!$exam->published_at)
+                                    @if($exam->status !== 'published')
                                         <span class="text-slate-300 dark:text-slate-600">|</span>
                                         <form method="POST" action="{{ route('center-sync.exams.publish', $exam) }}" class="inline">
                                             @csrf

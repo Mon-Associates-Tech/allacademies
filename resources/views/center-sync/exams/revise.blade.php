@@ -68,7 +68,11 @@
                                 @foreach($section->questions as $q)
                                     <tr class="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
                                         <td class="px-6 py-3.5 max-w-md">
-                                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ Str::limit(strip_tags($q->question ?? ''), 80) }}</div>
+                                            @php
+                                                $questionText = is_object($q->question) ? ($q->question->down ?? '') : ($q->question ?? '');
+                                                $plainQuestionText = is_string($questionText) ? strip_tags($questionText) : '';
+                                            @endphp
+                                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ Str::limit($plainQuestionText, 80) }}</div>
                                             <div class="text-xs text-slate-500 dark:text-slate-400">Section: {{ $section->title ?? '' }}</div>
                                         </td>
                                         <td class="px-6 py-3.5">
