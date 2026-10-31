@@ -43,16 +43,10 @@ class SyncSignature
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // Verify HMAC signature for POST/PUT/PATCH requests
-        if ($request->isMethod(['post', 'put', 'patch'])) {
-            $center = $request->get('center');
-            if (!$center) {
-                return response()->json([
-                    'error' => 'Unauthorized',
-                    'message' => 'Center not authenticated.',
-                ], Response::HTTP_UNAUTHORIZED);
-            }
-
+        // Verify HMAC signature for POST/PUT/PATCH requests (body signature)
+        // For GET requests, the signature is over an empty string (already provided by PullAgent)
+        $method = strtolower($request->method());
+        if (in_array($method, ['post', 'put', 'patch'])) {
             // The signature is HMAC-SHA256 of the raw body using the center's token
             $token = $request->bearerToken();
             $expectedSignature = hash_hmac('sha256', $request->body(), $token ?? '');
