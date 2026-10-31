@@ -9,6 +9,7 @@ use App\ExaminationHub\Models\GeneralExamSection;
 use App\ExaminationHub\Models\SyncRun;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * ExamPackageApplier — applies exam packages on centers.
@@ -26,11 +27,23 @@ class ExamPackageApplier
      * Apply a package.
      *
      * @param array $package The decoded package data.
-     * @return array{success: bool, errors: string[]}
+     * @return array{success: bool, errors: string[], exam_uuid: string, revision: int, sections: int, questions: int, participants: int}
      */
     public function apply(array $package): array
     {
         $errors = [];
+        $examUuid = $package['exam_uuid'] ?? 'unknown';
+        $revision = $package['revision'] ?? 0;
+        $sectionCount = 0;
+        $questionCount = 0;
+        $participantCount = 0;
+
+        Log::info('ExamPackageApplier: Starting to apply package', [
+            'exam_uuid' => $examUuid,
+            'revision' => $revision,
+            'sections' => count($package['sections'] ?? []),
+            'participants' => count($package['participants'] ?? []),
+        ]);
 
         try {
             DB::beginTransaction();
@@ -39,40 +52,82 @@ class ExamPackageApplier
             $examResult = $this->applyExam($package);
             if (!$examResult['success']) {
                 $errors = array_merge($errors, $examResult['errors']);
+                Log::error('ExamPackageApplier: Failed to apply exam', ['exam_uuid' => $examUuid, 'errors' => $examResult['errors']]);
+            } else {
+                Log::info('ExamPackageApplier: Exam applied', ['exam_uuid' => $examUuid, 'exam_id' => $examResult['exam']?->id]);
             }
 
             // Apply sections and questions
             $sectionsResult = $this->applySections($examResult['exam'] ?? null, $package['sections'] ?? []);
             if (!$sectionsResult['success']) {
                 $errors = array_merge($errors, $sectionsResult['errors']);
+                Log::error('ExamPackageApplier: Failed to apply sections', ['exam_uuid' => $examUuid, 'errors' => $sectionsResult['errors']]);
+            } else {
+                $sectionCount = $sectionsResult['section_count'] ?? 0;
+                $questionCount = $sectionsResult['question_count'] ?? 0;
+                Log::info('ExamPackageApplier: Sections applied', ['exam_uuid' => $examUuid, 'sections' => $sectionCount, 'questions' => $questionCount]);
             }
 
             // Apply participants
             $participantsResult = $this->applyParticipants($examResult['exam'] ?? null, $package['participants'] ?? []);
             if (!$participantsResult['success']) {
                 $errors = array_merge($errors, $participantsResult['errors']);
+                Log::error('ExamPackageApplier: Failed to apply participants', ['exam_uuid' => $examUuid, 'errors' => $participantsResult['errors']]);
+            } else {
+                $participantCount = $participantsResult['participant_count'] ?? 0;
+                Log::info('ExamPackageApplier: Participants applied', ['exam_uuid' => $examUuid, 'participants' => $participantCount]);
             }
 
             if (!empty($errors)) {
                 DB::rollBack();
-                return ['success' => false, 'errors' => $errors];
+                Log::error('ExamPackageApplier: Rolling back due to errors', ['exam_uuid' => $examUuid, 'errors' => $errors]);
+                return [
+                    'success' => false,
+                    'errors' => $errors,
+                    'exam_uuid' => $examUuid,
+                    'revision' => $revision,
+                    'sections' => 0,
+                    'questions' => 0,
+                    'participants' => 0,
+                ];
             }
 
             DB::commit();
+            Log::info('ExamPackageApplier: Package applied successfully', [
+                'exam_uuid' => $examUuid,
+                'revision' => $revision,
+                'sections' => $sectionCount,
+                'questions' => $questionCount,
+                'participants' => $participantCount,
+            ]);
 
-            return ['success' => true, 'errors' => []];
+            return [
+                'success' => true,
+                'errors' => [],
+                'exam_uuid' => $examUuid,
+                'revision' => $revision,
+                'sections' => $sectionCount,
+                'questions' => $questionCount,
+                'participants' => $participantCount,
+            ];
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('ExamPackageApplier: Failed to apply package', [
-                'exam_uuid' => $package['exam_uuid'] ?? 'unknown',
-                'revision' => $package['revision'] ?? 'unknown',
+            Log::error('ExamPackageApplier: Exception while applying package', [
+                'exam_uuid' => $examUuid,
+                'revision' => $revision,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
                 'errors' => ['Package apply failed: ' . $e->getMessage()],
+                'exam_uuid' => $examUuid,
+                'revision' => $revision,
+                'sections' => 0,
+                'questions' => 0,
+                'participants' => 0,
             ];
         }
     }
@@ -157,19 +212,27 @@ class ExamPackageApplier
      *
      * @param GeneralExam|null $exam
      * @param array $sectionsData
-     * @return array{success: bool, errors: string[]}
+     * @return array{success: bool, errors: string[], section_count: int, question_count: int}
      */
     protected function applySections(?GeneralExam $exam, array $sectionsData): array
     {
         $errors = [];
+        $sectionCount = 0;
+        $questionCount = 0;
 
         if (!$exam) {
-            return ['success' => false, 'errors' => ['Exam not found.']];
+            return ['success' => false, 'errors' => ['Exam not found.'], 'section_count' => 0, 'question_count' => 0];
         }
 
+        // Track which section UUIDs are in this package, so we can remove stale ones
+        $packageSectionUuids = [];
+
         foreach ($sectionsData as $sectionData) {
+            $sectionUuid = $sectionData['uuid'];
+            $packageSectionUuids[] = $sectionUuid;
+
             $section = GeneralExamSection::firstOrCreate(
-                ['uuid' => $sectionData['uuid']],
+                ['uuid' => $sectionUuid],
                 [
                     'general_exam_id' => $exam->id,
                     'title' => $sectionData['title'] ?? null,
@@ -190,14 +253,32 @@ class ExamPackageApplier
                 ]);
             }
 
+            $sectionCount++;
+            Log::info('ExamPackageApplier: Section applied', ['section_uuid' => $sectionUuid, 'section_id' => $section->id]);
+
             // Apply questions
             $questionsResult = $this->applyQuestions($section, $sectionData['questions'] ?? []);
             if (!$questionsResult['success']) {
                 $errors = array_merge($errors, $questionsResult['errors']);
             }
+            $questionCount += $questionsResult['question_count'] ?? 0;
         }
 
-        return ['success' => empty($errors), 'errors' => $errors];
+        // Remove sections that are no longer in the package
+        $staleSections = GeneralExamSection::where('general_exam_id', $exam->id)
+            ->whereNotIn('uuid', $packageSectionUuids)
+            ->get();
+        foreach ($staleSections as $staleSection) {
+            Log::info('ExamPackageApplier: Removing stale section', ['section_uuid' => $staleSection->uuid]);
+            $staleSection->delete();
+        }
+
+        return [
+            'success' => empty($errors),
+            'errors' => $errors,
+            'section_count' => $sectionCount,
+            'question_count' => $questionCount,
+        ];
     }
 
     /**
@@ -205,17 +286,25 @@ class ExamPackageApplier
      *
      * @param GeneralExamSection $section
      * @param array $questionsData
-     * @return array{success: bool, errors: string[]}
+     * @return array{success: bool, errors: string[], question_count: int}
      */
     protected function applyQuestions(GeneralExamSection $section, array $questionsData): array
     {
         $errors = [];
+        $questionCount = 0;
+
+        // Track which question UUIDs are in this package, so we can remove stale ones
+        $packageQuestionUuids = [];
 
         foreach ($questionsData as $questionData) {
+            $questionUuid = $questionData['uuid'];
+            $packageQuestionUuids[] = $questionUuid;
+
+            // FIX: Use $section->general_exam_id instead of $section->assignment_id
             $question = GeneralExamQuestion::firstOrCreate(
-                ['uuid' => $questionData['uuid']],
+                ['uuid' => $questionUuid],
                 [
-                    'general_exam_id' => $section->assignment_id ?? $section->general_exam_id,
+                    'general_exam_id' => $section->general_exam_id,
                     'general_exam_section_id' => $section->id,
                     'type' => $questionData['type'] ?? 'multiple_choice',
                     'question' => $this->markFromArray($questionData['question'] ?? null),
@@ -229,7 +318,7 @@ class ExamPackageApplier
                 ]
             );
 
-            // Update if exists (grading-only fields always, other fields only before start)
+            // Update if exists
             if (!$question->wasRecentlyCreated) {
                 $question->update([
                     'general_exam_section_id' => $section->id,
@@ -243,9 +332,25 @@ class ExamPackageApplier
                     'award_marks_on_exclusion' => $questionData['award_marks_on_exclusion'] ?? $question->award_marks_on_exclusion,
                 ]);
             }
+
+            $questionCount++;
+            Log::info('ExamPackageApplier: Question applied', ['question_uuid' => $questionUuid, 'question_id' => $question->id]);
         }
 
-        return ['success' => empty($errors), 'errors' => $errors];
+        // Remove questions that are no longer in the package
+        $staleQuestions = GeneralExamQuestion::where('general_exam_section_id', $section->id)
+            ->whereNotIn('uuid', $packageQuestionUuids)
+            ->get();
+        foreach ($staleQuestions as $staleQuestion) {
+            Log::info('ExamPackageApplier: Removing stale question', ['question_uuid' => $staleQuestion->uuid]);
+            $staleQuestion->delete();
+        }
+
+        return [
+            'success' => empty($errors),
+            'errors' => $errors,
+            'question_count' => $questionCount,
+        ];
     }
 
     /**
@@ -253,19 +358,26 @@ class ExamPackageApplier
      *
      * @param GeneralExam|null $exam
      * @param array $participantsData
-     * @return array{success: bool, errors: string[]}
+     * @return array{success: bool, errors: string[], participant_count: int}
      */
     protected function applyParticipants(?GeneralExam $exam, array $participantsData): array
     {
         $errors = [];
+        $participantCount = 0;
 
         if (!$exam) {
-            return ['success' => false, 'errors' => ['Exam not found.']];
+            return ['success' => false, 'errors' => ['Exam not found.'], 'participant_count' => 0];
         }
 
+        // Track which participant UUIDs are in this package
+        $packageParticipantUuids = [];
+
         foreach ($participantsData as $participantData) {
-            GeneralExamConfiguredParticipant::updateOrCreate(
-                ['uuid' => $participantData['uuid']],
+            $participantUuid = $participantData['uuid'];
+            $packageParticipantUuids[] = $participantUuid;
+
+            $participant = GeneralExamConfiguredParticipant::updateOrCreate(
+                ['uuid' => $participantUuid],
                 [
                     'general_exam_id' => $exam->id,
                     'name' => $participantData['name'] ?? null,
@@ -274,9 +386,25 @@ class ExamPackageApplier
                     'is_active' => $participantData['is_active'] ?? true,
                 ]
             );
+
+            $participantCount++;
+            Log::info('ExamPackageApplier: Participant applied', ['participant_uuid' => $participantUuid, 'participant_id' => $participant->id]);
         }
 
-        return ['success' => empty($errors), 'errors' => $errors];
+        // Remove participants that are no longer in the package
+        $staleParticipants = GeneralExamConfiguredParticipant::where('general_exam_id', $exam->id)
+            ->whereNotIn('uuid', $packageParticipantUuids)
+            ->get();
+        foreach ($staleParticipants as $staleParticipant) {
+            Log::info('ExamPackageApplier: Removing stale participant', ['participant_uuid' => $staleParticipant->uuid]);
+            $staleParticipant->delete();
+        }
+
+        return [
+            'success' => empty($errors),
+            'errors' => $errors,
+            'participant_count' => $participantCount,
+        ];
     }
 
     /**

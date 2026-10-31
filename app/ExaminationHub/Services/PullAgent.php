@@ -25,7 +25,7 @@ class PullAgent
     /**
      * Execute a pull sync.
      *
-     * @return array{success: bool, pulled: int, errors: string[]}
+     * @return array{success: bool, pulled: int, errors: string[], details: array[]}
      */
     public function pull(): array
     {
@@ -38,6 +38,7 @@ class PullAgent
                 'success' => false,
                 'pulled' => 0,
                 'errors' => ['Central URL or sync token not configured.'],
+                'details' => [],
             ];
         }
 
@@ -49,6 +50,7 @@ class PullAgent
 
         $errors = [];
         $pulled = 0;
+        $details = [];
 
         try {
             // Fetch manifest
@@ -58,6 +60,11 @@ class PullAgent
                 throw new \RuntimeException('Failed to fetch manifest from central.');
             }
 
+            Log::info('PullAgent: Manifest fetched', [
+                'exam_count' => count($manifest['exams'] ?? []),
+                'server_time' => $manifest['server_time'] ?? null,
+            ]);
+
             // Check clock skew
             $serverTime = \Illuminate\Support\Carbon::parse($manifest['server_time'] ?? null);
             if ($serverTime) {
@@ -66,7 +73,10 @@ class PullAgent
 
                 if ($skew > $threshold) {
                     Log::warning("Clock skew detected: {$skew}s exceeds threshold {$threshold}s");
-                    // Don't block pull, but log the warning
+                    $details[] = [
+                        'status' => 'warning',
+                        'message' => "Clock skew detected: {$skew}s (threshold: {$threshold}s)",
+                    ];
                 }
             }
 
@@ -76,12 +86,35 @@ class PullAgent
                     $result = $this->pullExam($centralUrl, $token, $publicKey, $examInfo);
                     if ($result['success']) {
                         $pulled++;
+                        $details[] = [
+                            'status' => 'success',
+                            'exam_uuid' => $examInfo['uuid'],
+                            'revision' => $examInfo['revision'],
+                            'message' => $result['message'] ?? 'Exam pulled successfully',
+                            'sections' => $result['sections'] ?? 0,
+                            'questions' => $result['questions'] ?? 0,
+                            'participants' => $result['participants'] ?? 0,
+                        ];
+                    } else {
+                        $details[] = [
+                            'status' => 'error',
+                            'exam_uuid' => $examInfo['uuid'],
+                            'revision' => $examInfo['revision'],
+                            'message' => implode(', ', $result['errors'] ?? ['Unknown error']),
+                        ];
                     }
                     if (!empty($result['errors'])) {
                         $errors = array_merge($errors, $result['errors']);
                     }
                 } catch (\Exception $e) {
-                    $errors[] = "Failed to pull exam {$examInfo['uuid']}: {$e->getMessage()}";
+                    $errorMsg = "Failed to pull exam {$examInfo['uuid']}: {$e->getMessage()}";
+                    $errors[] = $errorMsg;
+                    $details[] = [
+                        'status' => 'error',
+                        'exam_uuid' => $examInfo['uuid'],
+                        'revision' => $examInfo['revision'],
+                        'message' => $e->getMessage(),
+                    ];
                     Log::error('PullAgent: Failed to pull exam', [
                         'exam_uuid' => $examInfo['uuid'],
                         'error' => $e->getMessage(),
@@ -97,8 +130,18 @@ class PullAgent
                 'error' => implode('; ', array_slice($errors, 0, 5)),
             ]);
 
+            Log::info('PullAgent: Pull completed', [
+                'pulled' => $pulled,
+                'errors' => count($errors),
+                'status' => empty($errors) ? 'success' : 'failed',
+            ]);
+
         } catch (\Exception $e) {
             $errors[] = $e->getMessage();
+            $details[] = [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
             $syncRun->update([
                 'finished_at' => now(),
                 'status' => 'failed',
@@ -110,6 +153,7 @@ class PullAgent
             'success' => empty($errors),
             'pulled' => $pulled,
             'errors' => $errors,
+            'details' => $details,
         ];
     }
 
@@ -155,7 +199,7 @@ class PullAgent
      * Pull a single exam package.
      *
      * @param array{uuid: string, revision: int, checksum: string, size: int} $examInfo
-     * @return array{success: bool, errors: string[]}
+     * @return array{success: bool, errors: string[], message: string, sections: int, questions: int, participants: int}
      */
     protected function pullExam(string $centralUrl, string $token, string $publicKey, array $examInfo): array
     {
@@ -169,49 +213,92 @@ class PullAgent
 
         // Skip if already up to date
         if ($localRevision >= $remoteRevision) {
-            return ['success' => true, 'errors' => []];
+            Log::info('PullAgent: Exam already up to date', [
+                'exam_uuid' => $examUuid,
+                'local_revision' => $localRevision,
+                'remote_revision' => $remoteRevision,
+            ]);
+            return [
+                'success' => true,
+                'errors' => [],
+                'message' => 'Already up to date (revision ' . $localRevision . ')',
+                'sections' => 0,
+                'questions' => 0,
+                'participants' => 0,
+            ];
         }
+
+        Log::info('PullAgent: Downloading package', [
+            'exam_uuid' => $examUuid,
+            'revision' => $remoteRevision,
+        ]);
 
         // Download the package
         $payload = $this->downloadPackage($centralUrl, $token, $examUuid, $remoteRevision);
         if (!$payload) {
-            return ['success' => false, 'errors' => ["Failed to download package for {$examUuid} revision {$remoteRevision}."]];
+            $error = "Failed to download package for {$examUuid} revision {$remoteRevision}.";
+            Log::error('PullAgent: ' . $error);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
         // Verify checksum
         $decompressed = @gzdecode($payload);
         if ($decompressed === false) {
-            return ['success' => false, 'errors' => ["Failed to decompress package for {$examUuid}."]];
+            $error = "Failed to decompress package for {$examUuid}.";
+            Log::error('PullAgent: ' . $error);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
         $calculatedChecksum = hash('sha256', $decompressed);
         if (!hash_equals($remoteChecksum, $calculatedChecksum)) {
-            return ['success' => false, 'errors' => ["Checksum mismatch for {$examUuid} revision {$remoteRevision}."]];
+            $error = "Checksum mismatch for {$examUuid} revision {$remoteRevision}.";
+            Log::error('PullAgent: ' . $error);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
+
+        Log::info('PullAgent: Checksum verified', ['exam_uuid' => $examUuid]);
 
         // Verify signature
         $packageData = json_decode($decompressed, true);
         if (!$packageData) {
-            return ['success' => false, 'errors' => ["Invalid JSON in package for {$examUuid}."]];
+            $error = "Invalid JSON in package for {$examUuid}.";
+            Log::error('PullAgent: ' . $error);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
         $signature = base64_decode($packageData['signature'] ?? '');
         $publicKeyBytes = base64_decode($publicKey);
 
         if ($signature === false || $publicKeyBytes === false) {
-            return ['success' => false, 'errors' => ["Invalid signature encoding for {$examUuid}."]];
+            $error = "Invalid signature encoding for {$examUuid}.";
+            Log::error('PullAgent: ' . $error);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
         if (!sodium_crypto_sign_verify_detached($signature, $calculatedChecksum, $publicKeyBytes)) {
-            return ['success' => false, 'errors' => ["Signature verification failed for {$examUuid} revision {$remoteRevision}."]];
+            $error = "Signature verification failed for {$examUuid} revision {$remoteRevision}.";
+            Log::error('PullAgent: ' . $error);
+            return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
+        Log::info('PullAgent: Signature verified', ['exam_uuid' => $examUuid]);
+
         // Apply the package
+        Log::info('PullAgent: Applying package', ['exam_uuid' => $examUuid, 'revision' => $remoteRevision]);
         $applier = new ExamPackageApplier();
         $applyResult = $applier->apply($packageData);
 
         if (!$applyResult['success']) {
-            return $applyResult;
+            $errorMsg = "Failed to apply package for {$examUuid}: " . implode(', ', $applyResult['errors']);
+            Log::error('PullAgent: ' . $errorMsg);
+            return [
+                'success' => false,
+                'errors' => $applyResult['errors'],
+                'message' => $errorMsg,
+                'sections' => 0,
+                'questions' => 0,
+                'participants' => 0,
+            ];
         }
 
         // Update local sync state
@@ -225,7 +312,17 @@ class PullAgent
             ]
         );
 
-        return ['success' => true, 'errors' => []];
+        $message = "Applied revision {$remoteRevision}: {$applyResult['sections']} sections, {$applyResult['questions']} questions, {$applyResult['participants']} participants";
+        Log::info('PullAgent: ' . $message);
+
+        return [
+            'success' => true,
+            'errors' => [],
+            'message' => $message,
+            'sections' => $applyResult['sections'] ?? 0,
+            'questions' => $applyResult['questions'] ?? 0,
+            'participants' => $applyResult['participants'] ?? 0,
+        ];
     }
 
     /**

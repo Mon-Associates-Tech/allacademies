@@ -51,12 +51,34 @@ class SyncPull extends Command
             }
         }
 
-        $this->info('Pulling exam packages from central...');
+        $centralUrl = config('center.central_url');
+        $this->info("Pulling exam packages from {$centralUrl}...");
+        $this->newLine();
 
         $result = $this->pullAgent->pull();
 
+        // Display detailed results
+        if (!empty($result['details'])) {
+            foreach ($result['details'] as $detail) {
+                $status = $detail['status'] ?? 'unknown';
+                $message = $detail['message'] ?? '';
+                $examUuid = $detail['exam_uuid'] ?? '';
+                $revision = $detail['revision'] ?? '';
+
+                if ($status === 'success') {
+                    $this->line("<info>✓</info> Exam {$examUuid} (rev {$revision}): {$message}");
+                } elseif ($status === 'warning') {
+                    $this->line("<comment>⚠</comment> {$message}");
+                } else {
+                    $this->line("<error>✗</error> Exam {$examUuid} (rev {$revision}): {$message}");
+                }
+            }
+
+            $this->newLine();
+        }
+
         if ($result['success']) {
-            $this->info("Pull complete: {$result['pulled']} exam(s) pulled.");
+            $this->info("Pull complete: {$result['pulled']} exam(s) pulled successfully.");
         } else {
             $this->error("Pull completed with errors:");
             foreach ($result['errors'] as $error) {
