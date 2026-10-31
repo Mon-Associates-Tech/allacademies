@@ -35,7 +35,7 @@ class ExamDashboardService implements ExamDashboardServiceInterface
         $role = config('center.role', 'central');
         if ($role === 'center') {
             // Center staff see all exams, including those pulled from central
-            $query->where(function ($q) {
+            $query->where(function ($q) use ($userId) {
                 $q->whereNull('user_id')->orWhere('user_id', $userId);
             });
         } else {
