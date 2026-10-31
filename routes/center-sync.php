@@ -21,7 +21,26 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'verified'])->prefix('admin/center-sync')->name('center-sync.')->group(function () {
+// ── Center-Instance Routes (APP_ROLE=center) ──────────────────────────────
+// These routes are accessible on center instances for sync operations.
+// They use a non-admin prefix so center staff can access them easily.
+if (config('center.role') === 'center') {
+    Route::middleware(['auth', 'verified'])
+        ->prefix('center-sync')
+        ->name('center-sync.')->group(function () {
+
+            // Sync Status — the main page for center staff
+            Route::get('/', [CenterSyncController::class, 'index'])->name('sync.index');
+            Route::post('/push', [CenterSyncController::class, 'pushNow'])->name('sync.push');
+            Route::post('/pull', [CenterSyncController::class, 'pullNow'])->name('sync.pull');
+        });
+}
+
+// ── Central-Instance Admin Routes (APP_ROLE=central) ──────────────────────
+if (config('center.role') === 'central') {
+    Route::middleware(['auth', 'verified'])
+        ->prefix('admin/center-sync')
+        ->name('center-sync.')->group(function () {
 
     // ── Multi-Center Dashboard ──────────────────────────────────────────────
     Route::get('/dashboard', [CenterDashboardController::class, 'index'])->name('dashboard');
@@ -60,4 +79,5 @@ Route::middleware(['auth', 'verified'])->prefix('admin/center-sync')->name('cent
     Route::patch('/exams/{exam}/corrections', [GradingCorrectionsController::class, 'update'])->name('corrections.update');
     Route::post('/exams/{exam}/corrections/question/{question}/exclude', [GradingCorrectionsController::class, 'excludeQuestion'])->name('corrections.exclude-question');
     Route::post('/exams/{exam}/corrections/question/{question}/restore', [GradingCorrectionsController::class, 'restoreQuestion'])->name('corrections.restore-question');
-});
+    });
+}

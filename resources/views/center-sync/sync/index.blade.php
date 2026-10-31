@@ -8,10 +8,15 @@
             <div class="h-1 w-full" style="background: linear-gradient(90deg, #065f46, #059669, #10b981);"></div>
             <div class="px-7 py-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h1 class="text-2xl font-bold text-white leading-snug"
-                        style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
-                        Sync Status
-                    </h1>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white leading-snug"
+                            style="letter-spacing: -0.02em; font-family: 'Georgia', serif;">
+                            Sync Status
+                        </h1>
+                        @if(config('center.role') === 'center')
+                            <p class="text-sm text-slate-400 mt-1">Central server: <span class="text-slate-300">{{ config('center.central_url') }}</span></p>
+                        @endif
+                    </div>
                     <div class="flex gap-2">
                         <form method="POST" action="{{ route('center-sync.sync.pull') }}" class="inline">
                             @csrf

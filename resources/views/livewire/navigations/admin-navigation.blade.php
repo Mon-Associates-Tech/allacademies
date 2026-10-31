@@ -441,7 +441,7 @@
     @endcan
 
     {{-- ═══════════════════════════════════════════════════════════
-         SECTION: Multi-Center Sync (Central Admin Only)
+         SECTION: Multi-Center Sync (Central Admin)
      ═══════════════════════════════════════════════════════════ --}}
     @if(config('center.role') === 'central')
         <x-app.nav-section
@@ -483,6 +483,25 @@
                 :active="Route::is('center-sync.bank.*')"
                 icon="heroicon-o-archive-box"
             >Bank Backup
+            </x-app.nav-item>
+        </x-app.nav-section>
+    @endif
+
+    {{-- ═══════════════════════════════════════════════════════════
+         SECTION: Sync (Center Instance Only)
+     ═══════════════════════════════════════════════════════════ --}}
+    @if(config('center.role') === 'center')
+        <x-app.nav-section
+            id="admin-nav-center-sync"
+            label="Sync"
+            :open="true"
+            :bordered="true"
+        >
+            <x-app.nav-item
+                href="{{ route('center-sync.sync.index') }}"
+                :active="Route::is('center-sync.sync.*')"
+                icon="heroicon-o-arrow-path"
+            >Sync Status
             </x-app.nav-item>
         </x-app.nav-section>
     @endif
