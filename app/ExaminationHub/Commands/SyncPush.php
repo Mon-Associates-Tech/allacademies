@@ -76,8 +76,14 @@ class SyncPush extends Command
         $proctoring = $result['proctoring'] ?? [];
 
         $this->info("Push completed in {$duration}s:");
-        $this->info("  Submissions: {$submissions['ingested'] ?? 0} ingested, {$submissions['skipped'] ?? 0} skipped, {$submissions['errors'] ?? 0} errors");
-        $this->info("  Proctoring:  {$proctoring['ingested'] ?? 0} ingested, {$proctoring['skipped'] ?? 0} skipped, {$proctoring['errors'] ?? 0} errors");
+        $subIngested = $submissions['ingested'] ?? 0;
+        $subSkipped = $submissions['skipped'] ?? 0;
+        $subErrors = $submissions['errors'] ?? 0;
+        $this->info("  Submissions: {$subIngested} ingested, {$subSkipped} skipped, {$subErrors} errors");
+        $proIngested = $proctoring['ingested'] ?? 0;
+        $proSkipped = $proctoring['skipped'] ?? 0;
+        $proErrors = $proctoring['errors'] ?? 0;
+        $this->info("  Proctoring:  {$proIngested} ingested, {$proSkipped} skipped, {$proErrors} errors");
 
         return self::SUCCESS;
     }

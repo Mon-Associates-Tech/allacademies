@@ -186,7 +186,7 @@ class PullAgent
             return ['success' => false, 'errors' => ["Invalid signature encoding for {$examUuid}."]];
         }
 
-        if (!\Sodium\crypto_sign_verify_detached($signature, $calculatedChecksum, $publicKeyBytes)) {
+        if (!sodium_crypto_sign_verify_detached($signature, $calculatedChecksum, $publicKeyBytes)) {
             return ['success' => false, 'errors' => ["Signature verification failed for {$examUuid} revision {$remoteRevision}."]];
         }
 

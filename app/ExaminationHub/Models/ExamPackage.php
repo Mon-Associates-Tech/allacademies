@@ -108,7 +108,7 @@ class ExamPackage extends Model
 
         // libsodium signature verification
         try {
-            return \Sodium\crypto_sign_verify_detached(
+            return sodium_crypto_sign_verify_detached(
                 $signature,
                 $this->checksum,
                 $publicKey

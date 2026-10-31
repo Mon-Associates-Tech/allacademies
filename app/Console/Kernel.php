@@ -92,6 +92,7 @@ $schedule->call(function () {
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__.'/../ExaminationHub/Commands');
 
         require base_path('routes/console.php');
     }

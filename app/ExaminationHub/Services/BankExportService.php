@@ -372,7 +372,7 @@ class BankExportService
         }
 
         $privateKey = base64_decode($privateKeyBase64);
-        $signature = \Sodium\crypto_sign_detached($checksum, $privateKey);
+        $signature = sodium_crypto_sign_detached($checksum, $privateKey);
         return base64_encode($signature);
     }
 }

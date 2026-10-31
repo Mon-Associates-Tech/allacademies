@@ -308,7 +308,7 @@ class ExamPackageBuilder
         }
 
         try {
-            $signature = \Sodium\crypto_sign_detached($checksum, $privateKey);
+            $signature = sodium_crypto_sign_detached($checksum, $privateKey);
             return base64_encode($signature);
         } catch (\Exception $e) {
             throw new \RuntimeException('Ed25519 signing failed: ' . $e->getMessage());

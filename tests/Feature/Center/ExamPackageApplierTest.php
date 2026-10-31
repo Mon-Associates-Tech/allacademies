@@ -30,9 +30,9 @@ class ExamPackageApplierTest extends TestCase
         parent::setUp();
 
         // Generate test keys
-        $keyPair = \Sodium\crypto_sign_keypair();
-        $publicKey = \Sodium\crypto_sign_publickey($keyPair);
-        $privateKey = \Sodium\crypto_sign_secretkey($keyPair);
+        $keyPair = sodium_crypto_sign_keypair();
+        $publicKey = sodium_crypto_sign_publickey($keyPair);
+        $privateKey = sodium_crypto_sign_secretkey($keyPair);
 
         config([
             'center.central_private_key' => base64_encode($privateKey),

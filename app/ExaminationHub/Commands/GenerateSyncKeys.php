@@ -35,19 +35,19 @@ class GenerateSyncKeys extends Command
         $this->info('Generating Ed25519 key pair...');
         $this->newLine();
 
-        // Generate the key pair
-        $keyPair = \Sodium\crypto_sign_keypair();
-        $publicKey = \Sodium\crypto_sign_publickey($keyPair);
-        $privateKey = \Sodium\crypto_sign_secretkey($keyPair);
+        // Generate the key pair using native PHP sodium_* functions
+        $keyPair = sodium_crypto_sign_keypair();
+        $publicKey = sodium_crypto_sign_publickey($keyPair);
+        $privateKey = sodium_crypto_sign_secretkey($keyPair);
 
         // Base64 encode for storage
         $publicKeyBase64 = base64_encode($publicKey);
         $privateKeyBase64 = base64_encode($privateKey);
 
-        $this->success('Key pair generated successfully!');
+        $this->info('Key pair generated successfully!');
         $this->newLine();
 
-        $this->warning('IMPORTANT: Keep the private key secure. Do not share it with centers.');
+        $this->error('IMPORTANT: Keep the private key secure. Do not share it with centers.');
         $this->newLine();
 
         $this->info('Add these values to your .env file:');
@@ -70,8 +70,8 @@ class GenerateSyncKeys extends Command
 
         // Verify the keys work
         $testMessage = 'package integrity test';
-        $signature = \Sodium\crypto_sign_detached($testMessage, $privateKey);
-        $verified = \Sodium\crypto_sign_verify_detached($signature, $testMessage, $publicKey);
+        $signature = sodium_crypto_sign_detached($testMessage, $privateKey);
+        $verified = sodium_crypto_sign_verify_detached($signature, $testMessage, $publicKey);
 
         if ($verified) {
             $this->info('Verification test: PASSED ✓');
