@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('exam_uuid', 26);
             $table->unsignedInteger('revision');
-            $table->longText('payload'); // gzip compressed JSON
+            $table->longBlob('payload'); // gzip compressed JSON binary
             $table->string('checksum', 64); // sha256
             $table->string('signature', 256); // Ed25519 base64
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
