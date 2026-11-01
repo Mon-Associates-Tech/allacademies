@@ -346,7 +346,8 @@ class PushAgent
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
-            ->post($url, $bodyString);
+            ->withBody($bodyString, 'application/json')
+            ->post($url);
 
         if (!$response->successful()) {
             throw new \RuntimeException(
@@ -408,7 +409,8 @@ class PushAgent
                     'X-App-Version' => config('center.app_version', '1.0.0'),
                     'Content-Type' => 'application/json',
                 ])
-                ->post($centralUrl . '/api/sync/v1/heartbeat', $bodyString);
+                ->withBody($bodyString, 'application/json')
+                ->post($centralUrl . '/api/sync/v1/heartbeat');
 
             if (!$response->successful()) {
                 Log::warning("PushAgent: Heartbeat failed with status " . $response->status(), [

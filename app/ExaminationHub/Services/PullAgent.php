@@ -223,7 +223,8 @@ class PullAgent
                     'X-App-Version' => config('center.app_version', '1.0.0'),
                     'Content-Type' => 'application/json',
                 ])
-                ->post($centralUrl . '/api/sync/v1/heartbeat', $bodyString);
+                ->withBody($bodyString, 'application/json')
+                ->post($centralUrl . '/api/sync/v1/heartbeat');
 
             if (!$response->successful()) {
                 Log::warning("PullAgent: Heartbeat failed with status " . $response->status(), [
