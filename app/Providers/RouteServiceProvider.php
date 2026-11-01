@@ -38,7 +38,12 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/api.php'));
 
             // Sync API routes for multi-center sync
-            Route::middleware('api')
+            // Does not use the 'api' middleware group (which includes throttle:api at 60/min).
+            // Instead, applies only the middleware we need plus throttle:sync (1000/min per center).
+            Route::middleware([
+                'throttle:sync',
+                \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            ])
                 ->prefix('api')
                 ->group(base_path('routes/sync.php'));
 
@@ -60,6 +65,14 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Sync API rate limiter — much higher limit for batch push/pull operations.
+        // Centers push hundreds of submissions in batches, so 60/min is too low.
+        RateLimiter::for('sync', function (Request $request) {
+            // Identify by the center's bearer token, or fall back to IP.
+            $key = $request->bearerToken() ?: $request->ip();
+            return Limit::perMinute(1000)->by($key);
         });
     }
 }

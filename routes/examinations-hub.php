@@ -7,6 +7,7 @@ use App\ExaminationHub\Controllers\ExamTakingController;
 use App\ExaminationHub\Controllers\GradingSystemController;
 use App\ExaminationHub\Controllers\HeartbeatController;
 use App\ExaminationHub\Controllers\LiveMonitoringController;
+use App\ExaminationHub\Controllers\MultiCenterLiveMonitoringController;
 use App\ExaminationHub\Controllers\ParticipantController;
 use App\ExaminationHub\Controllers\ParticipantResultsController;
 use App\ExaminationHub\Controllers\PerformanceReportController;
@@ -90,6 +91,16 @@ Route::middleware(['auth', 'verified'])->prefix('examinations')->name('examinati
     // ── Live Monitoring (Admin) ───────────────────────────────────────────────
     Route::get('/live-monitoring', [LiveMonitoringController::class, 'allExamsIndex'])->name('live-monitoring.all-exams');
     Route::get('/live-monitoring/api/all-participants', [LiveMonitoringController::class, 'apiAllExamsParticipants'])->name('live-monitoring.api.all-participants');
+
+    // ── Multi-Center Live Monitoring (Central only) ───────────────────────────
+    Route::get('/live-monitoring/centers', [MultiCenterLiveMonitoringController::class, 'index'])
+        ->name('live-monitoring.centers');
+    Route::get('/live-monitoring/centers/api', [MultiCenterLiveMonitoringController::class, 'apiAllCenters'])
+        ->name('live-monitoring.centers.api');
+    Route::get('/exams/{exam}/live-monitoring/centers', [MultiCenterLiveMonitoringController::class, 'show'])
+        ->name('live-monitoring.exam-centers');
+    Route::get('/exams/{exam}/live-monitoring/centers/api', [MultiCenterLiveMonitoringController::class, 'apiExam'])
+        ->name('live-monitoring.exam-centers.api');
 
     Route::prefix('exams/{exam}/live-monitoring')->name('live-monitoring.')->group(function () {
         Route::get('/', [LiveMonitoringController::class, 'index'])->name('index');

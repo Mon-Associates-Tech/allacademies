@@ -48,6 +48,18 @@
                     </div>
                 </a>
 
+                @if(config('center.role') === 'central')
+                <a href="{{ route('examination-hub.live-monitoring.centers') }}"
+                   class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'live-monitoring-centers' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Multi-Center
+                    </div>
+                </a>
+                @endif
+
                 <a href="{{ route('examination-hub.performance.index') }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'performance' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
