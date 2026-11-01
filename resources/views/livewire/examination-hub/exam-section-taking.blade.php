@@ -63,6 +63,7 @@ $wire.on('examAutoSubmitted', (payload) => {
 </script>
 @endscript
 
+@php $hasSectionInstructions = $this->section->hasInstructions(); @endphp
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950" style="font-family: 'Georgia', 'Times New Roman', serif;">
     {{-- ═══════════════════════════════════════════════════════════
          STATE 1 · SECTION INFO OVERLAY
@@ -143,7 +144,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                         </div>
                     </div>
 
-                    @if($this->section->instructions)
+                    @if($hasSectionInstructions)
                         <div style="border-left: 3px solid #d97706; padding-left: 1rem;">
                             <h4 class="text-xs font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-2" style="font-size: 10px; letter-spacing: 0.12em;">Instructions</h4>
                             <div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{ $this->section->instructions }}</div>
@@ -180,7 +181,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                     @endif
 
                     <div class="pt-2 flex justify-end items-center gap-3">
-                        @if($this->section->instructions)
+                        @if($hasSectionInstructions)
                             <label class="inline-flex items-center gap-2 text-sm">
                                 <input type="checkbox" wire:model="instructionsAcknowledged" class="h-4 w-4"/>
                                 <span>I have read and understood the section instructions</span>
@@ -190,7 +191,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                             @if($isSingleSection)
                                 {{-- Single section: enter fullscreen AND start in one click --}}
                                 <button
-                                    @if($this->section->instructions && !$this->instructionsAcknowledged) disabled @endif
+                                    @if($hasSectionInstructions && !$this->instructionsAcknowledged) disabled @endif
                                     onclick="
                                         fullscreenGate.request();
                                         setTimeout(() => {
@@ -206,8 +207,8 @@ $wire.on('examAutoSubmitted', (payload) => {
                             @else
                                 {{-- Multi-section: just start the section (fullscreen already active) --}}
                                 <button wire:click="startSection"
-                                       @if($this->section->instructions) wire:loading.attr="disabled" @endif
-                                       @if($this->section->instructions && !$this->instructionsAcknowledged) disabled @endif
+                                       @if($hasSectionInstructions) wire:loading.attr="disabled" @endif
+                                       @if($hasSectionInstructions && !$this->instructionsAcknowledged) disabled @endif
                                        class="group relative inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                        style="border-radius: 2px; letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                                     Begin Section
@@ -246,7 +247,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                         <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ $this->section->description }}</p>
                     @endif
 
-                    @if($this->section->instructions)
+                    @if($hasSectionInstructions)
                         <div class="p-4 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-400">
                             <h3 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-2">Section Instructions</h3>
                             <div class="text-sm text-blue-700 dark:text-blue-300 whitespace-pre-line leading-relaxed">{{ $this->section->instructions }}</div>

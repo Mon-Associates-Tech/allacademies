@@ -84,4 +84,34 @@ class GeneralExamSection extends Model
     {
         return $this->questions;
     }
+
+    /**
+     * Check if this section has actual instructions content.
+     * Returns false for null, empty strings, or {"up":null,"down":null}.
+     */
+    public function hasInstructions(): bool
+    {
+        $instructions = $this->instructions;
+        if (empty($instructions)) {
+            return false;
+        }
+
+        // If it's a Mark object, check if it has content
+        if ($instructions instanceof \App\Support\Mark) {
+            return !empty($instructions->up) || !empty($instructions->down);
+        }
+
+        // If it's a JSON string, decode and check
+        if (is_string($instructions)) {
+            $decoded = json_decode($instructions, true);
+            if (is_array($decoded)) {
+                $up = $decoded['up'] ?? null;
+                $down = $decoded['down'] ?? null;
+                return !empty($up) || !empty($down);
+            }
+            return !empty(trim($instructions));
+        }
+
+        return false;
+    }
 }
