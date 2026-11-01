@@ -53,7 +53,7 @@ class SyncRetryJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $attempt = $this->attempt;
+        $attempt = $this->attempts();
 
         // Calculate exponential backoff with jitter
         $delay = self::BASE_DELAY * pow(2, $attempt - 1) + random_int(0, self::BASE_DELAY);
@@ -105,7 +105,7 @@ class SyncRetryJob implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
-        Log::error("SyncRetryJob failed after {$this->attempt} attempts: " . $exception->getMessage(), [
+        Log::error("SyncRetryJob failed after {$this->attempts()} attempts: " . $exception->getMessage(), [
             'operation' => $this->operation,
             'context' => $this->context,
             'trace' => $exception->getTraceAsString(),
