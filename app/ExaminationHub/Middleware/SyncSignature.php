@@ -49,7 +49,7 @@ class SyncSignature
         if (in_array($method, ['post', 'put', 'patch'])) {
             // The signature is HMAC-SHA256 of the raw body using the center's token
             $token = $request->bearerToken();
-            $expectedSignature = hash_hmac('sha256', $request->body(), $token ?? '');
+            $expectedSignature = hash_hmac('sha256', $request->getContent(), $token ?? '');
 
             if (!hash_equals($expectedSignature, $signature)) {
                 return response()->json([
