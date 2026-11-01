@@ -409,6 +409,7 @@ class ExamPackageApplier
 
     /**
      * Convert a Mark array {up, down} to the JSON string stored in the DB.
+     * Returns null if both up and down are null, so the DB column stays NULL.
      */
     protected function markFromArray(?array $mark): ?string
     {
@@ -416,9 +417,17 @@ class ExamPackageApplier
             return null;
         }
 
+        $up = $mark['up'] ?? null;
+        $down = $mark['down'] ?? null;
+
+        // If both are null, store NULL in the DB so the view doesn't show an empty checkbox
+        if ($up === null && $down === null) {
+            return null;
+        }
+
         return json_encode([
-            'up' => $mark['up'] ?? null,
-            'down' => $mark['down'] ?? null,
+            'up' => $up,
+            'down' => $down,
         ]);
     }
 

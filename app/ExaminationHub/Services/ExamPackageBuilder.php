@@ -259,24 +259,34 @@ class ExamPackageBuilder
     /**
      * Convert a Mark object to a canonical array {up, down}.
      */
-    protected function markToArray($value): array
+    protected function markToArray($value): ?array
     {
         if ($value instanceof Mark) {
-            return $value->toArray();
+            $arr = $value->toArray();
+            // Return null if both up and down are null
+            return ($arr['up'] ?? null) !== null || ($arr['down'] ?? null) !== null
+                ? $arr
+                : null;
         }
 
         if (is_string($value)) {
-            return Mark::fromString($value)->toArray();
+            $arr = Mark::fromString($value)->toArray();
+            return ($arr['up'] ?? null) !== null || ($arr['down'] ?? null) !== null
+                ? $arr
+                : null;
         }
 
         if (is_array($value)) {
-            return [
+            $arr = [
                 'up' => $value['up'] ?? null,
                 'down' => $value['down'] ?? null,
             ];
+            return ($arr['up'] !== null || $arr['down'] !== null)
+                ? $arr
+                : null;
         }
 
-        return ['up' => null, 'down' => null];
+        return null;
     }
 
     /**
