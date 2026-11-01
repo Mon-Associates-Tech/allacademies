@@ -207,14 +207,15 @@ class PullAgent
     protected function reportHeartbeat(string $centralUrl, string $token): void
     {
         try {
-            $body = [
+            $bodyArray = [
                 'app_version' => config('center.app_version', '1.0.0'),
                 'last_pull_at' => now()->toIso8601String(),
             ];
+            $bodyString = json_encode($bodyArray);
 
-            $signature = hash_hmac('sha256', json_encode($body), $token);
+            $signature = hash_hmac('sha256', $bodyString, $token);
 
-            Http::timeout(10)
+            $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $token,
                     'X-Signature' => $signature,
@@ -222,7 +223,13 @@ class PullAgent
                     'X-App-Version' => config('center.app_version', '1.0.0'),
                     'Content-Type' => 'application/json',
                 ])
-                ->post($centralUrl . '/api/sync/v1/heartbeat', $body);
+                ->post($centralUrl . '/api/sync/v1/heartbeat', $bodyString);
+
+            if (!$response->successful()) {
+                Log::warning("PullAgent: Heartbeat failed with status " . $response->status(), [
+                    'body' => $response->body(),
+                ]);
+            }
         } catch (\Exception $e) {
             Log::warning("PullAgent: Heartbeat failed: " . $e->getMessage());
         }

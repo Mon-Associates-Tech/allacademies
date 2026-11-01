@@ -333,8 +333,8 @@ class PushAgent
      */
     protected function sendBatch(string $url, string $token, array $batch): array
     {
-        $body = json_encode($batch);
-        $signature = hash_hmac('sha256', $body, $token);
+        $bodyString = json_encode($batch);
+        $signature = hash_hmac('sha256', $bodyString, $token);
         $timestamp = (string) time();
 
         $response = Http::timeout(30)
@@ -346,7 +346,7 @@ class PushAgent
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
-            ->post($url, $batch);
+            ->post($url, $bodyString);
 
         if (!$response->successful()) {
             throw new \RuntimeException(
@@ -387,19 +387,20 @@ class PushAgent
     protected function reportHeartbeat(string $centralUrl, string $token, string $direction): void
     {
         try {
-            $body = [
+            $bodyArray = [
                 'app_version' => config('center.app_version', '1.0.0'),
             ];
 
             if ($direction === 'push') {
-                $body['last_push_at'] = now()->toIso8601String();
+                $bodyArray['last_push_at'] = now()->toIso8601String();
             } else {
-                $body['last_pull_at'] = now()->toIso8601String();
+                $bodyArray['last_pull_at'] = now()->toIso8601String();
             }
 
-            $signature = hash_hmac('sha256', json_encode($body), $token);
+            $bodyString = json_encode($bodyArray);
+            $signature = hash_hmac('sha256', $bodyString, $token);
 
-            Http::timeout(10)
+            $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $token,
                     'X-Signature' => $signature,
@@ -407,7 +408,13 @@ class PushAgent
                     'X-App-Version' => config('center.app_version', '1.0.0'),
                     'Content-Type' => 'application/json',
                 ])
-                ->post($centralUrl . '/api/sync/v1/heartbeat', $body);
+                ->post($centralUrl . '/api/sync/v1/heartbeat', $bodyString);
+
+            if (!$response->successful()) {
+                Log::warning("PushAgent: Heartbeat failed with status " . $response->status(), [
+                    'body' => $response->body(),
+                ]);
+            }
         } catch (\Exception $e) {
             Log::warning("PushAgent: Heartbeat failed: " . $e->getMessage());
         }
