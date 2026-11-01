@@ -136,6 +136,9 @@ class PullAgent
                 'status' => empty($errors) ? 'success' : 'failed',
             ]);
 
+            // Report pull status to central via heartbeat so last_pull_at is tracked
+            $this->reportHeartbeat($centralUrl, $token);
+
         } catch (\Exception $e) {
             $errors[] = $e->getMessage();
             $details[] = [
@@ -193,6 +196,36 @@ class PullAgent
             'X-Timestamp' => (string) time(),
             'X-Signature' => hash_hmac('sha256', '', $token),
         ];
+    }
+
+    /**
+     * Report heartbeat to central so last_pull_at and last_seen_at are tracked.
+     *
+     * The center is identified by the bearer token (SyncAuth middleware resolves it).
+     * No center_uuid needed in the body — the center doesn't know its own UUID.
+     */
+    protected function reportHeartbeat(string $centralUrl, string $token): void
+    {
+        try {
+            $body = [
+                'app_version' => config('center.app_version', '1.0.0'),
+                'last_pull_at' => now()->toIso8601String(),
+            ];
+
+            $signature = hash_hmac('sha256', json_encode($body), $token);
+
+            Http::timeout(10)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $token,
+                    'X-Signature' => $signature,
+                    'X-Timestamp' => (string) time(),
+                    'X-App-Version' => config('center.app_version', '1.0.0'),
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($centralUrl . '/api/sync/v1/heartbeat', $body);
+        } catch (\Exception $e) {
+            Log::warning("PullAgent: Heartbeat failed: " . $e->getMessage());
+        }
     }
 
     /**

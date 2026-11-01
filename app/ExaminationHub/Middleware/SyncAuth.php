@@ -37,8 +37,8 @@ class SyncAuth
             ], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Attach center to request for downstream use
-        $request->merge(['center' => $center]);
+        // Attach center to request attributes for downstream use
+        $request->attributes->set('center', $center);
 
         return $next($request);
     }

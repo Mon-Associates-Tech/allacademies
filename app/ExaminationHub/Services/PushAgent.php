@@ -380,17 +380,14 @@ class PushAgent
 
     /**
      * Report heartbeat to central so last_push_at / last_pull_at is tracked.
+     *
+     * The center is identified by the bearer token (SyncAuth middleware resolves it).
+     * No center_uuid needed in the body — the center doesn't know its own UUID.
      */
     protected function reportHeartbeat(string $centralUrl, string $token, string $direction): void
     {
         try {
-            $centerUuid = \App\ExaminationHub\Models\Center::where('id', config('center.center_id'))->value('uuid');
-            if (!$centerUuid) {
-                return;
-            }
-
             $body = [
-                'center_uuid' => $centerUuid,
                 'app_version' => config('center.app_version', '1.0.0'),
             ];
 
