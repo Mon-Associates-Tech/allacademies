@@ -36,11 +36,24 @@ class PushAgent
         $token = config('center.sync_token');
         $centerId = config('center.center_id');
 
-        if (!$centralUrl || !$token || !$centerId) {
-            Log::warning('PushAgent: Central URL, token, or center_id not configured.');
+        // Build a helpful error message listing exactly which config keys are missing
+        $missing = [];
+        if (!$centralUrl) {
+            $missing[] = 'CENTRAL_URL';
+        }
+        if (!$token) {
+            $missing[] = 'CENTER_SYNC_TOKEN';
+        }
+        if (!$centerId) {
+            $missing[] = 'CENTER_ID';
+        }
+
+        if ($missing) {
+            $message = 'Configuration missing: ' . implode(', ', $missing) . ' is not set in .env';
+            Log::warning('PushAgent: ' . $message);
             return [
-                'submissions' => ['error' => 'Configuration missing'],
-                'proctoring' => ['error' => 'Configuration missing'],
+                'submissions' => ['error' => $message],
+                'proctoring' => ['error' => $message],
                 'sync_run' => null,
             ];
         }

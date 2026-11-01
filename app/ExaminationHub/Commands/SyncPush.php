@@ -69,6 +69,11 @@ class SyncPush extends Command
 
         if (isset($result['submissions']['error'])) {
             $this->error('Push failed: ' . $result['submissions']['error']);
+            $this->info('To fix this, add the missing values to your .env file:');
+            $this->info('  CENTRAL_URL=http://<central-server-url>');
+            $this->info('  CENTER_SYNC_TOKEN=<token-from-central>');
+            $this->info('  CENTER_ID=<center-database-id>');
+            $this->info('Then run: php artisan config:clear');
             return self::FAILURE;
         }
 

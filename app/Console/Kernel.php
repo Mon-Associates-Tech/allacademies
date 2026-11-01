@@ -55,6 +55,22 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('books:process-audio-conversion')->everyFiveMinutes();
 
+        // Multi-center sync: pull exam packages from central (center instances only)
+        $schedule->command('sync:pull')
+            ->everyFiveMinutes()
+            ->when(function () {
+                return config('center.role') === 'center';
+            })
+            ->withoutOverlapping();
+
+        // Multi-center sync: push results to central (center instances only)
+        $schedule->command('sync:push')
+            ->everyFiveMinutes()
+            ->when(function () {
+                return config('center.role') === 'center';
+            })
+            ->withoutOverlapping();
+
         $schedule->command('queue:work --stop-when-empty --max-time=240')
             ->everyFiveMinutes()
             ->withoutOverlapping();
