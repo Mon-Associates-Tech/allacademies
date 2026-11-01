@@ -320,9 +320,11 @@ $wire.on('examAutoSubmitted', (payload) => {
             <div class="flex flex-col h-screen" style="font-family: 'system-ui', -apple-system, sans-serif;"
                  x-data="{
          fontSize: parseInt(localStorage.getItem('exam_font_size') || 16),
-         increase() { if (this.fontSize < 22) { this.fontSize++; localStorage.setItem('exam_font_size', this.fontSize); } },
-         decrease() { if (this.fontSize > 13) { this.fontSize--; localStorage.setItem('exam_font_size', this.fontSize); } }
-     }">
+         increase() { if (this.fontSize < 22) { this.fontSize++; localStorage.setItem('exam_font_size', this.fontSize); this.applyFontSize(); } },
+         decrease() { if (this.fontSize > 13) { this.fontSize--; localStorage.setItem('exam_font_size', this.fontSize); this.applyFontSize(); } },
+         applyFontSize() { document.documentElement.style.setProperty('--exam-font-size', this.fontSize + 'px'); }
+     }"
+                 x-init="applyFontSize()">
 
     {{-- ── TOP HEADER BAR ── --}}
     <div class="flex-shrink-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800"
@@ -476,7 +478,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                     <div class="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5">
                         {{-- Question text --}}
                         <div class="text-slate-800 dark:text-slate-200 mb-5 sm:mb-7 font-serif"
-                             :style="`font-size: ${fontSize}px; line-height: 1.75;`"
+                             style="font-size: var(--exam-font-size, 16px); line-height: 1.75;"
                             wire:key="question-text-{{ $question->id }}">
                             <x-form.markdown-with-math :content="$question->question->down ?? $question->question->getFormattedQuestion()" class="prose dark:prose-invert max-w-none"/>
                         </div>
@@ -503,7 +505,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                                             <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold flex-shrink-0 mt-0.5 transition-colors rounded-[2px] {{ $isSelected ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
                                                 {{ $key }}
                                             </span>
-                                            <div class="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5">
+                                            <div class="flex-1 text-slate-700 dark:text-slate-300 leading-relaxed pt-0.5" style="font-size: var(--exam-font-size, 16px);">
                                                 <x-form.markdown-with-math :content="$optionText['down'] ?? $optionText" class="text-slate-800 dark:text-slate-200"/>
                                             </div>
                                         </div>
@@ -540,7 +542,7 @@ $wire.on('examAutoSubmitted', (payload) => {
                                 <textarea
                                     wire:model.live.debounce.500ms="responses.{{ $question->id }}"
                                     rows="10"
-                                    :style="`font-size: ${fontSize}px`"
+                                    style="font-size: var(--exam-font-size, 16px);"
                                     class="w-full px-4 py-3 text-sm text-slate-800 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 transition-all resize-none leading-relaxed rounded-[2px] font-serif"
                                     placeholder="Type your answer here…"
                                 ></textarea>
