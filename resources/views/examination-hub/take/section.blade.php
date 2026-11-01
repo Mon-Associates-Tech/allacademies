@@ -194,24 +194,43 @@
                 // time is still counting while they are outside fullscreen.
                 const mount = document.getElementById('fullscreen-dialog-timer-mount');
                 if (mount && typeof Alpine !== 'undefined') {
-                    mount.innerHTML = `
-                        <div
-                            x-data="examCountdown(null, 0)"
-                            class="flex items-center gap-2 px-3 py-1.5 border transition-all duration-300"
-                            style="border-radius:2px;"
-                            :class="{
-                                'bg-red-600 text-white animate-pulse border-red-600': state === 'expired',
-                                'bg-red-100 border-red-300 text-red-700': state === 'critical',
-                                'bg-amber-100 border-amber-300 text-amber-700': state === 'warning',
-                                'bg-slate-50 border-slate-200': state === 'normal'
-                            }"
-                        >
-                            <svg class="w-4 h-4 flex-shrink-0" :class="state === 'expired' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="text-sm font-bold tabular-nums" :class="state === 'expired' ? 'text-white' : 'text-slate-800'" x-text="display">--:--:--</span>
-                        </div>
-                    `;
+                    // Read the current remaining seconds from the main exam timer
+                    // so the dialog shows the real countdown, not a placeholder.
+                    let remainingSeconds = null;
+                    const mainTimer = document.getElementById('time-alert');
+                    if (mainTimer && mainTimer.__x) {
+                        const data = mainTimer.__x.data;
+                        if (data && typeof data.remaining === 'number') {
+                            remainingSeconds = data.remaining;
+                        }
+                    }
+                    // Fallback: calculate from exam start time and duration
+                    if (remainingSeconds === null) {
+                        const startTime = {{ $submission->started_at ? $submission->started_at->timestamp : 'null' }};
+                        const durationMinutes = {{ (int) ($exam->duration_in_minutes ?? 0) }};
+                        const extraMinutes = {{ (int) ($submission->extra_time_minutes ?? 0) }};
+                        if (startTime && durationMinutes) {
+                            const totalSeconds = (durationMinutes + extraMinutes) * 60;
+                            const elapsed = Math.floor((Date.now() - startTime * 1000) / 1000);
+                            remainingSeconds = Math.max(0, totalSeconds - elapsed);
+                        }
+                    }
+                    const remainingArg = remainingSeconds !== null ? remainingSeconds : 'null';
+                    mount.innerHTML =
+                        '<div x-data="examCountdown(' + remainingArg + ', 0)" ' +
+                        'class="flex items-center gap-2 px-3 py-1.5 border transition-all duration-300" ' +
+                        'style="border-radius:2px;" ' +
+                        ':class="{ ' +
+                        "'bg-red-600 text-white animate-pulse border-red-600': state === 'expired', " +
+                        "'bg-red-100 border-red-300 text-red-700': state === 'critical', " +
+                        "'bg-amber-100 border-amber-300 text-amber-700': state === 'warning', " +
+                        "'bg-slate-50 border-slate-200': state === 'normal' " +
+                        '}">' +
+                        '<svg class="w-4 h-4 flex-shrink-0" :class="state === \'expired\' ? \'text-white\' : \'text-slate-500\'" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>' +
+                        '</svg>' +
+                        '<span class="text-sm font-bold tabular-nums" :class="state === \'expired\' ? \'text-white\' : \'text-slate-800\'" x-text="display">--:--:--</span>' +
+                        '</div>';
                     Alpine.initTree(mount.firstElementChild);
                 }
 
