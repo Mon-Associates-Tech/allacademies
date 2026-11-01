@@ -184,20 +184,18 @@ class ExamPackageApplier
             $examData
         );
 
-        // If exam already exists, update only allowed fields
+        // If exam already exists, update from the package
         if ($exam->wasRecentlyCreated === false) {
             // Check if exam has started or has submissions
             $hasStarted = $exam->starts_at && now()->gte($exam->starts_at);
             $hasSubmissions = $exam->submissions()->exists();
 
             if ($hasStarted || $hasSubmissions) {
-                // Only update grading-only fields
-                $exam->update([
-                    'revision' => $package['revision'],
-                    'state_version' => $package['state_version'] ?? $exam->state_version,
-                    'grading_scale' => $package['grading_scale'] ?? $exam->grading_scale,
+                // Update all exam-level settings from the package, including title, duration, etc.
+                // Question-level changes (sections/questions) are handled separately by applySections/applyQuestions
+                $exam->update(array_merge($examData, [
                     'published_at' => now(),
-                ]);
+                ]));
             } else {
                 // Free update before exam starts
                 $exam->update($examData);
