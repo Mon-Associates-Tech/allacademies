@@ -27,7 +27,7 @@ class ProctoringIngestController
      */
     public function store(Request $request): JsonResponse
     {
-        $batch = $request->input('logs', []);
+        $batch = $request->input('proctoring', []);
         $centerId = $request->input('center_id');
 
         if (!$centerId) {

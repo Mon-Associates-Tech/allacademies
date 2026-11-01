@@ -131,7 +131,7 @@ class PushAgent
                 $result = $this->sendBatch(
                     $centralUrl . '/api/sync/v1/ingest/submissions',
                     $token,
-                    $batch
+                    ['center_id' => $centerId, 'submissions' => $batch]
                 );
 
                 $ingested = $result['ingested'] ?? 0;
@@ -201,7 +201,7 @@ class PushAgent
                 $result = $this->sendBatch(
                     $centralUrl . '/api/sync/v1/ingest/proctoring',
                     $token,
-                    $batch
+                    ['center_id' => $centerId, 'proctoring' => $batch]
                 );
 
                 $ingested = $result['ingested'] ?? 0;
