@@ -176,9 +176,9 @@
                                 @if($currentQuestion->type === 'multiple_choice')
                                     @php
                                         $correctKey = strtoupper($currentQuestion->correct_answer);
-                                        $options = $currentQuestion->options ?? [];
-                                        $optionText = $options[$correctKey]
-                                            ?? ($options[strtolower($correctKey)] ?? ($options[strtoupper($correctKey)] ?? ''));
+                                        $optionsDisplay = $currentQuestion->getOptionsForDisplay();
+                                        $optionText = $optionsDisplay[$correctKey]
+                                            ?? ($optionsDisplay[strtolower($correctKey)] ?? ($optionsDisplay[strtoupper($correctKey)] ?? ''));
                                     @endphp
                                     <div class="flex items-start gap-2 text-green-700 dark:text-green-400">
                                         <span class="font-semibold flex-shrink-0 pt-0.5">{{ $correctKey }}.</span>
@@ -202,9 +202,9 @@
                                 @if($currentQuestion->type === 'multiple_choice')
                                     @php
                                         $respKey = strtoupper($response);
-                                        $options = $currentQuestion->options ?? [];
-                                        $optionText = $options[$respKey]
-                                            ?? ($options[strtolower($respKey)] ?? ($options[strtoupper($respKey)] ?? ''));
+                                        $optionsDisplay = $currentQuestion->getOptionsForDisplay();
+                                        $optionText = $optionsDisplay[$respKey]
+                                            ?? ($optionsDisplay[strtolower($respKey)] ?? ($optionsDisplay[strtoupper($respKey)] ?? ''));
                                     @endphp
                                     <div class="flex items-start gap-2 text-blue-700 dark:text-blue-400">
                                         <span class="font-semibold flex-shrink-0 pt-0.5">{{ $respKey }}.</span>

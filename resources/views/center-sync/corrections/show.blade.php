@@ -86,7 +86,7 @@
                                 $questionText = is_object($q->question) ? ($q->question->down ?? '') : ($q->question ?? '');
                                 $plainQuestionText = strip_tags($questionText);
                                 $options = $q->options ?? [];
-                                // Normalize options to keyed array, handling Mark objects and nested arrays
+                                // Normalize options to keyed array, handling Mark objects, arrays, and JSON strings
                                 $optionsDisplay = [];
                                 if (!empty($options)) {
                                     foreach ($options as $opt) {
@@ -94,11 +94,18 @@
                                             $optValue = $opt['value'] ?? '';
                                             // Handle Mark object (has up/down properties)
                                             if (is_object($optValue)) {
-                                                $optValue = $optValue->down ?? '';
+                                                $optValue = $optValue->down ?? $optValue->up ?? '';
                                             }
                                             // Handle Mark array format ['up' => ..., 'down' => ...]
                                             if (is_array($optValue)) {
                                                 $optValue = $optValue['down'] ?? $optValue['up'] ?? '';
+                                            }
+                                            // Handle JSON-encoded Mark string '{"up":"...","down":"..."}'
+                                            if (is_string($optValue)) {
+                                                $decoded = json_decode($optValue, true);
+                                                if (is_array($decoded)) {
+                                                    $optValue = $decoded['down'] ?? $decoded['up'] ?? $optValue;
+                                                }
                                             }
                                             // Now it should be a string
                                             if (is_string($optValue)) {

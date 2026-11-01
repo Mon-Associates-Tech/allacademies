@@ -210,6 +210,7 @@ class GeneralExamQuestion extends Model
 
     /**
      * Returns options as an associative array: ['A' => 'text', 'B' => 'text', ...]
+     * Handles Mark values stored as JSON strings ({"up":"...","down":"..."}) by extracting the plain text.
      */
     public function getOptionsForDisplay(): array
     {
@@ -219,16 +220,49 @@ class GeneralExamQuestion extends Model
 
         // Current format: [{key: 'A', value: '...'}, ...]
         if (isset($this->options[0]) && is_array($this->options[0]) && isset($this->options[0]['key'])) {
-            return collect($this->options)->pluck('value', 'key')->toArray();
+            $result = [];
+            foreach ($this->options as $option) {
+                $value = $this->resolveOptionValue($option['value'] ?? '');
+                $result[$option['key']] = $value;
+            }
+            return $result;
         }
 
         // Legacy format: ['text1', 'text2', ...] — convert to keyed array
         $keyed = [];
         foreach ($this->options as $index => $value) {
-            $keyed[chr(65 + $index)] = $value;
+            $keyed[chr(65 + $index)] = $this->resolveOptionValue($value);
         }
 
         return $keyed;
+    }
+
+    /**
+     * Resolve an option value to a plain string for display.
+     * Handles: plain strings, Mark JSON strings, Mark arrays, and Mark objects.
+     */
+    protected function resolveOptionValue($value): string
+    {
+        if ($value instanceof Mark) {
+            return $value->up ?? $value->down ?? '';
+        }
+
+        if (is_array($value)) {
+            // Mark array format: ['up' => ..., 'down' => ...]
+            return $value['up'] ?? $value['down'] ?? '';
+        }
+
+        if (is_string($value)) {
+            // Try to decode as Mark JSON
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return $decoded['up'] ?? $decoded['down'] ?? $value;
+            }
+            // Plain string
+            return $value;
+        }
+
+        return '';
     }
 
     public function getFormattedQuestion(): string
