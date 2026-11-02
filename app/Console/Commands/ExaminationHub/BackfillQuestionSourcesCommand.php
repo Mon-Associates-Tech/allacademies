@@ -140,7 +140,15 @@ private function buildIndex(string $modelClass, int $chunkSize): array
             ->whereNull('source_question_id')
             ->chunk($chunkSize, function ($rows) use ($index, $dryRun, &$matched, &$unmatched, &$examIds) {
                 foreach ($rows as $examQ) {
-                    $norm      = $this->normalise($examQ->question ?? '');
+                    $questionValue = $examQ->question;
+                    if ($questionValue instanceof Mark) {
+                        $questionText = $questionValue->down ?? '';
+                    } elseif (is_array($questionValue)) {
+                        $questionText = implode(' ', array_filter(array_map('strval', $questionValue)));
+                    } else {
+                        $questionText = (string) ($questionValue ?? '');
+                    }
+                    $norm      = $this->normalise($questionText);
                     $sourceId  = $index[$norm] ?? null;
 
                     if ($sourceId) {
