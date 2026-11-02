@@ -4,8 +4,12 @@ namespace App\ExaminationHub\Services;
 
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
+use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSection;
+use App\Models\AcademicGroup;
+use App\Models\AcademicSubject;
+use App\Models\AcademicLevel;
 use App\Support\Mark;
 use Illuminate\Support\Facades\DB;
 
@@ -83,9 +87,144 @@ class ExamPackageBuilder
             'access_code' => $exam->access_code,
             'settings' => $this->buildSettings($exam),
             'grading_scale' => $this->buildGradingScale($exam),
+            'academic_structure' => $this->buildAcademicStructure($exam),
             'sections' => $this->buildSections($exam->sections),
             'participants' => $this->buildParticipants($exam->configuredParticipants),
         ];
+    }
+
+    /**
+     * Build the academic structure block.
+     *
+     * Embeds the academic group, level, and subject referenced by the exam
+     * and its sections so that a center server can recreate them before
+     * applying the exam. This ensures the foreign keys resolve correctly
+     * even when the center has no pre-existing academic structure.
+     *
+     * @return array{
+     *     exam_subject: array|null,
+     *     exam_participant_group: array|null,
+     *     sections: array
+     * }
+     */
+    protected function buildAcademicStructure(GeneralExam $exam): array
+    {
+        $exam->loadMissing([
+            'academicSubject.academicLevel.academicGroup',
+            'participantGroup',
+            'sections.academicGroup',
+            'sections.academicLevel',
+            'sections.academicSubject',
+        ]);
+
+        return [
+            'exam_subject' => $this->buildSubjectWithHierarchy($exam->academicSubject),
+            'exam_participant_group' => $this->buildParticipantGroup($exam->participantGroup),
+            'sections' => $this->buildSectionAcademicStructure($exam->sections),
+        ];
+    }
+
+    /**
+     * Build a subject with its full hierarchy (group → level → subject).
+     *
+     * @return array|null
+     */
+    protected function buildSubjectWithHierarchy(?AcademicSubject $subject): ?array
+    {
+        if (!$subject) {
+            return null;
+        }
+
+        $subject->loadMissing(['academicLevel.academicGroup']);
+
+        return [
+            'uuid' => $subject->uuid ?? null,
+            'name' => $subject->name,
+            'level' => $this->buildLevelWithGroup($subject->academicLevel),
+        ];
+    }
+
+    /**
+     * Build a level with its parent group.
+     *
+     * @return array|null
+     */
+    protected function buildLevelWithGroup(?AcademicLevel $level): ?array
+    {
+        if (!$level) {
+            return null;
+        }
+
+        $level->loadMissing('academicGroup');
+
+        return [
+            'uuid' => $level->uuid ?? null,
+            'name' => $level->name,
+            'group' => $this->buildGroup($level->academicGroup),
+        ];
+    }
+
+    /**
+     * Build a group.
+     *
+     * @return array|null
+     */
+    protected function buildGroup(?AcademicGroup $group): ?array
+    {
+        if (!$group) {
+            return null;
+        }
+
+        return [
+            'uuid' => $group->uuid ?? null,
+            'name' => $group->name,
+        ];
+    }
+
+    /**
+     * Build a participant group for the exam.
+     *
+     * @return array|null
+     */
+    protected function buildParticipantGroup(?GeneralExamParticipantGroup $group): ?array
+    {
+        if (!$group) {
+            return null;
+        }
+
+        return [
+            'uuid' => $group->uuid ?? null,
+            'name' => $group->name,
+            'academic_subject_id' => $group->academic_subject_id,
+        ];
+    }
+
+    /**
+     * Build academic structure for all sections.
+     *
+     * @param \Illuminate\Database\Eloquent\Collection $sections
+     * @return array
+     */
+    protected function buildSectionAcademicStructure($sections): array
+    {
+        $result = [];
+
+        foreach ($sections as $section) {
+            $section->loadMissing([
+                'academicGroup',
+                'academicLevel',
+                'academicSubject',
+            ]);
+
+            $result[] = [
+                'uuid' => $section->uuid,
+                'academic_group' => $this->buildGroup($section->academicGroup),
+                'academic_level' => $this->buildLevelWithGroup($section->academicLevel),
+                'academic_subject' => $this->buildSubjectWithHierarchy($section->academicSubject),
+            ];
+        }
+
+        return $result;
     }
 
     /**

@@ -7,6 +7,9 @@ use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Models\GeneralExamQuestion;
 use App\ExaminationHub\Models\GeneralExamSection;
 use App\ExaminationHub\Models\SyncRun;
+use App\Models\AcademicGroup;
+use App\Models\AcademicLevel;
+use App\Models\AcademicSubject;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -48,8 +51,22 @@ class ExamPackageApplier
         try {
             DB::beginTransaction();
 
+            // Apply academic structure first (groups, levels, subjects)
+            $academicResult = $this->applyAcademicStructure($package['academic_structure'] ?? []);
+            if (!$academicResult['success']) {
+                $errors = array_merge($errors, $academicResult['errors']);
+                Log::error('ExamPackageApplier: Failed to apply academic structure', ['exam_uuid' => $examUuid, 'errors' => $academicResult['errors']]);
+            } else {
+                Log::info('ExamPackageApplier: Academic structure applied', [
+                    'exam_uuid' => $examUuid,
+                    'groups' => $academicResult['groups_count'] ?? 0,
+                    'levels' => $academicResult['levels_count'] ?? 0,
+                    'subjects' => $academicResult['subjects_count'] ?? 0,
+                ]);
+            }
+
             // Apply exam
-            $examResult = $this->applyExam($package);
+            $examResult = $this->applyExam($package, $academicResult['subject_map'] ?? []);
             if (!$examResult['success']) {
                 $errors = array_merge($errors, $examResult['errors']);
                 Log::error('ExamPackageApplier: Failed to apply exam', ['exam_uuid' => $examUuid, 'errors' => $examResult['errors']]);
@@ -58,7 +75,7 @@ class ExamPackageApplier
             }
 
             // Apply sections and questions
-            $sectionsResult = $this->applySections($examResult['exam'] ?? null, $package['sections'] ?? []);
+            $sectionsResult = $this->applySections($examResult['exam'] ?? null, $package['sections'] ?? [], $academicResult['subject_map'] ?? []);
             if (!$sectionsResult['success']) {
                 $errors = array_merge($errors, $sectionsResult['errors']);
                 Log::error('ExamPackageApplier: Failed to apply sections', ['exam_uuid' => $examUuid, 'errors' => $sectionsResult['errors']]);
@@ -135,11 +152,20 @@ class ExamPackageApplier
     /**
      * Apply the exam entity.
      *
+     * @param array $package
+     * @param array $subjectMap Maps package subject UUIDs to local AcademicSubject IDs
      * @return array{success: bool, exam: GeneralExam|null, errors: string[]}
      */
-    protected function applyExam(array $package): array
+    protected function applyExam(array $package, array $subjectMap = []): array
     {
         $settings = $package['settings'] ?? [];
+        $academicStructure = $package['academic_structure'] ?? [];
+
+        // Resolve the exam's academic subject from the subject map
+        $examSubjectId = null;
+        if (isset($academicStructure['exam_subject']['uuid'])) {
+            $examSubjectId = $subjectMap[$academicStructure['exam_subject']['uuid']] ?? null;
+        }
 
         $examData = [
             'uuid' => $package['exam_uuid'],
@@ -173,6 +199,7 @@ class ExamPackageApplier
             'state_version' => $package['state_version'] ?? 1,
             'grading_scale' => $package['grading_scale'] ?? null,
             'published_at' => now(),
+            'academic_subject_id' => $examSubjectId,
             // Center-specific: no user_id, school_id, teacher_id
             'user_id' => null,
             'school_id' => null,
@@ -210,9 +237,10 @@ class ExamPackageApplier
      *
      * @param GeneralExam|null $exam
      * @param array $sectionsData
+     * @param array $subjectMap Maps package subject UUIDs to local AcademicSubject IDs
      * @return array{success: bool, errors: string[], section_count: int, question_count: int}
      */
-    protected function applySections(?GeneralExam $exam, array $sectionsData): array
+    protected function applySections(?GeneralExam $exam, array $sectionsData, array $subjectMap = []): array
     {
         $errors = [];
         $sectionCount = 0;
@@ -229,9 +257,25 @@ class ExamPackageApplier
             $sectionUuid = $sectionData['uuid'];
             $packageSectionUuids[] = $sectionUuid;
 
+            // Resolve section's academic structure from the package
+            $sectionAcademic = $this->findSectionAcademic($package['academic_structure']['sections'] ?? [], $sectionUuid);
+
+            $sectionGroupData = [];
+            if ($sectionAcademic) {
+                if (isset($sectionAcademic['academic_group']['uuid'])) {
+                    $sectionGroupData['academic_group_id'] = $this->resolveLocalId('academic_groups', $sectionAcademic['academic_group']['uuid']);
+                }
+                if (isset($sectionAcademic['academic_level']['uuid'])) {
+                    $sectionGroupData['academic_level_id'] = $this->resolveLocalId('academic_levels', $sectionAcademic['academic_level']['uuid']);
+                }
+                if (isset($sectionAcademic['academic_subject']['uuid'])) {
+                    $sectionGroupData['academic_subject_id'] = $subjectMap[$sectionAcademic['academic_subject']['uuid']] ?? null;
+                }
+            }
+
             $section = GeneralExamSection::firstOrCreate(
                 ['uuid' => $sectionUuid],
-                [
+                array_merge([
                     'general_exam_id' => $exam->id,
                     'title' => $sectionData['title'] ?? null,
                     'description' => $sectionData['description'] ?? null,
@@ -239,7 +283,7 @@ class ExamPackageApplier
                     'order' => $sectionData['order'] ?? 0,
                     'time_limit_minutes' => $sectionData['time_limit_minutes'] ?? null,
                     'is_randomized' => $sectionData['is_randomized'] ?? false,
-                ]
+                ], $sectionGroupData)
             );
 
             // Update if exists
@@ -450,5 +494,182 @@ class ExamPackageApplier
         }
 
         return $result;
+    }
+
+    /**
+     * Apply academic structure (groups, levels, subjects) from the package.
+     *
+     * Creates or finds existing records by UUID, building the hierarchy
+     * bottom-up: groups → levels → subjects.
+     *
+     * @return array{success: bool, errors: string[], groups_count: int, levels_count: int, subjects_count: int, subject_map: array}
+     */
+    protected function applyAcademicStructure(array $academicStructure): array
+    {
+        $errors = [];
+        $groupsCount = 0;
+        $levelsCount = 0;
+        $subjectsCount = 0;
+        $subjectMap = []; // package UUID => local DB ID
+
+        // Build a map of all academic structures referenced by sections too
+        $allGroups = [];
+        $allLevels = [];
+        $allSubjects = [];
+
+        // Collect from exam-level subject
+        if (!empty($academicStructure['exam_subject'])) {
+            $allSubjects[$academicStructure['exam_subject']['uuid']] = $academicStructure['exam_subject'];
+            if (!empty($academicStructure['exam_subject']['level']['group'])) {
+                $groupUuid = $academicStructure['exam_subject']['level']['group']['uuid'];
+                if ($groupUuid) {
+                    $allGroups[$groupUuid] = $academicStructure['exam_subject']['level']['group'];
+                }
+            }
+            if (!empty($academicStructure['exam_subject']['level'])) {
+                $levelUuid = $academicStructure['exam_subject']['level']['uuid'];
+                if ($levelUuid) {
+                    $allLevels[$levelUuid] = $academicStructure['exam_subject']['level'];
+                }
+            }
+        }
+
+        // Collect from section-level academic structures
+        foreach ($academicStructure['sections'] ?? [] as $sectionAcademic) {
+            if (!empty($sectionAcademic['academic_group'])) {
+                $groupUuid = $sectionAcademic['academic_group']['uuid'];
+                if ($groupUuid) {
+                    $allGroups[$groupUuid] = $sectionAcademic['academic_group'];
+                }
+            }
+            if (!empty($sectionAcademic['academic_level'])) {
+                $levelUuid = $sectionAcademic['academic_level']['uuid'];
+                if ($levelUuid) {
+                    $allLevels[$levelUuid] = $sectionAcademic['academic_level'];
+                }
+                // Also collect the group from the level
+                if (!empty($sectionAcademic['academic_level']['group'])) {
+                    $groupUuid = $sectionAcademic['academic_level']['group']['uuid'];
+                    if ($groupUuid) {
+                        $allGroups[$groupUuid] = $sectionAcademic['academic_level']['group'];
+                    }
+                }
+            }
+            if (!empty($sectionAcademic['academic_subject'])) {
+                $subjectUuid = $sectionAcademic['academic_subject']['uuid'];
+                if ($subjectUuid) {
+                    $allSubjects[$subjectUuid] = $sectionAcademic['academic_subject'];
+                }
+                // Also collect level and group from the subject
+                if (!empty($sectionAcademic['academic_subject']['level'])) {
+                    $levelUuid = $sectionAcademic['academic_subject']['level']['uuid'];
+                    if ($levelUuid) {
+                        $allLevels[$levelUuid] = $sectionAcademic['academic_subject']['level'];
+                    }
+                    if (!empty($sectionAcademic['academic_subject']['level']['group'])) {
+                        $groupUuid = $sectionAcademic['academic_subject']['level']['group']['uuid'];
+                        if ($groupUuid) {
+                            $allGroups[$groupUuid] = $sectionAcademic['academic_subject']['level']['group'];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Apply groups first
+        $groupMap = []; // package UUID => local DB ID
+        foreach ($allGroups as $pkgUuid => $groupData) {
+            $group = AcademicGroup::firstOrCreate(
+                ['uuid' => $pkgUuid],
+                ['name' => $groupData['name'] ?? 'Unknown']
+            );
+            $groupMap[$pkgUuid] = $group->id;
+            $groupsCount++;
+        }
+
+        // Apply levels
+        $levelMap = []; // package UUID => local DB ID
+        foreach ($allLevels as $pkgUuid => $levelData) {
+            $groupId = null;
+            if (!empty($levelData['group']['uuid']) && isset($groupMap[$levelData['group']['uuid']])) {
+                $groupId = $groupMap[$levelData['group']['uuid']];
+            }
+            $level = AcademicLevel::firstOrCreate(
+                ['uuid' => $pkgUuid],
+                [
+                    'name' => $levelData['name'] ?? 'Unknown',
+                    'academic_group_id' => $groupId,
+                ]
+            );
+            // Update group if it was created without one
+            if (!$level->wasRecentlyCreated && $groupId && !$level->academic_group_id) {
+                $level->update(['academic_group_id' => $groupId]);
+            }
+            $levelMap[$pkgUuid] = $level->id;
+            $levelsCount++;
+        }
+
+        // Apply subjects
+        foreach ($allSubjects as $pkgUuid => $subjectData) {
+            $levelId = null;
+            if (!empty($subjectData['level']['uuid']) && isset($levelMap[$subjectData['level']['uuid']])) {
+                $levelId = $levelMap[$subjectData['level']['uuid']];
+            }
+            $subject = AcademicSubject::firstOrCreate(
+                ['uuid' => $pkgUuid],
+                [
+                    'name' => $subjectData['name'] ?? 'Unknown',
+                    'academic_level_id' => $levelId,
+                ]
+            );
+            // Update level if it was created without one
+            if (!$subject->wasRecentlyCreated && $levelId && !$subject->academic_level_id) {
+                $subject->update(['academic_level_id' => $levelId]);
+            }
+            $subjectMap[$pkgUuid] = $subject->id;
+            $subjectsCount++;
+        }
+
+        Log::info('ExamPackageApplier: Academic structure applied', [
+            'groups' => $groupsCount,
+            'levels' => $levelsCount,
+            'subjects' => $subjectsCount,
+        ]);
+
+        return [
+            'success' => true,
+            'errors' => $errors,
+            'groups_count' => $groupsCount,
+            'levels_count' => $levelsCount,
+            'subjects_count' => $subjectsCount,
+            'subject_map' => $subjectMap,
+            'group_map' => $groupMap,
+            'level_map' => $levelMap,
+        ];
+    }
+
+    /**
+     * Find the academic structure data for a specific section UUID.
+     */
+    protected function findSectionAcademic(array $sectionAcademics, string $sectionUuid): ?array
+    {
+        foreach ($sectionAcademics as $sa) {
+            if (($sa['uuid'] ?? '') === $sectionUuid) {
+                return $sa;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve a local DB ID from a package UUID using the model's findByUuid.
+     */
+    protected function resolveLocalId(string $table, ?string $uuid): ?int
+    {
+        if (!$uuid) {
+            return null;
+        }
+        $record = DB::table($table)->where('uuid', $uuid)->first();
+        return $record ? (int) $record->id : null;
     }
 }
