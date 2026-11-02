@@ -208,8 +208,12 @@
                                             <div class="max-w-md">
                                                 @php
                                                     $qText = $question->question ?? 'No question text';
-                                                    $qText = is_object($qText) ? (string) $qText : $qText;
-                                                    $qText = is_array($qText) ? implode(' ', array_filter($qText, 'is_string')) : $qText;
+                                                    if ($qText instanceof \App\Support\Mark) {
+                                                        $qText = $qText->down ?? '';
+                                                    } elseif (is_array($qText)) {
+                                                        $qText = implode(' ', array_filter($qText, 'is_string'));
+                                                    }
+                                                    $qText = is_string($qText) ? $qText : '';
                                                 @endphp
                                                 <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{{ strip_tags($qText) }}</p>
                                                 <span class="text-xs font-mono text-slate-400">{{ Str::limit($question->uuid ?? '', 12) }}</span>
