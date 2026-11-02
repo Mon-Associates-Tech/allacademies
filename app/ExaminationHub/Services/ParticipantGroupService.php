@@ -304,7 +304,8 @@ class ParticipantGroupService
         $copied = 0;
 
         foreach ($group->members as $member) {
-            DB::table('general_exam_configured_participants')->updateOrInsert(
+            // Use Eloquent updateOrCreate so the HasUuid trait fires and assigns a UUID
+            $participant = GeneralExamConfiguredParticipant::updateOrCreate(
                 [
                     'general_exam_id' => $examId,
                     'email' => $member->email,
@@ -313,10 +314,15 @@ class ParticipantGroupService
                     'name' => $member->name,
                     'unique_code' => $member->unique_code,
                     'is_active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ]
             );
+
+            // If the participant already existed but had no UUID (from old DB::table() path), assign one now
+            if (empty($participant->uuid)) {
+                $participant->uuid = \Illuminate\Support\Str::ulid();
+                $participant->save();
+            }
+
             $copied++;
         }
 

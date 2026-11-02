@@ -200,10 +200,11 @@ class ExamPackageApplier
             'grading_scale' => $package['grading_scale'] ?? null,
             'published_at' => now(),
             'academic_subject_id' => $examSubjectId,
-            // Center-specific: no user_id, school_id, teacher_id
+            // Center-specific: no user_id, school_id, teacher_id, participant_group_id
             'user_id' => null,
             'school_id' => null,
             'teacher_id' => null,
+            'participant_group_id' => null,
         ];
 
         $exam = GeneralExam::firstOrCreate(
@@ -411,35 +412,98 @@ class ExamPackageApplier
             return ['success' => false, 'errors' => ['Exam not found.'], 'participant_count' => 0];
         }
 
-        // Track which participant UUIDs are in this package
+        // Track which participant UUIDs are in this package (only non-null UUIDs)
         $packageParticipantUuids = [];
+        // Track emails as fallback for participants without UUIDs
+        $packageParticipantEmails = [];
 
         foreach ($participantsData as $participantData) {
-            $participantUuid = $participantData['uuid'];
-            $packageParticipantUuids[] = $participantUuid;
+            $participantUuid = $participantData['uuid'] ?? null;
+            $participantEmail = ($participantData['email'] ?? null) && $participantData['email'] !== ''
+                ? strtolower(trim($participantData['email']))
+                : null;
 
-            $participant = GeneralExamConfiguredParticipant::updateOrCreate(
-                ['uuid' => $participantUuid],
-                [
-                    'general_exam_id' => $exam->id,
-                    'name' => $participantData['name'] ?? null,
-                    'email' => $participantData['email'] ?? null,
-                    'unique_code' => $participantData['index_number'] ?? null,
-                    'is_active' => $participantData['is_active'] ?? true,
-                ]
-            );
+            if ($participantUuid) {
+                $packageParticipantUuids[] = $participantUuid;
+            }
+            if ($participantEmail) {
+                $packageParticipantEmails[] = $participantEmail;
+            }
+
+            // If participant has a UUID, upsert by UUID
+            if ($participantUuid) {
+                $participant = GeneralExamConfiguredParticipant::updateOrCreate(
+                    ['uuid' => $participantUuid],
+                    [
+                        'general_exam_id' => $exam->id,
+                        'name' => $participantData['name'] ?? null,
+                        'email' => $participantData['email'] ?? null,
+                        'unique_code' => $participantData['index_number'] ?? null,
+                        'is_active' => $participantData['is_active'] ?? true,
+                    ]
+                );
+            } elseif ($participantEmail) {
+                // Fallback: upsert by exam + email for participants without UUIDs (legacy data)
+                $participant = GeneralExamConfiguredParticipant::updateOrCreate(
+                    [
+                        'general_exam_id' => $exam->id,
+                        'email' => $participantEmail,
+                    ],
+                    [
+                        'name' => $participantData['name'] ?? null,
+                        'unique_code' => $participantData['index_number'] ?? null,
+                        'is_active' => $participantData['is_active'] ?? true,
+                    ]
+                );
+
+                // Assign UUID if missing (legacy participant)
+                if (empty($participant->uuid)) {
+                    $participant->uuid = \Illuminate\Support\Str::ulid();
+                    $participant->save();
+                    $packageParticipantUuids[] = $participant->uuid;
+                }
+            } else {
+                Log::warning('ExamPackageApplier: Skipping participant without UUID or email', [
+                    'exam_uuid' => $exam->uuid,
+                    'participant_data' => $participantData,
+                ]);
+                continue;
+            }
 
             $participantCount++;
-            Log::info('ExamPackageApplier: Participant applied', ['participant_uuid' => $participantUuid, 'participant_id' => $participant->id]);
+            Log::info('ExamPackageApplier: Participant applied', [
+                'participant_uuid' => $participant->uuid,
+                'participant_id' => $participant->id,
+                'email' => $participant->email,
+            ]);
         }
 
         // Remove participants that are no longer in the package
-        $staleParticipants = GeneralExamConfiguredParticipant::where('general_exam_id', $exam->id)
-            ->whereNotIn('uuid', $packageParticipantUuids)
-            ->get();
-        foreach ($staleParticipants as $staleParticipant) {
-            Log::info('ExamPackageApplier: Removing stale participant', ['participant_uuid' => $staleParticipant->uuid]);
-            $staleParticipant->delete();
+        // Check each existing participant against the package list
+        $allExamParticipants = GeneralExamConfiguredParticipant::where('general_exam_id', $exam->id)->get();
+        foreach ($allExamParticipants as $existingParticipant) {
+            $isInPackage = false;
+
+            // Match by UUID
+            if ($existingParticipant->uuid && in_array($existingParticipant->uuid, $packageParticipantUuids, true)) {
+                $isInPackage = true;
+            }
+
+            // Match by email (fallback for legacy participants)
+            if (!$isInPackage) {
+                $existingEmail = $existingParticipant->email ? strtolower(trim($existingParticipant->email)) : null;
+                if ($existingEmail && in_array($existingEmail, $packageParticipantEmails, true)) {
+                    $isInPackage = true;
+                }
+            }
+
+            if (!$isInPackage) {
+                Log::info('ExamPackageApplier: Removing stale participant', [
+                    'participant_uuid' => $existingParticipant->uuid,
+                    'participant_email' => $existingParticipant->email,
+                ]);
+                $existingParticipant->delete();
+            }
         }
 
         return [

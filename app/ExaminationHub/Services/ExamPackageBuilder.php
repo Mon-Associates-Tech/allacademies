@@ -111,7 +111,7 @@ class ExamPackageBuilder
     {
         $exam->loadMissing([
             'academicSubject.academicLevel.academicGroup',
-            'participantGroup',
+            'participantGroup.academicSubject',
             'sections.academicGroup',
             'sections.academicLevel',
             'sections.academicSubject',
@@ -194,10 +194,16 @@ class ExamPackageBuilder
             return null;
         }
 
+        // Include the group's academic subject UUID instead of local integer ID
+        $subjectUuid = null;
+        if ($group->academicSubject) {
+            $subjectUuid = $group->academicSubject->uuid ?? null;
+        }
+
         return [
             'uuid' => $group->uuid ?? null,
             'name' => $group->name,
-            'academic_subject_id' => $group->academic_subject_id,
+            'academic_subject_uuid' => $subjectUuid,
         ];
     }
 
@@ -373,8 +379,16 @@ class ExamPackageBuilder
         $result = [];
 
         foreach ($participants as $participant) {
+            // Ensure participant has a UUID; assign one if missing (legacy data)
+            $uuid = $participant->uuid;
+            if (empty($uuid)) {
+                $uuid = \Illuminate\Support\Str::ulid();
+                $participant->uuid = $uuid;
+                $participant->save();
+            }
+
             $result[] = [
-                'uuid' => $participant->uuid,
+                'uuid' => $uuid,
                 'index_number' => $participant->unique_code,
                 'name' => $participant->name,
                 'email' => $participant->email,
