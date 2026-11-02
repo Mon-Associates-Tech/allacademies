@@ -502,6 +502,10 @@ class ExamPackageApplier
      * Creates or finds existing records by UUID, building the hierarchy
      * bottom-up: groups → levels → subjects.
      *
+     * If a level's group is missing, a placeholder group is created.
+     * If a subject's level is missing, a placeholder level is created.
+     * This ensures every record has valid foreign keys.
+     *
      * @return array{success: bool, errors: string[], groups_count: int, levels_count: int, subjects_count: int, subject_map: array}
      */
     protected function applyAcademicStructure(array $academicStructure): array
@@ -512,26 +516,15 @@ class ExamPackageApplier
         $subjectsCount = 0;
         $subjectMap = []; // package UUID => local DB ID
 
-        // Build a map of all academic structures referenced by sections too
+        // Collect all groups, levels, and subjects from the package
         $allGroups = [];
         $allLevels = [];
         $allSubjects = [];
 
         // Collect from exam-level subject
         if (!empty($academicStructure['exam_subject'])) {
-            $allSubjects[$academicStructure['exam_subject']['uuid']] = $academicStructure['exam_subject'];
-            if (!empty($academicStructure['exam_subject']['level']['group'])) {
-                $groupUuid = $academicStructure['exam_subject']['level']['group']['uuid'];
-                if ($groupUuid) {
-                    $allGroups[$groupUuid] = $academicStructure['exam_subject']['level']['group'];
-                }
-            }
-            if (!empty($academicStructure['exam_subject']['level'])) {
-                $levelUuid = $academicStructure['exam_subject']['level']['uuid'];
-                if ($levelUuid) {
-                    $allLevels[$levelUuid] = $academicStructure['exam_subject']['level'];
-                }
-            }
+            $examSubject = $academicStructure['exam_subject'];
+            $this->collectAcademicHierarchy($examSubject, $allGroups, $allLevels, $allSubjects);
         }
 
         // Collect from section-level academic structures
@@ -546,37 +539,19 @@ class ExamPackageApplier
                 $levelUuid = $sectionAcademic['academic_level']['uuid'];
                 if ($levelUuid) {
                     $allLevels[$levelUuid] = $sectionAcademic['academic_level'];
-                }
-                // Also collect the group from the level
-                if (!empty($sectionAcademic['academic_level']['group'])) {
-                    $groupUuid = $sectionAcademic['academic_level']['group']['uuid'];
-                    if ($groupUuid) {
+                    // Also collect the group from the level
+                    if (!empty($sectionAcademic['academic_level']['group']['uuid'])) {
+                        $groupUuid = $sectionAcademic['academic_level']['group']['uuid'];
                         $allGroups[$groupUuid] = $sectionAcademic['academic_level']['group'];
                     }
                 }
             }
             if (!empty($sectionAcademic['academic_subject'])) {
-                $subjectUuid = $sectionAcademic['academic_subject']['uuid'];
-                if ($subjectUuid) {
-                    $allSubjects[$subjectUuid] = $sectionAcademic['academic_subject'];
-                }
-                // Also collect level and group from the subject
-                if (!empty($sectionAcademic['academic_subject']['level'])) {
-                    $levelUuid = $sectionAcademic['academic_subject']['level']['uuid'];
-                    if ($levelUuid) {
-                        $allLevels[$levelUuid] = $sectionAcademic['academic_subject']['level'];
-                    }
-                    if (!empty($sectionAcademic['academic_subject']['level']['group'])) {
-                        $groupUuid = $sectionAcademic['academic_subject']['level']['group']['uuid'];
-                        if ($groupUuid) {
-                            $allGroups[$groupUuid] = $sectionAcademic['academic_subject']['level']['group'];
-                        }
-                    }
-                }
+                $this->collectAcademicHierarchy($sectionAcademic['academic_subject'], $allGroups, $allLevels, $allSubjects);
             }
         }
 
-        // Apply groups first
+        // Step 1: Create all groups first
         $groupMap = []; // package UUID => local DB ID
         foreach ($allGroups as $pkgUuid => $groupData) {
             $group = AcademicGroup::firstOrCreate(
@@ -587,12 +562,25 @@ class ExamPackageApplier
             $groupsCount++;
         }
 
-        // Apply levels
+        // Step 2: Create all levels, creating placeholder groups if needed
         $levelMap = []; // package UUID => local DB ID
         foreach ($allLevels as $pkgUuid => $levelData) {
             $groupId = null;
             if (!empty($levelData['group']['uuid']) && isset($groupMap[$levelData['group']['uuid']])) {
                 $groupId = $groupMap[$levelData['group']['uuid']];
+            }
+            // If group is missing, create a placeholder group
+            if ($groupId === null) {
+                $placeholderGroup = AcademicGroup::firstOrCreate(
+                    ['uuid' => 'placeholder_' . md5($pkgUuid)],
+                    ['name' => ($levelData['name'] ?? 'Unknown') . ' (Auto)']
+                );
+                $groupId = $placeholderGroup->id;
+                $groupsCount++;
+                Log::info('ExamPackageApplier: Created placeholder group for level', [
+                    'level_uuid' => $pkgUuid,
+                    'group_id' => $groupId,
+                ]);
             }
             $level = AcademicLevel::firstOrCreate(
                 ['uuid' => $pkgUuid],
@@ -610,11 +598,28 @@ class ExamPackageApplier
             $levelsCount++;
         }
 
-        // Apply subjects
+        // Step 3: Create all subjects, creating placeholder levels if needed
         foreach ($allSubjects as $pkgUuid => $subjectData) {
             $levelId = null;
             if (!empty($subjectData['level']['uuid']) && isset($levelMap[$subjectData['level']['uuid']])) {
                 $levelId = $levelMap[$subjectData['level']['uuid']];
+            }
+            // If level is missing, create a placeholder level (which itself gets a placeholder group)
+            if ($levelId === null) {
+                $placeholderLevel = AcademicLevel::firstOrCreate(
+                    ['uuid' => 'placeholder_' . md5($pkgUuid)],
+                    [
+                        'name' => ($subjectData['name'] ?? 'Unknown') . ' (Auto)',
+                        'label' => ($subjectData['name'] ?? 'Unknown') . ' (Auto)',
+                        'academic_group_id' => $this->ensureDefaultGroup($groupMap),
+                    ]
+                );
+                $levelId = $placeholderLevel->id;
+                $levelsCount++;
+                Log::info('ExamPackageApplier: Created placeholder level for subject', [
+                    'subject_uuid' => $pkgUuid,
+                    'level_id' => $levelId,
+                ]);
             }
             $subject = AcademicSubject::firstOrCreate(
                 ['uuid' => $pkgUuid],
@@ -648,6 +653,57 @@ class ExamPackageApplier
             'group_map' => $groupMap,
             'level_map' => $levelMap,
         ];
+    }
+
+    /**
+     * Recursively collect academic hierarchy from a subject data array.
+     *
+     * @param array $subjectData
+     * @param array $allGroups
+     * @param array $allLevels
+     * @param array $allSubjects
+     */
+    protected function collectAcademicHierarchy(array $subjectData, array &$allGroups, array &$allLevels, array &$allSubjects): void
+    {
+        $subjectUuid = $subjectData['uuid'] ?? null;
+        if (!$subjectUuid) {
+            return;
+        }
+
+        // Collect the subject
+        $allSubjects[$subjectUuid] = $subjectData;
+
+        // Collect the level
+        if (!empty($subjectData['level']['uuid'])) {
+            $levelUuid = $subjectData['level']['uuid'];
+            $allLevels[$levelUuid] = $subjectData['level'];
+
+            // Collect the group
+            if (!empty($subjectData['level']['group']['uuid'])) {
+                $groupUuid = $subjectData['level']['group']['uuid'];
+                $allGroups[$groupUuid] = $subjectData['level']['group'];
+            }
+        }
+    }
+
+    /**
+     * Ensure there's always a default group available for placeholder levels.
+     *
+     * @param array $groupMap
+     * @return int
+     */
+    protected function ensureDefaultGroup(array &$groupMap): int
+    {
+        $defaultUuid = 'default_academic_group';
+        if (isset($groupMap[$defaultUuid])) {
+            return $groupMap[$defaultUuid];
+        }
+        $group = AcademicGroup::firstOrCreate(
+            ['uuid' => $defaultUuid],
+            ['name' => 'Default (Auto-generated)']
+        );
+        $groupMap[$defaultUuid] = $group->id;
+        return $group->id;
     }
 
     /**
