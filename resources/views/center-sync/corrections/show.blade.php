@@ -85,6 +85,7 @@
                             @php
                                 $questionIndex = $loop->parent->index * 100 + $loop->index;
                                 $questionText = is_object($q->question) ? ($q->question->down ?? '') : ($q->question ?? '');
+                                $questionText = is_string($questionText) ? $questionText : '';
                                 $plainQuestionText = strip_tags($questionText);
                                 $options = $q->options ?? [];
                                 // Normalize options to keyed array, handling Mark objects, arrays, and JSON strings
