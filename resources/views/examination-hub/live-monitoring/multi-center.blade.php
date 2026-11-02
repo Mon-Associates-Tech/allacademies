@@ -1,5 +1,5 @@
 <x-layouts.app page-name="Multi-Center Live Monitoring">
-    <x-examination-hub.navigation active="live-monitoring" />
+    <x-examination-hub.navigation active="multi-center-monitoring" />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6"
          x-data="multiCenterMonitoring({{ json_encode($initialData) }}, {{ json_encode($exams->toArray()) }})"

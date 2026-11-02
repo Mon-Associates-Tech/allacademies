@@ -25,7 +25,7 @@ class LiveMonitoringController extends Controller
 
     public function index(GeneralExam $exam): View
     {
-        $this->ensureOwnerAccess($exam);
+        $this->ensureMonitorAccess($exam);
 
         $data = $this->monitoringService->getExamMonitoringData($exam);
 
@@ -46,7 +46,7 @@ class LiveMonitoringController extends Controller
 
     public function show(GeneralExam $exam, int $submissionId): View
     {
-        $this->ensureOwnerAccess($exam);
+        $this->ensureMonitorAccess($exam);
 
         $data = $this->monitoringService->getParticipantLiveData($submissionId);
 
@@ -63,7 +63,7 @@ class LiveMonitoringController extends Controller
 
     public function apiParticipants(GeneralExam $exam): JsonResponse
     {
-        $this->ensureOwnerAccess($exam);
+        $this->ensureMonitorAccess($exam);
 
         return response()->json($this->monitoringService->getExamMonitoringData($exam));
     }
@@ -75,7 +75,7 @@ class LiveMonitoringController extends Controller
 
     public function apiParticipant(GeneralExam $exam, int $submissionId): JsonResponse
     {
-        $this->ensureOwnerAccess($exam);
+        $this->ensureMonitorAccess($exam);
 
         $data = $this->monitoringService->getParticipantLiveData($submissionId);
 
