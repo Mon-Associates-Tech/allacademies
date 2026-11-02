@@ -1097,6 +1097,10 @@
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
+                                            @else
+                                                <option value="{{ $parentGroup->id }}">{{ $parentGroup->name }}
+                                                    ({{ $parentGroup->members_count }} members)
+                                                </option>
                                             @endif
                                         @endforeach
                                     </select>

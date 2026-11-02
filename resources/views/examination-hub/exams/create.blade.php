@@ -306,6 +306,12 @@
                                             </option>
                                         @endforeach
                                     </optgroup>
+                                @else
+                                    <option value="{{ $parentGroup->id }}"
+                                            data-members="{{ $parentGroup->members_count ?? $parentGroup->members()->count() }}"
+                                            @selected(($seed['participant_group_id'] ?? '') == $parentGroup->id)>
+                                        {{ $parentGroup->name }} ({{ $parentGroup->members_count ?? $parentGroup->members()->count() }} participants)
+                                    </option>
                                 @endif
                             @endforeach
                         </select>

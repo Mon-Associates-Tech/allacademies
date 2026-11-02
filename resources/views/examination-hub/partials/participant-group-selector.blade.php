@@ -63,6 +63,12 @@
                                 </option>
                             @endforeach
                         </optgroup>
+                    @else
+                        <option value="{{ $parentGroup->id }}"
+                                data-members="{{ $parentGroup->members_count ?? 0 }}"
+                                {{ ($formData['participant_group_id'] ?? '') == $parentGroup->id ? 'selected' : '' }}>
+                            {{ $parentGroup->name }} ({{ $parentGroup->members_count ?? 0 }} participants)
+                        </option>
                     @endif
                 @endforeach
             </select>
