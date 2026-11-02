@@ -2,10 +2,39 @@
 
 <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 mb-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center h-16">
-            {{-- overflow-x-auto enables horizontal scrolling; scrollbar utilities hide it visually --}}
-            <div class="flex items-center space-x-1 overflow-x-auto flex-1
-                        [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div x-data="{
+            showLeft: false,
+            showRight: true,
+            checkScroll() {
+                this.showLeft = this.$refs.navContainer.scrollLeft > 2;
+                this.showRight = this.$refs.navContainer.scrollLeft < (this.$refs.navContainer.scrollWidth - this.$refs.navContainer.clientWidth - 2);
+            }
+        }"
+             x-init="checkScroll(); window.addEventListener('resize', () => checkScroll())"
+             class="flex items-center h-16 relative">
+
+            {{-- Left chevron to scroll nav items left --}}
+            <button type="button"
+                    x-show="showLeft"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    x-on:click="$refs.navContainer.scrollBy({ left: -200, behavior: 'smooth' })"
+                    class="absolute left-0 z-10 flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    style="display:none;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+
+            {{-- Scrollable nav items container --}}
+            <div x-ref="navContainer"
+                 x-on:scroll.debounce.200ms="checkScroll()"
+                 class="flex items-center gap-1 overflow-x-auto flex-1 px-8"
+                 style="scrollbar-width: none; -ms-overflow-style: none;">
 
                 <a href="{{ route('examination-hub.dashboard') }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'dashboard' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
@@ -104,6 +133,23 @@
                 </a>
 
             </div>
+
+            {{-- Right chevron to scroll nav items right --}}
+            <button type="button"
+                    x-show="showRight"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    x-on:click="$refs.navContainer.scrollBy({ left: 200, behavior: 'smooth' })"
+                    class="absolute right-0 z-10 flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    style="display:none;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
         </div>
     </div>
 </nav>
