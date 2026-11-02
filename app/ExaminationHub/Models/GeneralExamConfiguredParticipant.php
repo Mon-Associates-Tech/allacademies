@@ -13,6 +13,7 @@ class GeneralExamConfiguredParticipant extends Model
     protected $fillable = [
         'uuid',
         'general_exam_id',
+        'center_id',
         'name',
         'email',
         'unique_code',
@@ -29,6 +30,11 @@ class GeneralExamConfiguredParticipant extends Model
     public function exam(): BelongsTo
     {
         return $this->belongsTo(GeneralExam::class, 'general_exam_id');
+    }
+
+    public function center(): BelongsTo
+    {
+        return $this->belongsTo(\App\ExaminationHub\Models\Center::class, 'center_id');
     }
 }
 

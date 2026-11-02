@@ -11,19 +11,21 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ParticipantGroupService
 {
-    public function createGroup(string $name, ?string $description = null): GeneralExamParticipantGroup
+    public function createGroup(string $name, ?string $description = null, ?int $academicSubjectId = null): GeneralExamParticipantGroup
     {
         return GeneralExamParticipantGroup::create([
             'name' => strtoupper($name),
             'description' => $description,
+            'academic_subject_id' => $academicSubjectId,
         ]);
     }
 
-    public function updateGroup(GeneralExamParticipantGroup $group, string $name, ?string $description = null): GeneralExamParticipantGroup
+    public function updateGroup(GeneralExamParticipantGroup $group, string $name, ?string $description = null, ?int $academicSubjectId = null): GeneralExamParticipantGroup
     {
         $group->update([
             'name' => strtoupper($name),
             'description' => $description,
+            'academic_subject_id' => $academicSubjectId,
         ]);
 
         return $group->fresh();
@@ -214,12 +216,36 @@ class ParticipantGroupService
         }
     }
 
-    public function getAllGroups()
+    public function getAllGroups(?string $search = null, ?int $subjectId = null, string $sort = 'name_asc')
     {
-        return GeneralExamParticipantGroup::withCount('members')
-            ->with(['creator', 'parent'])
-            ->orderBy('name')
-            ->paginate();
+        $query = GeneralExamParticipantGroup::withCount(['members', 'exams', 'children'])
+            ->with(['parent', 'academicSubject.academicLevel.academicGroup']);
+
+        // Search by name or description
+        if ($search) {
+            $searchTerm = '%' . trim($search) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm)
+                    ->orWhere('description', 'like', $searchTerm);
+            });
+        }
+
+        // Filter by academic subject
+        if ($subjectId) {
+            $query->where('academic_subject_id', $subjectId);
+        }
+
+        // Sorting
+        match ($sort) {
+            'members_desc' => $query->orderByDesc('members_count'),
+            'members_asc' => $query->orderByAsc('members_count'),
+            'created_desc' => $query->latest(),
+            'created_asc' => $query->oldest(),
+            'name_desc' => $query->orderByDesc('name'),
+            default => $query->orderBy('name'),
+        };
+
+        return $query->paginate(24)->withQueryString();
     }
 
     public function searchExamReferencesForGuest(?string $search = null): Collection

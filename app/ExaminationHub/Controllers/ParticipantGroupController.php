@@ -17,16 +17,22 @@ class ParticipantGroupController extends Controller
         private readonly ParticipantGroupService $groupService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $groups = $this->groupService->getAllGroups();
+        $search = $request->query('search');
+        $subjectId = $request->query('subject_id');
+        $sort = $request->query('sort', 'name_asc');
 
-        return view('examination-hub.participant-groups.index', compact('groups'));
+        $groups = $this->groupService->getAllGroups($search, $subjectId, $sort);
+        $subjects = \App\Models\AcademicSubject::with(['academicLevel.academicGroup'])->orderBy('name')->get();
+
+        return view('examination-hub.participant-groups.index', compact('groups', 'subjects', 'search', 'subjectId', 'sort'));
     }
 
     public function create(): View
     {
-        return view('examination-hub.participant-groups.create');
+        $subjects = \App\Models\AcademicSubject::with(['academicLevel.academicGroup'])->orderBy('name')->get();
+        return view('examination-hub.participant-groups.create', compact('subjects'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -38,10 +44,11 @@ class ParticipantGroupController extends Controller
                 'max:255',
                 Rule::unique('general_exam_participant_groups', 'name')->where(fn ($query) => $query->whereNull('parent_id')),
             ],
+            'academic_subject_id' => ['nullable', 'integer', 'exists:academic_subjects,id'],
             'description' => ['nullable', 'string'],
         ]);
 
-        $this->groupService->createGroup($data['name'], $data['description'] ?? null);
+        $this->groupService->createGroup($data['name'], $data['description'] ?? null, $data['academic_subject_id'] ?? null);
 
         return redirect()->route('examination-hub.participant-groups.index')
             ->with('success', 'Participant group created successfully.');
@@ -56,7 +63,8 @@ class ParticipantGroupController extends Controller
 
     public function edit(GeneralExamParticipantGroup $group): View
     {
-        return view('examination-hub.participant-groups.edit', compact('group'));
+        $subjects = \App\Models\AcademicSubject::with(['academicLevel.academicGroup'])->orderBy('name')->get();
+        return view('examination-hub.participant-groups.edit', compact('group', 'subjects'));
     }
 
     public function update(Request $request, GeneralExamParticipantGroup $group): RedirectResponse
@@ -70,10 +78,11 @@ class ParticipantGroupController extends Controller
                     ->ignore($group->id)
                     ->where(fn ($query) => $query->whereNull('parent_id')),
             ],
+            'academic_subject_id' => ['nullable', 'integer', 'exists:academic_subjects,id'],
             'description' => ['nullable', 'string'],
         ]);
 
-        $this->groupService->updateGroup($group, $data['name'], $data['description'] ?? null);
+        $this->groupService->updateGroup($group, $data['name'], $data['description'] ?? null, $data['academic_subject_id'] ?? null);
 
         return redirect()->route('examination-hub.participant-groups.show', $group)
             ->with('success', 'Participant group updated successfully.');

@@ -53,13 +53,51 @@
                 @csrf
 
                 <div>
+                    <label for="academic_subject_id" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                        Academic Subject (Optional)
+                    </label>
+                    <select name="academic_subject_id" id="academic_subject_id"
+                            class="w-full px-4 py-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:focus:border-amber-500 outline-none transition-colors"
+                            style="border-radius: 2px;"
+                            x-data
+                            @change="if($el.value) {
+                                const subjectName = $el.options[$el.selectedIndex].dataset.subjectName || '';
+                                const nameInput = document.getElementById('name');
+                                if(nameInput && !nameInput.dataset.manual && subjectName) {
+                                    nameInput.value = subjectName + ' - Group';
+                                    nameInput.dataset.auto = '1';
+                                }
+                            }">
+                        <option value="">-- Select a subject (optional) --</option>
+                        @foreach($subjects as $subject)
+                            @php
+                                $levelName = $subject->academicLevel ? $subject->academicLevel->name : null;
+                                $groupName = $subject->academicLevel && $subject->academicLevel->academicGroup ? $subject->academicLevel->academicGroup->name : null;
+                                $context = [];
+                                if ($groupName) $context[] = $groupName;
+                                if ($levelName) $context[] = $levelName;
+                                $contextString = $context ? ' (' . implode(' - ', $context) . ')' : '';
+                            @endphp
+                            <option value="{{ $subject->id }}" data-subject-name="{{ $subject->name }}" {{ old('academic_subject_id') == $subject->id ? 'selected' : '' }}>
+                                {{ $subject->name }}{{ $contextString }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Selecting a subject will auto-fill the group name as "Subject Name - Group". You can edit it.</p>
+                    @error('academic_subject_id')
+                        <p class="text-red-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label for="name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                         Group Name <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}"
                            class="w-full px-4 py-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:focus:border-amber-500 outline-none transition-colors"
                            style="border-radius: 2px;"
-                           placeholder="e.g., Computer Science 2024" required>
+                           placeholder="e.g., Computer Science 2024" required
+                           @change="this.dataset.manual = '1'">
                     @error('name')
                         <p class="text-red-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
                     @enderror

@@ -19,6 +19,7 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
             [
                 'name' => (string) ($payload['name'] ?? ''),
                 'unique_code' => $payload['unique_code'] ?? null,
+                'center_id' => isset($payload['center_id']) ? (int) $payload['center_id'] : null,
                 'is_active' => true,
             ]
         );
@@ -48,6 +49,7 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
         $nameIndex = array_search('name', $header, true);
         $emailIndex = array_search('email', $header, true);
         $codeIndex = array_search('unique_code', $header, true);
+        $centerIndex = array_search('center_id', $header, true);
 
         // Validate required columns
         $hasNameSource = $firstNameIndex !== false && $lastNameIndex !== false || $nameIndex !== false;
@@ -82,6 +84,8 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
 
             $email = strtolower(trim((string) ($row[$emailIndex] ?? '')));
             $uniqueCode = $codeIndex !== false ? trim((string) ($row[$codeIndex] ?? '')) : '';
+            $centerId = $centerIndex !== false ? trim((string) ($row[$centerIndex] ?? '')) : '';
+            $centerId = $centerId !== '' ? (int) $centerId : null;
 
             if ($name === '') {
                 $errors[] = "Row {$rowNumber}: name is required (provide either first_name + last_name or name column).";
@@ -97,7 +101,7 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
 
             GeneralExamConfiguredParticipant::updateOrCreate(
                 ['general_exam_id' => $exam->id, 'email' => $email],
-                ['name' => $name, 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null, 'is_active' => true]
+                ['name' => $name, 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null, 'center_id' => $centerId, 'is_active' => true]
             );
 
             $imported++;

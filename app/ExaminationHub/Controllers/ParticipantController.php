@@ -74,6 +74,7 @@ class ParticipantController extends Controller
             'last_name' => ['required', 'string', 'max:128'],
             'email' => ['required', 'email', 'max:255'],
             'unique_code' => ['nullable', 'string', 'max:100'],
+            'center_id' => ['nullable', 'integer', 'exists:general_exam_centers,id'],
         ]);
 
         $data['name'] = "{$data['first_name']} {$data['last_name']}";

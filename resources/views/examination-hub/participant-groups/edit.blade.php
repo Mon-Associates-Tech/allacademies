@@ -54,6 +54,33 @@
                 @method('PUT')
 
                 <div>
+                    <label for="academic_subject_id" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
+                        Academic Subject (Optional)
+                    </label>
+                    <select name="academic_subject_id" id="academic_subject_id"
+                            class="w-full px-4 py-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:focus:border-amber-500 outline-none transition-colors"
+                            style="border-radius: 2px;">
+                        <option value="">-- None --</option>
+                        @foreach($subjects as $subject)
+                            @php
+                                $levelName = $subject->academicLevel ? $subject->academicLevel->name : null;
+                                $groupName = $subject->academicLevel && $subject->academicLevel->academicGroup ? $subject->academicLevel->academicGroup->name : null;
+                                $context = [];
+                                if ($groupName) $context[] = $groupName;
+                                if ($levelName) $context[] = $levelName;
+                                $contextString = $context ? ' (' . implode(' - ', $context) . ')' : '';
+                            @endphp
+                            <option value="{{ $subject->id }}" {{ old('academic_subject_id', $group->academic_subject_id) == $subject->id ? 'selected' : '' }}>
+                                {{ $subject->name }}{{ $contextString }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('academic_subject_id')
+                        <p class="text-red-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label for="name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
                         Group Name <span class="text-red-500">*</span>
                     </label>

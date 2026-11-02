@@ -19,6 +19,7 @@ class GeneralExamParticipantGroup extends Model
         'uuid',
         'name',
         'parent_id',
+        'academic_subject_id',
         'description',
         'created_by',
         'updated_by',
@@ -64,6 +65,11 @@ class GeneralExamParticipantGroup extends Model
     public function exams(): HasMany
     {
         return $this->hasMany(GeneralExam::class, 'participant_group_id');
+    }
+
+    public function academicSubject(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\AcademicSubject::class, 'academic_subject_id');
     }
 
     protected static function boot(): void
