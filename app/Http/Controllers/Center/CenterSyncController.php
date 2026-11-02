@@ -7,8 +7,8 @@ use App\ExaminationHub\Models\ExamProctoringLog;
 use App\ExaminationHub\Models\ExamSyncState;
 use App\ExaminationHub\Models\GeneralExamSubmission;
 use App\ExaminationHub\Models\SyncRun;
-use App\ExaminationHub\Services\PushAgent;
-use App\ExaminationHub\Services\PullAgent;
+use App\ExaminationHub\Jobs\SyncPushJob;
+use App\ExaminationHub\Jobs\SyncPullJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
@@ -217,45 +217,21 @@ class CenterSyncController
     }
 
     /**
-     * Trigger an immediate push sync.
+     * Trigger an immediate push sync via a background job.
      */
     public function pushNow(Request $request)
     {
-        $agent = app(PushAgent::class);
-        $result = $agent->push();
-
-        if (isset($result['submissions']['error'])) {
-            return back()->with('error', 'Push failed: ' . $result['submissions']['error']);
-        }
-
-        return back()->with('success', 'Push completed successfully.');
+        SyncPushJob::dispatch();
+        return back()->with('success', 'Push sync started — results will be pushed in the background.');
     }
 
     /**
-     * Trigger an immediate pull sync.
+     * Trigger an immediate pull sync via a background job.
      */
     public function pullNow(Request $request)
     {
-        $agent = app(PullAgent::class);
-        $result = $agent->pull();
-
-        if (!$result['success']) {
-            $errors = $result['errors'] ?? ['Unknown error'];
-            return back()->with('error', 'Pull failed: ' . implode(', ', $errors));
-        }
-
-        $message = "Pull completed: {$result['pulled']} exam(s) pulled.";
-        if (!empty($result['details'])) {
-            $successCount = 0;
-            foreach ($result['details'] as $detail) {
-                if (($detail['status'] ?? '') === 'success') {
-                    $successCount++;
-                }
-            }
-            $message .= " {$successCount} exam(s) applied successfully.";
-        }
-
-        return back()->with('success', $message);
+        SyncPullJob::dispatch();
+        return back()->with('success', 'Pull sync started — exam packages will be pulled in the background.');
     }
 
     /**
