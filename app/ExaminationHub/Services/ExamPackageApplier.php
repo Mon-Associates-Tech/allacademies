@@ -41,12 +41,7 @@ class ExamPackageApplier
         $questionCount = 0;
         $participantCount = 0;
 
-        Log::info('ExamPackageApplier: Starting to apply package', [
-            'exam_uuid' => $examUuid,
-            'revision' => $revision,
-            'sections' => count($package['sections'] ?? []),
-            'participants' => count($package['participants'] ?? []),
-        ]);
+        // Apply silently — only log errors or final summary
 
         try {
             DB::beginTransaction();
@@ -57,12 +52,7 @@ class ExamPackageApplier
                 $errors = array_merge($errors, $academicResult['errors']);
                 Log::error('ExamPackageApplier: Failed to apply academic structure', ['exam_uuid' => $examUuid, 'errors' => $academicResult['errors']]);
             } else {
-                Log::info('ExamPackageApplier: Academic structure applied', [
-                    'exam_uuid' => $examUuid,
-                    'groups' => $academicResult['groups_count'] ?? 0,
-                    'levels' => $academicResult['levels_count'] ?? 0,
-                    'subjects' => $academicResult['subjects_count'] ?? 0,
-                ]);
+                // Academic structure applied silently
             }
 
             // Apply exam
@@ -71,7 +61,7 @@ class ExamPackageApplier
                 $errors = array_merge($errors, $examResult['errors']);
                 Log::error('ExamPackageApplier: Failed to apply exam', ['exam_uuid' => $examUuid, 'errors' => $examResult['errors']]);
             } else {
-                Log::info('ExamPackageApplier: Exam applied', ['exam_uuid' => $examUuid, 'exam_id' => $examResult['exam']?->id]);
+                // Exam applied silently
             }
 
             // Apply sections and questions
@@ -82,7 +72,6 @@ class ExamPackageApplier
             } else {
                 $sectionCount = $sectionsResult['section_count'] ?? 0;
                 $questionCount = $sectionsResult['question_count'] ?? 0;
-                Log::info('ExamPackageApplier: Sections applied', ['exam_uuid' => $examUuid, 'sections' => $sectionCount, 'questions' => $questionCount]);
             }
 
             // Apply participants
@@ -92,7 +81,6 @@ class ExamPackageApplier
                 Log::error('ExamPackageApplier: Failed to apply participants', ['exam_uuid' => $examUuid, 'errors' => $participantsResult['errors']]);
             } else {
                 $participantCount = $participantsResult['participant_count'] ?? 0;
-                Log::info('ExamPackageApplier: Participants applied', ['exam_uuid' => $examUuid, 'participants' => $participantCount]);
             }
 
             if (!empty($errors)) {
@@ -110,13 +98,6 @@ class ExamPackageApplier
             }
 
             DB::commit();
-            Log::info('ExamPackageApplier: Package applied successfully', [
-                'exam_uuid' => $examUuid,
-                'revision' => $revision,
-                'sections' => $sectionCount,
-                'questions' => $questionCount,
-                'participants' => $participantCount,
-            ]);
 
             return [
                 'success' => true,
@@ -297,7 +278,6 @@ class ExamPackageApplier
             }
 
             $sectionCount++;
-            Log::info('ExamPackageApplier: Section applied', ['section_uuid' => $sectionUuid, 'section_id' => $section->id]);
 
             // Apply questions
             $questionsResult = $this->applyQuestions($section, $sectionData['questions'] ?? []);
@@ -312,7 +292,6 @@ class ExamPackageApplier
             ->whereNotIn('uuid', $packageSectionUuids)
             ->get();
         foreach ($staleSections as $staleSection) {
-            Log::info('ExamPackageApplier: Removing stale section', ['section_uuid' => $staleSection->uuid]);
             $staleSection->delete();
         }
 
@@ -377,7 +356,6 @@ class ExamPackageApplier
             }
 
             $questionCount++;
-            Log::info('ExamPackageApplier: Question applied', ['question_uuid' => $questionUuid, 'question_id' => $question->id]);
         }
 
         // Remove questions that are no longer in the package
@@ -385,7 +363,6 @@ class ExamPackageApplier
             ->whereNotIn('uuid', $packageQuestionUuids)
             ->get();
         foreach ($staleQuestions as $staleQuestion) {
-            Log::info('ExamPackageApplier: Removing stale question', ['question_uuid' => $staleQuestion->uuid]);
             $staleQuestion->delete();
         }
 
@@ -471,11 +448,6 @@ class ExamPackageApplier
             }
 
             $participantCount++;
-            Log::info('ExamPackageApplier: Participant applied', [
-                'participant_uuid' => $participant->uuid,
-                'participant_id' => $participant->id,
-                'email' => $participant->email,
-            ]);
         }
 
         // Remove participants that are no longer in the package
@@ -498,10 +470,6 @@ class ExamPackageApplier
             }
 
             if (!$isInPackage) {
-                Log::info('ExamPackageApplier: Removing stale participant', [
-                    'participant_uuid' => $existingParticipant->uuid,
-                    'participant_email' => $existingParticipant->email,
-                ]);
                 $existingParticipant->delete();
             }
         }
@@ -641,10 +609,6 @@ class ExamPackageApplier
                 );
                 $groupId = $placeholderGroup->id;
                 $groupsCount++;
-                Log::info('ExamPackageApplier: Created placeholder group for level', [
-                    'level_uuid' => $pkgUuid,
-                    'group_id' => $groupId,
-                ]);
             }
             $level = AcademicLevel::firstOrCreate(
                 ['uuid' => $pkgUuid],
@@ -680,10 +644,6 @@ class ExamPackageApplier
                 );
                 $levelId = $placeholderLevel->id;
                 $levelsCount++;
-                Log::info('ExamPackageApplier: Created placeholder level for subject', [
-                    'subject_uuid' => $pkgUuid,
-                    'level_id' => $levelId,
-                ]);
             }
             $subject = AcademicSubject::firstOrCreate(
                 ['uuid' => $pkgUuid],
@@ -700,12 +660,6 @@ class ExamPackageApplier
             $subjectMap[$pkgUuid] = $subject->id;
             $subjectsCount++;
         }
-
-        Log::info('ExamPackageApplier: Academic structure applied', [
-            'groups' => $groupsCount,
-            'levels' => $levelsCount,
-            'subjects' => $subjectsCount,
-        ]);
 
         return [
             'success' => true,

@@ -51,7 +51,7 @@ class PullAgent
             ->where('started_at', '>', now()->subMinutes(30))
             ->first();
         if ($activePull) {
-            Log::info('PullAgent: Skipping pull — a pull run is already in progress (started ' . $activePull->started_at->diffForHumans() . ').');
+            // Skip silently — another pull is already running
             return [
                 'success' => true,
                 'pulled' => 0,
@@ -79,10 +79,7 @@ class PullAgent
                 throw new \RuntimeException('Failed to fetch manifest from central.');
             }
 
-            Log::info('PullAgent: Manifest fetched', [
-                'exam_count' => count($manifest['exams'] ?? []),
-                'server_time' => $manifest['server_time'] ?? null,
-            ]);
+            // Manifest fetched silently
 
             // Check clock skew
             $serverTime = \Illuminate\Support\Carbon::parse($manifest['server_time'] ?? null);
@@ -149,10 +146,10 @@ class PullAgent
                 'error' => implode('; ', array_slice($errors, 0, 5)),
             ]);
 
+            // Pull completed — single summary log
             Log::info('PullAgent: Pull completed', [
                 'pulled' => $pulled,
                 'errors' => count($errors),
-                'status' => empty($errors) ? 'success' : 'failed',
             ]);
 
             // Report pull status to central via heartbeat so last_pull_at is tracked
@@ -273,11 +270,7 @@ class PullAgent
 
         // Skip if already up to date
         if ($localRevision >= $remoteRevision) {
-            Log::info('PullAgent: Exam already up to date', [
-                'exam_uuid' => $examUuid,
-                'local_revision' => $localRevision,
-                'remote_revision' => $remoteRevision,
-            ]);
+            // Exam already up to date — no log needed
             return [
                 'success' => true,
                 'errors' => [],
@@ -288,10 +281,7 @@ class PullAgent
             ];
         }
 
-        Log::info('PullAgent: Downloading package', [
-            'exam_uuid' => $examUuid,
-            'revision' => $remoteRevision,
-        ]);
+            // Downloading package silently
 
         // Download the package
         $payload = $this->downloadPackage($centralUrl, $token, $examUuid, $remoteRevision);
@@ -328,7 +318,7 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
-        Log::info('PullAgent: Checksum verified', ['exam_uuid' => $examUuid]);
+            // Checksum verified silently
 
         // Verify signature: the signature was created over the checksum
         $signature = base64_decode($packageData['signature'] ?? '');
@@ -346,10 +336,10 @@ class PullAgent
             return ['success' => false, 'errors' => [$error], 'message' => $error, 'sections' => 0, 'questions' => 0, 'participants' => 0];
         }
 
-        Log::info('PullAgent: Signature verified', ['exam_uuid' => $examUuid]);
+            // Signature verified silently
 
         // Apply the package
-        Log::info('PullAgent: Applying package', ['exam_uuid' => $examUuid, 'revision' => $remoteRevision]);
+            // Applying package silently
         $applier = new ExamPackageApplier();
         $applyResult = $applier->apply($packageData);
 
@@ -378,7 +368,7 @@ class PullAgent
         );
 
         $message = "Applied revision {$remoteRevision}: {$applyResult['sections']} sections, {$applyResult['questions']} questions, {$applyResult['participants']} participants";
-        Log::info('PullAgent: ' . $message);
+        // Applied silently
 
         return [
             'success' => true,

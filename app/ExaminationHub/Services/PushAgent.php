@@ -67,7 +67,7 @@ class PushAgent
             ->where('started_at', '>', now()->subMinutes(30))
             ->first();
         if ($activePush) {
-            Log::info('PushAgent: Skipping push — a push run is already in progress (started ' . $activePush->started_at->diffForHumans() . ').');
+            // Skip silently — another push is already running
             return [
                 'submissions' => ['skipped' => 0, 'ingested' => 0, 'errors' => 0, 'total' => 0, 'already_running' => true],
                 'proctoring' => ['skipped' => 0, 'ingested' => 0, 'errors' => 0, 'total' => 0, 'already_running' => true],
@@ -90,6 +90,14 @@ class PushAgent
                 'status' => 'success',
                 'items_total' => ($submissionResult['total'] ?? 0) + ($proctoringResult['total'] ?? 0),
                 'items_ok' => ($submissionResult['ingested'] ?? 0) + ($proctoringResult['ingested'] ?? 0),
+            ]);
+
+            // Log a single summary line for the entire push run
+            Log::info('PushAgent: Push completed', [
+                'submissions_ingested' => $submissionResult['ingested'] ?? 0,
+                'submissions_skipped' => $submissionResult['skipped'] ?? 0,
+                'proctoring_ingested' => $proctoringResult['ingested'] ?? 0,
+                'proctoring_skipped' => $proctoringResult['skipped'] ?? 0,
             ]);
 
             // Report push status to central via heartbeat so last_push_at is tracked
@@ -170,7 +178,7 @@ class PushAgent
                         ->update(['synced_version' => DB::raw('sync_version')]);
                 }
 
-                Log::info("PushAgent: Submission batch {$page} pushed: {$ingested} ingested, {$skipped} skipped, " . count($errors) . " errors");
+                // Only log summary at the end, not per-batch, to avoid log spam
             } catch (\Exception $e) {
                 $totalErrors++;
                 Log::error("PushAgent: Submission batch {$page} failed: " . $e->getMessage());
@@ -240,7 +248,7 @@ class PushAgent
                         ->update(['synced_at' => now()]);
                 }
 
-                Log::info("PushAgent: Proctoring batch {$page} pushed: {$ingested} ingested, {$skipped} skipped, " . count($errors) . " errors");
+                // Only log summary at the end, not per-batch, to avoid log spam
             } catch (\Exception $e) {
                 $totalErrors++;
                 Log::error("PushAgent: Proctoring batch {$page} failed: " . $e->getMessage());
@@ -389,7 +397,7 @@ class PushAgent
         // Cap at 15 minutes
         $delay = min($delay, 900);
 
-        Log::info("PushAgent: Scheduling retry for {$operation} in {$delay} seconds");
+        // Retry scheduled — only log if retry actually fails
 
         // Schedule retry via SyncRetryJob with serializable operation name
         \App\ExaminationHub\Jobs\SyncRetryJob::dispatch($operation)

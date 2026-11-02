@@ -75,10 +75,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | How often the center pulls from central, in minutes. Adjustable between
-    | 1 and 60 minutes. Default is 5 minutes.
+    | 1 and 60 minutes. Default is 15 minutes to avoid excessive sync runs.
     |
     */
-    'pull_interval_minutes' => (int) env('CENTER_PULL_INTERVAL', 5),
+    'pull_interval_minutes' => (int) env('CENTER_PULL_INTERVAL', 15),
 
     /*
     |--------------------------------------------------------------------------

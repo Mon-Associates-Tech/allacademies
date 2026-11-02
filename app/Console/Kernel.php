@@ -57,7 +57,7 @@ class Kernel extends ConsoleKernel
 
         // Multi-center sync: pull exam packages from central (center instances only)
         $schedule->command('sync:pull')
-            ->everyFiveMinutes()
+            ->everyFifteenMinutes()
             ->when(function () {
                 return config('center.role') === 'center';
             })
@@ -65,7 +65,7 @@ class Kernel extends ConsoleKernel
 
         // Multi-center sync: push results to central (center instances only)
         $schedule->command('sync:push')
-            ->everyFiveMinutes()
+            ->everyFifteenMinutes()
             ->when(function () {
                 return config('center.role') === 'center';
             })
