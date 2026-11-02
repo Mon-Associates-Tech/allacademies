@@ -1,4 +1,5 @@
 <x-layouts.app>
+    <x-examination-hub.navigation active="center-dashboard" />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7"
          style="font-family: 'system-ui', -apple-system, sans-serif;">
 

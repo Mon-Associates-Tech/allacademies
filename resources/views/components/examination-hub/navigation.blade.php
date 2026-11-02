@@ -5,12 +5,27 @@
         <div x-data="{
             showLeft: false,
             showRight: true,
+            activeItem: '{{ $active }}',
             checkScroll() {
                 this.showLeft = this.$refs.navContainer.scrollLeft > 2;
                 this.showRight = this.$refs.navContainer.scrollLeft < (this.$refs.navContainer.scrollWidth - this.$refs.navContainer.clientWidth - 2);
+            },
+            scrollToActive() {
+                if (!this.$refs.activeNavItem) return;
+                const item = this.$refs.activeNavItem;
+                const container = this.$refs.navContainer;
+                const itemLeft = item.offsetLeft;
+                const itemRight = itemLeft + item.offsetWidth;
+                const containerLeft = container.scrollLeft;
+                const containerRight = containerLeft + container.clientWidth;
+                if (itemLeft < containerLeft + 16) {
+                    container.scrollTo({ left: itemLeft - 16, behavior: 'smooth' });
+                } else if (itemRight > containerRight - 16) {
+                    container.scrollTo({ left: itemRight - container.clientWidth + 16, behavior: 'smooth' });
+                }
             }
         }"
-             x-init="checkScroll(); window.addEventListener('resize', () => checkScroll())"
+             x-init="checkScroll(); window.addEventListener('resize', () => checkScroll()); $nextTick(() => { setTimeout(() => scrollToActive(), 100) })"
              class="flex items-center h-16 relative">
 
             {{-- Left chevron to scroll nav items left --}}
@@ -23,8 +38,7 @@
                     x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
                     x-on:click="$refs.navContainer.scrollBy({ left: -200, behavior: 'smooth' })"
-                    class="absolute left-0 z-10 flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    style="display:none;">
+                    class="absolute left-0 z-10 flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
@@ -37,6 +51,7 @@
                  style="scrollbar-width: none; -ms-overflow-style: none;">
 
                 <a href="{{ route('examination-hub.dashboard') }}"
+                   x-ref="{{ $active === 'dashboard' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'dashboard' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,6 +62,7 @@
                 </a>
 
                 <a href="{{ route('examination-hub.create') }}"
+                   x-ref="{{ $active === 'create' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'create' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,6 +73,7 @@
                 </a>
 
                 <a href="{{ route('examination-hub.manage') }}"
+                   x-ref="{{ $active === 'manage' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'manage' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,6 +84,7 @@
                 </a>
 
                 <a href="{{ route('examination-hub.live-monitoring.all-exams') }}"
+                   x-ref="{{ $active === 'live-monitoring' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'live-monitoring' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,19 +95,8 @@
                     </div>
                 </a>
 
-                @if(config('center.role') === 'central')
-                <a href="{{ route('examination-hub.live-monitoring.centers') }}"
-                   class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'live-monitoring-centers' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                        </svg>
-                        Multi-Center
-                    </div>
-                </a>
-                @endif
-
                 <a href="{{ route('examination-hub.performance.index') }}"
+                   x-ref="{{ $active === 'performance' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'performance' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,6 +107,7 @@
                 </a>
 
                 <a href="{{ route('examination-hub.reports.index') }}"
+                   x-ref="{{ $active === 'reports' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'reports' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,6 +119,7 @@
 
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasRole('owner') || auth()->user()->hasRole('admin'))
                     <a href="{{ route('examination-hub.grading-system.index') }}"
+                       x-ref="{{ $active === 'grading-system' ? 'activeNavItem' : '' }}"
                        class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'grading-system' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,6 +131,7 @@
                 @endif
 
                 <a href="{{ route('examination-hub.participant-groups.index') }}"
+                   x-ref="{{ $active === 'participant-groups' ? 'activeNavItem' : '' }}"
                    class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'participant-groups' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,6 +141,82 @@
                         Candidates
                     </div>
                 </a>
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     Multi-Center Sync Items (Central Admin Only)
+                ═══════════════════════════════════════════════════════════ --}}
+                @if(config('center.role') === 'central')
+                    <a href="{{ route('center-sync.dashboard') }}"
+                       x-ref="{{ $active === 'center-dashboard' ? 'activeNavItem' : '' }}"
+                       class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'center-dashboard' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                            </svg>
+                            Sync Dashboard
+                        </div>
+                    </a>
+
+                    <a href="{{ route('center-sync.centers.index') }}"
+                       x-ref="{{ $active === 'center-centers' ? 'activeNavItem' : '' }}"
+                       class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'center-centers' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            Centers
+                        </div>
+                    </a>
+
+                    <a href="{{ route('center-sync.exams.index') }}"
+                       x-ref="{{ $active === 'center-exams' ? 'activeNavItem' : '' }}"
+                       class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'center-exams' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Published Exams
+                        </div>
+                    </a>
+
+                    <a href="{{ route('center-sync.sync.index') }}"
+                       x-ref="{{ $active === 'center-sync' ? 'activeNavItem' : '' }}"
+                       class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'center-sync' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Sync Status
+                        </div>
+                    </a>
+
+                    <a href="{{ route('center-sync.bank.index') }}"
+                       x-ref="{{ $active === 'center-bank' ? 'activeNavItem' : '' }}"
+                       class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'center-bank' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            Bank Backup
+                        </div>
+                    </a>
+                @endif
+
+                {{-- ═══════════════════════════════════════════════════════════
+                     Sync Status (Center Instance Only)
+                ═══════════════════════════════════════════════════════════ --}}
+                @if(config('center.role') === 'center')
+                    <a href="{{ route('center-sync.sync.index') }}"
+                       x-ref="{{ $active === 'center-sync' ? 'activeNavItem' : '' }}"
+                       class="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $active === 'center-sync' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Sync Status
+                        </div>
+                    </a>
+                @endif
 
             </div>
 
@@ -144,8 +230,7 @@
                     x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
                     x-on:click="$refs.navContainer.scrollBy({ left: 200, behavior: 'smooth' })"
-                    class="absolute right-0 z-10 flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    style="display:none;">
+                    class="absolute right-0 z-10 flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
