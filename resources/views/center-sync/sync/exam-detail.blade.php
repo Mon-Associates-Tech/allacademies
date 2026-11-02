@@ -206,7 +206,12 @@
                                         <td class="px-4 py-2.5 text-slate-400 text-xs">{{ $loop->iteration }}</td>
                                         <td class="px-4 py-2.5">
                                             <div class="max-w-md">
-                                                <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{{ strip_tags($question->question ?? 'No question text') }}</p>
+                                                @php
+                                                    $qText = $question->question ?? 'No question text';
+                                                    $qText = is_object($qText) ? (string) $qText : $qText;
+                                                    $qText = is_array($qText) ? implode(' ', array_filter($qText, 'is_string')) : $qText;
+                                                @endphp
+                                                <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{{ strip_tags($qText) }}</p>
                                                 <span class="text-xs font-mono text-slate-400">{{ Str::limit($question->uuid ?? '', 12) }}</span>
                                             </div>
                                         </td>
