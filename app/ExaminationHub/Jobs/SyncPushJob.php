@@ -41,6 +41,12 @@ class SyncPushJob implements ShouldQueue
         $agent = app(PushAgent::class);
         $result = $agent->push();
 
+        // Skip if another push is already running
+        if (isset($result['submissions']['already_running']) && $result['submissions']['already_running']) {
+            Log::info('SyncPushJob: Skipped — a push run is already in progress');
+            return;
+        }
+
         if (isset($result['submissions']['error'])) {
             Log::error('SyncPushJob: Push failed: ' . $result['submissions']['error']);
             return;

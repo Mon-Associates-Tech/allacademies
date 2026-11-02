@@ -110,4 +110,31 @@ class SyncRun extends Model
             ->orderByDesc('started_at')
             ->first();
     }
+
+    /**
+     * Clean up stale "running" sync runs that exceeded their timeout.
+     *
+     * If a job crashes without completing, the SyncRun stays in "running"
+     * state. This method marks any run older than $timeoutMinutes as failed
+     * so that future syncs are not blocked.
+     *
+     * @param int $timeoutMinutes Maximum allowed runtime in minutes
+     * @return int Number of stale runs cleaned up
+     */
+    public static function cleanupStaleRunning(int $timeoutMinutes = 30): int
+    {
+        $stale = static::where('status', 'running')
+            ->where('started_at', '<', now()->subMinutes($timeoutMinutes))
+            ->update([
+                'status' => self::STATUS_FAILED,
+                'finished_at' => now(),
+                'error' => 'Timed out — job did not complete within ' . $timeoutMinutes . ' minutes',
+            ]);
+
+        if ($stale > 0) {
+            \Illuminate\Support\Facades\Log::warning("SyncRun: Cleaned up {$stale} stale running sync run(s).");
+        }
+
+        return $stale;
+    }
 }

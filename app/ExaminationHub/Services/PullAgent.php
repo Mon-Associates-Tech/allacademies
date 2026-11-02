@@ -42,6 +42,25 @@ class PullAgent
             ];
         }
 
+        // Clean up any stale "running" records from crashed jobs
+        SyncRun::cleanupStaleRunning(30);
+
+        // Prevent overlapping pull runs — skip if a pull is already in progress
+        $activePull = SyncRun::where('direction', 'pull')
+            ->where('status', 'running')
+            ->where('started_at', '>', now()->subMinutes(30))
+            ->first();
+        if ($activePull) {
+            Log::info('PullAgent: Skipping pull — a pull run is already in progress (started ' . $activePull->started_at->diffForHumans() . ').');
+            return [
+                'success' => true,
+                'pulled' => 0,
+                'errors' => [],
+                'details' => [],
+                'already_running' => true,
+            ];
+        }
+
         $syncRun = SyncRun::create([
             'direction' => 'pull',
             'started_at' => now(),

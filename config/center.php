@@ -85,10 +85,11 @@ return [
     | Push Interval
     |--------------------------------------------------------------------------
     |
-    | How often the center pushes to central, in minutes. Default is 5 minutes.
+    | How often the center pushes to central, in minutes. Default is 15 minutes
+    | to avoid excessive sync runs. Reduce if you need faster result delivery.
     |
     */
-    'push_interval_minutes' => (int) env('CENTER_PUSH_INTERVAL', 5),
+    'push_interval_minutes' => (int) env('CENTER_PUSH_INTERVAL', 15),
 
     /*
     |--------------------------------------------------------------------------

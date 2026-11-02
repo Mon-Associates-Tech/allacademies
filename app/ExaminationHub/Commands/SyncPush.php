@@ -51,13 +51,21 @@ class SyncPush extends Command
                 ->orderBy('started_at', 'desc')
                 ->first();
 
-            $pushInterval = config('center.push_interval_minutes', 5);
+            $pushInterval = config('center.push_interval_minutes', 15);
 
             if ($lastPush && $lastPush->started_at->gt(now()->subMinutes($pushInterval))) {
                 $remaining = $lastPush->started_at->diffInMinutes(now(), false);
                 $this->info("Skipping push: last push was {$remaining} minutes ago (interval: {$pushInterval} minutes).");
                 return self::SUCCESS;
             }
+        }
+
+        // Skip if there's nothing to push
+        $pendingCount = \App\ExaminationHub\Models\GeneralExamSubmission::whereRaw('synced_version < sync_version')->count();
+        $pendingProctoring = \App\ExaminationHub\Models\ExamProctoringLog::whereNull('synced_at')->count();
+        if ($pendingCount === 0 && $pendingProctoring === 0) {
+            $this->info('Skipping push: no pending submissions or proctoring logs.');
+            return self::SUCCESS;
         }
 
         $this->info('Starting push to central...');

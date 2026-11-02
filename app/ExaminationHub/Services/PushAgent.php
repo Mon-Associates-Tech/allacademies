@@ -58,6 +58,23 @@ class PushAgent
             ];
         }
 
+        // Clean up any stale "running" records from crashed jobs
+        SyncRun::cleanupStaleRunning(30);
+
+        // Prevent overlapping push runs — skip if a push is already in progress
+        $activePush = SyncRun::where('direction', 'push')
+            ->where('status', 'running')
+            ->where('started_at', '>', now()->subMinutes(30))
+            ->first();
+        if ($activePush) {
+            Log::info('PushAgent: Skipping push — a push run is already in progress (started ' . $activePush->started_at->diffForHumans() . ').');
+            return [
+                'submissions' => ['skipped' => 0, 'ingested' => 0, 'errors' => 0, 'total' => 0, 'already_running' => true],
+                'proctoring' => ['skipped' => 0, 'ingested' => 0, 'errors' => 0, 'total' => 0, 'already_running' => true],
+                'sync_run' => null,
+            ];
+        }
+
         $syncRun = SyncRun::create([
             'direction' => 'push',
             'started_at' => now(),

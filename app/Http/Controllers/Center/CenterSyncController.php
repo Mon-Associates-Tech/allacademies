@@ -221,6 +221,15 @@ class CenterSyncController
      */
     public function pushNow(Request $request)
     {
+        // Check if a push is already running
+        $activePush = \App\ExaminationHub\Models\SyncRun::where('direction', 'push')
+            ->where('status', 'running')
+            ->where('started_at', '>', now()->subMinutes(30))
+            ->first();
+        if ($activePush) {
+            return back()->with('error', 'A push sync is already in progress (started ' . $activePush->started_at->diffForHumans() . '). Please wait before trying again.');
+        }
+
         SyncPushJob::dispatch();
         return back()->with('success', 'Push sync started — results will be pushed in the background.');
     }
@@ -230,6 +239,15 @@ class CenterSyncController
      */
     public function pullNow(Request $request)
     {
+        // Check if a pull is already running
+        $activePull = \App\ExaminationHub\Models\SyncRun::where('direction', 'pull')
+            ->where('status', 'running')
+            ->where('started_at', '>', now()->subMinutes(30))
+            ->first();
+        if ($activePull) {
+            return back()->with('error', 'A pull sync is already in progress (started ' . $activePull->started_at->diffForHumans() . '). Please wait before trying again.');
+        }
+
         SyncPullJob::dispatch();
         return back()->with('success', 'Pull sync started — exam packages will be pulled in the background.');
     }

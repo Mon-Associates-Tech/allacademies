@@ -40,6 +40,12 @@ class SyncPullJob implements ShouldQueue
         $agent = app(PullAgent::class);
         $result = $agent->pull();
 
+        // Skip if another pull is already running
+        if (isset($result['already_running']) && $result['already_running']) {
+            Log::info('SyncPullJob: Skipped — a pull run is already in progress');
+            return;
+        }
+
         if (!$result['success']) {
             $errors = $result['errors'] ?? ['Unknown error'];
             Log::error('SyncPullJob: Pull failed: ' . implode(', ', $errors));
