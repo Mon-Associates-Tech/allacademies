@@ -257,4 +257,31 @@ class CenterSyncController
 
         return back()->with('success', $message);
     }
+
+    /**
+     * Show details of an applied exam package on a center instance.
+     *
+     * Centers do not store the raw package payload, so we show the applied
+     * exam data from local tables instead.
+     */
+    public function examDetail(Request $request, $examUuid)
+    {
+        $exam = \App\ExaminationHub\Models\GeneralExam::where('uuid', $examUuid)->first();
+
+        if (!$exam) {
+            return redirect()
+                ->route('center-sync.sync.index')
+                ->with('error', 'Exam not found on this center.');
+        }
+
+        $exam->load([
+            'sections.questions',
+            'configuredParticipants',
+            'academicSubject.academicLevel.academicGroup',
+        ]);
+
+        $syncState = \App\ExaminationHub\Models\ExamSyncState::where('exam_uuid', $examUuid)->first();
+
+        return view('center-sync.sync.exam-detail', compact('exam', 'syncState'));
+    }
 }

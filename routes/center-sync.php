@@ -33,6 +33,7 @@ if (config('center.role') === 'center') {
             Route::get('/', [CenterSyncController::class, 'index'])->name('sync.index');
             Route::post('/push', [CenterSyncController::class, 'pushNow'])->name('sync.push');
             Route::post('/pull', [CenterSyncController::class, 'pullNow'])->name('sync.pull');
+            Route::get('/exams/{examUuid}', [CenterSyncController::class, 'examDetail'])->name('sync.exam-detail');
         });
 }
 
@@ -59,6 +60,7 @@ if (config('center.role') === 'central') {
     // ── Exam Publish / Republish ────────────────────────────────────────────
     Route::get('/exams', [ExamPublishController::class, 'index'])->name('exams.index');
     Route::get('/exams/{exam}', [ExamPublishController::class, 'show'])->name('exams.show');
+    Route::get('/exams/{exam}/packages/{revision}', [ExamPublishController::class, 'packageDetail'])->name('exams.package-detail');
     Route::post('/exams/{exam}/publish', [ExamPublishController::class, 'publish'])->name('exams.publish');
     Route::post('/exams/{exam}/release-results', [ExamPublishController::class, 'releaseResults'])->name('exams.release-results');
 

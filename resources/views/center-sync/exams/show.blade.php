@@ -121,6 +121,7 @@
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Revision</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Checksum</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Actions</th>
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
@@ -129,6 +130,16 @@
                                     <td class="px-6 py-3.5 font-semibold text-slate-800 dark:text-slate-200">{{ $pkg->revision }}</td>
                                     <td class="px-6 py-3.5 font-mono text-xs text-slate-700 dark:text-slate-300">{{ Str::limit($pkg->checksum, 20) }}</td>
                                     <td class="px-6 py-3.5 text-slate-700 dark:text-slate-300">{{ $pkg->created_at->diffForHumans() }}</td>
+                                    <td class="px-6 py-3.5">
+                                        <a href="{{ route('center-sync.exams.package-detail', [$exam, $pkg->revision]) }}"
+                                           class="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                            View Details
+                                        </a>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

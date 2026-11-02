@@ -186,4 +186,52 @@ class ExamPublishController
             ->route('center-sync.exams.show', $exam)
             ->with('success', 'Results released. Candidates can now view their scores.');
     }
+
+    /**
+     * Show detailed contents of a specific exam package revision.
+     */
+    public function packageDetail(GeneralExam $exam, $revision)
+    {
+        $package = ExamPackage::findExamRevision($exam->uuid, (int) $revision);
+
+        if (!$package) {
+            return redirect()
+                ->route('center-sync.exams.show', $exam)
+                ->with('error', 'Package revision ' . $revision . ' not found.');
+        }
+
+        $payload = $package->getDecompressedPayload();
+        $checksumValid = $package->verifyChecksum();
+
+        // Verify signature if public key is configured
+        $signatureValid = null;
+        $publicKey = config('center.central_public_key');
+        if ($publicKey) {
+            $signatureValid = $package->verifySignature($publicKey);
+        }
+
+        // Build summary counts from payload
+        $summary = [
+            'sections' => count($payload['sections'] ?? []),
+            'questions' => 0,
+            'participants' => count($payload['participants'] ?? []),
+            'academic_groups' => count($payload['academic_structure']['groups'] ?? []),
+            'academic_levels' => count($payload['academic_structure']['levels'] ?? []),
+            'academic_subjects' => count($payload['academic_structure']['subjects'] ?? []),
+        ];
+
+        // Count total questions across all sections
+        foreach ($payload['sections'] ?? [] as $section) {
+            $summary['questions'] += count($section['questions'] ?? []);
+        }
+
+        return view('center-sync.exams.package-detail', compact(
+            'exam',
+            'package',
+            'payload',
+            'checksumValid',
+            'signatureValid',
+            'summary'
+        ));
+    }
 }
