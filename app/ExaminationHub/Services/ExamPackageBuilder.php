@@ -140,6 +140,7 @@ class ExamPackageBuilder
         return [
             'uuid' => $subject->uuid ?? null,
             'name' => $subject->name,
+            'code' => $subject->code ?? null,
             'level' => $this->buildLevelWithGroup($subject->academicLevel),
         ];
     }
@@ -160,6 +161,7 @@ class ExamPackageBuilder
         return [
             'uuid' => $level->uuid ?? null,
             'name' => $level->name,
+            'label' => $level->label ?? null,
             'group' => $this->buildGroup($level->academicGroup),
         ];
     }

@@ -598,6 +598,7 @@ class ExamPackageApplier
                 ['uuid' => $pkgUuid],
                 [
                     'name' => $levelData['name'] ?? 'Unknown',
+                    'label' => $levelData['label'] ?? $levelData['name'] ?? 'Unknown',
                     'academic_group_id' => $groupId,
                 ]
             );
@@ -619,6 +620,7 @@ class ExamPackageApplier
                 ['uuid' => $pkgUuid],
                 [
                     'name' => $subjectData['name'] ?? 'Unknown',
+                    'code' => $subjectData['code'] ?? strtoupper(substr($subjectData['name'] ?? 'SUB', 0, 10)),
                     'academic_level_id' => $levelId,
                 ]
             );
