@@ -159,7 +159,7 @@ class CenterDashboardController
     public function show(Center $center)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasRole('admin');
+        $isAdmin = $user->hasRole('admin') || $user->hasRole('owner');
 
         // Non-admin users can only view their own center
         if (!$isAdmin && $user->center_id !== $center->id) {
