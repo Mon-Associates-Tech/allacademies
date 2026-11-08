@@ -10,12 +10,12 @@
                 </p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('log-viewer.download') }}"
+                <a href="{{ route('system.logs.download') }}"
                    class="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                    style="border-radius: 2px;">
                     Download
                 </a>
-                <form method="POST" action="{{ route('log-viewer.clear') }}"
+                <form method="POST" action="{{ route('system.logs.clear') }}"
                       onsubmit="return confirm('Clear the entire log file?')">
                     @csrf
                     <button type="submit"
@@ -34,7 +34,7 @@
         @endif
 
         {{-- Filters --}}
-        <form method="GET" action="{{ route('log-viewer.index') }}"
+        <form method="GET" action="{{ route('system.logs.index') }}"
               class="flex items-end gap-3 flex-wrap mb-4">
             <div>
                 <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Level</label>
@@ -69,7 +69,7 @@
                 Filter
             </button>
             @if($search || $level)
-                <a href="{{ route('log-viewer.index') }}"
+                <a href="{{ route('system.logs.index') }}"
                    class="px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline">
                     Reset
                 </a>

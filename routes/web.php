@@ -486,8 +486,13 @@ include_once 'debug.php';
 include_once 'mock-exams.php';
 
 // Log Viewer (owner only)
-Route::middleware(['auth', 'verified', 'role:owner'])->prefix('system')->name('log-viewer.')->group(function () {
-    Route::get('/logs', [\App\Http\Controllers\LogViewerController::class, 'index'])->name('index');
-    Route::post('/logs/clear', [\App\Http\Controllers\LogViewerController::class, 'clear'])->name('clear');
-    Route::get('/logs/download', [\App\Http\Controllers\LogViewerController::class, 'download'])->name('download');
+Route::middleware(['auth', 'verified', 'role:owner'])->prefix('system')->name('system.')->group(function () {
+    Route::get('/logs', [\App\Http\Controllers\LogViewerController::class, 'index'])->name('logs.index');
+    Route::post('/logs/clear', [\App\Http\Controllers\LogViewerController::class, 'clear'])->name('logs.clear');
+    Route::get('/logs/download', [\App\Http\Controllers\LogViewerController::class, 'download'])->name('logs.download');
+
+    // Environment Variable Editor (owner only)
+    Route::get('/env', [\App\Http\Controllers\EnvEditorController::class, 'index'])->name('env.index');
+    Route::post('/env', [\App\Http\Controllers\EnvEditorController::class, 'update'])->name('env.update');
+    Route::post('/env/export', [\App\Http\Controllers\EnvEditorController::class, 'export'])->name('env.export');
 });
