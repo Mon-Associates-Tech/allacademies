@@ -97,6 +97,7 @@ class CreateUserCommand extends Command
             'password' => $customPassword ?: 'defaultpass',
             'status' => 'active',
             'is_active' => true,
+            'email_verified_at' => now(),
         ];
 
         if ($schoolId) {
