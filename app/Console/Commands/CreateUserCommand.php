@@ -30,23 +30,23 @@ class CreateUserCommand extends Command
         $schoolId = $this->option('school_id');
         $customPassword = $this->option('password');
 
-        // Interactive prompts for missing optional values
-        if (empty($firstName)) {
+        // Interactive prompts for missing optional values (skip in non-interactive mode)
+        if (empty($firstName) && $this->input->isInteractive()) {
             $firstName = $this->ask('First name (optional)', null);
             $firstName = $firstName ?: null;
         }
 
-        if (empty($lastName)) {
+        if (empty($lastName) && $this->input->isInteractive()) {
             $lastName = $this->ask('Last name (optional)', null);
             $lastName = $lastName ?: null;
         }
 
-        if (empty($schoolId)) {
+        if (empty($schoolId) && $this->input->isInteractive()) {
             $schoolId = $this->ask('School ID to associate (leave blank for none)', null);
             $schoolId = $schoolId ?: null;
         }
 
-        if (empty($customPassword)) {
+        if (empty($customPassword) && $this->input->isInteractive()) {
             $secret = $this->secret('Password (leave blank to use defaultpass)');
             $customPassword = $secret ?: null;
         }
