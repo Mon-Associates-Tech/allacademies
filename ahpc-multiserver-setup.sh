@@ -601,19 +601,21 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     mkdir -p "/var/www/html"
     chown "www-data:www-data" "/var/www/html"
 
+    # Helper: run git as the directory owner to avoid safe.directory issues on re-runs
+    _git() { sudo -u www-data git "$@" 2>/dev/null || git "$@"; }
+
     if [[ -d "$NEW_PROJECT_DIR" ]]; then
         warn "${NEW_PROJECT_DIR} already exists — not cloning again."
-        git config --global --add safe.directory "$NEW_PROJECT_DIR"
         if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
-            CURRENT_BRANCH="$(git -C "$NEW_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+            CURRENT_BRANCH="$(_git -C "$NEW_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
             if [[ -z "$CURRENT_BRANCH" || "$CURRENT_BRANCH" == "HEAD" ]]; then
                 _log "Detached HEAD or unknown branch — checking out '${REPO_BRANCH}'"
-                git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" 2>/dev/null || true
-                git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" 2>/dev/null || true
+                _git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" || true
+                _git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" || true
             elif [[ "$CURRENT_BRANCH" != "$REPO_BRANCH" ]]; then
                 warn "Existing checkout is on branch '${CURRENT_BRANCH}', not '${REPO_BRANCH}' — switching."
-                git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" 2>/dev/null || true
-                git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" 2>/dev/null || \
+                _git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" || true
+                _git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" || \
                     warn "Could not switch to branch '${REPO_BRANCH}' — continuing with current branch."
             fi
         fi
@@ -635,8 +637,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     fi
 
     if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
-        git config --global --add safe.directory "$NEW_PROJECT_DIR" 2>/dev/null || true
-        git -C "$NEW_PROJECT_DIR" config core.fileMode false
+        _git -C "$NEW_PROJECT_DIR" config core.fileMode false
     fi
 
     _log "Fixing ownership and permissions"
