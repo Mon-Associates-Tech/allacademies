@@ -236,7 +236,7 @@ fi
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
-log()  { echo -e "\n\033[1;32m==>\033[0m \033[1m$1\033[0m"; }
+_log()  { echo -e "\n\033[1;32m==>\033[0m \033[1m$1\033[0m"; }
 info() { echo -e "${BLUE}[INFO]${NC}   $*"; }
 ok()   { echo -e "${GREEN}[OK]${NC}     $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC}   $*"; }
@@ -246,9 +246,9 @@ dry()  { echo -e "${BLUE}[DRY-RUN]${NC} $*"; }
 
 # Dry-run mode: print commands instead of executing them
 if [[ "$DRY_RUN" -eq 1 ]]; then
-    log "============================================================"
-    log "  DRY-RUN MODE — No changes will be made"
-    log "============================================================"
+    _log "============================================================"
+    _log "  DRY-RUN MODE — No changes will be made"
+    _log "============================================================"
     run() { echo -e "\033[1;34m[DRY-RUN]\033[0m $*"; }
     run_sql() { echo -e "\033[1;34m[DRY-RUN SQL]\033[0m $*"; }
     run_cmd() { echo -e "\033[1;34m[DRY-RUN]\033[0m $*"; }
@@ -269,13 +269,13 @@ WIFI_SSID="${WIFI_SSID:-$DEFAULT_WIFI_SSID}"
 WIFI_PASSWORD="${WIFI_PASSWORD:-$DEFAULT_WIFI_PASSWORD}"
 
 if [[ "$SKIP_WIFI" -eq 1 ]]; then
-    log "Skipping Wi-Fi setup (--skip-wifi)"
+    _log "Skipping Wi-Fi setup (--skip-wifi)"
 else
-    log "Checking Wi-Fi connectivity"
+    _log "Checking Wi-Fi connectivity"
     if [[ "$DRY_RUN" -eq 0 ]]; then
         # Install network-manager if not present
         if ! command -v nmcli >/dev/null 2>&1; then
-            log "Installing NetworkManager"
+            _log "Installing NetworkManager"
             apt-get install -y network-manager || warn "Failed to install network-manager — Wi-Fi setup will be skipped."
         fi
 
@@ -287,10 +287,10 @@ else
             else
                 # Check if the connection profile already exists
                 if nmcli connection show | grep -q "$WIFI_SSID"; then
-                    log "Connection profile for '${WIFI_SSID}' exists — activating"
+                    _log "Connection profile for '${WIFI_SSID}' exists — activating"
                     nmcli connection up id "$WIFI_SSID" 2>&1 || warn "Could not activate connection '${WIFI_SSID}'."
                 else
-                    log "Connecting to Wi-Fi: ${WIFI_SSID}"
+                    _log "Connecting to Wi-Fi: ${WIFI_SSID}"
                     nmcli device wifi connect "$WIFI_SSID" password "$WIFI_PASSWORD" 2>&1 || warn "Could not connect to Wi-Fi '${WIFI_SSID}'."
                 fi
 
@@ -321,12 +321,12 @@ DOMAIN="${DOMAIN:-$DEFAULT_DOMAIN}"
 # Detect or use provided IP address
 if [[ -n "${LAN_IP_OVERRIDE:-}" ]]; then
     LAN_IP="$LAN_IP_OVERRIDE"
-    log "Using provided IP address: ${LAN_IP}"
+    _log "Using provided IP address: ${LAN_IP}"
 else
     LAN_IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}' | head -1 || true)"
     [[ -n "$LAN_IP" ]] || LAN_IP="$(hostname -I | awk '{print $1}')"
     [[ -n "$LAN_IP" ]] || die "Could not detect this server's LAN IP address. Use --ip to specify one."
-    log "Detected LAN IP: ${LAN_IP}"
+    _log "Detected LAN IP: ${LAN_IP}"
 fi
 
 # Default admin credentials
@@ -340,40 +340,40 @@ CENTRAL_PRIVATE_KEY="${CENTRAL_PRIVATE_KEY:-}"
 # READ EXISTING CREDENTIALS (if available)
 # ============================================================
 if [[ -f "$CREDS_FILE" ]]; then
-    log "Found existing credentials file: ${CREDS_FILE}"
+    _log "Found existing credentials file: ${CREDS_FILE}"
 
     EXISTING_DB_PASS="$(grep '^Database pass:' "$CREDS_FILE" 2>/dev/null | sed 's/^Database pass:[[:space:]]*//' | xargs || true)"
     EXISTING_REDIS_PASS="$(grep '^Redis password:' "$CREDS_FILE" 2>/dev/null | sed 's/^Redis password:[[:space:]]*//' | xargs || true)"
 
     if [[ -n "$DB_PASS" ]]; then
-        log "Using --db-password flag to replace existing database password"
+        _log "Using --db-password flag to replace existing database password"
     elif [[ -n "$EXISTING_DB_PASS" ]]; then
         DB_PASS="$EXISTING_DB_PASS"
-        log "Reusing existing database password from credentials file"
+        _log "Reusing existing database password from credentials file"
     fi
 
     if [[ -n "$REDIS_PASS" ]]; then
-        log "Using --redis-password flag to replace existing Redis password"
+        _log "Using --redis-password flag to replace existing Redis password"
     elif [[ -n "$EXISTING_REDIS_PASS" ]]; then
         REDIS_PASS="$EXISTING_REDIS_PASS"
-        log "Reusing existing Redis password from credentials file"
+        _log "Reusing existing Redis password from credentials file"
     fi
 fi
 
 if [[ -z "$DB_PASS" ]]; then
     DB_PASS="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-24)"
-    log "Generated new database password"
+    _log "Generated new database password"
 fi
 
 if [[ -z "$REDIS_PASS" ]]; then
     REDIS_PASS="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-24)"
-    log "Generated new Redis password"
+    _log "Generated new Redis password"
 fi
 
 # ============================================================
 # 2. BASE SYSTEM UPDATE
 # ============================================================
-log "Updating system packages"
+_log "Updating system packages"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y
@@ -382,7 +382,7 @@ else
     dry "apt-get update -y && apt-get upgrade -y"
 fi
 
-log "Installing base utilities"
+_log "Installing base utilities"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     apt-get install -y \
         curl wget git unzip zip rsync openssl \
@@ -397,7 +397,7 @@ fi
 # ============================================================
 # 3. CREATE DEPLOY USER
 # ============================================================
-log "Setting up deploy user"
+_log "Setting up deploy user"
 DEPLOY_USER="deploy"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     if id "$DEPLOY_USER" &>/dev/null; then
@@ -426,7 +426,7 @@ fi
 # ============================================================
 # 4. NGINX + MARIADB
 # ============================================================
-log "Installing Nginx"
+_log "Installing Nginx"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     apt-get install -y nginx
     systemctl enable nginx
@@ -434,7 +434,7 @@ else
     dry "apt-get install -y nginx && systemctl enable nginx"
 fi
 
-log "Installing MariaDB"
+_log "Installing MariaDB"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     apt-get install -y mariadb-server mariadb-client
     systemctl enable mariadb
@@ -443,7 +443,7 @@ else
     dry "apt-get install -y mariadb-server mariadb-client && systemctl enable mariadb"
 fi
 
-log "Hardening MariaDB"
+_log "Hardening MariaDB"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     mysql -u root <<'SQL'
 DELETE FROM mysql.global_priv WHERE User='';
@@ -457,7 +457,7 @@ else
     dry "DROP DATABASE IF EXISTS test; FLUSH PRIVILEGES;"
 fi
 
-log "Creating application database and user (localhost + 127.0.0.1)"
+_log "Creating application database and user (localhost + 127.0.0.1)"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     mysql -u root <<SQL
 CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -475,12 +475,12 @@ SQL
 else
     dry "CREATE DATABASE \`${DB_NAME}\`; CREATE USER '${DB_USER}'@'localhost'; GRANT ALL;"
 fi
-log "Database password set for ${DB_USER}@localhost and ${DB_USER}@127.0.0.1"
+_log "Database password set for ${DB_USER}@localhost and ${DB_USER}@127.0.0.1"
 
 # ============================================================
 # 5. REDIS
 # ============================================================
-log "Installing Redis"
+_log "Installing Redis"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     apt-get install -y redis-server
 
@@ -513,12 +513,12 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         apt-get install -y php-cli php-fpm
     fi
     PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
-    log "Detected PHP ${PHP_VER}"
+    _log "Detected PHP ${PHP_VER}"
 
     PHP_FPM_SERVICE="php${PHP_VER}-fpm"
     PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
 
-    log "Installing required PHP extensions for PHP ${PHP_VER}"
+    _log "Installing required PHP extensions for PHP ${PHP_VER}"
     apt-get install -y \
         "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-common" \
         "php${PHP_VER}-mysql" "php${PHP_VER}-redis" "php${PHP_VER}-mbstring" \
@@ -531,7 +531,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     systemctl restart "$PHP_FPM_SERVICE" || true
 
     # ── PHP-FPM Production Tuning ─────────────────────────────────────────────
-    log "Tuning PHP-FPM for production"
+    _log "Tuning PHP-FPM for production"
     PHP_FPM_POOL_DIR="/etc/php/${PHP_VER}/fpm/pool.d"
     PHP_FPM_POOL="${PHP_FPM_POOL_DIR}/www.conf"
     if [[ -f "$PHP_FPM_POOL" ]]; then
@@ -553,7 +553,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     fi
 
     if ! command -v composer >/dev/null 2>&1; then
-        log "Installing Composer"
+        _log "Installing Composer"
         EXPECTED_SIG="$(curl -s https://composer.github.io/installer.sig)"
         curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
         ACTUAL_SIG="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"
@@ -575,19 +575,19 @@ fi
 # ============================================================
 if [[ "$DRY_RUN" -eq 0 ]]; then
     if ! command -v node >/dev/null 2>&1; then
-        log "Installing Node.js and npm"
+        _log "Installing Node.js and npm"
         curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource-setup.sh
         bash /tmp/nodesource-setup.sh
         apt-get install -y nodejs
         rm /tmp/nodesource-setup.sh
     else
-        log "Node.js already installed: $(node --version)"
+        _log "Node.js already installed: $(node --version)"
     fi
 
     if ! command -v npm >/dev/null 2>&1; then
         warn "npm not found — install manually."
     else
-        log "npm version: $(npm --version)"
+        _log "npm version: $(npm --version)"
     fi
 else
     dry "Install Node.js 20 LTS and npm"
@@ -596,7 +596,7 @@ fi
 # ============================================================
 # 7. PROJECT FILES — clone the 'ahpc' branch
 # ============================================================
-log "Placing project files"
+_log "Placing project files"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     mkdir -p "/var/www/html"
     chown "www-data:www-data" "/var/www/html"
@@ -615,7 +615,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         fi
 
         if [[ -n "$REPO_URL" ]]; then
-            log "Cloning branch '${REPO_BRANCH}' from ${REPO_URL}"
+            _log "Cloning branch '${REPO_BRANCH}' from ${REPO_URL}"
             git clone --branch "$REPO_BRANCH" "$REPO_URL" "$NEW_PROJECT_DIR"
         elif [[ -d "$OLD_PROJECT_DIR" ]]; then
             warn "No REPO_URL given — moving existing project from ${OLD_PROJECT_DIR}."
@@ -630,7 +630,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         git -C "$NEW_PROJECT_DIR" config core.fileMode false
     fi
 
-    log "Fixing ownership and permissions"
+    _log "Fixing ownership and permissions"
     chown -R "www-data:www-data" "$NEW_PROJECT_DIR"
     find "$NEW_PROJECT_DIR" -type d -exec chmod 755 {} \;
     find "$NEW_PROJECT_DIR" -type f -exec chmod 644 {} \;
@@ -644,7 +644,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage/logs"
 
     grep -q "[[:space:]]${DOMAIN}\$" /etc/hosts && sed -i "s|.*[[:space:]]${DOMAIN}$|${LAN_IP} ${DOMAIN}|" /etc/hosts || echo "${LAN_IP} ${DOMAIN}" >> /etc/hosts
-    log "Added /etc/hosts entry: ${LAN_IP} ${DOMAIN}"
+    _log "Added /etc/hosts entry: ${LAN_IP} ${DOMAIN}"
 else
     dry "mkdir -p /var/www/html && Clone or move project to ${NEW_PROJECT_DIR}"
     dry "Set ownership www-data:www-data on ${NEW_PROJECT_DIR}"
@@ -654,12 +654,12 @@ fi
 # ============================================================
 # 8. ENVIRONMENT CONFIGURATION — write .env
 # ============================================================
-log "Configuring .env"
+_log "Configuring .env"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     if [[ ! -f "${NEW_PROJECT_DIR}/.env" ]]; then
         if [[ -f "${NEW_PROJECT_DIR}/.env.example" ]]; then
             cp "${NEW_PROJECT_DIR}/.env.example" "${NEW_PROJECT_DIR}/.env"
-            log ".env created from .env.example"
+            _log ".env created from .env.example"
         else
             warn "No .env or .env.example found — creating minimal .env"
             touch "${NEW_PROJECT_DIR}/.env"
@@ -705,7 +705,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     if [[ "$APP_ROLE" == "central" ]]; then
         # Generate Ed25519 key pair for central server
         if [[ -z "$CENTRAL_PRIVATE_KEY" ]]; then
-            log "Generating Ed25519 key pair for central server"
+            _log "Generating Ed25519 key pair for central server"
             KEY_OUTPUT="$(php -r '
 $pair = sodium_crypto_box_keypair();
 $pub = sodium_bin2base64(sodium_crypto_box_publickey($pair), SODIUM_BASE64_VARIANT_ORIGINAL);
@@ -716,7 +716,7 @@ echo $priv . "\n" . $pub . "\n";
             if [[ -n "$KEY_OUTPUT" ]]; then
                 CENTRAL_PRIVATE_KEY="$(echo "$KEY_OUTPUT" | head -1)"
                 CENTRAL_PUBLIC_KEY="$(echo "$KEY_OUTPUT" | tail -1)"
-                log "Ed25519 key pair generated"
+                _log "Ed25519 key pair generated"
             else
                 warn "Could not generate Ed25519 keys automatically (php-sodium not available)."
                 warn "Generate them manually and set CENTRAL_PRIVATE_KEY / CENTRAL_PUBLIC_KEY in .env"
@@ -761,20 +761,20 @@ fi
 # ============================================================
 # 9. COMPOSER + NPM DEPENDENCIES
 # ============================================================
-log "Installing dependencies"
+_log "Installing dependencies"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
-    log "Running composer install"
+    _log "Running composer install"
     composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5
     ok "composer install done"
 
     if [[ -f "package.json" ]]; then
-        log "Running npm install"
+        _log "Running npm install"
         npm ci --no-audit --no-fund 2>&1 | tail -3 || npm install --no-audit --no-fund 2>&1 | tail -3
         ok "npm install done"
 
-        log "Running npm run build"
+        _log "Running npm run build"
         npm run build 2>&1 | tail -5
         ok "npm run build done"
     else
@@ -788,23 +788,23 @@ fi
 # ============================================================
 # 10. LARAVEL SETUP — key, migrate, storage link, caches
 # ============================================================
-log "Running Laravel setup commands"
+_log "Running Laravel setup commands"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
-    log "Generating application key"
+    _log "Generating application key"
     php artisan key:generate --force
     ok "APP_KEY generated"
 
-    log "Running database migrations"
+    _log "Running database migrations"
     php artisan migrate --force --no-interaction 2>&1 | tail -10
     ok "Migrations complete"
 
-    log "Creating storage symbolic link"
+    _log "Creating storage symbolic link"
     php artisan storage:link
     ok "Storage link created"
 
-    log "Clearing and caching config"
+    _log "Clearing and caching config"
     php artisan config:clear
     php artisan cache:clear
     php artisan view:clear
@@ -823,7 +823,7 @@ fi
 # ============================================================
 # 11. DEFAULT ADMIN USER PROVISIONING
 # ============================================================
-log "Provisioning default admin user"
+_log "Provisioning default admin user"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
@@ -832,7 +832,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     if [[ "$EXISTING_USER" == "yes" ]]; then
         warn "Admin user ${DEFAULT_ADMIN_EMAIL} already exists — skipping creation"
     else
-        log "Creating admin user: ${DEFAULT_ADMIN_EMAIL}"
+        _log "Creating admin user: ${DEFAULT_ADMIN_EMAIL}"
         php artisan users:create \
             "${DEFAULT_ADMIN_EMAIL}" \
             admin \
@@ -850,7 +850,7 @@ fi
 # ============================================================
 # 12. NGINX SERVER BLOCK
 # ============================================================
-log "Writing Nginx config for ${DOMAIN}"
+_log "Writing Nginx config for ${DOMAIN}"
 NGINX_SITE="/etc/nginx/sites-available/${DOMAIN}"
 
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -907,7 +907,7 @@ fi
 # ============================================================
 # 13. SUPERVISOR — QUEUE WORKER
 # ============================================================
-log "Writing Supervisor config for queue worker"
+_log "Writing Supervisor config for queue worker"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/${APP_NAME}-worker.conf"
 
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -938,7 +938,7 @@ fi
 # ============================================================
 # 14. LOG ROTATION
 # ============================================================
-log "Setting up log rotation"
+_log "Setting up log rotation"
 if [[ "$DRY_RUN" -eq 0 ]]; then
 
     # ── Laravel application logs ──────────────────────────────────────────────
@@ -1013,7 +1013,7 @@ fi
 # ============================================================
 # 15. LARAVEL SCHEDULER — cron entry
 # ============================================================
-log "Setting up Laravel scheduler"
+_log "Setting up Laravel scheduler"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     SCHEDULER_CRON="* * * * * cd ${NEW_PROJECT_DIR} && php artisan schedule:run >> /dev/null 2>&1"
     # Add to root's crontab if not already present
@@ -1032,14 +1032,14 @@ fi
 # 16. SSL / HTTPS — Certbot + Let's Encrypt
 # ============================================================
 SSL_ENABLED=0
-log "Setting up SSL with Certbot"
+_log "Setting up SSL with Certbot"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     # Install Certbot and Nginx plugin
     if ! command -v certbot >/dev/null 2>&1; then
         apt-get install -y certbot python3-certbot-nginx
         ok "Certbot installed"
     else
-        log "Certbot already installed: $(certbot --version 2>&1)"
+        _log "Certbot already installed: $(certbot --version 2>&1)"
     fi
 
     # Try to obtain a certificate
@@ -1088,7 +1088,7 @@ fi
 # ============================================================
 # 17. FIREWALL
 # ============================================================
-log "Configuring UFW firewall"
+_log "Configuring UFW firewall"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     ufw allow OpenSSH
     if [[ -n "$LAN_SUBNET" ]]; then
@@ -1178,7 +1178,7 @@ fi
 # ============================================================
 # 19. SUMMARY & CREDENTIALS FILE
 # ============================================================
-log "Writing credentials to ${CREDS_FILE} (root-only readable)"
+_log "Writing credentials to ${CREDS_FILE} (root-only readable)"
 if [[ "$DRY_RUN" -eq 0 ]]; then
 
     if [[ "$APP_ROLE" == "central" ]]; then
@@ -1258,7 +1258,7 @@ fi
 # FINAL SUMMARY
 # ============================================================
 if [[ "$APP_ROLE" == "central" ]]; then
-    log "DONE — Central server provisioning complete"
+    _log "DONE — Central server provisioning complete"
     SSL_STATUS="No (HTTP only)"
     [[ "$SSL_ENABLED" -eq 1 ]] && SSL_STATUS="Yes (HTTPS enabled)"
     PROTOCOL="http"
@@ -1334,7 +1334,7 @@ if [[ "$APP_ROLE" == "central" ]]; then
 SUMMARY
 
 elif [[ "$APP_ROLE" == "center" ]]; then
-    log "DONE — Center server provisioning complete"
+    _log "DONE — Center server provisioning complete"
     SSL_STATUS="No (HTTP only)"
     [[ "$SSL_ENABLED" -eq 1 ]] && SSL_STATUS="Yes (HTTPS enabled)"
     PROTOCOL="http"
