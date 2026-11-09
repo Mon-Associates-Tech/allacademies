@@ -110,9 +110,7 @@ DB_PASS=""
 REDIS_PASS=""
 LAN_IP_OVERRIDE=""
 DOMAIN=""
-REPO_URL="https://github.com/Mon-Associates-Tech/allacademies"
 REPO_BRANCH="ahpc"
-OLD_PROJECT_DIR="/root/sites/${APP_NAME}"
 DEFAULT_ADMIN_EMAIL=""
 DEFAULT_ADMIN_PASSWORD=""
 CENTRAL_URL=""
@@ -609,50 +607,31 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     mkdir -p "/var/www/html"
     chown "www-data:www-data" "/var/www/html"
 
-    # Helper: run git as the directory owner to avoid safe.directory issues on re-runs
-    _git() { sudo -u www-data git "$@" 2>/dev/null || git "$@"; }
+    REPO_OWNER="Mon-Associates-Tech"
+    REPO_SLUG="allacademies"
+    TAR_URL="https://github.com/${REPO_OWNER}/${REPO_SLUG}/archive/refs/heads/${REPO_BRANCH}.tar.gz"
+    TAR_FILE="/tmp/${APP_NAME}-${REPO_BRANCH}.tar.gz"
+    EXTRACT_DIR="/tmp/${APP_NAME}-extract"
+
+    _log "Downloading branch '${REPO_BRANCH}' from GitHub"
+    sudo -u www-data wget --timeout=120 --tries=3 -q -O "$TAR_FILE" "$TAR_URL" \
+        || die "Failed to download ${TAR_URL} — check network connectivity."
+
+    _log "Extracting archive"
+    rm -rf "$EXTRACT_DIR"
+    mkdir -p "$EXTRACT_DIR"
+    tar -xzf "$TAR_FILE" -C "$EXTRACT_DIR" --strip-components=1
+    rm -f "$TAR_FILE"
 
     if [[ -d "$NEW_PROJECT_DIR" ]]; then
-        _log "${NEW_PROJECT_DIR} already exists — fetching latest changes."
-        if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
-            CURRENT_BRANCH="$(_git -C "$NEW_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
-            if [[ -z "$CURRENT_BRANCH" || "$CURRENT_BRANCH" == "HEAD" ]]; then
-                _log "Detached HEAD — checking out '${REPO_BRANCH}'"
-                _git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" || true
-                _git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" || true
-                _git -C "$NEW_PROJECT_DIR" pull origin "$REPO_BRANCH" || true
-            elif [[ "$CURRENT_BRANCH" != "$REPO_BRANCH" ]]; then
-                _log "Switching from '${CURRENT_BRANCH}' to '${REPO_BRANCH}'"
-                _git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" || true
-                _git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" || \
-                    warn "Could not switch to branch '${REPO_BRANCH}' — continuing with current branch."
-                _git -C "$NEW_PROJECT_DIR" pull origin "$REPO_BRANCH" || true
-            else
-                _log "On branch '${REPO_BRANCH}' — pulling latest changes"
-                _git -C "$NEW_PROJECT_DIR" pull origin "$REPO_BRANCH" || \
-                    warn "git pull failed — continuing with existing code."
-            fi
-        fi
+        _log "${NEW_PROJECT_DIR} exists — syncing latest files (preserving .env and storage)"
+        rsync -a --exclude='.env' --exclude='storage/' --exclude='vendor/' --exclude='node_modules/' \
+            "${EXTRACT_DIR}/" "${NEW_PROJECT_DIR}/"
     else
-        if [[ -z "$REPO_URL" && ! -d "$OLD_PROJECT_DIR" && -t 0 ]]; then
-            read -rp "Git repository URL to clone (branch '${REPO_BRANCH}'): " REPO_URL
-        fi
-
-        if [[ -n "$REPO_URL" ]]; then
-            _log "Cloning branch '${REPO_BRANCH}' from ${REPO_URL}"
-            git clone --branch "$REPO_BRANCH" "$REPO_URL" "$NEW_PROJECT_DIR"
-        elif [[ -d "$OLD_PROJECT_DIR" ]]; then
-            warn "No REPO_URL given — moving existing project from ${OLD_PROJECT_DIR}."
-            rsync -a --remove-source-files "$OLD_PROJECT_DIR"/ "$NEW_PROJECT_DIR"/
-            find "$OLD_PROJECT_DIR" -type d -empty -delete || true
-        else
-            die "No project found. Set REPO_URL at the top of this script (branch '${REPO_BRANCH}') and re-run."
-        fi
+        _log "Moving extracted files to ${NEW_PROJECT_DIR}"
+        mv "$EXTRACT_DIR" "$NEW_PROJECT_DIR"
     fi
-
-    if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
-        _git -C "$NEW_PROJECT_DIR" config core.fileMode false
-    fi
+    rm -rf "$EXTRACT_DIR"
 
     _log "Fixing ownership and permissions"
     chown -R "www-data:www-data" "$NEW_PROJECT_DIR"
