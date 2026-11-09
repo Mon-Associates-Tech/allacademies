@@ -393,32 +393,16 @@ else
 fi
 
 # ============================================================
-# 3. CREATE DEPLOY USER
+# 3. ENSURE CURRENT USER IS IN www-data GROUP
 # ============================================================
-_log "Setting up deploy user"
-DEPLOY_USER="deploy"
+_log "Configuring user groups"
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    if id "$DEPLOY_USER" &>/dev/null; then
-        warn "User '$DEPLOY_USER' already exists, skipping creation."
-    else
-        adduser --disabled-password --gecos "" "$DEPLOY_USER"
-        usermod -aG sudo "$DEPLOY_USER"
-        echo "${DEPLOY_USER} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/90-${DEPLOY_USER}"
-        chmod 440 "/etc/sudoers.d/90-${DEPLOY_USER}"
-    fi
-    usermod -aG www-data "$DEPLOY_USER"
-
-    if [[ -f /root/.ssh/authorized_keys ]]; then
-        mkdir -p "/home/${DEPLOY_USER}/.ssh"
-        cp /root/.ssh/authorized_keys "/home/${DEPLOY_USER}/.ssh/authorized_keys"
-        chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "/home/${DEPLOY_USER}/.ssh"
-        chmod 700 "/home/${DEPLOY_USER}/.ssh"
-        chmod 600 "/home/${DEPLOY_USER}/.ssh/authorized_keys"
-    fi
+    CURRENT_USER="${SUDO_USER:-$(logname 2>/dev/null || whoami)}"
+    usermod -aG www-data "$CURRENT_USER" || true
+    usermod -aG "$CURRENT_USER" www-data || true
+    ok "Added ${CURRENT_USER} <-> www-data to each other's groups"
 else
-    dry "adduser --disabled-password --gecos '' ${DEPLOY_USER}"
-    dry "usermod -aG sudo ${DEPLOY_USER}"
-    dry "usermod -aG www-data ${DEPLOY_USER}"
+    dry "usermod -aG www-data <current-user> && usermod -aG <current-user> www-data"
 fi
 
 # ============================================================
@@ -626,23 +610,23 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     rm -rf "$EXTRACT_DIR"
 
     _log "Fixing ownership and permissions"
-    chown -R "www-data:www-data" "$NEW_PROJECT_DIR"
+    chown -R "${CURRENT_USER}:www-data" "$NEW_PROJECT_DIR"
     find "$NEW_PROJECT_DIR" -type d -exec chmod 755 {} \;
     find "$NEW_PROJECT_DIR" -type f -exec chmod 644 {} \;
-    for d in storage bootstrap/cache; do
-        if [[ -d "${NEW_PROJECT_DIR}/${d}" ]]; then
-            chmod -R 775 "${NEW_PROJECT_DIR}/${d}"
-            find "${NEW_PROJECT_DIR}/${d}" -type d -exec chmod g+s {} \;
-        fi
-    done
+
     # Ensure required storage subdirectories exist
     mkdir -p "${NEW_PROJECT_DIR}/storage/logs"
     mkdir -p "${NEW_PROJECT_DIR}/storage/app/public"
     mkdir -p "${NEW_PROJECT_DIR}/storage/framework/cache"
     mkdir -p "${NEW_PROJECT_DIR}/storage/framework/sessions"
     mkdir -p "${NEW_PROJECT_DIR}/storage/framework/views"
+    mkdir -p "${NEW_PROJECT_DIR}/bootstrap/cache"
+
+    # storage and bootstrap/cache must be writable by www-data
     chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage"
+    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/bootstrap/cache"
     chmod -R 775 "${NEW_PROJECT_DIR}/storage"
+    chmod -R 775 "${NEW_PROJECT_DIR}/bootstrap/cache"
 
     grep -q "[[:space:]]${DOMAIN}\$" /etc/hosts && sed -i "s|.*[[:space:]]${DOMAIN}$|${LAN_IP} ${DOMAIN}|" /etc/hosts || echo "${LAN_IP} ${DOMAIN}" >> /etc/hosts
     _log "Added /etc/hosts entry: ${LAN_IP} ${DOMAIN}"
