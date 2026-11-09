@@ -790,17 +790,18 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
     _log "Running composer install"
-    sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction 2>&1 | tail -5
-    ok "composer install done"
+    sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5 \
+        && ok "composer install done" || warn "composer install failed — continuing."
 
     if [[ -f "package.json" ]]; then
         _log "Running npm install"
-        sudo -u www-data npm ci --no-audit --no-fund 2>&1 | tail -3 || sudo -u www-data npm install --no-audit --no-fund 2>&1 | tail -3
-        ok "npm install done"
+        sudo -u www-data npm ci --no-audit --no-fund 2>&1 | tail -3 \
+            || sudo -u www-data npm install --no-audit --no-fund 2>&1 | tail -3 \
+            || warn "npm install failed — continuing."
 
         _log "Running npm run build"
-        sudo -u www-data npm run build 2>&1 | tail -5
-        ok "npm run build done"
+        sudo -u www-data npm run build 2>&1 | tail -5 \
+            && ok "npm run build done" || warn "npm run build failed — continuing."
     else
         warn "package.json not found — skipping npm install/build"
     fi
