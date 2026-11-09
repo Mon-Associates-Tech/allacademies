@@ -359,12 +359,12 @@ if [[ -f "$CREDS_FILE" ]]; then
 fi
 
 if [[ -z "$DB_PASS" ]]; then
-    DB_PASS="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-24)"
+    DB_PASS="$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)"
     _log "Generated new database password"
 fi
 
 if [[ -z "$REDIS_PASS" ]]; then
-    REDIS_PASS="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-24)"
+    REDIS_PASS="$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)"
     _log "Generated new Redis password"
 fi
 
