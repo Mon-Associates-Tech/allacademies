@@ -603,10 +603,18 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
 
     if [[ -d "$NEW_PROJECT_DIR" ]]; then
         warn "${NEW_PROJECT_DIR} already exists — not cloning again."
+        git config --global --add safe.directory "$NEW_PROJECT_DIR"
         if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
             CURRENT_BRANCH="$(git -C "$NEW_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
-            if [[ "$CURRENT_BRANCH" != "$REPO_BRANCH" ]]; then
-                warn "Existing checkout is on branch '${CURRENT_BRANCH}', not '${REPO_BRANCH}'."
+            if [[ -z "$CURRENT_BRANCH" || "$CURRENT_BRANCH" == "HEAD" ]]; then
+                _log "Detached HEAD or unknown branch — checking out '${REPO_BRANCH}'"
+                git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" 2>/dev/null || true
+                git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" 2>/dev/null || true
+            elif [[ "$CURRENT_BRANCH" != "$REPO_BRANCH" ]]; then
+                warn "Existing checkout is on branch '${CURRENT_BRANCH}', not '${REPO_BRANCH}' — switching."
+                git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" 2>/dev/null || true
+                git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" 2>/dev/null || \
+                    warn "Could not switch to branch '${REPO_BRANCH}' — continuing with current branch."
             fi
         fi
     else
@@ -627,6 +635,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     fi
 
     if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
+        git config --global --add safe.directory "$NEW_PROJECT_DIR" 2>/dev/null || true
         git -C "$NEW_PROJECT_DIR" config core.fileMode false
     fi
 
