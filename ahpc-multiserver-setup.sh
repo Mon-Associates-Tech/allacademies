@@ -751,6 +751,8 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
     _log "Running composer install"
+    mkdir -p "${NEW_PROJECT_DIR}/vendor"
+    chown -R www-data:www-data "${NEW_PROJECT_DIR}/vendor"
     sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5 \
         && ok "composer install done" || warn "composer install failed — continuing."
 
@@ -760,6 +762,8 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         chown -R "www-data:www-data" "$NPM_CACHE" "${NEW_PROJECT_DIR}/node_modules"
 
         _log "Running npm install"
+        mkdir -p "${NEW_PROJECT_DIR}/node_modules"
+        chown -R www-data:www-data "${NEW_PROJECT_DIR}/node_modules"
         sudo -u www-data npm ci --no-audit --no-fund --cache "$NPM_CACHE" 2>&1 | tail -3 \
             || sudo -u www-data npm install --no-audit --no-fund --cache "$NPM_CACHE" 2>&1 | tail -3 \
             || warn "npm install failed — continuing."
