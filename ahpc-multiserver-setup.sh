@@ -635,8 +635,14 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
             find "${NEW_PROJECT_DIR}/${d}" -type d -exec chmod g+s {} \;
         fi
     done
+    # Ensure required storage subdirectories exist
     mkdir -p "${NEW_PROJECT_DIR}/storage/logs"
-    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage/logs"
+    mkdir -p "${NEW_PROJECT_DIR}/storage/app/public"
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/cache"
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/sessions"
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/views"
+    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage"
+    chmod -R 775 "${NEW_PROJECT_DIR}/storage"
 
     grep -q "[[:space:]]${DOMAIN}\$" /etc/hosts && sed -i "s|.*[[:space:]]${DOMAIN}$|${LAN_IP} ${DOMAIN}|" /etc/hosts || echo "${LAN_IP} ${DOMAIN}" >> /etc/hosts
     _log "Added /etc/hosts entry: ${LAN_IP} ${DOMAIN}"
@@ -795,25 +801,28 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
     _log "Generating application key"
-    php artisan key:generate --force
+    sudo -u www-data php artisan key:generate --force
     ok "APP_KEY generated"
 
     _log "Running database migrations"
-    php artisan migrate --force --no-interaction 2>&1 | tail -10
+    sudo -u www-data php artisan migrate --force --no-interaction 2>&1 | tail -10
     ok "Migrations complete"
 
     _log "Creating storage symbolic link"
-    php artisan storage:link
+    # Remove broken symlink if exists, then create manually to avoid permission issues
+    rm -f "${NEW_PROJECT_DIR}/public/storage"
+    ln -s "${NEW_PROJECT_DIR}/storage/app/public" "${NEW_PROJECT_DIR}/public/storage"
+    chown -h www-data:www-data "${NEW_PROJECT_DIR}/public/storage"
     ok "Storage link created"
 
     _log "Clearing and caching config"
-    php artisan config:clear
-    php artisan cache:clear
-    php artisan view:clear
-    php artisan route:clear
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
+    sudo -u www-data php artisan config:clear
+    sudo -u www-data php artisan cache:clear
+    sudo -u www-data php artisan view:clear
+    sudo -u www-data php artisan route:clear
+    sudo -u www-data php artisan config:cache
+    sudo -u www-data php artisan route:cache
+    sudo -u www-data php artisan view:cache
     ok "Laravel caches configured"
 else
     dry "php artisan key:generate --force"
