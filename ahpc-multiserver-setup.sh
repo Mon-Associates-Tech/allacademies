@@ -10,23 +10,24 @@
 #  Run with root privileges:  sudo bash ahpc-multiserver-setup.sh
 #
 #  What it does (both roles — full provisioning):
-#    1. System update + base packages (including openssh-server)
-#    2. Creates a non-root 'deploy' user (sudo + www-data group)
-#    3. Installs & configures MariaDB (app DB + user on localhost + 127.0.0.1)
-#    4. Installs & configures Redis (localhost-only, password protected)
-#    5. Ensures PHP-FPM + required extensions + production tuning
-#    6. Installs Node.js + npm for frontend builds
-#    7. Clones the 'ahpc' git branch into /var/www/html/ahpc
-#    8. Writes .env with all credentials (DB, Redis, Session, Sync, APP_NAME)
-#    9. Runs composer install, npm install, npm run build
-#   10. Generates app key, runs migrations, creates storage link
-#   11. Provisions a default admin user
-#   12. Configures Nginx to serve the app (HTTP + HTTPS with Certbot)
-#   13. Configures Supervisor queue workers
-#   14. Sets up log rotation (Laravel, Nginx, Supervisor, sync)
-#   15. Sets up Laravel scheduler cron entry
-#   16. Configures UFW firewall
-#   17. Writes credentials to /root/ahpc-credentials.txt and prints next steps
+#    1. Connects to Wi-Fi network (nmcli) if network-manager is available
+#    2. System update + base packages (including openssh-server)
+#    3. Creates a non-root 'deploy' user (sudo + www-data group)
+#    4. Installs & configures MariaDB (app DB + user on localhost + 127.0.0.1)
+#    5. Installs & configures Redis (localhost-only, password protected)
+#    6. Ensures PHP-FPM + required extensions + production tuning
+#    7. Installs Node.js + npm for frontend builds
+#    8. Clones the 'ahpc' git branch into /var/www/html/ahpc
+#    9. Writes .env with all credentials (DB, Redis, Session, Sync, APP_NAME)
+#   10. Runs composer install, npm install, npm run build
+#   11. Generates app key, runs migrations, creates storage link
+#   12. Provisions a default admin user
+#   13. Configures Nginx to serve the app (HTTP + HTTPS with Certbot)
+#   14. Configures Supervisor queue workers
+#   15. Sets up log rotation (Laravel, Nginx, Supervisor, sync)
+#   16. Sets up Laravel scheduler cron entry
+#   17. Configures UFW firewall
+#   18. Writes credentials to /root/ahpc-credentials.txt and prints next steps
 #
 #  Role differences:
 #    - Central: generates Ed25519 key pair, APP_ROLE=central
@@ -54,6 +55,10 @@ QUEUE_WORKER_PROCESSES=2
 LAN_SUBNET=""
 
 CREDS_FILE="/root/${APP_NAME}-credentials.txt"
+
+# Wi-Fi defaults
+DEFAULT_WIFI_SSID="AHGENERAL"
+DEFAULT_WIFI_PASSWORD="1L0ve@M1n3!0B.&"
 
 # Center-specific defaults
 DEFAULT_CENTRAL_URL="http://192.168.1.103"
@@ -91,6 +96,9 @@ DEFAULT_PUSH_INTERVAL=15
 #   --app-version        App version for version handshake (default: 1.0.0)
 #   --pull-interval      Pull sync interval in minutes (default: 15)
 #   --push-interval      Push sync interval in minutes (default: 15)
+#   --wifi-ssid          Wi-Fi network name (default: AHGENERAL)
+#   --wifi-password       Wi-Fi password (default: built-in)
+#   --skip-wifi           Skip Wi-Fi connection setup
 #   --setup-cron         Set up auto-sync cron jobs (center role)
 #   --no-cron            Skip cron setup entirely (center role)
 #   --dry-run            Show what would be done without making changes
@@ -114,8 +122,11 @@ APP_VERSION=""
 PULL_INTERVAL=""
 PUSH_INTERVAL=""
 SETUP_CRON_FLAG=""
+SKIP_WIFI=0
 DRY_RUN=0
 SHOW_HELP=0
+WIFI_SSID=""
+WIFI_PASSWORD=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -136,6 +147,9 @@ while [[ $# -gt 0 ]]; do
         --push-interval)    PUSH_INTERVAL="$2";      shift 2 ;;
         --setup-cron)       SETUP_CRON_FLAG="Y";     shift   ;;
         --no-cron)          SETUP_CRON_FLAG="N";     shift   ;;
+        --wifi-ssid)        WIFI_SSID="$2";           shift 2 ;;
+        --wifi-password)    WIFI_PASSWORD="$2";       shift 2 ;;
+        --skip-wifi)        SKIP_WIFI=1;              shift   ;;
         --dry-run)          DRY_RUN=1;               shift   ;;
         --help)             SHOW_HELP=1;             shift   ;;
         *)                  echo "Unknown option: $1"; echo "Run with --help for usage."; exit 1 ;;
@@ -162,6 +176,9 @@ if [[ $SHOW_HELP -eq 1 ]]; then
     echo "  --app-version        App version (default: 1.0.0)"
     echo "  --pull-interval      Pull sync interval in minutes (default: 15)"
     echo "  --push-interval      Push sync interval in minutes (default: 15)"
+    echo "  --wifi-ssid          Wi-Fi network name (default: AHGENERAL)"
+    echo "  --wifi-password      Wi-Fi password"
+    echo "  --skip-wifi          Skip Wi-Fi connection setup"
     echo "  --setup-cron         Set up auto-sync cron jobs (center role)"
     echo "  --no-cron            Skip cron setup entirely (center role)"
     echo "  --dry-run            Show what would be done without making changes"
@@ -246,6 +263,55 @@ fi
 [[ $EUID -eq 0 ]] || die "This script must be run as root (use sudo)."
 
 # ============================================================
+# 1. WI-FI CONNECTION (nmcli)
+# ============================================================
+WIFI_SSID="${WIFI_SSID:-$DEFAULT_WIFI_SSID}"
+WIFI_PASSWORD="${WIFI_PASSWORD:-$DEFAULT_WIFI_PASSWORD}"
+
+if [[ "$SKIP_WIFI" -eq 1 ]]; then
+    log "Skipping Wi-Fi setup (--skip-wifi)"
+else
+    log "Checking Wi-Fi connectivity"
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+        # Install network-manager if not present
+        if ! command -v nmcli >/dev/null 2>&1; then
+            log "Installing NetworkManager"
+            apt-get install -y network-manager || warn "Failed to install network-manager — Wi-Fi setup will be skipped."
+        fi
+
+        if command -v nmcli >/dev/null 2>&1; then
+            # Check if already connected to the target SSID
+            CURRENT_SSID="$(nmcli -t -f active,ssid dev wifi | grep '^yes:' | cut -d: -f2 || true)"
+            if [[ "$CURRENT_SSID" == "$WIFI_SSID" ]]; then
+                ok "Already connected to Wi-Fi: ${WIFI_SSID}"
+            else
+                # Check if the connection profile already exists
+                if nmcli connection show | grep -q "$WIFI_SSID"; then
+                    log "Connection profile for '${WIFI_SSID}' exists — activating"
+                    nmcli connection up id "$WIFI_SSID" 2>&1 || warn "Could not activate connection '${WIFI_SSID}'."
+                else
+                    log "Connecting to Wi-Fi: ${WIFI_SSID}"
+                    nmcli device wifi connect "$WIFI_SSID" password "$WIFI_PASSWORD" 2>&1 || warn "Could not connect to Wi-Fi '${WIFI_SSID}'."
+                fi
+
+                # Wait a moment and verify connection
+                sleep 3
+                NEW_SSID="$(nmcli -t -f active,ssid dev wifi | grep '^yes:' | cut -d: -f2 || true)"
+                if [[ "$NEW_SSID" == "$WIFI_SSID" ]]; then
+                    ok "Connected to Wi-Fi: ${WIFI_SSID}"
+                else
+                    warn "Wi-Fi connection to '${WIFI_SSID}' may have failed — continuing anyway."
+                fi
+            fi
+        else
+            warn "nmcli not available — skipping Wi-Fi setup."
+        fi
+    else
+        dry "Connect to Wi-Fi: ${WIFI_SSID} (password hidden)"
+    fi
+fi
+
+# ============================================================
 # SHARED PRE-SETUP
 # ============================================================
 
@@ -305,7 +371,7 @@ if [[ -z "$REDIS_PASS" ]]; then
 fi
 
 # ============================================================
-# 1. BASE SYSTEM UPDATE
+# 2. BASE SYSTEM UPDATE
 # ============================================================
 log "Updating system packages"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -329,7 +395,7 @@ else
 fi
 
 # ============================================================
-# 2. CREATE DEPLOY USER
+# 3. CREATE DEPLOY USER
 # ============================================================
 log "Setting up deploy user"
 DEPLOY_USER="deploy"
@@ -358,7 +424,7 @@ else
 fi
 
 # ============================================================
-# 3. NGINX + MARIADB
+# 4. NGINX + MARIADB
 # ============================================================
 log "Installing Nginx"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -412,7 +478,7 @@ fi
 log "Database password set for ${DB_USER}@localhost and ${DB_USER}@127.0.0.1"
 
 # ============================================================
-# 4. REDIS
+# 5. REDIS
 # ============================================================
 log "Installing Redis"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -439,7 +505,7 @@ else
 fi
 
 # ============================================================
-# 5. PHP + COMPOSER
+# 6. PHP + COMPOSER
 # ============================================================
 if [[ "$DRY_RUN" -eq 0 ]]; then
     if ! command -v php >/dev/null 2>&1; then
@@ -528,7 +594,7 @@ else
 fi
 
 # ============================================================
-# 6. PROJECT FILES — clone the 'ahpc' branch
+# 7. PROJECT FILES — clone the 'ahpc' branch
 # ============================================================
 log "Placing project files"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -586,7 +652,7 @@ else
 fi
 
 # ============================================================
-# 7. ENVIRONMENT CONFIGURATION — write .env
+# 8. ENVIRONMENT CONFIGURATION — write .env
 # ============================================================
 log "Configuring .env"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -693,7 +759,7 @@ else
 fi
 
 # ============================================================
-# 8. COMPOSER + NPM DEPENDENCIES
+# 9. COMPOSER + NPM DEPENDENCIES
 # ============================================================
 log "Installing dependencies"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -720,7 +786,7 @@ else
 fi
 
 # ============================================================
-# 9. LARAVEL SETUP — key, migrate, storage link, caches
+# 10. LARAVEL SETUP — key, migrate, storage link, caches
 # ============================================================
 log "Running Laravel setup commands"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -755,7 +821,7 @@ else
 fi
 
 # ============================================================
-# 10. DEFAULT ADMIN USER PROVISIONING
+# 11. DEFAULT ADMIN USER PROVISIONING
 # ============================================================
 log "Provisioning default admin user"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -782,7 +848,7 @@ else
 fi
 
 # ============================================================
-# 11. NGINX SERVER BLOCK
+# 12. NGINX SERVER BLOCK
 # ============================================================
 log "Writing Nginx config for ${DOMAIN}"
 NGINX_SITE="/etc/nginx/sites-available/${DOMAIN}"
@@ -839,7 +905,7 @@ else
 fi
 
 # ============================================================
-# 12. SUPERVISOR — QUEUE WORKER
+# 13. SUPERVISOR — QUEUE WORKER
 # ============================================================
 log "Writing Supervisor config for queue worker"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/${APP_NAME}-worker.conf"
@@ -870,7 +936,7 @@ else
 fi
 
 # ============================================================
-# 13. LOG ROTATION
+# 14. LOG ROTATION
 # ============================================================
 log "Setting up log rotation"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -945,7 +1011,7 @@ else
 fi
 
 # ============================================================
-# 14. LARAVEL SCHEDULER — cron entry
+# 15. LARAVEL SCHEDULER — cron entry
 # ============================================================
 log "Setting up Laravel scheduler"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -963,7 +1029,7 @@ else
 fi
 
 # ============================================================
-# 15. SSL / HTTPS — Certbot + Let's Encrypt
+# 16. SSL / HTTPS — Certbot + Let's Encrypt
 # ============================================================
 SSL_ENABLED=0
 log "Setting up SSL with Certbot"
@@ -1020,7 +1086,7 @@ else
 fi
 
 # ============================================================
-# 16. FIREWALL
+# 17. FIREWALL
 # ============================================================
 log "Configuring UFW firewall"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -1038,7 +1104,7 @@ else
 fi
 
 # ============================================================
-# 17. CENTER-ROLE POST-SETUP (auto-sync cron, central connectivity)
+# 18. CENTER-ROLE POST-SETUP (auto-sync cron, central connectivity)
 # ============================================================
 if [[ "$APP_ROLE" == "center" ]]; then
 
@@ -1110,7 +1176,7 @@ if [[ "$APP_ROLE" == "center" ]]; then
 fi
 
 # ============================================================
-# 18. SUMMARY & CREDENTIALS FILE
+# 19. SUMMARY & CREDENTIALS FILE
 # ============================================================
 log "Writing credentials to ${CREDS_FILE} (root-only readable)"
 if [[ "$DRY_RUN" -eq 0 ]]; then
