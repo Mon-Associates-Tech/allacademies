@@ -506,32 +506,24 @@ fi
 # 6. PHP + COMPOSER
 # ============================================================
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    MIN_PHP="8.4"
-    if command -v php >/dev/null 2>&1; then
-        PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
+    if ! command -v php >/dev/null 2>&1; then
+        _log "PHP not found — installing default PHP packages"
+        apt-get install -y php-cli php-fpm
     fi
-    # Ensure PHP >= 8.4 (required by app — mb_split is built-in from 8.4+)
-    if [[ -z "${PHP_VER:-}" ]] || [[ "$(printf '%s\n' "$MIN_PHP" "$PHP_VER" | sort -V | head -1)" != "$MIN_PHP" ]]; then
-        _log "PHP ${PHP_VER:-not found} is below ${MIN_PHP} — installing PHP ${MIN_PHP}"
-        add-apt-repository -y ppa:ondrej/php 2>/dev/null || true
-        apt-get update -y
-        apt-get install -y "php${MIN_PHP}-cli" "php${MIN_PHP}-fpm"
-        update-alternatives --set php "/usr/bin/php${MIN_PHP}" 2>/dev/null || true
-        PHP_VER="$MIN_PHP"
-    fi
+    PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
     _log "Using PHP ${PHP_VER}"
 
     PHP_FPM_SERVICE="php${PHP_VER}-fpm"
     PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
 
-    _log "Installing required PHP extensions for PHP ${PHP_VER}"
+    _log "Installing required PHP extensions"
     apt-get install -y \
+        php-mbstring php-curl php-fpm php-mysql php-redis \
         "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-common" \
-        "php${PHP_VER}-mysql" "php${PHP_VER}-redis" "php${PHP_VER}-mbstring" \
-        "php${PHP_VER}-xml" "php${PHP_VER}-curl" "php${PHP_VER}-zip" \
+        "php${PHP_VER}-redis" "php${PHP_VER}-xml" "php${PHP_VER}-zip" \
         "php${PHP_VER}-gd" "php${PHP_VER}-bcmath" "php${PHP_VER}-intl" \
         "php${PHP_VER}-sodium" \
-        || warn "Some PHP packages may not exist under these names for PHP ${PHP_VER} — verify with 'php -m'."
+        || warn "Some PHP packages may not exist — verify with 'php -m'."
 
     systemctl enable "$PHP_FPM_SERVICE" || warn "Could not enable ${PHP_FPM_SERVICE}."
     systemctl restart "$PHP_FPM_SERVICE" || true
@@ -773,14 +765,20 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         && ok "composer install done" || warn "composer install failed — continuing."
 
     if [[ -f "package.json" ]]; then
+        NPM_CACHE="/tmp/${APP_NAME}-npm-cache"
+        mkdir -p "$NPM_CACHE" "${NEW_PROJECT_DIR}/node_modules"
+        chown -R "www-data:www-data" "$NPM_CACHE" "${NEW_PROJECT_DIR}/node_modules"
+
         _log "Running npm install"
-        sudo -u www-data npm ci --no-audit --no-fund 2>&1 | tail -3 \
-            || sudo -u www-data npm install --no-audit --no-fund 2>&1 | tail -3 \
+        sudo -u www-data npm ci --no-audit --no-fund --cache "$NPM_CACHE" 2>&1 | tail -3 \
+            || sudo -u www-data npm install --no-audit --no-fund --cache "$NPM_CACHE" 2>&1 | tail -3 \
             || warn "npm install failed — continuing."
 
         _log "Running npm run build"
         sudo -u www-data npm run build 2>&1 | tail -5 \
             && ok "npm run build done" || warn "npm run build failed — continuing."
+
+        rm -rf "$NPM_CACHE"
     else
         warn "package.json not found — skipping npm install/build"
     fi
