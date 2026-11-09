@@ -605,18 +605,24 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     _git() { sudo -u www-data git "$@" 2>/dev/null || git "$@"; }
 
     if [[ -d "$NEW_PROJECT_DIR" ]]; then
-        warn "${NEW_PROJECT_DIR} already exists — not cloning again."
+        _log "${NEW_PROJECT_DIR} already exists — fetching latest changes."
         if [[ -d "${NEW_PROJECT_DIR}/.git" ]]; then
             CURRENT_BRANCH="$(_git -C "$NEW_PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
             if [[ -z "$CURRENT_BRANCH" || "$CURRENT_BRANCH" == "HEAD" ]]; then
-                _log "Detached HEAD or unknown branch — checking out '${REPO_BRANCH}'"
+                _log "Detached HEAD — checking out '${REPO_BRANCH}'"
                 _git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" || true
                 _git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" || true
+                _git -C "$NEW_PROJECT_DIR" pull origin "$REPO_BRANCH" || true
             elif [[ "$CURRENT_BRANCH" != "$REPO_BRANCH" ]]; then
-                warn "Existing checkout is on branch '${CURRENT_BRANCH}', not '${REPO_BRANCH}' — switching."
+                _log "Switching from '${CURRENT_BRANCH}' to '${REPO_BRANCH}'"
                 _git -C "$NEW_PROJECT_DIR" fetch origin "$REPO_BRANCH" || true
                 _git -C "$NEW_PROJECT_DIR" checkout "$REPO_BRANCH" || \
                     warn "Could not switch to branch '${REPO_BRANCH}' — continuing with current branch."
+                _git -C "$NEW_PROJECT_DIR" pull origin "$REPO_BRANCH" || true
+            else
+                _log "On branch '${REPO_BRANCH}' — pulling latest changes"
+                _git -C "$NEW_PROJECT_DIR" pull origin "$REPO_BRANCH" || \
+                    warn "git pull failed — continuing with existing code."
             fi
         fi
     else
@@ -776,16 +782,16 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
     _log "Running composer install"
-    composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5
+    sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5
     ok "composer install done"
 
     if [[ -f "package.json" ]]; then
         _log "Running npm install"
-        npm ci --no-audit --no-fund 2>&1 | tail -3 || npm install --no-audit --no-fund 2>&1 | tail -3
+        sudo -u www-data npm ci --no-audit --no-fund 2>&1 | tail -3 || sudo -u www-data npm install --no-audit --no-fund 2>&1 | tail -3
         ok "npm install done"
 
         _log "Running npm run build"
-        npm run build 2>&1 | tail -5
+        sudo -u www-data npm run build 2>&1 | tail -5
         ok "npm run build done"
     else
         warn "package.json not found — skipping npm install/build"
