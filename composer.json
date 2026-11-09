@@ -12,7 +12,7 @@
         "ext-pdo": "*",
         "ext-zip": "*",
         "ext-zlib": "*",
-        "ext-libsodium": "*",
+        "ext-sodium": "*",
         "akaunting/laravel-firewall": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "bigbluebutton/bigbluebutton-api-php": "^2.3",

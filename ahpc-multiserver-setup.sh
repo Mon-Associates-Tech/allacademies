@@ -508,12 +508,20 @@ fi
 # 6. PHP + COMPOSER
 # ============================================================
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    if ! command -v php >/dev/null 2>&1; then
-        warn "PHP not found — installing Ubuntu's default PHP packages."
-        apt-get install -y php-cli php-fpm
+    MIN_PHP="8.4"
+    if command -v php >/dev/null 2>&1; then
+        PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
     fi
-    PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
-    _log "Detected PHP ${PHP_VER}"
+    # Ensure PHP >= 8.4 (required by app — mb_split is built-in from 8.4+)
+    if [[ -z "${PHP_VER:-}" ]] || [[ "$(printf '%s\n' "$MIN_PHP" "$PHP_VER" | sort -V | head -1)" != "$MIN_PHP" ]]; then
+        _log "PHP ${PHP_VER:-not found} is below ${MIN_PHP} — installing PHP ${MIN_PHP}"
+        add-apt-repository -y ppa:ondrej/php 2>/dev/null || true
+        apt-get update -y
+        apt-get install -y "php${MIN_PHP}-cli" "php${MIN_PHP}-fpm"
+        update-alternatives --set php "/usr/bin/php${MIN_PHP}" 2>/dev/null || true
+        PHP_VER="$MIN_PHP"
+    fi
+    _log "Using PHP ${PHP_VER}"
 
     PHP_FPM_SERVICE="php${PHP_VER}-fpm"
     PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
@@ -782,7 +790,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
     _log "Running composer install"
-    sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5
+    sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction 2>&1 | tail -5
     ok "composer install done"
 
     if [[ -f "package.json" ]]; then
