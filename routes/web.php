@@ -447,43 +447,43 @@ Route::get('/volta/{any?}', function () {
 */
 
 // Authentication Routes (login, register, password, 2FA, email verification)
-include_once 'auth.php';
+include_once __DIR__.'/auth.php';
 
 // Payment Routes (public payments, fee payments, subscriptions, callbacks)
-include_once 'payment.php';
+include_once __DIR__.'/payment.php';
 
 // Book Routes (books, reading progress, user books, learning quiz)
-include_once 'book.php';
+include_once __DIR__.'/book.php';
 
 // Token Routes (token subscriptions, allocations, messenger transactions)
-include_once 'token.php';
+include_once __DIR__.'/token.php';
 
 // School Routes (school management, fee setup, settings, onboarding)
-include_once 'school.php';
+include_once __DIR__.'/school.php';
 
 // Role-based Route Files
-include_once 'student.php';
-include_once 'teacher.php';
-include_once 'author.php';
-include_once 'librarian.php';
-include_once 'parent.php';
-include_once 'administrator.php';
-include_once 'accountant.php';
-include_once 'academic.php';
-include_once 'guest.php';
-include_once 'sponsorship.php';
-include_once 'misc.php';
-include_once 'lms.php';
+include_once __DIR__.'/student.php';
+include_once __DIR__.'/teacher.php';
+include_once __DIR__.'/author.php';
+include_once __DIR__.'/librarian.php';
+include_once __DIR__.'/parent.php';
+include_once __DIR__.'/administrator.php';
+include_once __DIR__.'/accountant.php';
+include_once __DIR__.'/academic.php';
+include_once __DIR__.'/guest.php';
+include_once __DIR__.'/sponsorship.php';
+include_once __DIR__.'/misc.php';
+include_once __DIR__.'/lms.php';
 
 // General Exams Routes (code-based assignments for teachers and participants)
-include_once 'general-exams.php';
-include_once 'examinations-hub.php';
-include_once 'examination-hub-participant-groups.php';
+include_once __DIR__.'/general-exams.php';
+include_once __DIR__.'/examinations-hub.php';
+include_once __DIR__.'/examination-hub-participant-groups.php';
 
 // Debug Routes (testing and monitoring - development only)
-include_once 'debug.php';
+include_once __DIR__.'/debug.php';
 
-include_once 'mock-exams.php';
+include_once __DIR__.'/mock-exams.php';
 
 // Log Viewer (owner only)
 Route::middleware(['auth', 'verified', 'role:owner'])->prefix('system')->name('system.')->group(function () {
