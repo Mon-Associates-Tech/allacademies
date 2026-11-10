@@ -807,7 +807,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     set_env "$ENV_FILE" APP_URL   "http://${DOMAIN}"
     set_env "$ENV_FILE" APP_ENV   "production"
     set_env "$ENV_FILE" APP_DEBUG "false"
-    set_env "$ENV_FILE" APP_NAME  '"All Academies"'
+    set_env "$ENV_FILE" APP_NAME  '"AHPC"'
     # A cookie Domain of ahpc.internal is rejected by browsers when the site is opened via the IP address,
     # which breaks login/CSRF. null = cookie is scoped to whatever host was used.
     set_env "$ENV_FILE" SESSION_DOMAIN "null"
