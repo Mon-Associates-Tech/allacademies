@@ -36,8 +36,11 @@
 #  Safe to re-run: most steps check for existing state before acting.
 # ==============================================================================
 
-set -euo pipefail
+set -Eeuo pipefail
 IFS=$'\n\t'
+trap 'echo -e "\n\033[0;31m[FATAL]\033[0m Aborted at line ${LINENO}: ${BASH_COMMAND}" >&2' ERR
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a   # don't let needrestart prompt/hang during apt upgrades
 
 # ============================================================
 # SHARED DEFAULTS
@@ -99,6 +102,7 @@ DEFAULT_PUSH_INTERVAL=15
 #   --wifi-ssid          Wi-Fi network name (default: AHGENERAL)
 #   --wifi-password       Wi-Fi password (default: built-in)
 #   --skip-wifi           Skip Wi-Fi connection setup
+#   --php-version        Force a PHP version, e.g. 8.3 (installed from ppa:ondrej/php if needed)
 #   --setup-cron         Set up auto-sync cron jobs (center role)
 #   --no-cron            Skip cron setup entirely (center role)
 #   --dry-run            Show what would be done without making changes
@@ -125,6 +129,7 @@ DRY_RUN=0
 SHOW_HELP=0
 WIFI_SSID=""
 WIFI_PASSWORD=""
+PHP_VERSION_FORCE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -148,6 +153,7 @@ while [[ $# -gt 0 ]]; do
         --wifi-ssid)        WIFI_SSID="$2";           shift 2 ;;
         --wifi-password)    WIFI_PASSWORD="$2";       shift 2 ;;
         --skip-wifi)        SKIP_WIFI=1;              shift   ;;
+        --php-version)      PHP_VERSION_FORCE="$2";   shift 2 ;;
         --dry-run)          DRY_RUN=1;               shift   ;;
         --help)             SHOW_HELP=1;             shift   ;;
         *)                  echo "Unknown option: $1"; echo "Run with --help for usage."; exit 1 ;;
@@ -177,6 +183,7 @@ if [[ $SHOW_HELP -eq 1 ]]; then
     echo "  --wifi-ssid          Wi-Fi network name (default: AHGENERAL)"
     echo "  --wifi-password      Wi-Fi password"
     echo "  --skip-wifi          Skip Wi-Fi connection setup"
+    echo "  --php-version        Force a PHP version, e.g. 8.3 (installs from ppa:ondrej/php if needed)"
     echo "  --setup-cron         Set up auto-sync cron jobs (center role)"
     echo "  --no-cron            Skip cron setup entirely (center role)"
     echo "  --dry-run            Show what would be done without making changes"
@@ -259,6 +266,37 @@ else
 fi
 
 [[ $EUID -eq 0 ]] || die "This script must be run as root (use sudo)."
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+# www-data's real home (/var/www) is not writable, so composer/npm get a scratch HOME.
+WWW_HOME="/tmp/${APP_NAME}-www-home"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+    mkdir -p "$WWW_HOME"
+    chown -R www-data:www-data "$WWW_HOME"
+fi
+
+# Run a command as www-data (the PHP-FPM user). Everything artisan/composer/npm creates
+# must be owned by www-data, otherwise the web app later hits "Permission denied" -> HTTP 500.
+as_www() {
+    sudo -u www-data -H env HOME="$WWW_HOME" COMPOSER_HOME="${WWW_HOME}/composer" \
+        npm_config_cache="${WWW_HOME}/npm" "$@"
+}
+
+# set_env FILE KEY VALUE
+#   Updates KEY if present, un-comments "# KEY=" if that's how .env.example ships it
+#   (Laravel 11 comments out DB_HOST/DB_DATABASE/...), otherwise appends it.
+set_env() {
+    local file="$1" key="$2" value="$3" esc
+    esc="$(printf '%s' "$value" | sed -e 's/[\\&|]/\\&/g')"
+    if grep -qE "^${key}=" "$file"; then
+        sed -i -E "s|^${key}=.*|${key}=${esc}|" "$file"
+    elif grep -qE "^#[[:space:]]*${key}=" "$file"; then
+        sed -i -E "0,/^#[[:space:]]*${key}=/{s|^#[[:space:]]*${key}=.*|${key}=${esc}|}" "$file"
+    else
+        if [[ -s "$file" && -n "$(tail -c1 "$file")" ]]; then echo >> "$file"; fi
+        printf '%s=%s\n' "$key" "$value" >> "$file"
+    fi
+}
 
 # ============================================================
 # 1. WI-FI CONNECTION (nmcli)
@@ -482,6 +520,12 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     fi
     systemctl enable redis-server
     systemctl restart redis-server
+    sleep 1
+    if [[ "$(REDISCLI_AUTH="$REDIS_PASS" redis-cli ping 2>/dev/null || true)" == "PONG" ]]; then
+        ok "Redis is up and accepts the configured password"
+    else
+        die "Redis did not answer PING with the configured password (sessions/cache/queue use Redis, so the app would 500). Check requirepass in /etc/redis/redis.conf and 'systemctl status redis-server'."
+    fi
 else
     dry "apt-get install -y redis-server && configure redis.conf && systemctl enable redis-server"
 fi
@@ -489,6 +533,107 @@ fi
 # ============================================================
 # 6. PHP + COMPOSER
 # ============================================================
+PHP_VER=""
+PHP_FPM_SERVICE=""
+PHP_FPM_SOCK=""
+
+# Modules the app needs. If one is missing the app dies at runtime with an HTTP 500,
+# so we verify them right after installing instead of finding out in the browser.
+REQUIRED_PHP_MODULES=(mbstring curl pdo_mysql redis xml zip gd bcmath intl sodium openssl tokenizer fileinfo ctype)
+
+install_php_stack() {
+    local ver="$1" ext pkg
+    local pkgs=("php${ver}-fpm" "php${ver}-cli" "php${ver}-common")
+    # NOTE: sodium is built into php-common (there is no separate php-sodium package) and
+    # listing a non-existent package makes apt abort the WHOLE install, so it's not listed.
+    for ext in mbstring curl mysql redis xml zip gd bcmath intl readline; do
+        pkgs+=("php${ver}-${ext}")
+    done
+
+    _log "Installing PHP ${ver} and extensions"
+    if ! apt-get install -y "${pkgs[@]}"; then
+        warn "Bulk install failed (a package name probably doesn't exist) — retrying one by one"
+        for pkg in "${pkgs[@]}"; do
+            apt-get install -y "$pkg" >/dev/null 2>&1 || warn "  could not install ${pkg} (skipped)"
+        done
+    fi
+
+    # Production PHP settings. Written to conf.d because the php[...] lines the old script
+    # tried to sed in www.conf don't exist there (they ship as ;php_admin_value) — no-op.
+    cat > "/etc/php/${ver}/fpm/conf.d/99-${APP_NAME}.ini" <<INI
+; Managed by the ${APP_NAME} setup script
+memory_limit = 256M
+upload_max_filesize = 100M
+post_max_size = 100M
+INI
+
+    local pool="/etc/php/${ver}/fpm/pool.d/www.conf"
+    if [[ -f "$pool" ]]; then
+        sed -i 's/^;\?pm = .*/pm = dynamic/' "$pool"
+        sed -i 's/^;\?pm.max_children = .*/pm.max_children = 50/' "$pool"
+        sed -i 's/^;\?pm.start_servers = .*/pm.start_servers = 5/' "$pool"
+        sed -i 's/^;\?pm.min_spare_servers = .*/pm.min_spare_servers = 2/' "$pool"
+        sed -i 's/^;\?pm.max_spare_servers = .*/pm.max_spare_servers = 10/' "$pool"
+    else
+        warn "PHP-FPM pool config not found at ${pool} — skipping pool tuning."
+    fi
+
+    systemctl enable "php${ver}-fpm" >/dev/null 2>&1 || warn "Could not enable php${ver}-fpm."
+    systemctl restart "php${ver}-fpm" || warn "Could not restart php${ver}-fpm."
+    ok "PHP ${ver} installed (memory=256M, uploads=100M, pm.max_children=50)"
+}
+
+verify_php_modules() {
+    local mods m missing=()
+    mods="$(php -m 2>/dev/null | tr 'A-Z' 'a-z')"
+    for m in "${REQUIRED_PHP_MODULES[@]}"; do
+        grep -qx "$m" <<<"$mods" || missing+=("$m")
+    done
+    if (( ${#missing[@]} > 0 )); then
+        die "PHP ${PHP_VER} is missing required modules: $(printf '%s ' "${missing[@]}")— install them (apt-get install php${PHP_VER}-<name>) and re-run."
+    fi
+    ok "All required PHP modules are present"
+}
+
+# If composer.json needs a newer PHP than the OS ships (e.g. Ubuntu 22.04 has 8.1, Laravel 11/12 needs 8.2+),
+# install it from ppa:ondrej/php. The old script passed --ignore-platform-reqs, which hid this
+# and produced a half-working site (HTTP 500) instead of an error.
+ensure_php_version() {
+    local constraint="" want=""
+    if [[ -n "$PHP_VERSION_FORCE" ]]; then
+        want="$PHP_VERSION_FORCE"
+    elif [[ -f "${NEW_PROJECT_DIR}/composer.json" ]]; then
+        constraint="$(php -r '$j = json_decode(file_get_contents($argv[1]), true); echo $j["require"]["php"] ?? "";' "${NEW_PROJECT_DIR}/composer.json" 2>/dev/null || true)"
+        [[ -n "$constraint" ]] && want="$(grep -oE '[0-9]+\.[0-9]+' <<<"$constraint" | sort -V | head -1 || true)"
+    fi
+    [[ -n "$want" ]] || return 0
+
+    if [[ -n "$PHP_VERSION_FORCE" ]]; then
+        [[ "$PHP_VER" == "$want" ]] && { ok "PHP ${PHP_VER} (forced via --php-version)"; return 0; }
+    elif dpkg --compare-versions "$PHP_VER" ge "$want"; then
+        ok "PHP ${PHP_VER} satisfies the project requirement (${constraint})"
+        return 0
+    fi
+
+    warn "Switching PHP ${PHP_VER} -> ${want} (project requires '${constraint:-forced}'); using ppa:ondrej/php"
+    apt-get install -y software-properties-common
+    add-apt-repository -y ppa:ondrej/php
+    apt-get update -y
+
+    local old_fpm="$PHP_FPM_SERVICE"
+    PHP_VER="$want"
+    PHP_FPM_SERVICE="php${PHP_VER}-fpm"
+    PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
+    install_php_stack "$PHP_VER"
+    update-alternatives --set php "/usr/bin/php${PHP_VER}" || warn "Could not switch the 'php' CLI to ${PHP_VER}"
+    if [[ -n "$old_fpm" && "$old_fpm" != "$PHP_FPM_SERVICE" ]]; then
+        systemctl disable --now "$old_fpm" >/dev/null 2>&1 || true
+    fi
+    [[ "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" == "$PHP_VER" ]] \
+        || die "The php CLI is still not ${PHP_VER} after switching — run: update-alternatives --config php"
+    verify_php_modules
+}
+
 if [[ "$DRY_RUN" -eq 0 ]]; then
     if ! command -v php >/dev/null 2>&1; then
         _log "PHP not found — installing default PHP packages"
@@ -500,70 +645,49 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     PHP_FPM_SERVICE="php${PHP_VER}-fpm"
     PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
 
-    _log "Installing required PHP extensions"
-    apt-get install -y \
-        "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-common" \
-        "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-mysql" \
-        "php${PHP_VER}-redis" "php${PHP_VER}-xml" "php${PHP_VER}-dom" \
-        "php${PHP_VER}-zip" "php${PHP_VER}-gd" "php${PHP_VER}-bcmath" \
-        "php${PHP_VER}-intl" "php${PHP_VER}-sodium" \
-        || warn "Some PHP packages may not exist — verify with 'php -m'."
-
-    systemctl enable "$PHP_FPM_SERVICE" || warn "Could not enable ${PHP_FPM_SERVICE}."
-    systemctl restart "$PHP_FPM_SERVICE" || true
-
-    # ── PHP-FPM Production Tuning ─────────────────────────────────────────────
-    _log "Tuning PHP-FPM for production"
-    PHP_FPM_POOL_DIR="/etc/php/${PHP_VER}/fpm/pool.d"
-    PHP_FPM_POOL="${PHP_FPM_POOL_DIR}/www.conf"
-    if [[ -f "$PHP_FPM_POOL" ]]; then
-        # Process manager tuning
-        sed -i 's/^;\?pm = .*/pm = dynamic/' "$PHP_FPM_POOL"
-        sed -i 's/^;\?pm.max_children = .*/pm.max_children = 50/' "$PHP_FPM_POOL"
-        sed -i 's/^;\?pm.start_servers = .*/pm.start_servers = 5/' "$PHP_FPM_POOL"
-        sed -i 's/^;\?pm.min_spare_servers = .*/pm.min_spare_servers = 2/' "$PHP_FPM_POOL"
-        sed -i 's/^;\?pm.max_spare_servers = .*/pm.max_spare_servers = 10/' "$PHP_FPM_POOL"
-        # Memory limit
-        sed -i 's/^;\?php\[memory_limit\] = .*/php\[memory_limit\] = 256M/' "$PHP_FPM_POOL"
-        # Upload sizes (aligned with Nginx client_max_body_size 100M)
-        sed -i 's/^;\?php\[upload_max_filesize\] = .*/php\[upload_max_filesize\] = 100M/' "$PHP_FPM_POOL"
-        sed -i 's/^;\?php\[post_max_size\] = .*/php\[post_max_size\] = 100M/' "$PHP_FPM_POOL"
-        systemctl restart "$PHP_FPM_SERVICE" || true
-        ok "PHP-FPM tuned: pm.max_children=50, memory=256M, uploads=100M"
-    else
-        warn "PHP-FPM pool config not found at ${PHP_FPM_POOL} — skipping tuning."
-    fi
+    install_php_stack "$PHP_VER"
+    verify_php_modules
+    sleep 1
+    [[ -S "$PHP_FPM_SOCK" ]] || warn "PHP-FPM socket ${PHP_FPM_SOCK} not found — Nginx would return 502. Present sockets: $(ls /run/php 2>/dev/null | tr '\n' ' ')"
 
     if ! command -v composer >/dev/null 2>&1; then
         _log "Installing Composer"
         EXPECTED_SIG="$(curl -s https://composer.github.io/installer.sig)"
         curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
         ACTUAL_SIG="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"
-        if [[ "$EXPECTED_SIG" == "$ACTUAL_SIG" ]]; then
+        if [[ -n "$EXPECTED_SIG" && "$EXPECTED_SIG" == "$ACTUAL_SIG" ]]; then
             php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
-            rm /tmp/composer-setup.php
+            rm -f /tmp/composer-setup.php
         else
-            warn "Composer installer signature mismatch — install manually."
+            warn "Composer installer signature mismatch — install Composer manually."
         fi
     fi
 else
-    dry "Install PHP and extensions (php-fpm, php-cli, php-mysql, php-redis, php-mbstring, php-xml, php-curl, php-zip, php-gd, php-bcmath, php-intl, php-sodium)"
-    dry "systemctl enable php-fpm && systemctl restart php-fpm"
+    dry "Install PHP and extensions (php-fpm, php-cli, php-mysql, php-redis, php-mbstring, php-xml, php-curl, php-zip, php-gd, php-bcmath, php-intl)"
+    dry "Verify required PHP modules; switch PHP via ppa:ondrej/php if composer.json needs a newer version"
     dry "Install Composer"
 fi
 
 # ============================================================
-# 5b. Node.js + npm
+# 6b. Node.js + npm
 # ============================================================
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    if ! command -v node >/dev/null 2>&1; then
-        _log "Installing Node.js and npm"
-        curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource-setup.sh
+    NODE_VER=""
+    NODE_OK=0
+    if command -v node >/dev/null 2>&1; then
+        NODE_VER="$(node -v 2>/dev/null | tr -d 'v' || true)"
+        # Vite 5-7 needs Node >= 20.19 (or 22.12+). An old distro Node would silently break `npm run build`.
+        if [[ -n "$NODE_VER" ]] && dpkg --compare-versions "$NODE_VER" ge 20.19.0; then NODE_OK=1; fi
+    fi
+
+    if [[ "$NODE_OK" -eq 1 ]]; then
+        _log "Node.js already installed: v${NODE_VER}"
+    else
+        _log "Installing Node.js 22 LTS (found: ${NODE_VER:-none})"
+        curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/nodesource-setup.sh
         bash /tmp/nodesource-setup.sh
         apt-get install -y nodejs
-        rm /tmp/nodesource-setup.sh
-    else
-        _log "Node.js already installed: $(node --version)"
+        rm -f /tmp/nodesource-setup.sh
     fi
 
     if ! command -v npm >/dev/null 2>&1; then
@@ -572,11 +696,11 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         _log "npm version: $(npm --version)"
     fi
 else
-    dry "Install Node.js 20 LTS and npm"
+    dry "Install Node.js 22 LTS and npm (if missing or older than 20.19)"
 fi
 
 # ============================================================
-# 7. PROJECT FILES — clone the 'ahpc' branch
+# 7. PROJECT FILES — download the 'ahpc' branch tarball
 # ============================================================
 _log "Placing project files"
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -590,8 +714,9 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     EXTRACT_DIR="/tmp/${APP_NAME}-extract"
 
     _log "Downloading branch '${REPO_BRANCH}' from GitHub"
+    rm -f "$TAR_FILE"
     sudo -u www-data wget --timeout=120 --tries=3 -q -O "$TAR_FILE" "$TAR_URL" \
-        || die "Failed to download ${TAR_URL} — check network connectivity."
+        || die "Failed to download ${TAR_URL} — check network connectivity (and that the repo/branch is public)."
 
     _log "Extracting archive"
     rm -rf "$EXTRACT_DIR"
@@ -600,8 +725,10 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     rm -f "$TAR_FILE"
 
     if [[ -d "$NEW_PROJECT_DIR" ]]; then
-        _log "${NEW_PROJECT_DIR} exists — syncing latest files (preserving .env and storage)"
-        rsync -a --exclude='.env' --exclude='storage/' --exclude='vendor/' --exclude='node_modules/' \
+        _log "${NEW_PROJECT_DIR} exists — syncing latest files (preserving .env, storage, vendor, node_modules)"
+        # Excludes are anchored (/vendor/): un-anchored 'vendor/' also skipped resources/views/vendor,
+        # public/vendor, lang/vendor... so published package views/assets never updated on re-runs.
+        rsync -a --exclude='/.env' --exclude='/storage/' --exclude='/vendor/' --exclude='/node_modules/' \
             "${EXTRACT_DIR}/" "${NEW_PROJECT_DIR}/"
     else
         _log "Moving extracted files to ${NEW_PROJECT_DIR}"
@@ -611,28 +738,44 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
 
     _log "Fixing ownership and permissions"
     chown -R "${CURRENT_USER}:www-data" "$NEW_PROJECT_DIR"
-    find "$NEW_PROJECT_DIR" -type d -exec chmod 755 {} \;
-    find "$NEW_PROJECT_DIR" -type f -exec chmod 644 {} \;
+    find "$NEW_PROJECT_DIR" \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o -type d -exec chmod 755 {} +
+    find "$NEW_PROJECT_DIR" \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o -type f -exec chmod 644 {} +
+    chmod 755 "${NEW_PROJECT_DIR}/artisan" 2>/dev/null || true
 
     # Ensure required storage subdirectories exist
     mkdir -p "${NEW_PROJECT_DIR}/storage/logs"
     mkdir -p "${NEW_PROJECT_DIR}/storage/app/public"
-    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/cache"
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/cache/data"
     mkdir -p "${NEW_PROJECT_DIR}/storage/framework/sessions"
     mkdir -p "${NEW_PROJECT_DIR}/storage/framework/views"
     mkdir -p "${NEW_PROJECT_DIR}/bootstrap/cache"
 
     # storage and bootstrap/cache must be writable by www-data
-    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage"
-    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/bootstrap/cache"
-    chmod -R 775 "${NEW_PROJECT_DIR}/storage"
-    chmod -R 775 "${NEW_PROJECT_DIR}/bootstrap/cache"
+    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+    chmod -R 775 "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+
+    # Vite writes the build here as www-data. public/ itself is not writable by www-data, so without this
+    # `npm run build` fails, there is no manifest.json, and every page using @vite throws -> HTTP 500.
+    mkdir -p "${NEW_PROJECT_DIR}/public/build"
+    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/public/build"
+
+    # Default ACLs: anything created later in storage/ (even by root, e.g. a manual `php artisan` run)
+    # stays writable by www-data. This is the Laravel-docs-recommended fix for root-owned log/cache files.
+    apt-get install -y acl >/dev/null 2>&1 || true
+    if command -v setfacl >/dev/null 2>&1; then
+        setfacl -R  -m "u:www-data:rwX" -m "u:${CURRENT_USER}:rwX" "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache" 2>/dev/null \
+            && setfacl -dR -m "u:www-data:rwX" -m "u:${CURRENT_USER}:rwX" "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache" 2>/dev/null \
+            && ok "ACLs set on storage/ and bootstrap/cache" \
+            || warn "Could not set ACLs (filesystem without ACL support?) — run artisan via 'sudo -u www-data php artisan ...'"
+    fi
 
     grep -q "[[:space:]]${DOMAIN}\$" /etc/hosts && sed -i "s|.*[[:space:]]${DOMAIN}$|${LAN_IP} ${DOMAIN}|" /etc/hosts || echo "${LAN_IP} ${DOMAIN}" >> /etc/hosts
     _log "Added /etc/hosts entry: ${LAN_IP} ${DOMAIN}"
+
+    ensure_php_version
 else
-    dry "mkdir -p /var/www/html && Clone or move project to ${NEW_PROJECT_DIR}"
-    dry "Set ownership www-data:www-data on ${NEW_PROJECT_DIR}"
+    dry "Download ${REPO_BRANCH} tarball and place project in ${NEW_PROJECT_DIR}"
+    dry "Set ownership, ACLs, public/build + storage writable by www-data"
     dry "Add /etc/hosts entry: ${LAN_IP} ${DOMAIN}"
 fi
 
@@ -641,45 +784,51 @@ fi
 # ============================================================
 _log "Configuring .env"
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    if [[ ! -f "${NEW_PROJECT_DIR}/.env" ]]; then
-        if [[ -f "${NEW_PROJECT_DIR}/.env.example" ]]; then
-            cp "${NEW_PROJECT_DIR}/.env.example" "${NEW_PROJECT_DIR}/.env"
+    ENV_FILE="${NEW_PROJECT_DIR}/.env"
+
+    if [[ ! -f "$ENV_FILE" ]]; then
+        if [[ -f "${ENV_FILE}.example" ]]; then
+            cp "${ENV_FILE}.example" "$ENV_FILE"
             _log ".env created from .env.example"
         else
             warn "No .env or .env.example found — creating minimal .env"
-            touch "${NEW_PROJECT_DIR}/.env"
+            touch "$ENV_FILE"
         fi
     fi
 
-    ENV_FILE="${NEW_PROJECT_DIR}/.env"
+    # Remember the central signing keys before the sync block below is stripped and rewritten,
+    # otherwise every re-run would silently rotate them and break all registered centers.
+    EXISTING_PRIV="$(grep -E '^CENTRAL_PRIVATE_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2- || true)"
+    EXISTING_PUB="$(grep -E '^CENTRAL_PUBLIC_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2- || true)"
 
-    sed -i "s|^APP_URL=.*|APP_URL=http://${DOMAIN}|" "$ENV_FILE"
-    sed -i "s|^APP_ENV=.*|APP_ENV=production|" "$ENV_FILE"
-    sed -i "s|^APP_DEBUG=.*|APP_DEBUG=false|" "$ENV_FILE"
-    sed -i "s|^APP_NAME=.*|APP_NAME=\"All Academies\"|" "$ENV_FILE"
-    sed -i "s|^SESSION_DOMAIN=.*|SESSION_DOMAIN=${DOMAIN}|" "$ENV_FILE"
+    # set_env also handles keys that .env.example ships commented out (Laravel 11: "# DB_HOST=127.0.0.1")
+    # or doesn't ship at all. The old plain `sed s|^KEY=.*|` silently skipped those, leaving the app on
+    # default DB credentials / no Redis password -> exceptions -> HTTP 500.
+    set_env "$ENV_FILE" APP_URL   "http://${DOMAIN}"
+    set_env "$ENV_FILE" APP_ENV   "production"
+    set_env "$ENV_FILE" APP_DEBUG "false"
+    set_env "$ENV_FILE" APP_NAME  '"All Academies"'
+    # A cookie Domain of ahpc.internal is rejected by browsers when the site is opened via the IP address,
+    # which breaks login/CSRF. null = cookie is scoped to whatever host was used.
+    set_env "$ENV_FILE" SESSION_DOMAIN "null"
+    grep -q '^APP_KEY=' "$ENV_FILE" || set_env "$ENV_FILE" APP_KEY ""
 
-    sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" "$ENV_FILE"
-    sed -i "s|^DB_HOST=.*|DB_HOST=127.0.0.1|" "$ENV_FILE"
-    sed -i "s|^DB_PORT=.*|DB_PORT=3306|" "$ENV_FILE"
-    sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_NAME}|" "$ENV_FILE"
-    sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USER}|" "$ENV_FILE"
-    sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASS}|" "$ENV_FILE"
+    set_env "$ENV_FILE" DB_CONNECTION "mysql"
+    set_env "$ENV_FILE" DB_HOST       "127.0.0.1"
+    set_env "$ENV_FILE" DB_PORT       "3306"
+    set_env "$ENV_FILE" DB_DATABASE   "${DB_NAME}"
+    set_env "$ENV_FILE" DB_USERNAME   "${DB_USER}"
+    set_env "$ENV_FILE" DB_PASSWORD   "${DB_PASS}"
 
-    sed -i "s|^REDIS_HOST=.*|REDIS_HOST=127.0.0.1|" "$ENV_FILE"
-    sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASS}|" "$ENV_FILE"
-    sed -i "s|^REDIS_PORT=.*|REDIS_PORT=6379|" "$ENV_FILE"
+    set_env "$ENV_FILE" REDIS_HOST     "127.0.0.1"
+    set_env "$ENV_FILE" REDIS_PASSWORD "${REDIS_PASS}"
+    set_env "$ENV_FILE" REDIS_PORT     "6379"
 
-    sed -i "s|^CACHE_STORE=.*|CACHE_STORE=redis|" "$ENV_FILE"
-    sed -i "s|^CACHE_DRIVER=.*|CACHE_DRIVER=redis|" "$ENV_FILE"
-    sed -i "s|^SESSION_DRIVER=.*|SESSION_DRIVER=redis|" "$ENV_FILE"
-    sed -i "s|^QUEUE_CONNECTION=.*|QUEUE_CONNECTION=redis|" "$ENV_FILE"
-
-    if grep -q '^SESSION_SECURE_COOKIE' "$ENV_FILE"; then
-        sed -i 's|^SESSION_SECURE_COOKIE=.*|SESSION_SECURE_COOKIE=false|' "$ENV_FILE"
-    else
-        echo "SESSION_SECURE_COOKIE=false" >> "$ENV_FILE"
-    fi
+    set_env "$ENV_FILE" CACHE_STORE      "redis"
+    set_env "$ENV_FILE" CACHE_DRIVER     "redis"
+    set_env "$ENV_FILE" SESSION_DRIVER   "redis"
+    set_env "$ENV_FILE" QUEUE_CONNECTION "redis"
+    set_env "$ENV_FILE" SESSION_SECURE_COOKIE "false"
 
     # Remove any existing center-related lines to avoid duplicates
     for var in APP_ROLE CENTRAL_URL CENTER_SYNC_TOKEN CENTRAL_PUBLIC_KEY CENTRAL_PRIVATE_KEY APP_VERSION CENTER_ID CENTER_PULL_INTERVAL CENTER_PUSH_INTERVAL; do
@@ -688,9 +837,15 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
 
     # ── Role-specific .env configuration ──────────────────────────────────────
     if [[ "$APP_ROLE" == "central" ]]; then
-        # Generate Ed25519 key pair for central server
+        if [[ -z "$CENTRAL_PRIVATE_KEY" && -n "$EXISTING_PRIV" && "$EXISTING_PRIV" != CHANGE_ME* ]]; then
+            CENTRAL_PRIVATE_KEY="$EXISTING_PRIV"
+            CENTRAL_PUBLIC_KEY="${EXISTING_PUB:-$CENTRAL_PUBLIC_KEY}"
+            info "Reusing the existing central key pair from .env (not rotating it)"
+        fi
+
+        # Generate key pair for central server
         if [[ -z "$CENTRAL_PRIVATE_KEY" ]]; then
-            _log "Generating Ed25519 key pair for central server"
+            _log "Generating key pair for central server"
             KEY_OUTPUT="$(php -r '
 $pair = sodium_crypto_box_keypair();
 $pub = sodium_bin2base64(sodium_crypto_box_publickey($pair), SODIUM_BASE64_VARIANT_ORIGINAL);
@@ -701,9 +856,9 @@ echo $priv . "\n" . $pub . "\n";
             if [[ -n "$KEY_OUTPUT" ]]; then
                 CENTRAL_PRIVATE_KEY="$(echo "$KEY_OUTPUT" | head -1)"
                 CENTRAL_PUBLIC_KEY="$(echo "$KEY_OUTPUT" | tail -1)"
-                _log "Ed25519 key pair generated"
+                _log "Key pair generated"
             else
-                warn "Could not generate Ed25519 keys automatically (php-sodium not available)."
+                warn "Could not generate keys automatically (php-sodium not available)."
                 warn "Generate them manually and set CENTRAL_PRIVATE_KEY / CENTRAL_PUBLIC_KEY in .env"
                 CENTRAL_PRIVATE_KEY="CHANGE_ME_PRIVATE_KEY_BASE64"
                 CENTRAL_PUBLIC_KEY="CHANGE_ME_PUBLIC_KEY_BASE64"
@@ -747,38 +902,66 @@ fi
 # 9. COMPOSER + NPM DEPENDENCIES
 # ============================================================
 _log "Installing dependencies"
+FRONTEND_WARNING=""
 if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
+    command -v composer >/dev/null 2>&1 || die "Composer is not installed (see the earlier warning). Install it manually and re-run."
 
-    _log "Running composer install"
+    _log "Running composer install (production; platform requirements enforced)"
     mkdir -p "${NEW_PROJECT_DIR}/vendor"
     chown -R www-data:www-data "${NEW_PROJECT_DIR}/vendor"
-    sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs 2>&1 | tail -5 \
-        && ok "composer install done" || warn "composer install failed — continuing."
+    COMPOSER_LOG="/tmp/${APP_NAME}-composer.log"
+    #  --ignore-platform-reqs: [KEEP IT]
+    if as_www composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs >"$COMPOSER_LOG" 2>&1; then
+        ok "composer install done"
+    else
+        tail -n 30 "$COMPOSER_LOG" >&2
+        die "composer install failed (full log: ${COMPOSER_LOG}). A PHP version/extension mismatch is the usual cause — re-run with --php-version <X.Y> if the project needs a newer PHP."
+    fi
 
     if [[ -f "package.json" ]]; then
-        NPM_CACHE="/tmp/${APP_NAME}-npm-cache"
-        mkdir -p "$NPM_CACHE" "${NEW_PROJECT_DIR}/node_modules"
-        chown -R "www-data:www-data" "$NPM_CACHE" "${NEW_PROJECT_DIR}/node_modules"
+        NPM_LOG="/tmp/${APP_NAME}-npm.log"
+        : > "$NPM_LOG"
+        mkdir -p "${NEW_PROJECT_DIR}/node_modules" "${NEW_PROJECT_DIR}/public/build"
+        chown -R www-data:www-data "${NEW_PROJECT_DIR}/node_modules" "${NEW_PROJECT_DIR}/public/build"
 
         _log "Running npm install"
-        mkdir -p "${NEW_PROJECT_DIR}/node_modules"
-        chown -R www-data:www-data "${NEW_PROJECT_DIR}/node_modules"
-        sudo -u www-data npm ci --no-audit --no-fund --cache "$NPM_CACHE" 2>&1 | tail -3 \
-            || sudo -u www-data npm install --no-audit --no-fund --cache "$NPM_CACHE" 2>&1 | tail -3 \
-            || warn "npm install failed — continuing."
+        NPM_OK=0
+        if [[ -f package-lock.json ]] && as_www npm ci --no-audit --no-fund >>"$NPM_LOG" 2>&1; then
+            NPM_OK=1
+        elif as_www npm install --no-audit --no-fund >>"$NPM_LOG" 2>&1; then
+            NPM_OK=1
+        fi
 
-        _log "Running npm run build"
-        sudo -u www-data npm run build 2>&1 | tail -5 \
-            && ok "npm run build done" || warn "npm run build failed — continuing."
+        if [[ "$NPM_OK" -eq 1 ]]; then
+            ok "npm dependencies installed"
+            if grep -q '"build"' package.json; then
+                _log "Running npm run build"
+                if as_www npm run build >>"$NPM_LOG" 2>&1; then
+                    ok "npm run build done"
+                else
+                    tail -n 25 "$NPM_LOG" >&2
+                    FRONTEND_WARNING="npm run build FAILED (log: ${NPM_LOG}) — pages that use @vite will return HTTP 500."
+                    warn "$FRONTEND_WARNING"
+                fi
+            fi
+        else
+            tail -n 25 "$NPM_LOG" >&2
+            FRONTEND_WARNING="npm install FAILED (log: ${NPM_LOG}) — frontend assets were not built; pages that use @vite will return HTTP 500."
+            warn "$FRONTEND_WARNING"
+        fi
 
-        rm -rf "$NPM_CACHE"
+        if [[ -z "$FRONTEND_WARNING" ]] && grep -qE '"(vite|laravel-mix)"' package.json \
+           && [[ ! -f public/build/manifest.json && ! -f public/mix-manifest.json ]]; then
+            FRONTEND_WARNING="Build reported success but no public/build/manifest.json exists — check vite.config.js (outDir) / ${NPM_LOG}."
+            warn "$FRONTEND_WARNING"
+        fi
     else
         warn "package.json not found — skipping npm install/build"
     fi
 else
-    dry "composer install --no-dev --optimize-autoloader --ignore-platform-reqs"
-    dry "npm ci && npm run build"
+    dry "composer install --no-dev --optimize-autoloader (platform reqs enforced)"
+    dry "npm ci && npm run build (as www-data, output to public/build)"
 fi
 
 # ============================================================
@@ -788,34 +971,49 @@ _log "Running Laravel setup commands"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
-    _log "Generating application key"
-    sudo -u www-data php artisan key:generate --force
-    ok "APP_KEY generated"
+    # Only generate a key when there isn't one. Regenerating on every re-run invalidates all sessions,
+    # signed URLs and any encrypted database columns.
+    if grep -qE '^APP_KEY=.+' .env; then
+        info "APP_KEY already set — keeping it"
+    else
+        _log "Generating application key"
+        if KEY_OUT="$(as_www php artisan key:generate --force 2>&1)"; then
+            ok "APP_KEY generated"
+        else
+            echo "$KEY_OUT" >&2
+            die "artisan could not boot the application. With 'composer install --no-dev', the usual cause is a dev-only package still referenced by a service provider (Pail, Collision, Debugbar, Telescope, ...). Fix the provider registration or install without --no-dev."
+        fi
+    fi
 
     _log "Running database migrations"
-    sudo -u www-data php artisan migrate --force --no-interaction 2>&1 | tail -10
-    ok "Migrations complete"
+    if MIGRATE_OUT="$(as_www php artisan migrate --force --no-interaction 2>&1)"; then
+        echo "$MIGRATE_OUT" | tail -10
+        ok "Migrations complete"
+    else
+        echo "$MIGRATE_OUT" >&2
+        die "Migrations failed — check the DB_* values in ${NEW_PROJECT_DIR}/.env and that MariaDB is running."
+    fi
 
     _log "Creating storage symbolic link"
-    # Remove broken symlink if exists, then create manually to avoid permission issues
     rm -f "${NEW_PROJECT_DIR}/public/storage"
     ln -s "${NEW_PROJECT_DIR}/storage/app/public" "${NEW_PROJECT_DIR}/public/storage"
     chown -h www-data:www-data "${NEW_PROJECT_DIR}/public/storage"
     ok "Storage link created"
 
     _log "Clearing and caching config"
-    sudo -u www-data php artisan config:clear
-    sudo -u www-data php artisan cache:clear
-    sudo -u www-data php artisan view:clear
-    sudo -u www-data php artisan route:clear
-    sudo -u www-data php artisan config:cache
-    sudo -u www-data php artisan route:cache
-    sudo -u www-data php artisan view:cache
+    as_www php artisan config:clear || true
+    as_www php artisan cache:clear  || warn "cache:clear failed (is Redis reachable with the configured password?)"
+    as_www php artisan view:clear   || true
+    as_www php artisan route:clear  || true
+    as_www php artisan config:cache || warn "config:cache failed — continuing without a config cache"
+    # route:cache fails on closure routes; under `set -e` that used to abort the entire script half-way.
+    as_www php artisan route:cache  || warn "route:cache failed (closure-based routes?) — continuing without a route cache"
+    as_www php artisan view:cache   || warn "view:cache failed (Blade error?) — continuing without a view cache"
     ok "Laravel caches configured"
 else
-    dry "php artisan key:generate --force"
+    dry "php artisan key:generate (only if APP_KEY is empty)"
     dry "php artisan migrate --force"
-    dry "php artisan storage:link"
+    dry "ln -s storage/app/public public/storage"
     dry "php artisan config:cache && route:cache && view:cache"
 fi
 
@@ -826,24 +1024,28 @@ _log "Provisioning default admin user"
 if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
 
-    EXISTING_USER="$(php artisan tinker --execute="echo \App\Models\User::where('email', '${DEFAULT_ADMIN_EMAIL}')->exists() ? 'yes' : 'no';" 2>/dev/null || true)"
+    # Run as www-data! Running artisan/tinker as root created root-owned files in storage/ (laravel.log,
+    # compiled views, cache) that PHP-FPM could not write later -> "Permission denied" -> HTTP 500.
+    EXISTING_USER="$(as_www php artisan tinker --execute="echo \App\Models\User::where('email', '${DEFAULT_ADMIN_EMAIL}')->exists() ? 'yes' : 'no';" 2>/dev/null || true)"
 
-    if [[ "$EXISTING_USER" == "yes" ]]; then
+    if [[ "$EXISTING_USER" == *yes* ]]; then
         warn "Admin user ${DEFAULT_ADMIN_EMAIL} already exists — skipping creation"
     else
         _log "Creating admin user: ${DEFAULT_ADMIN_EMAIL}"
-        php artisan users:create \
+        if as_www php artisan users:create \
             "${DEFAULT_ADMIN_EMAIL}" \
             admin \
             --first_name="Admin" \
             --last_name="User" \
             --password="${DEFAULT_ADMIN_PASSWORD}" \
-            --no-interaction 2>&1 || \
+            --no-interaction 2>&1; then
+            ok "Admin user provisioned"
+        else
             warn "Failed to create admin user — create manually after setup"
-        ok "Admin user provisioned"
+        fi
     fi
 else
-    dry "php artisan users:create ${DEFAULT_ADMIN_EMAIL} admin --password=***"
+    dry "php artisan users:create ${DEFAULT_ADMIN_EMAIL} admin --password=*** (as www-data)"
 fi
 
 # ============================================================
@@ -971,7 +1173,7 @@ LOGROTATE
     create 0640 www-data adm
     sharedscripts
     postrotate
-        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+        [ -f /var/run/nginx.pid ] && kill -USR1 \$(cat /var/run/nginx.pid) 2>/dev/null || true
     endscript
 }
 LOGROTATE
@@ -1000,7 +1202,7 @@ LOGROTATE
     compress
     delaycompress
     notifempty
-    create 0640 root root
+    create 0640 www-data www-data
 }
 LOGROTATE
     ok "Sync log rotation configured (7 days, daily)"
@@ -1010,78 +1212,72 @@ else
 fi
 
 # ============================================================
-# 15. LARAVEL SCHEDULER — cron entry
+# 15. LARAVEL SCHEDULER — cron entry (runs as www-data, NOT root)
 # ============================================================
 _log "Setting up Laravel scheduler"
 if [[ "$DRY_RUN" -eq 0 ]]; then
+    # A root cron job creates root-owned log/cache files in storage/ every minute, which later break the
+    # web app. Move any such entries from root's crontab to www-data's.
+    if crontab -u root -l 2>/dev/null | grep -qE 'artisan (schedule:run|sync:)'; then
+        warn "Removing artisan cron entries from root's crontab (they now run as www-data)"
+        crontab -u root -l 2>/dev/null | grep -vE 'artisan (schedule:run|sync:)' | crontab -u root - || true
+    fi
+
     SCHEDULER_CRON="* * * * * cd ${NEW_PROJECT_DIR} && php artisan schedule:run >> /dev/null 2>&1"
-    # Add to root's crontab if not already present
-    if ! crontab -u root -l 2>/dev/null | grep -q "schedule:run"; then
-        (crontab -u root -l 2>/dev/null; echo "$SCHEDULER_CRON") | crontab -u root -
-        ok "Laravel scheduler cron entry added"
+    if ! crontab -u www-data -l 2>/dev/null | grep -q "schedule:run"; then
+        (crontab -u www-data -l 2>/dev/null || true; echo "$SCHEDULER_CRON") | crontab -u www-data -
+        ok "Laravel scheduler cron entry added (user: www-data)"
         info "Scheduled commands: SendScheduledExamReminders, BackfillQuestionSourcesCommand, RegradeNormalizeCommand"
     else
         info "Laravel scheduler cron already exists — skipping"
     fi
 else
-    dry "Add cron entry: * * * * * cd ${NEW_PROJECT_DIR} && php artisan schedule:run"
+    dry "Add www-data cron entry: * * * * * cd ${NEW_PROJECT_DIR} && php artisan schedule:run"
 fi
 
 # ============================================================
 # 16. SSL / HTTPS — Certbot + Let's Encrypt
 # ============================================================
 SSL_ENABLED=0
-_log "Setting up SSL with Certbot"
+_log "Setting up SSL"
+LOCAL_DOMAIN_RE='\.(internal|local|lan|home|localdomain|test|localhost)$'
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    # Install Certbot and Nginx plugin
-    if ! command -v certbot >/dev/null 2>&1; then
-        apt-get install -y certbot python3-certbot-nginx
-        ok "Certbot installed"
+    if [[ "$DOMAIN" =~ $LOCAL_DOMAIN_RE || "$DOMAIN" =~ ^[0-9.]+$ ]]; then
+        # Let's Encrypt can never issue for these, so don't waste time/bandwidth on a guaranteed failure.
+        info "Skipping Certbot: '${DOMAIN}' is not a publicly resolvable domain."
+        info "The site is served over HTTP. For HTTPS on a LAN use a self-signed or local-CA certificate."
     else
-        _log "Certbot already installed: $(certbot --version 2>&1)"
-    fi
+        if ! command -v certbot >/dev/null 2>&1; then
+            apt-get install -y certbot python3-certbot-nginx
+            ok "Certbot installed"
+        else
+            _log "Certbot already installed: $(certbot --version 2>&1)"
+        fi
 
-    # Try to obtain a certificate
-    # Note: For .internal domains, Let's Encrypt cannot issue certificates
-    # because .internal is a reserved TLD (RFC 8375). We attempt it anyway
-    # and fall back gracefully if it fails.
-    echo ""
-    info "Attempting to obtain SSL certificate for ${DOMAIN}..."
-    info "Note: If ${DOMAIN} uses a reserved TLD (e.g., .internal), this will fail."
-    info "In that case, consider using a public domain or a self-signed certificate."
-    echo ""
+        info "Attempting to obtain SSL certificate for ${DOMAIN}..."
+        if certbot --nginx \
+            --non-interactive \
+            --agree-tos \
+            --register-unsafely-without-email \
+            -d "$DOMAIN" \
+            --redirect \
+            --expand \
+            2>&1 | tee /var/log/certbot-setup.log; then
+            SSL_ENABLED=1
+            ok "SSL certificate obtained and Nginx auto-configured for HTTPS"
+        else
+            warn "Could not obtain SSL certificate for ${DOMAIN}. The site will continue to work over HTTP."
+            warn "Check /var/log/certbot-setup.log (the domain must resolve publicly to this server, port 80 reachable)."
+            SSL_ENABLED=0
+        fi
 
-    if certbot --nginx \
-        --non-interactive \
-        --agree-tos \
-        --register-unsafely-without-email \
-        -d "$DOMAIN" \
-        --redirect \
-        --expand \
-        2>&1 | tee /var/log/certbot-setup.log; then
-        SSL_ENABLED=1
-        ok "SSL certificate obtained and Nginx auto-configured for HTTPS"
-    else
-        warn "Could not obtain SSL certificate for ${DOMAIN}."
-        warn "This is expected for .internal domains (reserved TLD)."
-        warn "The site will continue to work over HTTP."
-        warn "To use HTTPS, either:"
-        warn "  1. Use a public domain (e.g., yourdomain.com)"
-        warn "  2. Generate a self-signed certificate:"
-        warn "     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \\"
-        warn "       -keyout /etc/ssl/private/${DOMAIN}.key \\"
-        warn "       -out /etc/ssl/certs/${DOMAIN}.crt \\"
-        warn "       -subj '/CN=${DOMAIN}'"
-        SSL_ENABLED=0
-    fi
-
-    # Ensure UFW allows HTTPS if SSL was enabled
-    if [[ "$SSL_ENABLED" -eq 1 ]]; then
-        ufw allow 443/tcp 2>/dev/null || true
-        ok "UFW updated to allow HTTPS (port 443)"
+        if [[ "$SSL_ENABLED" -eq 1 ]]; then
+            ufw allow 443/tcp 2>/dev/null || true
+            ok "UFW updated to allow HTTPS (port 443)"
+        fi
     fi
 else
-    dry "Install certbot and attempt SSL certificate for ${DOMAIN}"
+    dry "Attempt SSL certificate for ${DOMAIN} (skipped automatically for .internal/.local/IP hosts)"
 fi
 
 # ============================================================
@@ -1139,11 +1335,13 @@ if [[ "$APP_ROLE" == "center" ]]; then
         fi
 
         if [[ "$SETUP_CRON_FLAG" =~ ^[Yy]$ ]]; then
+            touch /var/log/ahpc-sync.log
+            chown www-data:www-data /var/log/ahpc-sync.log
             CRON_PULL="*/${PULL_INTERVAL} * * * * cd ${NEW_PROJECT_DIR} && php artisan sync:pull >> /var/log/ahpc-sync.log 2>&1"
             CRON_PUSH="*/${PUSH_INTERVAL} * * * * cd ${NEW_PROJECT_DIR} && php artisan sync:push >> /var/log/ahpc-sync.log 2>&1"
 
-            if ! crontab -u root -l 2>/dev/null | grep -q "sync:pull"; then
-                (crontab -u root -l 2>/dev/null; echo "$CRON_PULL"; echo "$CRON_PUSH") | crontab -u root -
+            if ! crontab -u www-data -l 2>/dev/null | grep -q "sync:pull"; then
+                (crontab -u www-data -l 2>/dev/null || true; echo "$CRON_PULL"; echo "$CRON_PUSH") | crontab -u www-data -
                 ok "Cron jobs added: pull every ${PULL_INTERVAL} min, push every ${PUSH_INTERVAL} min"
                 info "Log file: /var/log/ahpc-sync.log"
             else
@@ -1163,15 +1361,49 @@ if [[ "$APP_ROLE" == "center" ]]; then
 
     if [[ "$DRY_RUN" -eq 0 ]]; then
         cd "$NEW_PROJECT_DIR"
-        if php artisan list sync &>/dev/null; then
+        if as_www php artisan list sync &>/dev/null; then
             ok "Sync commands registered"
-            php artisan list sync 2>&1 | grep -E 'sync:|center:' | sed 's/^/  /'
+            as_www php artisan list sync 2>&1 | grep -E 'sync:|center:' | sed 's/^/  /' || true
         else
             warn "Sync commands not found. Check: app/Console/Kernel.php"
         fi
     else
         dry "Verify sync commands are registered"
     fi
+fi
+
+# ============================================================
+# 18b. FINAL PERMISSION PASS + HEALTH CHECK
+# ============================================================
+_log "Final permission pass and health check"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+    # Anything created by root during provisioning must not lock www-data out of storage/.
+    chown -R www-data:www-data "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+    chmod -R ug+rwX "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+
+    # Reload PHP (clears opcache) and restart queue workers so they pick up the new code/.env
+    if [[ -n "${PHP_FPM_SERVICE:-}" ]]; then systemctl restart "$PHP_FPM_SERVICE" || true; fi
+    supervisorctl restart "${APP_NAME}-worker:*" >/dev/null 2>&1 || true
+    sleep 2
+
+    HTTP_STATUS="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -H "Host: ${DOMAIN}" http://127.0.0.1/ || true)"
+    if [[ "$HTTP_STATUS" =~ ^5 || "$HTTP_STATUS" == "000" ]]; then
+        warn "Health check FAILED: HTTP ${HTTP_STATUS} from http://127.0.0.1/ (Host: ${DOMAIN})"
+        LATEST_LOG="$(ls -t "${NEW_PROJECT_DIR}"/storage/logs/laravel*.log 2>/dev/null | head -1 || true)"
+        if [[ -n "$LATEST_LOG" ]]; then
+            warn "Last lines of ${LATEST_LOG}:"
+            tail -n 30 "$LATEST_LOG" | cut -c1-300 || true
+        else
+            warn "No Laravel log was written — likely a permissions problem on storage/ or PHP-FPM crashed before Laravel booted."
+        fi
+        warn "Nginx error log (last lines):"
+        tail -n 15 "/var/log/nginx/${DOMAIN}-error.log" 2>/dev/null || true
+    else
+        ok "Health check passed (HTTP ${HTTP_STATUS})"
+    fi
+    [[ -z "${FRONTEND_WARNING:-}" ]] || warn "$FRONTEND_WARNING"
+else
+    dry "Fix storage ownership, restart php-fpm + workers, curl http://127.0.0.1/ and dump logs on 5xx"
 fi
 
 # ============================================================
