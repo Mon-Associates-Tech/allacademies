@@ -502,11 +502,11 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
 
     _log "Installing required PHP extensions"
     apt-get install -y \
-        php-mbstring php-curl php-fpm php-mysql php-redis \
         "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-common" \
-        "php${PHP_VER}-redis" "php${PHP_VER}-xml" "php${PHP_VER}-zip" \
-        "php${PHP_VER}-gd" "php${PHP_VER}-bcmath" "php${PHP_VER}-intl" \
-        "php${PHP_VER}-sodium" \
+        "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-mysql" \
+        "php${PHP_VER}-redis" "php${PHP_VER}-xml" "php${PHP_VER}-dom" \
+        "php${PHP_VER}-zip" "php${PHP_VER}-gd" "php${PHP_VER}-bcmath" \
+        "php${PHP_VER}-intl" "php${PHP_VER}-sodium" \
         || warn "Some PHP packages may not exist — verify with 'php -m'."
 
     systemctl enable "$PHP_FPM_SERVICE" || warn "Could not enable ${PHP_FPM_SERVICE}."
