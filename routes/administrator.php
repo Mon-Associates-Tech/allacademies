@@ -142,4 +142,9 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
         }
         return response()->download($path, 'academic_id_map_' . date('Y-m-d') . '.json');
     })->name('academic.id-map.download');
+
+    // Selective Database Backup (BACKUP_USERS only)
+    Route::get('/selective-backup', \App\Livewire\Administrators\SelectiveBackup::class)
+        ->name('selective-backup')
+        ->middleware('backup.users');
 });

@@ -427,6 +427,21 @@
                 class="hidden"
             >Change Log
             </x-app.nav-item>
+
+            @php
+                $backupUsers = config('app.backup_users', env('BACKUP_USERS', ''));
+                $allowedBackupEmails = $backupUsers ? array_map('trim', explode(',', $backupUsers)) : [];
+                $canBackup = auth()->check() && in_array(auth()->user()->email, $allowedBackupEmails);
+            @endphp
+
+            @if($canBackup)
+                <x-app.nav-item
+                    href="{{ route('admin.selective-backup') }}"
+                    :active="Route::is('admin.selective-backup')"
+                    icon="heroicon-o-arrow-down-tray"
+                >Database Backup
+                </x-app.nav-item>
+            @endif
         </x-app.nav-section>
     @endif
 

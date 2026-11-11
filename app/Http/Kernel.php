@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\ApplyUserPreferences;
+use App\Http\Middleware\BackupUsersMiddleware;
 use App\Http\Middleware\CheckDefaultPassword;
 use App\Http\Middleware\CheckSuspended;
 use App\Http\Middleware\EnsureUserIsParent;
@@ -88,5 +89,6 @@ class Kernel extends HttpKernel
         'assignment.session' => \App\Http\Middleware\AssignmentSessionMiddleware::class,
         'token.subscription' => \App\Http\Middleware\CheckTokenSubscription::class,
         'proctor.exam' => \App\Http\Middleware\ProctorExamMiddleware::class,
+        'backup.users' => BackupUsersMiddleware::class,
     ];
 }
