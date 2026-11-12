@@ -113,4 +113,65 @@ return [
     */
     'app_version' => env('APP_VERSION', '1.0.0'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Load Balancer Mode
+    |--------------------------------------------------------------------------
+    |
+    | Controls the HAProxy routing mode on center servers.
+    | - "off": No load balancer; Nginx serves directly on ports 80/443.
+    | - "local-first": Local server is primary; overflow to Central when saturated.
+    | - "central-first": Central is primary; fall back to local when Central is busy.
+    |
+    */
+    'lb_mode' => env('LB_MODE', 'off'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxy IPs
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated list of IP addresses that act as trusted proxies
+    | (HAProxy on center servers). Laravel will use X-Forwarded-For headers
+    | from these IPs to determine the real client IP.
+    |
+    */
+    'trusted_proxy_ips' => array_filter(
+        array_map('trim', explode(',', env('TRUSTED_PROXY_IPS', '')))
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LB Health Check Threshold
+    |--------------------------------------------------------------------------
+    |
+    | PHP-FPM worker utilization percentage threshold. When the percentage of
+    | busy workers reaches this value, /lb-health returns 503 so HAProxy can
+    | route new candidates to a different backend.
+    |
+    */
+    'lb_health_threshold' => (int) env('LB_HEALTH_THRESHOLD', 85),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LB Health DB Connection Threshold
+    |--------------------------------------------------------------------------
+    |
+    | Fallback threshold when PHP-FPM status is unavailable. If the number of
+    | active database connections reaches this value, /lb-health returns 503.
+    |
+    */
+    'lb_health_db_threshold' => (int) env('LB_HEALTH_DB_THRESHOLD', 50),
+
+    /*
+    |--------------------------------------------------------------------------
+    | PHP-FPM Status Path
+    |--------------------------------------------------------------------------
+    |
+    | Nginx location path that exposes the PHP-FPM status page.
+    | Used by /lb-health to read worker utilization.
+    |
+    */
+    'fpm_status_path' => env('FPM_STATUS_PATH', '/fpm-status'),
+
 ];

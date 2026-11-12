@@ -622,6 +622,8 @@ class ExamTakingController extends Controller
         }
 
         // ── 4. Create (or find an in-progress) submission ────────────────────
+        $serverOrigin = $this->resolveServerOrigin();
+
         return GeneralExamSubmission::firstOrCreate(
             [
                 'general_exam_id'  => $exam->id,
@@ -636,8 +638,27 @@ class ExamTakingController extends Controller
                 'responses'         => [],
                 'score'             => 0,
                 'status'            => GeneralExamSubmission::STATUS_NOT_STARTED,
+                'server_origin'     => $serverOrigin,
             ]
         );
+    }
+
+    /**
+     * Determine which server owns this request based on HAProxy headers.
+     * HAProxy sets X-Forwarded-Server to "local" or "central".
+     * Falls back to "local" when running without a load balancer.
+     */
+    private function resolveServerOrigin(): string
+    {
+        $server = request()->header('X-Forwarded-Server');
+        if (in_array($server, ['local', 'central'], true)) {
+            return $server;
+        }
+
+        // If this server is a center with LB enabled, default to "local"
+        // If this server is Central, default to "central"
+        $role = config('center.role', 'central');
+        return $role === 'center' ? 'local' : 'central';
     }
 
     /**

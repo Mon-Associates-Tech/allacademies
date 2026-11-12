@@ -131,6 +131,13 @@ WIFI_SSID=""
 WIFI_PASSWORD=""
 PHP_VERSION_FORCE=""
 
+# Load balancer defaults
+LB_MODE=""
+LB_CENTRAL_URL=""
+LB_LOCAL_MAX=150
+LB_CENTRAL_MAX=350
+LB_COOKIE_HOURS=4
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --app-role)         APP_ROLE="$2";           shift 2 ;;
@@ -154,6 +161,11 @@ while [[ $# -gt 0 ]]; do
         --wifi-password)    WIFI_PASSWORD="$2";       shift 2 ;;
         --skip-wifi)        SKIP_WIFI=1;              shift   ;;
         --php-version)      PHP_VERSION_FORCE="$2";   shift 2 ;;
+        --lb-mode)          LB_MODE="$2";             shift 2 ;;
+        --lb-central-url)   LB_CENTRAL_URL="$2";      shift 2 ;;
+        --lb-local-max)     LB_LOCAL_MAX="$2";        shift   ;;
+        --lb-central-max)   LB_CENTRAL_MAX="$2";      shift   ;;
+        --lb-cookie-hours)  LB_COOKIE_HOURS="$2";     shift   ;;
         --dry-run)          DRY_RUN=1;               shift   ;;
         --help)             SHOW_HELP=1;             shift   ;;
         *)                  echo "Unknown option: $1"; echo "Run with --help for usage."; exit 1 ;;
@@ -186,6 +198,11 @@ if [[ $SHOW_HELP -eq 1 ]]; then
     echo "  --php-version        Force a PHP version, e.g. 8.3 (installs from ppa:ondrej/php if needed)"
     echo "  --setup-cron         Set up auto-sync cron jobs (center role)"
     echo "  --no-cron            Skip cron setup entirely (center role)"
+    echo "  --lb-mode            Load balancer mode: local-first, central-first, off (center role)"
+    echo "  --lb-central-url     Central server URL for HAProxy (default: uses --central-url)"
+    echo "  --lb-local-max       Max concurrent connections to local backend (default: 150)"
+    echo "  --lb-central-max     Max concurrent connections to Central backend (default: 350)"
+    echo "  --lb-cookie-hours    Sticky cookie max-age in hours (default: 4)"
     echo "  --dry-run            Show what would be done without making changes"
     echo "  --help               Show this help message"
     exit 0
@@ -1054,8 +1071,59 @@ fi
 _log "Writing Nginx config for ${DOMAIN}"
 NGINX_SITE="/etc/nginx/sites-available/${DOMAIN}"
 
+# Determine if HAProxy will be enabled (center role with lb-mode set)
+LB_ENABLED=0
+if [[ "$APP_ROLE" == "center" && -n "$LB_MODE" && "$LB_MODE" != "off" ]]; then
+    LB_ENABLED=1
+fi
+
 if [[ "$DRY_RUN" -eq 0 ]]; then
-    cat > "$NGINX_SITE" <<NGINXCONF
+    if [[ "$LB_ENABLED" -eq 1 ]]; then
+        # When HAProxy is enabled, Nginx listens on 127.0.0.1:8081 (HTTP only)
+        # HAProxy handles TLS termination on ports 80/443
+        cat > "$NGINX_SITE" <<NGINXCONF
+server {
+    listen 127.0.0.1:8081;
+    server_name ${DOMAIN} ${LAN_IP} 127.0.0.1;
+
+    root ${NEW_PROJECT_DIR}/public;
+    index index.php index.html;
+
+    client_max_body_size 100M;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    # Tell Laravel the original request was HTTPS (HAProxy terminates TLS)
+    fastcgi_param HTTPS on;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:${PHP_FPM_SOCK};
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location ~* \.(?:css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf)\$ {
+        expires 30d;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+
+    access_log /var/log/nginx/${DOMAIN}-access.log;
+    error_log  /var/log/nginx/${DOMAIN}-error.log;
+}
+NGINXCONF
+    else
+        cat > "$NGINX_SITE" <<NGINXCONF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -1094,6 +1162,7 @@ server {
     error_log  /var/log/nginx/${DOMAIN}-error.log;
 }
 NGINXCONF
+    fi
 
     ln -sf "$NGINX_SITE" "/etc/nginx/sites-enabled/${DOMAIN}"
     rm -f /etc/nginx/sites-enabled/default
@@ -1103,6 +1172,338 @@ else
     dry "Write Nginx config to ${NGINX_SITE}"
     dry "ln -sf ${NGINX_SITE} /etc/nginx/sites-enabled/${DOMAIN}"
     dry "nginx -t && systemctl reload nginx"
+fi
+
+# ============================================================
+# 12b. HAProxy LOAD BALANCER (Center role only)
+# ============================================================
+# Installs HAProxy on center servers to route candidate traffic between
+# the local app (127.0.0.1:8081) and the Central server.
+# Modes: local-first (Stage A) or central-first (Stage B).
+
+if [[ "$LB_ENABLED" -eq 1 ]]; then
+
+    # Resolve Central URL for HAProxy — use --lb-central-url or fall back to --central-url
+    HAPROXY_CENTRAL_URL="${LB_CENTRAL_URL:-$CENTRAL_URL}"
+    HAPROXY_CENTRAL_URL="${HAPROXY_CENTRAL_URL%/}"
+
+    # Extract host and port from Central URL
+    HAPROXY_CENTRAL_HOST="$(echo "$HAPROXY_CENTRAL_URL" | sed -E 's|https?://||; s|/.*||')"
+    HAPROXY_CENTRAL_PORT="443"
+
+    # Validate lb-mode
+    if [[ "$LB_MODE" != "local-first" && "$LB_MODE" != "central-first" ]]; then
+        warn "Invalid --lb-mode: '$LB_MODE'. Must be 'local-first' or 'central-first'."
+        warn "Disabling load balancer."
+        LB_ENABLED=0
+    fi
+
+    if [[ "$LB_ENABLED" -eq 1 ]]; then
+        section "Installing HAProxy load balancer (mode: ${LB_MODE})"
+
+        if [[ "$DRY_RUN" -eq 0 ]]; then
+
+            # ── Install HAProxy ────────────────────────────────────────────────
+            if ! command -v haproxy >/dev/null 2>&1; then
+                _log "Installing HAProxy"
+                apt-get install -y haproxy
+                systemctl enable haproxy
+                ok "HAProxy installed"
+            else
+                _log "HAProxy already installed: $(haproxy -v 2>&1 | head -1)"
+            fi
+
+            # ── Create HAProxy TLS certificate ─────────────────────────────────
+            HAPROXY_TLS_DIR="/etc/ahpc/tls"
+            mkdir -p "$HAPROXY_TLS_DIR"
+
+            HAPROXY_PEM="$HAPROXY_TLS_DIR/haproxy.pem"
+            if [[ "$SSL_ENABLED" -eq 1 ]]; then
+                # Use existing Let's Encrypt certificate
+                CERT_PATH="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
+                KEY_PATH="/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
+                if [[ -f "$CERT_PATH" && -f "$KEY_PATH" ]]; then
+                    cat "$CERT_PATH" "$KEY_PATH" > "$HAPROXY_PEM"
+                    chmod 600 "$HAPROXY_PEM"
+                    ok "HAProxy TLS certificate created from Let's Encrypt"
+                else
+                    warn "Let's Encrypt certificate not found. Generating self-signed certificate."
+                    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                        -keyout /tmp/haproxy.key \
+                        -out /tmp/haproxy.crt \
+                        -subj "/CN=${DOMAIN}" \
+                        -addext "subjectAltName=DNS:${DOMAIN},IP:${LAN_IP}" 2>/dev/null
+                    cat /tmp/haproxy.crt /tmp/haproxy.key > "$HAPROXY_PEM"
+                    chmod 600 "$HAPROXY_PEM"
+                    rm -f /tmp/haproxy.crt /tmp/haproxy.key
+                    ok "Self-signed HAProxy TLS certificate created"
+                fi
+            else
+                # Generate self-signed certificate for HAProxy
+                _log "Generating self-signed TLS certificate for HAProxy"
+                openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                    -keyout /tmp/haproxy.key \
+                    -out /tmp/haproxy.crt \
+                    -subj "/CN=${DOMAIN}" \
+                    -addext "subjectAltName=DNS:${DOMAIN},IP:${LAN_IP}" 2>/dev/null
+                cat /tmp/haproxy.crt /tmp/haproxy.key > "$HAPROXY_PEM"
+                chmod 600 "$HAPROXY_PEM"
+                rm -f /tmp/haproxy.crt /tmp/haproxy.key
+                ok "Self-signed HAProxy TLS certificate created"
+            fi
+
+            # ── Create HAProxy stats socket directory ──────────────────────────
+            mkdir -p /run/haproxy
+            chown haproxy:haproxy /run/haproxy
+
+            # ── Compute cookie max-age in seconds ──────────────────────────────
+            COOKIE_MAX_AGE=$((LB_COOKIE_HOURS * 3600))
+
+            # ── Generate HAProxy configuration ─────────────────────────────────
+            HAPROXY_CONF="/etc/haproxy/haproxy.cfg"
+
+            # Build routing rules based on mode
+            if [[ "$LB_MODE" == "local-first" ]]; then
+                ROUTING_RULES="    use_backend central if route_central !central_down
+    use_backend local   if route_local !local_down
+    use_backend central if local_down !central_down
+    use_backend central if local_full !central_down
+    default_backend local"
+            else
+                # central-first
+                ROUTING_RULES="    use_backend local   if { path_beg /build/ } !local_down
+    use_backend local   if route_local !local_down
+    use_backend central if route_central !central_down
+    use_backend local   if central_down !local_down
+    use_backend local   if central_full !local_down
+    default_backend central"
+            fi
+
+            cat > "$HAPROXY_CONF" <<HAPROXYCONF
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    log         127.0.0.1 local2
+    chroot      /var/lib/haproxy
+    pidfile     /run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+
+    # TLS tuning
+    ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384
+    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+#---------------------------------------------------------------------
+# Defaults
+#---------------------------------------------------------------------
+defaults
+    mode                        http
+    log                         global
+    option                      httplog
+    option                      dontlognull
+    option                      forwardfor
+    option                      http-server-close
+    timeout connect             3s
+    timeout client              60s
+    timeout server              120s
+    timeout queue               10s
+    errorfile 503               /etc/haproxy/errors/503.http
+
+#---------------------------------------------------------------------
+# Frontend — handles all incoming traffic on ports 80 and 443
+#---------------------------------------------------------------------
+frontend web
+    bind :80
+    bind :443 ssl crt ${HAPROXY_PEM}
+
+    # Redirect HTTP to HTTPS
+    http-request redirect scheme https unless { ssl_fc }
+
+    # Sticky session cookies
+    acl route_local   req.cook(ahpc_route) -m str local
+    acl route_central req.cook(ahpc_route) -m str central
+
+    # Backend health checks
+    acl local_down    nbsrv(local) lt 1
+    acl central_down  nbsrv(central) lt 1
+
+    # Connection limits
+    acl local_full    be_conn(local) ge ${LB_LOCAL_MAX}
+    acl central_full  be_conn(central) ge ${LB_CENTRAL_MAX}
+
+    # Routing rules (${LB_MODE})
+${ROUTING_RULES}
+
+#---------------------------------------------------------------------
+# Backend — Local application (Nginx on 127.0.0.1:8081)
+#---------------------------------------------------------------------
+backend local
+    option httpchk GET /up
+    http-check expect status 200
+    http-response add-header Set-Cookie 'ahpc_route=local; Path=/; Max-Age=${COOKIE_MAX_AGE}; HttpOnly; Secure; SameSite=Lax' unless { req.cook(ahpc_route) -m found }
+    http-request set-header X-Forwarded-Server local
+    server app 127.0.0.1:8081 check maxconn 180
+
+#---------------------------------------------------------------------
+# Backend — Central server (WAN, HTTPS)
+#---------------------------------------------------------------------
+backend central
+    option httpchk GET /lb-health
+    http-check expect status 200
+    http-response add-header Set-Cookie 'ahpc_route=central; Path=/; Max-Age=${COOKIE_MAX_AGE}; HttpOnly; Secure; SameSite=Lax' unless { req.cook(ahpc_route) -m found }
+    http-request set-header X-Forwarded-Server central
+    http-request set-header X-Forwarded-Center ${CENTER_ID:-unknown}
+    server central ${HAPROXY_CENTRAL_HOST}:${HAPROXY_CENTRAL_PORT} check ssl verify none maxconn 400
+
+#---------------------------------------------------------------------
+# Stats page (access via http://<ip>:9000/haproxy?stats)
+#---------------------------------------------------------------------
+listen stats
+    bind :9000
+    stats enable
+    stats uri /haproxy?stats
+    stats refresh 10s
+    stats admin if LOCALHOST
+HAPROXYCONF
+
+            ok "HAProxy configuration written to ${HAPROXY_CONF}"
+
+            # ── Create custom 503 error page ───────────────────────────────────
+            mkdir -p /etc/haproxy/errors
+            cat > /etc/haproxy/errors/503.http <<'ERROR503'
+HTTP/1.1 503 Service Unavailable
+Content-Type: text/html; charset=utf-8
+Connection: close
+
+<html>
+<head><title>503 Service Unavailable</title></head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+<h1>Service Temporarily Unavailable</h1>
+<p>All examination servers are currently at capacity or undergoing maintenance.</p>
+<p>Please try again in a few minutes.</p>
+</body>
+</html>
+ERROR503
+            ok "Custom 503 error page created"
+
+            # ── Start/restart HAProxy ──────────────────────────────────────────
+            haproxy -c -f "$HAPROXY_CONF" && {
+                systemctl restart haproxy
+                ok "HAProxy started and configured"
+            } || {
+                warn "HAProxy config validation failed. Check ${HAPROXY_CONF}"
+                warn "HAProxy not started. Fix config and run: systemctl restart haproxy"
+            }
+
+            # ── Update .env with LB settings ───────────────────────────────────
+            _log "Updating .env with load balancer settings"
+            if [[ -f "${NEW_PROJECT_DIR}/.env" ]]; then
+                # Remove existing LB entries
+                sed -i '/^LB_MODE=/d' "${NEW_PROJECT_DIR}/.env"
+                sed -i '/^TRUSTED_PROXY_IPS=/d' "${NEW_PROJECT_DIR}/.env"
+                echo "LB_MODE=${LB_MODE}" >> "${NEW_PROJECT_DIR}/.env"
+                echo "TRUSTED_PROXY_IPS=127.0.0.1" >> "${NEW_PROJECT_DIR}/.env"
+                ok ".env updated with LB settings"
+            fi
+
+            # ── Clear cached config ────────────────────────────────────────────
+            cd "$NEW_PROJECT_DIR"
+            as_www php artisan config:clear 2>/dev/null || true
+            as_www php artisan route:clear 2>/dev/null || true
+
+            info "HAProxy is now handling ports 80/443"
+            info "Local Nginx is on 127.0.0.1:8081"
+            info "Stats available at http://${LAN_IP}:9000/haproxy?stats"
+            info "Mode: ${LB_MODE}"
+            info "Local max connections: ${LB_LOCAL_MAX}"
+            info "Central max connections: ${LB_CENTRAL_MAX}"
+            info "Sticky cookie expires in ${LB_COOKIE_HOURS} hours"
+
+        else
+            dry "Install HAProxy and configure for ${LB_MODE} mode"
+            dry "Generate TLS certificate at ${HAPROXY_PEM}"
+            dry "Write HAProxy config to /etc/haproxy/haproxy.cfg"
+            dry "Move Nginx to 127.0.0.1:8081"
+            dry "Start HAProxy on ports 80/443"
+        fi
+    fi
+
+    # ── Handle --lb-mode off (rollback) ──────────────────────────────────────
+    if [[ "$LB_MODE" == "off" && "$APP_ROLE" == "center" ]]; then
+        section "Disabling HAProxy load balancer (rollback)"
+
+        if [[ "$DRY_RUN" -eq 0 ]]; then
+            if command -v haproxy >/dev/null 2>&1; then
+                systemctl stop haproxy 2>/dev/null || true
+                systemctl disable haproxy 2>/dev/null || true
+                ok "HAProxy stopped and disabled"
+            fi
+
+            # Restore Nginx to ports 80/443
+            cat > "$NGINX_SITE" <<NGINXCONF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ${DOMAIN} ${LAN_IP};
+
+    root ${NEW_PROJECT_DIR}/public;
+    index index.php index.html;
+
+    client_max_body_size 100M;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:${PHP_FPM_SOCK};
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location ~* \.(?:css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf)\$ {
+        expires 30d;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+
+    access_log /var/log/nginx/${DOMAIN}-access.log;
+    error_log  /var/log/nginx/${DOMAIN}-error.log;
+}
+NGINXCONF
+            nginx -t && systemctl reload nginx
+            ok "Nginx restored to ports 80/443"
+
+            # Remove LB settings from .env
+            if [[ -f "${NEW_PROJECT_DIR}/.env" ]]; then
+                sed -i '/^LB_MODE=/d' "${NEW_PROJECT_DIR}/.env"
+                sed -i '/^TRUSTED_PROXY_IPS=/d' "${NEW_PROJECT_DIR}/.env"
+                echo "LB_MODE=off" >> "${NEW_PROJECT_DIR}/.env"
+            fi
+
+            cd "$NEW_PROJECT_DIR"
+            as_www php artisan config:clear 2>/dev/null || true
+            as_www php artisan route:clear 2>/dev/null || true
+
+            ok "Load balancer rollback complete"
+        else
+            dry "Stop HAProxy, restore Nginx to ports 80/443, clear LB settings"
+        fi
+    fi
+
 fi
 
 # ============================================================

@@ -106,6 +106,20 @@ Route::get('/calendar', function () {
 
 /*
 |--------------------------------------------------------------------------
+| Load Balancer Health Check (Public, Unauthenticated)
+|--------------------------------------------------------------------------
+|
+| Used by HAProxy on center servers to determine whether the local backend
+| or Central is healthy and has capacity. These routes must NOT require auth.
+|
+*/
+Route::get('/up', [\App\ExaminationHub\Controllers\HealthCheckController::class, 'up'])
+    ->name('health.up');
+Route::get('/lb-health', [\App\ExaminationHub\Controllers\HealthCheckController::class, 'lbHealth'])
+    ->name('health.lb');
+
+/*
+|--------------------------------------------------------------------------
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */

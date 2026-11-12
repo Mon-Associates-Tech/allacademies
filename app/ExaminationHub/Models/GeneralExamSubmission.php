@@ -68,6 +68,8 @@ class GeneralExamSubmission extends Model
         'attempt_number',
         'ip_address',
         'user_agent',
+        // Load balancer — tracks which server owns this attempt
+        'server_origin',
         // Sync columns
         'center_id',
         'participant_index_number',

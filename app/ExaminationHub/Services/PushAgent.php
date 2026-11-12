@@ -319,6 +319,7 @@ class PushAgent
                 'attempt_number' => $submission->attempt_number,
                 'ip_address' => $submission->ip_address,
                 'user_agent' => $submission->user_agent,
+                'server_origin' => $submission->server_origin,
                 'tab_switch_count' => $submission->tab_switch_count,
                 'violations' => $submission->violations,
                 'sync_version' => $submission->sync_version,

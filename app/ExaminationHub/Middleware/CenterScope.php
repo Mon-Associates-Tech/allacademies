@@ -47,7 +47,17 @@ class CenterScope
         if ($centerId) {
             // Register global scopes for center-aware models
             \App\ExaminationHub\Models\GeneralExamSubmission::addGlobalScope('center', function (Builder $builder) use ($centerId) {
-                $builder->where('center_id', $centerId);
+                // Show submissions owned by this center AND submissions that were
+                // routed through this center's HAProxy to Central (server_origin='central'
+                // but tagged with this center's ID via X-Forwarded-Center header).
+                $builder->where(function ($q) use ($centerId) {
+                    $q->where('center_id', $centerId)
+                      ->orWhere(function ($q2) use ($centerId) {
+                          // Submissions created on Central for this center's students
+                          $q2->where('server_origin', 'central')
+                              ->where('center_id', $centerId);
+                      });
+                });
             });
 
             \App\ExaminationHub\Models\ExamProctoringLog::addGlobalScope('center', function (Builder $builder) use ($centerId) {

@@ -124,6 +124,7 @@ class SubmissionIngestService
                     'attempt_number' => $data['attempt_number'] ?? 1,
                     'ip_address' => $data['ip_address'] ?? null,
                     'user_agent' => $data['user_agent'] ?? null,
+                    'server_origin' => $data['server_origin'] ?? 'local',
                     'tab_switch_count' => $data['tab_switch_count'] ?? 0,
                     'violations' => $data['violations'] ?? null,
                     'sync_version' => $newSyncVersion,
@@ -169,6 +170,7 @@ class SubmissionIngestService
                     'auto_submit_reason' => $data['auto_submit_reason'] ?? $submission->auto_submit_reason,
                     'tab_switch_count' => $data['tab_switch_count'] ?? $submission->tab_switch_count,
                     'violations' => $data['violations'] ?? $submission->violations,
+                    'server_origin' => $data['server_origin'] ?? $submission->server_origin,
                     'sync_version' => $newSyncVersion,
                     'synced_version' => $newSyncVersion,
                 ]);
