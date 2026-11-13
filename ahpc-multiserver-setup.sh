@@ -447,6 +447,16 @@ else
     dry "systemctl enable --now ssh"
 fi
 
+_log "Installing minimal desktop (XFCE + XRDP for remote admin)"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+    apt-get install -y xfce4 xfce4-goodies lightdm xrdp
+    echo "xfce4-session" > /root/.xsession
+    [[ -n "${SUDO_USER:-}" ]] && echo "xfce4-session" > "/home/${SUDO_USER}/.xsession"
+    systemctl enable xrdp
+else
+    dry "apt-get install -y xfce4 xfce4-goodies lightdm xrdp && systemctl enable xrdp"
+fi
+
 # ============================================================
 # 3. ENSURE CURRENT USER IS IN www-data GROUP
 # ============================================================
@@ -924,7 +934,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     cd "$NEW_PROJECT_DIR"
     command -v composer >/dev/null 2>&1 || die "Composer is not installed (see the earlier warning). Install it manually and re-run."
 
-    _log "Running composer install (production; platform requirements enforced)"
+    _log "Running composer install (production; --ignore-platform-reqs by design)"
     mkdir -p "${NEW_PROJECT_DIR}/vendor"
     chown -R www-data:www-data "${NEW_PROJECT_DIR}/vendor"
     COMPOSER_LOG="/tmp/${APP_NAME}-composer.log"
@@ -933,7 +943,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         ok "composer install done"
     else
         tail -n 30 "$COMPOSER_LOG" >&2
-        die "composer install failed (full log: ${COMPOSER_LOG}). A PHP version/extension mismatch is the usual cause — re-run with --php-version <X.Y> if the project needs a newer PHP."
+        die "composer install failed (full log: ${COMPOSER_LOG}). Check the log for missing packages or syntax errors."
     fi
 
     if [[ -f "package.json" ]]; then
@@ -977,7 +987,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         warn "package.json not found — skipping npm install/build"
     fi
 else
-    dry "composer install --no-dev --optimize-autoloader (platform reqs enforced)"
+    dry "composer install --no-dev --optimize-autoloader --ignore-platform-reqs"
     dry "npm ci && npm run build (as www-data, output to public/build)"
 fi
 
@@ -1705,20 +1715,24 @@ fi
 if [[ "$APP_ROLE" == "center" ]]; then
 
     # ── Test connection to central ───────────────────────────────────────────
-    section "Testing connection to Central"
+    # NOTE: CENTRAL_URL is ONLY used for center<->central sync communication.
+    # Exam devices (students/staff) connect to this server's LAN IP directly.
+    section "Testing connection to Central sync API"
 
     if [[ "$DRY_RUN" -eq 0 ]]; then
         echo ""
-        info "Testing HTTP connection to $CENTRAL_URL..."
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "$CENTRAL_URL" 2>/dev/null || echo "000")
-        case "$HTTP_CODE" in
-            200|302) ok "HTTP $HTTP_CODE — Central server is reachable" ;;
-            000)     warn "Cannot reach Central server at $CENTRAL_URL"
-                     warn "Check: firewall, nginx, and that the Central server is running" ;;
-            *)       warn "HTTP $HTTP_CODE from Central — check nginx logs on the Central server" ;;
-        esac
+        info "Testing sync API connectivity to $CENTRAL_URL..."
+        PING_RESPONSE=$(curl -s --connect-timeout 5 "${CENTRAL_URL}/api/sync/v1/ping" 2>/dev/null || echo "")
+        if echo "$PING_RESPONSE" | grep -q '"status":"ok"'; then
+            ok "Central sync API is reachable at ${CENTRAL_URL}"
+        else
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "${CENTRAL_URL}/api/sync/v1/ping" 2>/dev/null || echo "000")
+            warn "Cannot reach Central sync API at ${CENTRAL_URL}/api/sync/v1/ping (HTTP ${HTTP_CODE})"
+            warn "Check: firewall, nginx, and that the Central server is running"
+            warn "Note: exam devices connect to this server's LAN IP (${LAN_IP}), not to CENTRAL_URL"
+        fi
     else
-        dry "Test HTTP connection to $CENTRAL_URL"
+        dry "Test sync API connectivity: GET ${CENTRAL_URL}/api/sync/v1/ping"
     fi
 
     # ── Auto-sync via cron ───────────────────────────────────────────────────
@@ -1781,6 +1795,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     # Anything created by root during provisioning must not lock www-data out of storage/.
     chown -R www-data:www-data "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
     chmod -R ug+rwX "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+    sudo -u www-data php "${NEW_PROJECT_DIR}/artisan" optimize:clear
 
     # Reload PHP (clears opcache) and restart queue workers so they pick up the new code/.env
     if [[ -n "${PHP_FPM_SERVICE:-}" ]]; then systemctl restart "$PHP_FPM_SERVICE" || true; fi

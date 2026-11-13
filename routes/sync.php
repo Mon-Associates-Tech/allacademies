@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Public ping — no auth required, used by centers to test connectivity to central
+Route::get('sync/v1/ping', fn () => response()->json(['status' => 'ok', 'role' => config('center.role')]));
+
 Route::prefix('sync/v1')->middleware([SyncAuth::class, SyncSignature::class, SyncVersion::class])->group(function () {
 
     // ─── Pull endpoints (center → central) ──────────────────────────────────

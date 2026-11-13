@@ -786,6 +786,12 @@ sec_packages() {
         ufw supervisor cron openssh-server
     systemctl enable --now ssh
 
+    _log "Installing minimal desktop (XFCE + XRDP for remote admin)"
+    apt-get install -y xfce4 xfce4-goodies lightdm xrdp
+    echo "xfce4-session" > /root/.xsession
+    [[ -n "${SUDO_USER:-}" ]] && echo "xfce4-session" > "/home/${SUDO_USER}/.xsession"
+    systemctl enable xrdp
+
     _log "Configuring user groups"
     if [[ "$CURRENT_USER" == "root" ]]; then
         info "Running as plain root (no sudo user) — skipping group membership changes"
@@ -1254,22 +1260,22 @@ ENVEOF
 # ============================================================
 FRONTEND_WARNING=""
 sec_deps() {
-    if (( DRY_RUN )); then dry "composer install --no-dev (platform reqs enforced); npm ci && npm run build as www-data"; return 0; fi
+    if (( DRY_RUN )); then dry "composer install --no-dev --optimize-autoloader --ignore-platform-reqs; npm ci && npm run build as www-data"; return 0; fi
     need_project
     detect_php
     cd "$NEW_PROJECT_DIR"
     command -v composer >/dev/null 2>&1 || die "Composer is not installed (see the earlier warning). Install it manually and re-run."
 
-    _log "Running composer install (production; platform requirements enforced)"
+    _log "Running composer install (production; --ignore-platform-reqs by design)"
     mkdir -p "${NEW_PROJECT_DIR}/vendor"
     chown -R www-data:www-data "${NEW_PROJECT_DIR}/vendor"
     local composer_log="/tmp/${APP_NAME}-composer.log"
     # No --ignore-platform-reqs: it hid wrong PHP versions / missing extensions and produced a "successful" deploy that 500s.
-    if as_www composer install --no-dev --optimize-autoloader --no-interaction >"$composer_log" 2>&1; then
+    if as_www composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs >"$composer_log" 2>&1; then
         ok "composer install done"
     else
         tail -n 30 "$composer_log" >&2
-        die "composer install failed (full log: ${composer_log}). A PHP version/extension mismatch is the usual cause — re-run with --php-version <X.Y> if the project needs a newer PHP."
+        die "composer install failed (full log: ${composer_log}). Check the log for missing packages or syntax errors."
     fi
 
     if [[ ! -f package.json ]]; then warn "package.json not found — skipping npm install/build"; return 0; fi
@@ -1902,19 +1908,20 @@ sec_firewall() {
 # ============================================================
 sec_sync() {
     if [[ "$APP_ROLE" != "center" ]]; then info "Sync section only applies to the center role — skipping"; return 0; fi
-    if (( DRY_RUN )); then dry "Test connection to ${CENTRAL_URL}; set up sync cron (pull/push every ${PULL_INTERVAL}/${PUSH_INTERVAL} min); verify sync commands"; return 0; fi
+    if (( DRY_RUN )); then dry "Test sync API connectivity to ${CENTRAL_URL}/api/sync/v1/ping; set up sync cron (pull/push every ${PULL_INTERVAL}/${PUSH_INTERVAL} min); verify sync commands"; return 0; fi
     need_project
-    banner "Testing connection to Central"
-    local code
-    code="$(curl -sk -o /dev/null -w '%{http_code}' --connect-timeout 5 "$CENTRAL_URL" 2>/dev/null || true)"
-    case "$code" in
-        200|301|302) ok "HTTP ${code} — Central server is reachable" ;;
-        000|"")      warn "Cannot reach Central at ${CENTRAL_URL} (firewall? nginx running? same network?)" ;;
-        *)           warn "HTTP ${code} from Central — check nginx logs on the Central server" ;;
-    esac
-    if [[ "$CENTRAL_URL" == https://* && -z "${CENTRAL_CA:-}" ]]; then
-        warn "Central uses HTTPS. If its certificate comes from a local CA, add --central-ca http://<central-ip>/${CA_PUBLIC_NAME}"
-        warn "(PHP will refuse the connection otherwise). Compare the printed fingerprint with the one shown on the Central."
+    # NOTE: CENTRAL_URL is ONLY for center<->central sync. Exam devices connect to this server's LAN IP directly.
+    banner "Testing connection to Central sync API"
+    local ping_response
+    ping_response="$(curl -sk --connect-timeout 5 "${CENTRAL_URL}/api/sync/v1/ping" 2>/dev/null || true)"
+    if echo "$ping_response" | grep -q '"status":"ok"'; then
+        ok "Central sync API is reachable at ${CENTRAL_URL}"
+    else
+        local code
+        code="$(curl -sk -o /dev/null -w '%{http_code}' --connect-timeout 5 "${CENTRAL_URL}/api/sync/v1/ping" 2>/dev/null || true)"
+        warn "Cannot reach Central sync API at ${CENTRAL_URL}/api/sync/v1/ping (HTTP ${code:-000})"
+        warn "Check: firewall, nginx, and that the Central server is running"
+        warn "Note: exam devices connect to this server's LAN IP directly, not via CENTRAL_URL"
     fi
 
     banner "Auto-sync setup"
@@ -1961,6 +1968,7 @@ sec_finalize() {
     _log "Final permission pass and health check"
     chown -R www-data:www-data "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
     chmod -R ug+rwX "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+    sudo -u www-data php "${NEW_PROJECT_DIR}/artisan" optimize:clear
 
     if [[ -n "$PHP_FPM_SERVICE" ]]; then systemctl restart "$PHP_FPM_SERVICE" || true; fi    # also clears opcache
     as_www php "${NEW_PROJECT_DIR}/artisan" queue:restart >/dev/null 2>&1 || true
