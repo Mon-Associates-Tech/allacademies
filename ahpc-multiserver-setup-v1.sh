@@ -1202,9 +1202,9 @@ sec_env() {
             _log "Generating key pair for central server"
             local key_output
             key_output="$(php -r '
-$pair = sodium_crypto_box_keypair();
-$pub = sodium_bin2base64(sodium_crypto_box_publickey($pair), SODIUM_BASE64_VARIANT_ORIGINAL);
-$priv = sodium_bin2base64(sodium_crypto_box_secretkey($pair), SODIUM_BASE64_VARIANT_ORIGINAL);
+$keyPair = sodium_crypto_sign_keypair();
+$pub = sodium_bin2base64(sodium_crypto_sign_publickey($keyPair), SODIUM_BASE64_VARIANT_ORIGINAL);
+$priv = sodium_bin2base64(sodium_crypto_sign_secretkey($keyPair), SODIUM_BASE64_VARIANT_ORIGINAL);
 echo $priv . "\n" . $pub . "\n";
 ' 2>/dev/null || true)"
             if [[ -n "$key_output" ]]; then
