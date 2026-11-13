@@ -764,22 +764,22 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     rm -rf "$EXTRACT_DIR"
 
     _log "Fixing ownership and permissions"
-    chown -R "${CURRENT_USER}:www-data" "$NEW_PROJECT_DIR"
-    find "$NEW_PROJECT_DIR" \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o -type d -exec chmod 755 {} +
-    find "$NEW_PROJECT_DIR" \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o -type f -exec chmod 644 {} +
+    chown -R "${CURRENT_USER}:www-data" "$NEW_PROJECT_DIR" || true
+    find "$NEW_PROJECT_DIR" \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o -type d -exec chmod 755 {} + || true
+    find "$NEW_PROJECT_DIR" \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o -type f -exec chmod 644 {} + || true
     chmod 755 "${NEW_PROJECT_DIR}/artisan" 2>/dev/null || true
 
     # Ensure required storage subdirectories exist
-    mkdir -p "${NEW_PROJECT_DIR}/storage/logs"
-    mkdir -p "${NEW_PROJECT_DIR}/storage/app/public"
-    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/cache/data"
-    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/sessions"
-    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/views"
-    mkdir -p "${NEW_PROJECT_DIR}/bootstrap/cache"
+    mkdir -p "${NEW_PROJECT_DIR}/storage/logs" || true
+    mkdir -p "${NEW_PROJECT_DIR}/storage/app/public" || true
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/cache/data" || true
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/sessions" || true
+    mkdir -p "${NEW_PROJECT_DIR}/storage/framework/views" || true
+    mkdir -p "${NEW_PROJECT_DIR}/bootstrap/cache" || true
 
     # storage and bootstrap/cache must be writable by www-data
-    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
-    chmod -R 775 "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+    chown -R "www-data:www-data" "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache" || true
+    chmod -R 775 "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache" || true
 
     # Vite writes the build here as www-data. public/ itself is not writable by www-data, so without this
     # `npm run build` fails, there is no manifest.json, and every page using @vite throws -> HTTP 500.

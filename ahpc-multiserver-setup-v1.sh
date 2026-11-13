@@ -1118,17 +1118,17 @@ sec_code() {
     rm -rf "$extract_dir"
 
     _log "Fixing ownership and permissions"
-    chown -R "${CURRENT_USER}:www-data" "$NEW_PROJECT_DIR"
+    chown -R "${CURRENT_USER}:www-data" "$NEW_PROJECT_DIR" || true
     local skip=( \( -path "${NEW_PROJECT_DIR}/vendor" -o -path "${NEW_PROJECT_DIR}/node_modules" -o -path "${NEW_PROJECT_DIR}/storage" \) -prune -o )
-    find "$NEW_PROJECT_DIR" "${skip[@]}" -type d -exec chmod 755 {} +
-    find "$NEW_PROJECT_DIR" "${skip[@]}" -type f -exec chmod 644 {} +
+    find "$NEW_PROJECT_DIR" "${skip[@]}" -type d -exec chmod 755 {} + || true
+    find "$NEW_PROJECT_DIR" "${skip[@]}" -type f -exec chmod 644 {} + || true
     chmod 755 "${NEW_PROJECT_DIR}/artisan" 2>/dev/null || true
 
     mkdir -p "${NEW_PROJECT_DIR}/storage/logs" "${NEW_PROJECT_DIR}/storage/app/public" \
              "${NEW_PROJECT_DIR}/storage/framework/cache/data" "${NEW_PROJECT_DIR}/storage/framework/sessions" \
-             "${NEW_PROJECT_DIR}/storage/framework/views" "${NEW_PROJECT_DIR}/bootstrap/cache"
-    chown -R www-data:www-data "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
-    chmod -R 775 "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache"
+             "${NEW_PROJECT_DIR}/storage/framework/views" "${NEW_PROJECT_DIR}/bootstrap/cache" || true
+    chown -R www-data:www-data "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache" || true
+    chmod -R 775 "${NEW_PROJECT_DIR}/storage" "${NEW_PROJECT_DIR}/bootstrap/cache" || true
 
     # Vite writes the build here as www-data. Without a writable public/build, `npm run build` fails, there is no
     # manifest.json, and every page using @vite throws -> HTTP 500.
