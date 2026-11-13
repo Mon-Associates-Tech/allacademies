@@ -109,7 +109,7 @@ DEFAULT_PUSH_INTERVAL=15
 #   --help               Show this help message
 
 # ── Parse arguments ────────────────────────────────────────────────────────────
-APP_ROLE=""
+APP_ROLE="center"
 DB_PASS=""
 REDIS_PASS=""
 LAN_IP_OVERRIDE=""
@@ -864,9 +864,9 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
         if [[ -z "$CENTRAL_PRIVATE_KEY" ]]; then
             _log "Generating key pair for central server"
             KEY_OUTPUT="$(php -r '
-$pair = sodium_crypto_box_keypair();
-$pub = sodium_bin2base64(sodium_crypto_box_publickey($pair), SODIUM_BASE64_VARIANT_ORIGINAL);
-$priv = sodium_bin2base64(sodium_crypto_box_secretkey($pair), SODIUM_BASE64_VARIANT_ORIGINAL);
+$keyPair = sodium_crypto_sign_keypair();
+$pub = sodium_bin2base64(sodium_crypto_sign_publickey($keyPair), SODIUM_BASE64_VARIANT_ORIGINAL);
+$priv = sodium_bin2base64(sodium_crypto_sign_secretkey($keyPair), SODIUM_BASE64_VARIANT_ORIGINAL);
 echo $priv . "\n" . $pub . "\n";
 ' 2>/dev/null || true)"
 
