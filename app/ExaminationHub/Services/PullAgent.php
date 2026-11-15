@@ -33,20 +33,6 @@ class PullAgent
         $token = config('center.sync_token');
         $publicKey = config('center.central_public_key');
 
-        Log::debug('PullAgent: pull() config values', [
-            'central_url' => $centralUrl,
-            'token_length' => strlen($token ?? ''),
-            'token_empty' => empty($token),
-            'token_preview' => $token ? substr($token, 0, 6) . '...' : 'NULL',
-        ]);
-
-            return [
-                'success' => false,
-                'pulled' => 0,
-                'errors' => ['Central URL or sync token not configured.'],
-                'details' => [],
-            ];
-        }
 
         // Clean up any stale "running" records from crashed jobs
         SyncRun::cleanupStaleRunning(30);
