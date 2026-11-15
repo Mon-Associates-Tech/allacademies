@@ -233,15 +233,13 @@ class PullAgent
 
             $signature = hash_hmac('sha256', $bodyString, $token);
 
+            $headers = array_merge($this->syncHeaders($token), [
+                'X-Signature' => $signature,
+                'Content-Type' => 'application/json',
+            ]);
+
             $response = Http::timeout(10)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $token,
-                     'X-Sync-Token' => $token,
-                    'X-Signature' => $signature,
-                    'X-Timestamp' => (string) time(),
-                    'X-App-Version' => config('center.app_version', '1.0.0'),
-                    'Content-Type' => 'application/json',
-                ])
+                ->withHeaders($headers)
                 ->withOptions(['verify' => config('center.ssl_verify', true)])
                 ->withBody($bodyString, 'application/json')
                 ->post($centralUrl . '/api/sync/v1/heartbeat');
