@@ -783,7 +783,7 @@ sec_packages() {
     apt-get install -y \
         curl wget git unzip zip rsync openssl acl iputils-arping \
         ca-certificates gnupg lsb-release apt-transport-https \
-        ufw supervisor cron openssh-server
+        ufw supervisor cron openssh-server kate
     systemctl enable --now ssh
 
     _log "Installing minimal desktop (XFCE + XRDP for remote admin)"
@@ -791,6 +791,20 @@ sec_packages() {
     echo "xfce4-session" > /root/.xsession
     [[ -n "${SUDO_USER:-}" ]] && echo "xfce4-session" > "/home/${SUDO_USER}/.xsession"
     systemctl enable xrdp
+
+    _log "Installing NordVPN (CLI)"
+    if ! command -v nordvpn >/dev/null 2>&1; then
+        curl -fsSL https://downloads.nordcdn.com/apps/linux/install.sh -o /tmp/nordvpn-install.sh
+        sh /tmp/nordvpn-install.sh --no-browser
+        rm -f /tmp/nordvpn-install.sh
+    fi
+    if command -v nordvpn >/dev/null 2>&1; then
+        usermod -aG nordvpn "${SUDO_USER:-root}" 2>/dev/null || true
+        ok "NordVPN installed — logging in"
+        nordvpn login --token || warn "NordVPN login failed — run 'nordvpn login' manually after setup"
+    else
+        warn "NordVPN install failed — install manually from https://nordvpn.com/download/linux/"
+    fi
 
     _log "Configuring user groups"
     if [[ "$CURRENT_USER" == "root" ]]; then
@@ -930,7 +944,7 @@ install_php_stack() {
     local ver="$1" ext pkg
     local pkgs=("php${ver}-fpm" "php${ver}-cli" "php${ver}-common")
     # sodium is built into php-common; there is no php-sodium package, and one bad name aborts the WHOLE apt install.
-    for ext in mbstring curl mysql redis xml dom zip gd bcmath intl opcache readline; do
+    for ext in mbstring curl mysql redis xml dom zip gd bcmath intl readline; do
         pkgs+=("php${ver}-${ext}")
     done
 
@@ -949,12 +963,6 @@ upload_max_filesize = 100M
 post_max_size = 100M
 max_execution_time = 120
 max_input_vars = 5000
-opcache.enable = 1
-opcache.memory_consumption = 256
-opcache.interned_strings_buffer = 32
-opcache.max_accelerated_files = 30000
-opcache.validate_timestamps = 1
-opcache.revalidate_freq = 30
 INI
 
     local pool="/etc/php/${ver}/fpm/pool.d/www.conf"
