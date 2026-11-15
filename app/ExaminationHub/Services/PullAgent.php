@@ -33,7 +33,13 @@ class PullAgent
         $token = config('center.sync_token');
         $publicKey = config('center.central_public_key');
 
-        if (!$centralUrl || !$token) {
+        Log::debug('PullAgent: pull() config values', [
+            'central_url' => $centralUrl,
+            'token_length' => strlen($token ?? ''),
+            'token_empty' => empty($token),
+            'token_preview' => $token ? substr($token, 0, 6) . '...' : 'NULL',
+        ]);
+
             return [
                 'success' => false,
                 'pulled' => 0,
@@ -207,6 +213,13 @@ class PullAgent
     protected function syncHeaders(string $token): array
     {
         $appVersion = config('center.app_version', '1.0.0');
+
+        Log::debug('PullAgent: syncHeaders called', [
+            'token_length' => strlen($token),
+            'token_preview' => substr($token, 0, 6) . '...',
+            'app_version' => $appVersion,
+        ]);
+
         return [
             'Authorization' => 'Bearer ' . $token,
             'X-Sync-Token' => $token,
