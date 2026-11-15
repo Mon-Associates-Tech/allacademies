@@ -66,8 +66,8 @@ DEFAULT_WIFI_PASSWORD="1L0ve@M1n3!0B.&"
 # Center-specific defaults
 DEFAULT_CENTRAL_URL="http://192.168.1.103"
 DEFAULT_APP_VERSION="1.0.0"
-DEFAULT_PULL_INTERVAL=15
-DEFAULT_PUSH_INTERVAL=15
+DEFAULT_PULL_INTERVAL=5
+DEFAULT_PUSH_INTERVAL=5
 
 # ============================================================
 # COMMAND-LINE ARGUMENTS
@@ -97,8 +97,8 @@ DEFAULT_PUSH_INTERVAL=15
 #   --sync-token         Center sync token (required when role=center)
 #   --public-key         Central Ed25519 public key base64 (required when role=center)
 #   --app-version        App version for version handshake (default: 1.0.0)
-#   --pull-interval      Pull sync interval in minutes (default: 15)
-#   --push-interval      Push sync interval in minutes (default: 15)
+#   --pull-interval      Pull sync interval in minutes (default: 5)
+#   --push-interval      Push sync interval in minutes (default: 5)
 #   --wifi-ssid          Wi-Fi network name (default: AHGENERAL)
 #   --wifi-password       Wi-Fi password (default: built-in)
 #   --skip-wifi           Skip Wi-Fi connection setup
@@ -190,8 +190,8 @@ if [[ $SHOW_HELP -eq 1 ]]; then
     echo "  --sync-token         Center sync token (required when role=center)"
     echo "  --public-key         Central public key base64 (required when role=center)"
     echo "  --app-version        App version (default: 1.0.0)"
-    echo "  --pull-interval      Pull sync interval in minutes (default: 15)"
-    echo "  --push-interval      Push sync interval in minutes (default: 15)"
+    echo "  --pull-interval      Pull sync interval in minutes (default: 5)"
+    echo "  --push-interval      Push sync interval in minutes (default: 5)"
     echo "  --wifi-ssid          Wi-Fi network name (default: AHGENERAL)"
     echo "  --wifi-password      Wi-Fi password"
     echo "  --skip-wifi          Skip Wi-Fi connection setup"

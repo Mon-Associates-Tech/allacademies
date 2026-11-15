@@ -61,8 +61,8 @@ DEFAULT_WIFI_PASSWORD="1L0ve@M1n3!0B.&"
 
 # Center-specific defaults
 DEFAULT_APP_VERSION="1.0.0"
-DEFAULT_PULL_INTERVAL=15
-DEFAULT_PUSH_INTERVAL=15
+DEFAULT_PULL_INTERVAL=5
+DEFAULT_PUSH_INTERVAL=5
 
 # Section order is fixed: --only/--skip/--from always run in this order.
 ALL_SECTIONS=(wifi ip packages tuning mariadb redis php node code env deps laravel admin nginx workers logrotate cron tls firewall sync finalize summary)
