@@ -182,8 +182,8 @@ class PullAgent
     protected function fetchManifest(string $centralUrl, string $token): ?array
     {
         try {
-            $response = Http::withToken($token)
-                ->withHeaders($this->syncHeaders($token))
+            $response = Http::withHeaders($this->syncHeaders($token))
+                ->withOptions(['verify' => config('center.ssl_verify', true)])
                 ->timeout(30)
                 ->get("{$centralUrl}/api/sync/v1/manifest");
 
@@ -208,6 +208,8 @@ class PullAgent
     {
         $appVersion = config('center.app_version', '1.0.0');
         return [
+            'Authorization' => 'Bearer ' . $token,
+            'X-Sync-Token' => $token,
             'X-App-Version' => $appVersion,
             'X-Timestamp' => (string) time(),
             'X-Signature' => hash_hmac('sha256', '', $token),
@@ -234,11 +236,13 @@ class PullAgent
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $token,
+                     'X-Sync-Token' => $token,
                     'X-Signature' => $signature,
                     'X-Timestamp' => (string) time(),
                     'X-App-Version' => config('center.app_version', '1.0.0'),
                     'Content-Type' => 'application/json',
                 ])
+                ->withOptions(['verify' => config('center.ssl_verify', true)])
                 ->withBody($bodyString, 'application/json')
                 ->post($centralUrl . '/api/sync/v1/heartbeat');
 
@@ -386,8 +390,8 @@ class PullAgent
     protected function downloadPackage(string $centralUrl, string $token, string $uuid, int $revision): ?string
     {
         try {
-            $response = Http::withToken($token)
-                ->withHeaders($this->syncHeaders($token))
+            $response = Http::withHeaders($this->syncHeaders($token))
+                ->withOptions(['verify' => config('center.ssl_verify', true)])
                 ->timeout(120)
                 ->get("{$centralUrl}/api/sync/v1/exams/{$uuid}/revisions/{$revision}");
 

@@ -17,9 +17,14 @@ class SyncAuth
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->bearerToken();
+        $token = $request->bearerToken() ?? $request->header('X-Sync-Token');
 
         if (!$token) {
+            \Illuminate\Support\Facades\Log::warning('SyncAuth: missing token', [
+                'authorization' => $request->header('Authorization'),
+                'x_sync_token' => $request->header('X-Sync-Token'),
+                'all_headers' => $request->headers->all(),
+            ]);
             return response()->json([
                 'error' => 'Unauthorized',
                 'message' => 'Missing bearer token.',

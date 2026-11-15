@@ -115,6 +115,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | SSL Verification
+    |--------------------------------------------------------------------------
+    |
+    | Set to false only on internal/dev networks where the central server uses
+    | a certificate that does not cover its IP address.
+    |
+    */
+    'ssl_verify' => env('CENTER_SSL_VERIFY', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Load Balancer Mode
     |--------------------------------------------------------------------------
     |
