@@ -792,20 +792,6 @@ sec_packages() {
     [[ -n "${SUDO_USER:-}" ]] && echo "xfce4-session" > "/home/${SUDO_USER}/.xsession"
     systemctl enable xrdp
 
-    _log "Installing NordVPN (CLI)"
-    if ! command -v nordvpn >/dev/null 2>&1; then
-        curl -fsSL https://downloads.nordcdn.com/apps/linux/install.sh -o /tmp/nordvpn-install.sh
-        sh /tmp/nordvpn-install.sh --no-browser
-        rm -f /tmp/nordvpn-install.sh
-    fi
-    if command -v nordvpn >/dev/null 2>&1; then
-        usermod -aG nordvpn "${SUDO_USER:-root}" 2>/dev/null || true
-        ok "NordVPN installed — logging in"
-        nordvpn login --token || warn "NordVPN login failed — run 'nordvpn login' manually after setup"
-    else
-        warn "NordVPN install failed — install manually from https://nordvpn.com/download/linux/"
-    fi
-
     _log "Configuring user groups"
     if [[ "$CURRENT_USER" == "root" ]]; then
         info "Running as plain root (no sudo user) — skipping group membership changes"
