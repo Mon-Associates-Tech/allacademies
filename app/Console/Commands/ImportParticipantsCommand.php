@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Models\GeneralExamParticipantGroupMember;
+use App\ExaminationHub\Support\ParticipantAuthHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -102,8 +103,10 @@ class ImportParticipantsCommand extends Command
                                 'email'    => $memberData['email'],
                             ],
                             [
-                                'name'        => $memberData['name'], // Clean name, no programme prefix
+                                'name'        => $memberData['name'],
+                                'auth'        => ParticipantAuthHelper::generate($memberData['name']),
                                 'unique_code' => $memberData['index_number'],
+                                'center_id'   => (int) config('center.center_id') ?: null,
                             ]
                         );
                     }

@@ -8,17 +8,22 @@ trait EnsuresExamOwnership
 {
     protected function ensureOwnerAccess(GeneralExam $exam): void
     {
-        // On center instances, staff can monitor but not edit
-        $role = config('center.role', 'central');
-        if ($role === 'center') {
-            // Center staff can view but cannot edit content
-            abort(403, 'Content editing is not allowed on center instances.');
+        $user = auth()->user();
+
+        // Super admins and owners can always edit, even on center instances
+        if ($user->isSuperAdmin() || $user->isOwner() || $user->isSchoolAdmin()) {
+            return;
         }
 
-        $teacherId = optional(auth()->user()?->teacher)->id;
+        // On center instances, non-privileged staff can monitor but not edit
+        if (config('center.role', 'central') === 'center') {
+            //abort(403, 'Content editing is not allowed on center instances.');
+        }
+
+        $teacherId = optional($user->teacher)->id;
 
         abort_unless(
-            $exam->user_id === auth()->id() || ($teacherId && $exam->teacher_id === $teacherId),
+            $exam->user_id === $user->id || ($teacherId && $exam->teacher_id === $teacherId),
             403
         );
     }

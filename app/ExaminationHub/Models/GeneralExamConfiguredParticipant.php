@@ -16,6 +16,7 @@ class GeneralExamConfiguredParticipant extends Model
         'center_id',
         'name',
         'email',
+        'auth',
         'unique_code',
         'is_active',
     ];

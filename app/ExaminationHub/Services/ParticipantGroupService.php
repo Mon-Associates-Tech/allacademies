@@ -3,11 +3,15 @@
 namespace App\ExaminationHub\Services;
 
 use App\ExaminationHub\Models\GeneralExam;
+use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Models\GeneralExamParticipantGroupMember;
+use App\ExaminationHub\Support\ParticipantAuthHelper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ParticipantGroupService
 {
@@ -38,18 +42,25 @@ class ParticipantGroupService
 
     public function addMember(GeneralExamParticipantGroup $group, string $name, string $email, ?string $uniqueCode = null): GeneralExamParticipantGroupMember
     {
+        $upperName = strtoupper($name);
+
         return $group->members()->create([
-            'name' => strtoupper($name),
-            'email' => strtolower($email),
+            'name'        => $upperName,
+            'email'       => strtolower($email),
+            'auth'        => ParticipantAuthHelper::generate($upperName),
             'unique_code' => $uniqueCode,
+            'center_id'   => (int) config('center.center_id') ?: null,
         ]);
     }
 
     public function updateMember(GeneralExamParticipantGroupMember $member, string $name, string $email, ?string $uniqueCode = null): GeneralExamParticipantGroupMember
     {
+        $upperName = strtoupper($name);
+
         $member->update([
-            'name' => strtoupper($name),
-            'email' => strtolower($email),
+            'name'        => $upperName,
+            'email'       => strtolower($email),
+            'auth'        => ParticipantAuthHelper::generate($upperName),
             'unique_code' => $uniqueCode,
         ]);
 
@@ -90,131 +101,171 @@ class ParticipantGroupService
      * @param mixed $fileOrPath
      * @return array
      */
-    public function importFromCsv($fileOrPath): array
-    {
-        try {
-            $sheets = Excel::toArray(null, $fileOrPath);
-        } catch (\Throwable $e) {
-            return ['success' => false, 'imported' => 0, 'errors' => ['Could not read the uploaded spreadsheet: ' . $e->getMessage()]];
+
+public function importFromCsv($fileOrPath): array
+{
+    try {
+        $path = $fileOrPath instanceof \Illuminate\Http\UploadedFile
+            ? $fileOrPath->getRealPath()
+            : $fileOrPath;
+
+        if (! is_string($path) || ! is_file($path)) {
+            throw new \InvalidArgumentException('The uploaded spreadsheet is not readable.');
         }
 
-        if (empty($sheets) || !isset($sheets[0])) {
-            return ['success' => false, 'imported' => 0, 'errors' => ['The spreadsheet appears to be empty.']];
-        }
+        $spreadsheet = IOFactory::load($path);
+        $rows = $spreadsheet->getActiveSheet()->toArray(null, false, false, false);
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'imported' => 0,
+            'errors' => ['Could not read the uploaded spreadsheet: ' . $e->getMessage()],
+        ];
+    }
 
-        $rows = $sheets[0];
-        if (!is_array($rows) || count($rows) === 0) {
-            return ['success' => false, 'imported' => 0, 'errors' => ['The spreadsheet appears to be empty.']];
-        }
+    if (empty($rows) || ! is_array($rows)) {
+        return [
+            'success' => false,
+            'imported' => 0,
+            'errors' => ['The spreadsheet appears to be empty.'],
+        ];
+    }
 
-        $rawHeader = $rows[0];
-        if (!is_array($rawHeader)) {
-            return ['success' => false, 'imported' => 0, 'errors' => ['The spreadsheet header row is invalid.']];
-        }
+    $rawHeader = $rows[0];
+    if (! is_array($rawHeader)) {
+        return [
+            'success' => false,
+            'imported' => 0,
+            'errors' => ['The spreadsheet header row is invalid.'],
+        ];
+    }
 
-        $header = array_map(fn($col) => strtolower(trim((string)$col)), $rawHeader);
+    $header = array_map(fn ($col) => strtolower(trim((string) $col)), $rawHeader);
 
-        $nameIndex = array_search('name', $header, true);
-        $emailIndex = array_search('email', $header, true);
-        $groupIndex = array_search('group', $header, true);
-        $codeIndex = array_search('unique_code', $header, true);
-        $programmeIndex = array_search('programme', $header, true);
+    $nameIndex = array_search('name', $header, true);
+    $emailIndex = array_search('email', $header, true);
+    $groupIndex = array_search('group', $header, true);
+    $codeIndex = array_search('unique_code', $header, true);
+    $programmeIndex = array_search('programme', $header, true);
 
-        if ($nameIndex === false || $emailIndex === false || $groupIndex === false) {
-            return ['success' => false, 'imported' => 0, 'errors' => ['Missing required columns: name, email, group']];
-        }
+    if ($nameIndex === false || $emailIndex === false || $groupIndex === false) {
+        return [
+            'success' => false,
+            'imported' => 0,
+            'errors' => ['Missing required columns: name, email, group'],
+        ];
+    }
 
-        $imported = 0;
-        $errors = [];
-        $groups = [];
-        $programmes = [];
+    $imported = 0;
+    $errors = [];
+    $groups = [];
+    $programmes = [];
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            $totalRows = count($rows);
-            for ($i = 1; $i < $totalRows; $i++) {
-                $rowNumber = $i + 1;
-                $row = $rows[$i];
+    try {
+        $totalRows = count($rows);
 
-                if (!is_array($row)) {
-                    $errors[] = "Row {$rowNumber}: invalid row format.";
-                    continue;
-                }
+        for ($i = 1; $i < $totalRows; $i++) {
+            $rowNumber = $i + 1;
+            $row = $rows[$i];
 
-                $name = $this->normalizeName((string)($row[$nameIndex] ?? ''));
-                $email = $this->normalizeEmail((string)($row[$emailIndex] ?? ''));
-                $groupName = $this->normalizeString((string)($row[$groupIndex] ?? ''));
-                $programmeName = $programmeIndex !== false
-                    ? $this->normalizeString((string)($row[$programmeIndex] ?? ''))
-                    : '';
-                $uniqueCode = $codeIndex !== false ? $this->normalizeUniqueCode((string)($row[$codeIndex] ?? '')) : null;
+            if (! is_array($row)) {
+                $errors[] = "Row {$rowNumber}: invalid row format.";
+                continue;
+            }
 
-                if ($name === '' || $email === '' || $groupName === '') {
-                    $errors[] = "Row {$rowNumber}: name, email and group are required.";
-                    continue;
-                }
+            $name = $this->normalizeName((string) ($row[$nameIndex] ?? ''));
+            $email = $this->normalizeEmail((string) ($row[$emailIndex] ?? ''));
+            $groupName = $this->normalizeString((string) ($row[$groupIndex] ?? ''));
+            $programmeName = $programmeIndex !== false
+                ? $this->normalizeString((string) ($row[$programmeIndex] ?? ''))
+                : '';
+            $uniqueCode = $codeIndex !== false
+                ? $this->normalizeUniqueCode((string) ($row[$codeIndex] ?? ''))
+                : null;
 
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $errors[] = "Row {$rowNumber}: '{$email}' is not a valid email address.";
-                    continue;
-                }
+            if ($name === '' || $email === '' || $groupName === '') {
+                $errors[] = "Row {$rowNumber}: name, email and group are required.";
+                continue;
+            }
 
-                $groupNameUpper = strtoupper($groupName);
-                $programmeNameUpper = strtoupper($programmeName);
-                $useProgramme = $programmeIndex !== false && $programmeNameUpper !== '';
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Row {$rowNumber}: '{$email}' is not a valid email address.";
+                continue;
+            }
 
-                // Create or reuse top-level parent group by normalized name.
-                if (!isset($groups[$groupNameUpper])) {
-                    $existingGroup = GeneralExamParticipantGroup::whereNull('parent_id')
-                        ->whereRaw('TRIM(UPPER(name)) = ?', [$groupNameUpper])
+            $groupNameUpper = strtoupper($groupName);
+            $programmeNameUpper = strtoupper($programmeName);
+            $useProgramme = $programmeIndex !== false && $programmeNameUpper !== '';
+
+            if (! isset($groups[$groupNameUpper])) {
+                $existingGroup = GeneralExamParticipantGroup::whereNull('parent_id')
+                    ->whereRaw('TRIM(UPPER(name)) = ?', [$groupNameUpper])
+                    ->first();
+
+                $groups[$groupNameUpper] = $existingGroup ?: GeneralExamParticipantGroup::create([
+                    'name' => $groupNameUpper,
+                    'description' => 'Imported from CSV on ' . now()->format('Y-m-d'),
+                    'parent_id' => null,
+                ]);
+            }
+
+            $parent = $groups[$groupNameUpper];
+
+            if ($useProgramme) {
+                $programmeKey = $parent->id . '||' . $programmeNameUpper;
+
+                if (! isset($programmes[$programmeKey])) {
+                    $existing = GeneralExamParticipantGroup::where('parent_id', $parent->id)
+                        ->whereRaw('TRIM(UPPER(name)) = ?', [$programmeNameUpper])
                         ->first();
 
-                    $groups[$groupNameUpper] = $existingGroup ?: GeneralExamParticipantGroup::create([
-                        'name' => $groupNameUpper,
-                        'description' => "Imported from CSV on " . now()->format('Y-m-d'),
-                        'parent_id' => null,
+                    $programmes[$programmeKey] = $existing ?: GeneralExamParticipantGroup::create([
+                        'name' => $programmeNameUpper,
+                        'description' => 'Imported programme from CSV on ' . now()->format('Y-m-d'),
+                        'parent_id' => $parent->id,
                     ]);
                 }
 
-                $parent = $groups[$groupNameUpper];
-
-                if ($useProgramme) {
-                    // Create or reuse programme under the parent by normalized name.
-                    $programmeKey = $parent->id . '||' . $programmeNameUpper;
-                    if (!isset($programmes[$programmeKey])) {
-                        $existing = GeneralExamParticipantGroup::where('parent_id', $parent->id)
-                            ->whereRaw('TRIM(UPPER(name)) = ?', [$programmeNameUpper])
-                            ->first();
-
-                        $programmes[$programmeKey] = $existing ?: GeneralExamParticipantGroup::create([
-                            'name' => $programmeNameUpper,
-                            'description' => "Imported programme from CSV on " . now()->format('Y-m-d'),
-                            'parent_id' => $parent->id,
-                        ]);
-                    }
-
-                    $memberGroup = $programmes[$programmeKey];
-                } else {
-                    $memberGroup = $parent;
-                }
-
-                GeneralExamParticipantGroupMember::updateOrCreate(
-                    ['group_id' => $memberGroup->id, 'email' => $email],
-                    ['name' => strtoupper($name), 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null]
-                );
-
-                $imported++;
+                $memberGroup = $programmes[$programmeKey];
+            } else {
+                $memberGroup = $parent;
             }
 
-            DB::commit();
+            $upperName = strtoupper($name);
 
-            return ['success' => true, 'imported' => $imported, 'errors' => $errors, 'groups' => count($groups)];
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return ['success' => false, 'imported' => 0, 'errors' => ['Import failed: ' . $e->getMessage()]];
+            GeneralExamParticipantGroupMember::updateOrCreate(
+                ['group_id' => $memberGroup->id, 'email' => $email],
+                [
+                    'name' => $upperName,
+                    'auth' => ParticipantAuthHelper::generate($upperName),
+                    'unique_code' => $uniqueCode !== '' ? $uniqueCode : null,
+                    'center_id' => (int) config('center.center_id') ?: null,
+                ]
+            );
+
+            $imported++;
         }
+
+        DB::commit();
+
+        return [
+            'success' => true,
+            'imported' => $imported,
+            'errors' => $errors,
+            'groups' => count($groups),
+        ];
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return [
+            'success' => false,
+            'imported' => 0,
+            'errors' => ['Import failed: ' . $e->getMessage()],
+        ];
     }
+}
 
     public function getAllGroups(?string $search = null, ?int $subjectId = null, string $sort = 'name_asc')
     {
@@ -308,12 +359,14 @@ class ParticipantGroupService
             $participant = GeneralExamConfiguredParticipant::updateOrCreate(
                 [
                     'general_exam_id' => $examId,
-                    'email' => $member->email,
+                    'email'           => $member->email,
                 ],
                 [
-                    'name' => $member->name,
+                    'name'        => $member->name,
+                    'auth'        => ParticipantAuthHelper::generate($member->name),
                     'unique_code' => $member->unique_code,
-                    'is_active' => true,
+                    'center_id'   => $member->center_id ?? ((int) config('center.center_id') ?: null),
+                    'is_active'   => true,
                 ]
             );
 

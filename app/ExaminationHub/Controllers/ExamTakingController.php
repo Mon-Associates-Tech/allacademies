@@ -63,7 +63,7 @@ class ExamTakingController extends Controller
         $data = $request->validate([
             'access_code' => ['required', 'string'],
             'name'        => ['nullable', 'string', 'max:255'],
-            'email'       => ['nullable', 'email', 'max:255'],
+            'email'       => ['nullable', 'string', 'max:255'],
             'unique_code' => ['nullable', 'string', 'max:255'],
         ]);
 

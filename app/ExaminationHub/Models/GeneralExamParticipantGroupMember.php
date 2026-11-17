@@ -15,7 +15,9 @@ class GeneralExamParticipantGroupMember extends Model
         'group_id',
         'name',
         'email',
+        'auth',
         'unique_code',
+        'center_id',
         'created_by',
         'updated_by',
     ];

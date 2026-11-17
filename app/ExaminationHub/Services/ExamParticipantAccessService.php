@@ -6,21 +6,26 @@ use App\ExaminationHub\Contracts\ExamParticipantAccessServiceInterface;
 use App\ExaminationHub\Models\GeneralExam;
 use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Models\GeneralExamParticipant;
+use App\ExaminationHub\Support\ParticipantAuthHelper;
 
 class ExamParticipantAccessService implements ExamParticipantAccessServiceInterface
 {
     public function registerConfiguredParticipant(GeneralExam $exam, array $payload): array
     {
+        $name     = (string) ($payload['name'] ?? '');
+        $centerId = $payload['center_id'] ?? config('center.center_id');
+
         $record = GeneralExamConfiguredParticipant::updateOrCreate(
             [
                 'general_exam_id' => $exam->id,
                 'email' => strtolower((string) ($payload['email'] ?? '')),
             ],
             [
-                'name' => (string) ($payload['name'] ?? ''),
+                'name'        => $name,
+                'auth'        => ParticipantAuthHelper::generate($name),
                 'unique_code' => $payload['unique_code'] ?? null,
-                'center_id' => isset($payload['center_id']) ? (int) $payload['center_id'] : null,
-                'is_active' => true,
+                'center_id'   => $centerId !== null ? (int) $centerId : null,
+                'is_active'   => true,
             ]
         );
 
@@ -99,9 +104,17 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
                 continue;
             }
 
+            $centerId = $centerId ?? (int) config('center.center_id') ?: null;
+
             GeneralExamConfiguredParticipant::updateOrCreate(
                 ['general_exam_id' => $exam->id, 'email' => $email],
-                ['name' => $name, 'unique_code' => $uniqueCode !== '' ? $uniqueCode : null, 'center_id' => $centerId, 'is_active' => true]
+                [
+                    'name'        => $name,
+                    'auth'        => ParticipantAuthHelper::generate($name),
+                    'unique_code' => $uniqueCode !== '' ? $uniqueCode : null,
+                    'center_id'   => $centerId,
+                    'is_active'   => true,
+                ]
             );
 
             $imported++;
@@ -114,32 +127,42 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
 
     public function authorizeJoinByCode(GeneralExam $exam, string $name, string $email, ?string $uniqueCode = null): array
     {
-        $email = strtolower(trim($email));
         $uniqueCode = $uniqueCode ? trim($uniqueCode) : null;
+
+        // The email field accepts either a real email address or a 6-character auth code.
+        $rawEmail    = trim($email);
+        $inputIsAuth = $rawEmail !== '' && ! str_contains($rawEmail, '@') && strlen($rawEmail) === 6;
+        $email       = $inputIsAuth ? '' : strtolower($rawEmail);
+        $authCode    = $inputIsAuth ? strtoupper($rawEmail) : null;
 
         if ($exam->participant_mode === 'general') {
             return ['allowed' => true, 'mode' => 'general'];
         }
 
-        $configured = null;
-        if ($exam->participant_mode === 'configured' || $exam->participant_mode === 'both') {
-            $hasEmailForMatch = $email !== '';
-            $hasCodeForMatch = $uniqueCode !== null && $uniqueCode !== '';
+        $configured       = null;
+        $hasEmailForMatch = $email !== '';
+        $hasAuthForMatch  = $authCode !== null;
+        $hasCodeForMatch  = $uniqueCode !== null && $uniqueCode !== '';
 
-            $query = $exam->configuredParticipants()->where('is_active', true);
+        if ($exam->participant_mode === 'configured' || $exam->participant_mode === 'both') {
+            $query               = $exam->configuredParticipants()->where('is_active', true);
             $canLookupConfigured = false;
 
             if (($exam->configured_match_mode ?? 'any') === 'both') {
-                // Both mode: require both email AND unique_code
-                if ($hasEmailForMatch && $hasCodeForMatch) {
-                    $query->where('email', $email)->where('unique_code', $uniqueCode);
+                if (($hasEmailForMatch || $hasAuthForMatch) && $hasCodeForMatch) {
+                    if ($hasAuthForMatch) {
+                        $query->where('auth', $authCode);
+                    } else {
+                        $query->where('email', $email);
+                    }
+                    $query->where('unique_code', $uniqueCode);
                     $canLookupConfigured = true;
                 }
             } else {
-                // Any mode allows either identifier, but every provided identifier
-                // must still belong to the same configured participant.
-                if ($hasEmailForMatch || $hasCodeForMatch) {
-                    if ($hasEmailForMatch) {
+                if ($hasEmailForMatch || $hasAuthForMatch || $hasCodeForMatch) {
+                    if ($hasAuthForMatch) {
+                        $query->where('auth', $authCode);
+                    } elseif ($hasEmailForMatch) {
                         $query->where('email', $email);
                     }
                     if ($hasCodeForMatch) {
@@ -155,15 +178,23 @@ class ExamParticipantAccessService implements ExamParticipantAccessServiceInterf
         }
 
         if ($exam->participant_mode === 'configured') {
-            if (! $hasEmailForMatch || ! $hasCodeForMatch) {
-                return ['allowed' => false, 'mode' => 'configured', 'message' => 'Configured examinations require both email and unique code.'];
+            if (! $hasEmailForMatch && ! $hasAuthForMatch) {
+                return ['allowed' => false, 'mode' => 'configured', 'message' => 'Please enter your email address or auth code.'];
             }
 
-            $configured = $exam->configuredParticipants()
-                ->where('is_active', true)
-                ->where('email', $email)
-                ->where('unique_code', $uniqueCode)
-                ->first();
+            $codeQuery = $exam->configuredParticipants()->where('is_active', true);
+
+            if ($hasAuthForMatch) {
+                $codeQuery->where('auth', $authCode);
+            } else {
+                $codeQuery->where('email', $email);
+            }
+
+            if ($hasCodeForMatch) {
+                $codeQuery->where('unique_code', $uniqueCode);
+            }
+
+            $configured = $codeQuery->first();
 
             if (! $configured) {
                 return ['allowed' => false, 'mode' => 'configured', 'message' => 'You are not on the configured participant list for this examination.'];

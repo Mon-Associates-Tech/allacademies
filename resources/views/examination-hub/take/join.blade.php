@@ -134,29 +134,29 @@
                             >
                         </div>
 
-                        {{-- Email --}}
+                        {{-- Email Address / Auth Code --}}
                         <div>
                             <label for="email" class="block text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Email Address <span class="text-red-500" aria-label="required">*</span>
+                                Email Address / Auth Code <span class="text-red-500" aria-label="required">*</span>
                             </label>
                             <input
                                 id="email"
                                 name="email"
-                                type="email"
+                                type="text"
                                 required
                                 aria-required="true"
                                 value="{{ old('email') }}"
                                 class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-white transition-all"
-                                placeholder="your.email@example.com"
+                                placeholder="your.email@example.com or JOHSMI"
                                 autocomplete="email"
                                 style="border-color: {{ $branding['primary_color'] }};"
                             >
                         </div>
 
-                        {{-- Unique Code --}}
+                        {{-- Index Number --}}
                         <div>
                             <label for="unique_code" class="block text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Unique Code <span class="text-slate-400 font-normal"></span>
+                                Index Number <span class="text-slate-400 font-normal text-xs normal-case">(if provided)</span>
                             </label>
                             <input
                                 id="unique_code"
@@ -164,7 +164,7 @@
                                 type="text"
                                 value="{{ old('unique_code') }}"
                                 class="w-full px-3 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-none focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-white transition-all"
-                                placeholder="If provided"
+                                placeholder="e.g. 1234567"
                                 autocomplete="off"
                                 style="border-color: {{ $branding['primary_color'] }};"
                             >

@@ -8,6 +8,7 @@ use App\ExaminationHub\Models\GeneralExamConfiguredParticipant;
 use App\ExaminationHub\Models\GeneralExamParticipant;
 use App\ExaminationHub\Models\GeneralExamParticipantGroup;
 use App\ExaminationHub\Services\ParticipantGroupService;
+use App\ExaminationHub\Support\ParticipantAuthHelper;
 use App\ExaminationHub\Traits\EnsuresExamOwnership;
 use App\Http\Controllers\Controller;
 use App\Services\GeneralExam\GeneralExamService;
@@ -230,6 +231,7 @@ class ParticipantController extends Controller
             'unique_code' => ['nullable', 'string', 'max:100'],
         ]);
     
+        $data['auth'] = ParticipantAuthHelper::generate($data['name']);
         $participant->update($data);
     
         return back()->with('success', 'Participant details updated.')
