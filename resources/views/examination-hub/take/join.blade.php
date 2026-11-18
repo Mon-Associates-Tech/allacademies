@@ -94,10 +94,10 @@
                             </div>
                         @endif
 
-                        {{-- Access Code --}}
+                        {{-- Exam/Access Code --}}
                         <div>
                             <label for="access_code" class="block text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Access Code <span class="text-red-500" aria-label="required">*</span>
+                                Exam Code <span class="text-red-500" aria-label="required">*</span>
                             </label>
                             <input
                                 id="access_code"
@@ -134,10 +134,10 @@
                             >
                         </div>
 
-                        {{-- Email Address / Auth Code --}}
+                        {{-- Email Address / Username --}}
                         <div>
                             <label for="email" class="block text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Email Address / Auth Code <span class="text-red-500" aria-label="required">*</span>
+                                Email Address / Username <span class="text-red-500" aria-label="required">*</span>
                             </label>
                             <input
                                 id="email"

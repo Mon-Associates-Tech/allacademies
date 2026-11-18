@@ -111,10 +111,6 @@
                                 <span>Participant's full name</span>
                             </li>
                             <li class="flex items-start gap-2">
-                                <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">email</span>
-                                <span>Participant's email address</span>
-                            </li>
-                            <li class="flex items-start gap-2">
                                 <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">group</span>
                                 <span>Group name (root group, will be created if missing)</span>
                             </li>
@@ -125,12 +121,20 @@
                         <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3" style="letter-spacing: 0.08em;">Optional Columns</h3>
                         <ul class="space-y-2 text-sm text-slate-700 dark:text-slate-300">
                             <li class="flex items-start gap-2">
-                                <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">unique_code</span>
-                                <span>Unique identifier for participant</span>
+                                <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">username</span>
+                                <span>Username or email — if omitted, it will be auto-generated from the name</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">index_number/pin</span>
+                                <span>Participant's index number or PIN</span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">programme</span>
                                 <span>Programme name under the root group (optional)</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="inline-flex items-center justify-center text-[10px] font-mono font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-300 mt-0.5" style="border-radius: 2px;">center_id</span>
+                                <span>Center ID for the participant (optional, numeric)</span>
                             </li>
                         </ul>
                     </div>
@@ -139,10 +143,10 @@
                         <div class="h-1 w-full" style="background: linear-gradient(90deg, #1d4ed8, #3b82f6);"></div>
                         <div class="bg-slate-50 dark:bg-slate-800/50 p-4">
                             <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Example CSV Format</h3>
-                            <pre class="bg-white dark:bg-slate-900 p-3 text-xs font-mono text-slate-700 dark:text-slate-300 overflow-x-auto border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">name,email,group,unique_code
-John Doe,john@example.com,Group A,CODE123
-Jane Smith,jane@example.com,Group A,CODE456
-Bob Wilson,bob@example.com,Group B,CODE789</pre>
+                            <pre class="bg-white dark:bg-slate-900 p-3 text-xs font-mono text-slate-700 dark:text-slate-300 overflow-x-auto border border-slate-200 dark:border-slate-700" style="border-radius: 2px;">name,group,index_number/pin
+John Doe,Group A,12345
+Jane Smith,Group A,67890
+Bob Wilson,Group B,11223</pre>
                         </div>
                     </div>
 
@@ -157,14 +161,17 @@ Bob Wilson,bob@example.com,Group B,CODE789</pre>
                             </h3>
                             <ul class="list-disc list-inside text-sm text-slate-600 dark:text-slate-400 space-y-1">
                                 <li>Groups will be automatically created if they don't exist</li>
-                                <li>Duplicate emails within the same group will be updated</li>
+                                <li>If the username column is omitted, a username is auto-generated from the name (e.g. "John Doe" → "JDOE")</li>
+                                <li>If the name contains an email domain (e.g. "AMIYAWRABAB@GMAIL.COM"), the domain is stripped automatically</li>
+                                <li>The username field accepts any string — email addresses or generated usernames both work</li>
+                                <li>Duplicate entries within the same group will be updated</li>
                                 <li>Each participant can belong to multiple groups</li>
                                 <li>Invalid rows will be skipped with error messages</li>
                             </ul>
                         </div>
                     </div>
 
-                    <a href="data:text/csv;charset=utf-8,name%2Cemail%2Cgroup%2Cunique_code%0AJohn%20Doe%2Cjohn%40example.com%2CGroup%20A%2CCODE123%0AJane%20Smith%2Cjane%40example.com%2CGroup%20A%2CCODE456%0ABob%20Wilson%2Cbob%40example.com%2CGroup%20B%2CCODE789"
+                    <a href="data:text/csv;charset=utf-8,name%2Cgroup%2Cindex_number%2Fpin%0AJohn%20Doe%2CGroup%20A%2C12345%0AJane%20Smith%2CGroup%20A%2C67890%0ABob%20Wilson%2CGroup%20B%2C11223"
                        download="sample_participants.csv"
                        class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 uppercase tracking-wider"
                        style="border-radius: 2px; letter-spacing: 0.08em;">

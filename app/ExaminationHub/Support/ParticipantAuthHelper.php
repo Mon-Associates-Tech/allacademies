@@ -5,28 +5,41 @@ namespace App\ExaminationHub\Support;
 class ParticipantAuthHelper
 {
     /**
-     * Generate a 6-character auth code from a participant's full name.
+     * Generate a short auth code from a participant's full name.
      *
      * Rules:
-     *  - Split on whitespace; use only the first two words.
-     *  - Two+ words: first 3 chars of word 1 + first 3 chars of word 2.
-     *  - One word:   all 6 chars from that word.
-     *  - If a word is shorter than its required slice, pad with zeros.
+     *  - Split on whitespace.
+     *  - Exactly 2 names: first character of first word + entire second word.
+     *  - More than 2 names: first character of first word + entire last word.
+     *  - One name: the word itself.
      *  - Result is always uppercase.
      */
     public static function generate(string $name): string
     {
         $parts = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY);
 
-        if (count($parts) >= 2) {
-            $a    = strtoupper(substr($parts[0], 0, 3));
-            $b    = strtoupper(substr($parts[1], 0, 3));
-            $auth = str_pad($a, 3, '0') . str_pad($b, 3, '0');
-        } else {
-            $word = strtoupper($parts[0] ?? '');
-            $auth = str_pad(substr($word, 0, 6), 6, '0');
+        // Strip email domain parts (anything after @) from each word
+        $parts = array_map(function ($part) {
+            $pos = strpos($part, '@');
+            return $pos !== false ? substr($part, 0, $pos) : $part;
+        }, $parts);
+
+        // Re-filter empty parts after stripping
+        $parts = array_filter($parts, fn ($p) => $p !== '');
+        $parts = array_values($parts);
+
+        if (count($parts) === 1) {
+            return strtoupper($parts[0]);
         }
 
-        return $auth;
+        $firstChar = strtoupper(substr($parts[0], 0, 1));
+
+        if (count($parts) === 2) {
+            $secondWord = strtoupper($parts[1]);
+        } else {
+            $secondWord = strtoupper(end($parts));
+        }
+
+        return $firstChar . $secondWord;
     }
 }

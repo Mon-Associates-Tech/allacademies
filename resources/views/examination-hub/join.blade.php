@@ -19,8 +19,8 @@
             <form method="POST" action="{{ route('examination-hub.join.attempt', $exam->access_code) }}" class="space-y-3">
                 @csrf
                 <input name="name" placeholder="Full name" class="w-full px-3 py-2 border rounded-lg" value="{{ old('name') }}">
-                <input type="email" name="email" placeholder="Email" class="w-full px-3 py-2 border rounded-lg" value="{{ old('email') }}">
-                <input name="unique_code" placeholder="Unique code (if configured)" class="w-full px-3 py-2 border rounded-lg" value="{{ old('unique_code') }}">
+                <input type="text" name="email" placeholder="Username" class="w-full px-3 py-2 border rounded-lg" value="{{ old('email') }}">
+                <input name="unique_code" placeholder="Index Number/Pin (if configured)" class="w-full px-3 py-2 border rounded-lg" value="{{ old('unique_code') }}">
                 <button class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg">Continue to Exam</button>
             </form>
         @endif

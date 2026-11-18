@@ -46,7 +46,7 @@ class ParticipantGroupService
 
         return $group->members()->create([
             'name'        => $upperName,
-            'email'       => strtolower($email),
+            'email'       => $email,
             'auth'        => ParticipantAuthHelper::generate($upperName),
             'unique_code' => $uniqueCode,
             'center_id'   => (int) config('center.center_id') ?: null,
@@ -59,7 +59,7 @@ class ParticipantGroupService
 
         $member->update([
             'name'        => $upperName,
-            'email'       => strtolower($email),
+            'email'       => $email,
             'auth'        => ParticipantAuthHelper::generate($upperName),
             'unique_code' => $uniqueCode,
         ]);
@@ -84,7 +84,7 @@ class ParticipantGroupService
 
     private function normalizeEmail(string $value): string
     {
-        return strtolower($this->normalizeString($value));
+        return $this->normalizeString($value);
     }
 
     private function normalizeUniqueCode(string $value): ?string
@@ -143,16 +143,21 @@ public function importFromCsv($fileOrPath): array
     $header = array_map(fn ($col) => strtolower(trim((string) $col)), $rawHeader);
 
     $nameIndex = array_search('name', $header, true);
-    $emailIndex = array_search('email', $header, true);
+    $emailIndex = array_search('username', $header, true) !== false
+        ? array_search('username', $header, true)
+        : array_search('email', $header, true);
     $groupIndex = array_search('group', $header, true);
-    $codeIndex = array_search('unique_code', $header, true);
+    $codeIndex = array_search('index_number/pin', $header, true) !== false
+        ? array_search('index_number/pin', $header, true)
+        : array_search('unique_code', $header, true);
     $programmeIndex = array_search('programme', $header, true);
+    $centerIndex = array_search('center_id', $header, true);
 
-    if ($nameIndex === false || $emailIndex === false || $groupIndex === false) {
+    if ($nameIndex === false || $groupIndex === false) {
         return [
             'success' => false,
             'imported' => 0,
-            'errors' => ['Missing required columns: name, email, group'],
+            'errors' => ['Missing required columns: name, group (username is optional — will be generated from name if not provided)'],
         ];
     }
 
@@ -176,7 +181,9 @@ public function importFromCsv($fileOrPath): array
             }
 
             $name = $this->normalizeName((string) ($row[$nameIndex] ?? ''));
-            $email = $this->normalizeEmail((string) ($row[$emailIndex] ?? ''));
+            $rawEmail = $emailIndex !== false
+                ? trim((string) ($row[$emailIndex] ?? ''))
+                : '';
             $groupName = $this->normalizeString((string) ($row[$groupIndex] ?? ''));
             $programmeName = $programmeIndex !== false
                 ? $this->normalizeString((string) ($row[$programmeIndex] ?? ''))
@@ -185,14 +192,23 @@ public function importFromCsv($fileOrPath): array
                 ? $this->normalizeUniqueCode((string) ($row[$codeIndex] ?? ''))
                 : null;
 
-            if ($name === '' || $email === '' || $groupName === '') {
-                $errors[] = "Row {$rowNumber}: name, email and group are required.";
+            if ($name === '' || $groupName === '') {
+                $errors[] = "Row {$rowNumber}: name and group are required.";
                 continue;
             }
 
-            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = "Row {$rowNumber}: '{$email}' is not a valid email address.";
-                continue;
+            // Generate email (username) from name if not provided
+            if ($rawEmail === '') {
+                $rawEmail = ParticipantAuthHelper::generate($name);
+            }
+            $email = $this->normalizeEmail($rawEmail);
+
+            $centerId = null;
+            if ($centerIndex !== false) {
+                $rawCenter = trim((string) ($row[$centerIndex] ?? ''));
+                if ($rawCenter !== '' && is_numeric($rawCenter)) {
+                    $centerId = (int) $rawCenter;
+                }
             }
 
             $groupNameUpper = strtoupper($groupName);
@@ -241,7 +257,7 @@ public function importFromCsv($fileOrPath): array
                     'name' => $upperName,
                     'auth' => ParticipantAuthHelper::generate($upperName),
                     'unique_code' => $uniqueCode !== '' ? $uniqueCode : null,
-                    'center_id' => (int) config('center.center_id') ?: null,
+                    'center_id' => $centerId ?? ((int) config('center.center_id') ?: null),
                 ]
             );
 

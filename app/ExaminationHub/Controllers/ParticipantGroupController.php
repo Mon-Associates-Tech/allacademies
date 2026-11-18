@@ -130,7 +130,7 @@ class ParticipantGroupController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'string', 'max:255'],
             'unique_code' => ['nullable', 'string', 'max:100'],
         ]);
 
@@ -145,7 +145,7 @@ class ParticipantGroupController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'string', 'max:255'],
             'unique_code' => ['nullable', 'string', 'max:100'],
         ]);
 

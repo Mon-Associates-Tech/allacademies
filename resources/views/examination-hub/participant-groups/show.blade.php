@@ -95,9 +95,9 @@
 
                         <div>
                             <label for="email" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">
-                                Email <span class="text-red-500">*</span>
+                                Username <span class="text-red-500">*</span>
                             </label>
-                            <input type="email" name="email" id="email" value="{{ old('email') }}"
+                            <input type="text" name="email" id="email" value="{{ old('email') }}"
                                    class="w-full px-4 py-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:focus:border-amber-500 outline-none transition-colors"
                                    style="border-radius: 2px;" required>
                         </div>
@@ -152,8 +152,8 @@
                                 <thead>
                                     <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Email</th>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Code</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Username</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Index Number/Pin</th>
                                         <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" style="letter-spacing: 0.08em;">Actions</th>
                                     </tr>
                                 </thead>
@@ -229,14 +229,14 @@
                 </div>
 
                 <div>
-                    <label for="edit_email" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" id="edit_email" 
+                    <label for="edit_email" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Username <span class="text-red-500">*</span></label>
+                    <input type="text" name="email" id="edit_email"
                            class="w-full px-4 py-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:focus:border-amber-500 outline-none transition-colors"
                            style="border-radius: 2px;" required>
                 </div>
 
                 <div>
-                    <label for="edit_unique_code" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Unique Code</label>
+                    <label for="edit_unique_code" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2" style="letter-spacing: 0.08em;">Index Number/Pin</label>
                     <input type="text" name="unique_code" id="edit_unique_code" 
                            class="w-full px-4 py-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 dark:focus:border-amber-500 outline-none transition-colors"
                            style="border-radius: 2px;">

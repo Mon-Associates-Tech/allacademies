@@ -313,7 +313,7 @@
                             </div>
                             <p class="text-lg font-semibold text-slate-900 dark:text-white">No examinations found</p>
                             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Try adjusting your filters or create a new examination</p>
-                            <a href="{{ route('examination-hub.exams.create') }}"
+                            <a href="{{ route('examination-hub.create') }}"
                                class="mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all"
                                style="border-radius: 2px; background: linear-gradient(135deg, #7c3aed, #a78bfa); box-shadow: 0 2px 10px rgba(124,58,237,0.3);">
                                 Create Your First Exam
