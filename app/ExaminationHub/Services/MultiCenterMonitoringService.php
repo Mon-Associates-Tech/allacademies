@@ -293,8 +293,7 @@ class MultiCenterMonitoringService
             $examData = $exam ?? $item->exam;
             $durationMinutes = $examData?->duration_in_minutes ?? 60;
 
-            $answers = $item->answers ?? collect();
-            $answeredCount = $answers->count();
+            $answeredCount = $item->getAnsweredCount();
             $totalQuestions = $examData?->questions()->count() ?? 0;
 
             $participant = $item->generalExamParticipant;
@@ -362,13 +361,13 @@ class MultiCenterMonitoringService
         $localSubmissions = collect($localData['submissions'] ?? []);
         $combinedSubmissions = $allSubmissions->merge($localSubmissions);
 
-        $submitted = $combinedSubmissions->filter(fn ($s) => isset($s['submitted_at']) && $s['submitted_at'] !== null);
-        $graded = $combinedSubmissions->filter(fn ($s) => isset($s['score']) && $s['score'] !== null);
+        $submitted = $combinedSubmissions->filter(fn ($s) => ($s['submitted_at'] ?? null) !== null);
+        $graded = $combinedSubmissions->filter(fn ($s) => ($s['score'] ?? null) !== null);
 
         return [
             'total_candidates' => $combinedSubmissions->count(),
-            'joined' => $combinedSubmissions->filter(fn ($s) => isset($s['started_at']) && $s['started_at'] !== null)->count(),
-            'in_progress' => $combinedSubmissions->filter(fn ($s) => isset($s['started_at'], $s['submitted_at']) && $s['started_at'] !== null && $s['submitted_at'] === null)->count(),
+            'joined' => $combinedSubmissions->filter(fn ($s) => ($s['started_at'] ?? null) !== null)->count(),
+            'in_progress' => $combinedSubmissions->filter(fn ($s) => ($s['started_at'] ?? null) !== null && ($s['submitted_at'] ?? null) === null)->count(),
             'submitted' => $submitted->count(),
             'graded' => $graded->count(),
             'average_score' => $graded->count() > 0 ? round($graded->avg('score') ?? 0, 2) : 0,

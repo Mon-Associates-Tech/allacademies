@@ -214,8 +214,8 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4 text-sm">
-                    <span class="text-slate-500"><span class="font-bold text-slate-900 dark:text-white" x-text="initialData.local?.stats?.total_candidates || 0"></span> candidates</span>
-                    <span class="text-slate-500"><span class="font-bold text-emerald-600" x-text="initialData.local?.stats?.submitted || 0"></span> submitted</span>
+                    <span class="text-slate-500"><span class="font-bold text-slate-900 dark:text-white" x-text="data.local?.stats?.total_candidates || 0"></span> candidates</span>
+                    <span class="text-slate-500"><span class="font-bold text-emerald-600" x-text="data.local?.stats?.submitted || 0"></span> submitted</span>
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -230,7 +230,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="sub in (initialData.local?.submissions || [])" :key="'local-' + sub.id">
+                        <template x-for="sub in (data.local?.submissions || [])" :key="'local-' + sub.id">
                             <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                 <td class="px-4 py-2">
                                     <div>
@@ -260,7 +260,7 @@
                                 </td>
                             </tr>
                         </template>
-                        <template x-if="!(initialData.local?.submissions?.length)">
+                        <template x-if="!(data.local?.submissions?.length)">
                             <tr>
                                 <td colspan="5" class="px-4 py-8 text-center text-slate-400">
                                     No local submissions
