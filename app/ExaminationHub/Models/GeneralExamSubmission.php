@@ -164,6 +164,12 @@ class GeneralExamSubmission extends Model
         return $this->hasMany(SubmissionAnswer::class, 'general_exam_submission_id');
     }
 
+    /** The center this submission originated from (null for central server). */
+    public function center(): BelongsTo
+    {
+        return $this->belongsTo(Center::class, 'center_id');
+    }
+
     // ─── Status Helpers ───────────────────────────────────────────────────────
 
     public function isInProgress(): bool

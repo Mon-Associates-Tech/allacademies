@@ -83,7 +83,7 @@ class MultiCenterMonitoringService
         foreach ($centers as $center) {
             $submissions = GeneralExamSubmission::where('center_id', $center->id)
                 ->where('general_exam_id', $exam->id)
-                ->with(['generalExamParticipant', 'answers'])
+                ->with(['generalExamParticipant', 'answers', 'center'])
                 ->orderBy('started_at', 'desc')
                 ->get();
 
@@ -115,7 +115,7 @@ class MultiCenterMonitoringService
         // Include local submissions
         $localSubmissions = GeneralExamSubmission::where('general_exam_id', $exam->id)
             ->whereNull('center_id')
-            ->with(['generalExamParticipant', 'answers'])
+            ->with(['generalExamParticipant', 'answers', 'center'])
             ->orderBy('started_at', 'desc')
             ->get();
 
@@ -187,7 +187,7 @@ class MultiCenterMonitoringService
     protected function getCenterSubmissions(Center $center, ?array $filters = null): Collection
     {
         $query = GeneralExamSubmission::where('center_id', $center->id)
-            ->with(['exam', 'generalExamParticipant', 'answers'])
+            ->with(['exam', 'generalExamParticipant', 'answers', 'center'])
             ->orderBy('started_at', 'desc');
 
         if (isset($filters['exam_id'])) {
@@ -225,7 +225,7 @@ class MultiCenterMonitoringService
     protected function getLocalMonitoringData(?array $filters = null): array
     {
         $query = GeneralExamSubmission::whereNull('center_id')
-            ->with(['exam', 'generalExamParticipant', 'answers'])
+            ->with(['exam', 'generalExamParticipant', 'answers', 'center'])
             ->orderBy('started_at', 'desc');
 
         if (isset($filters['exam_id'])) {
@@ -297,12 +297,22 @@ class MultiCenterMonitoringService
             $totalQuestions = $examData?->questions()->count() ?? 0;
 
             $participant = $item->generalExamParticipant;
+            $center = $item->center;
+
+            $uniqueCode = $item->participant_index_number
+                ?? ($participant instanceof \App\ExaminationHub\Models\GeneralExamConfiguredParticipant ? $participant->unique_code : null)
+                ?? ($participant?->unique_code ?? null);
+
+            $username = $item->participant_email
+                ?? ($participant instanceof \App\ExaminationHub\Models\GeneralExamConfiguredParticipant ? $participant->email : null)
+                ?? ($participant?->email ?? null);
+
             return [
                 'id' => $item->id,
                 'uuid' => $item->uuid,
                 'participant_name' => $participant?->name ?? $item->participant_name ?? 'Unknown',
-                'participant_email' => $participant?->email ?? $item->participant_email ?? '',
-                'index_number' => $item->participant_index_number ?? $participant?->index_number ?? '',
+                'participant_email' => $username ?? '',
+                'unique_code' => $uniqueCode ?? '',
                 'status' => $item->status,
                 'started_at' => $item->started_at?->toIso8601String(),
                 'submitted_at' => $item->submitted_at?->toIso8601String(),
@@ -316,6 +326,8 @@ class MultiCenterMonitoringService
                 'extra_time_minutes' => $item->extra_time_minutes ?? 0,
                 'exam_title' => $examData?->title ?? '',
                 'exam_uuid' => $examData?->uuid ?? '',
+                'center_name' => $center?->name ?? null,
+                'center_code' => $center?->code ?? null,
             ];
         })->values()->toArray();
     }

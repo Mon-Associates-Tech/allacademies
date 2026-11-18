@@ -147,7 +147,7 @@
                         <thead>
                             <tr class="border-t border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Candidate</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Index #</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Center</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Progress</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Score</th>
@@ -160,10 +160,18 @@
                                     <td class="px-4 py-2">
                                         <div>
                                             <p class="font-medium text-slate-900 dark:text-white" x-text="sub.participant_name"></p>
+                                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                                <span x-show="sub.participant_email" x-text="sub.participant_email"></span>
+                                                <span x-show="sub.participant_email && sub.unique_code" class="text-slate-300 dark:text-slate-600">•</span>
+                                                <span x-show="sub.unique_code" x-text="'Index: ' + sub.unique_code"></span>
+                                            </div>
                                             <p class="text-xs text-slate-500" x-text="sub.exam_title"></p>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-2 text-slate-600 dark:text-slate-400" x-text="sub.index_number || '-'"></td>
+                                    <td class="px-4 py-2">
+                                        <span x-show="sub.center_name" class="text-sm text-slate-600 dark:text-slate-400" x-text="sub.center_name + ' (' + sub.center_code + ')'"></span>
+                                        <span x-show="!sub.center_name" class="text-xs text-slate-400 italic">Central</span>
+                                    </td>
                                     <td class="px-4 py-2">
                                         <span class="px-2 py-1 text-xs font-medium"
                                               :class="statusBadgeClass(sub.status)"
@@ -223,7 +231,7 @@
                     <thead>
                         <tr class="border-t border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                             <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Candidate</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Index #</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Center</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Progress</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Score</th>
@@ -235,10 +243,18 @@
                                 <td class="px-4 py-2">
                                     <div>
                                         <p class="font-medium text-slate-900 dark:text-white" x-text="sub.participant_name"></p>
+                                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                                            <span x-show="sub.participant_email" x-text="sub.participant_email"></span>
+                                            <span x-show="sub.participant_email && sub.unique_code" class="text-slate-300 dark:text-slate-600">•</span>
+                                            <span x-show="sub.unique_code" x-text="'Index: ' + sub.unique_code"></span>
+                                        </div>
                                         <p class="text-xs text-slate-500" x-text="sub.exam_title"></p>
                                     </div>
                                 </td>
-                                <td class="px-4 py-2 text-slate-600 dark:text-slate-400" x-text="sub.index_number || '-'"></td>
+                                <td class="px-4 py-2">
+                                    <span x-show="sub.center_name" class="text-sm text-slate-600 dark:text-slate-400" x-text="sub.center_name + ' (' + sub.center_code + ')'"></span>
+                                    <span x-show="!sub.center_name" class="text-xs text-slate-400 italic">Central</span>
+                                </td>
                                 <td class="px-4 py-2">
                                     <span class="px-2 py-1 text-xs font-medium"
                                           :class="statusBadgeClass(sub.status)"
@@ -262,7 +278,7 @@
                         </template>
                         <template x-if="!(data.local?.submissions?.length)">
                             <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                                <td colspan="6" class="px-4 py-8 text-center text-slate-400">
                                     No local submissions
                                 </td>
                             </tr>
