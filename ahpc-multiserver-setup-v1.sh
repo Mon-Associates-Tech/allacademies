@@ -65,7 +65,7 @@ DEFAULT_PULL_INTERVAL=5
 DEFAULT_PUSH_INTERVAL=5
 
 # Section order is fixed: --only/--skip/--from always run in this order.
-ALL_SECTIONS=(wifi ip packages tuning mariadb redis php node code env deps laravel admin nginx workers logrotate cron tls firewall sync finalize summary)
+ALL_SECTIONS=(wifi ip packages tuning mariadb redis php node code env deps laravel admin nginx workers logrotate cron tls firewall nordvpn sync finalize summary)
 
 # Settings remembered between runs (/etc/ahpc/setup.conf, root-only). CLI flags override them.
 STATE_KEYS=(APP_ROLE DOMAIN LAN_IP REPO_BRANCH CENTRAL_URL CENTER_SYNC_TOKEN CENTRAL_PUBLIC_KEY
@@ -95,6 +95,7 @@ section_desc() {
         cron)      echo "Laravel scheduler cron (runs as www-data)" ;;
         tls)       echo "Local CA + signed certificate (mkcert/openssl) or Let's Encrypt for public domains" ;;
         firewall)  echo "UFW firewall" ;;
+        nordvpn)   echo "Install NordVPN CLI (non-fatal if it fails)" ;;
         sync)      echo "Center role: connectivity test, auto-sync cron, sync command check" ;;
         finalize)  echo "Fix storage permissions, restart PHP-FPM/workers, HTTP health check" ;;
         summary)   echo "Write credentials file and print the summary" ;;
@@ -787,7 +788,7 @@ sec_packages() {
     systemctl enable --now ssh
 
     _log "Installing minimal desktop (XFCE + XRDP for remote admin)"
-    apt-get install -y xfce4 xfce4-goodies lightdm xrdp
+    apt-get install -y xfce4 xfce4-goodies lightdm xrdp epiphany-browser xserver-xorg-input-all
     echo "xfce4-session" > /root/.xsession
     [[ -n "${SUDO_USER:-}" ]] && echo "xfce4-session" > "/home/${SUDO_USER}/.xsession"
     systemctl enable xrdp
@@ -1030,7 +1031,7 @@ sec_php() {
     fi
     if ! command -v php >/dev/null 2>&1; then
         _log "PHP not found — installing default PHP packages"
-        apt-get install -y php-cli php-fpm
+        apt-get install -y php-cli php-fpm php-mbstring
     fi
     detect_php
     _log "Using PHP ${PHP_VER}"
@@ -1240,6 +1241,7 @@ APP_VERSION=${APP_VERSION}
 CENTER_ID=null
 CENTER_PULL_INTERVAL=${PULL_INTERVAL}
 CENTER_PUSH_INTERVAL=${PUSH_INTERVAL}
+CENTER_SSL_VERIFY=false
 ENVEOF
         ok ".env configured for center role"
     fi
@@ -1408,6 +1410,7 @@ nginx_app_body() {
         fastcgi_pass unix:${PHP_FPM_SOCK};
         fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
         include fastcgi_params;
+        fastcgi_param HTTP_AUTHORIZATION $http_authorization;
         fastcgi_read_timeout 120s;
         fastcgi_buffer_size 32k;
         fastcgi_buffers 16 16k;
@@ -1895,6 +1898,29 @@ sec_firewall() {
         ufw allow 443/tcp
     fi
     ufw --force enable
+}
+
+# ============================================================
+# SECTION: nordvpn
+# ============================================================
+sec_nordvpn() {
+    if (( DRY_RUN )); then dry "Install NordVPN via official installer script (non-fatal)"; return 0; fi
+    _log "Installing NordVPN"
+    if command -v nordvpn >/dev/null 2>&1; then
+        ok "NordVPN is already installed — skipping"
+        return 0
+    fi
+    info "Running NordVPN official installer (failure will not stop the script)"
+    sh <(curl -sSf https://downloads.nordcdn.com/apps/linux/install.sh) 2>&1 || warn "NordVPN installation failed — continuing without it"
+    if command -v nordvpn >/dev/null 2>&1; then
+        ok "NordVPN installed successfully"
+        if [[ -n "${SUDO_USER:-}" ]]; then
+            usermod -aG nordvpn "$SUDO_USER" || warn "Could not add ${SUDO_USER} to nordvpn group"
+            ok "Added ${SUDO_USER} to nordvpn group (log out and back in for it to take effect)"
+        fi
+    else
+        warn "NordVPN does not appear to be installed after running the installer"
+    fi
 }
 
 # ============================================================
