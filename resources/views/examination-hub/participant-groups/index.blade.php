@@ -70,46 +70,8 @@
            </div>
        @endif
 
-       @if($groups->isEmpty())
-           {{-- ── EMPTY STATE ── --}}
-           <div class="bg-white dark:bg-slate-900 overflow-hidden" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
-               <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                   <div class="w-1 h-5" style="background: linear-gradient(180deg, #7c3aed, #a78bfa); border-radius: 1px;"></div>
-                   <h2 class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider" style="letter-spacing: 0.1em;">Participant Groups</h2>
-               </div>
-               <div class="p-12 text-center">
-                   <div class="w-16 h-16 mx-auto flex items-center justify-center mb-4" style="background: linear-gradient(135deg, #7c3aed, #a78bfa); border-radius: 2px;">
-                       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                       </svg>
-                   </div>
-                   <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" style="letter-spacing: -0.02em;">No participant groups found</h3>
-                   <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                       @if(request()->hasAny(['search', 'subject_id']))
-                           No groups match your current filters. Try adjusting your search or filter criteria.
-                       @else
-                           Create your first group or import participants from a CSV file.
-                       @endif
-                   </p>
-                   @if(!request()->hasAny(['search', 'subject_id']))
-                       <div class="flex gap-3 justify-center">
-                           <a href="{{ route('examination-hub.participant-groups.create') }}"
-                              class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white uppercase tracking-wider transition-opacity hover:opacity-90"
-                              style="background: linear-gradient(135deg, #065f46, #059669); border-radius: 2px; letter-spacing: 0.08em;">
-                               Create Group
-                           </a>
-                           <a href="{{ route('examination-hub.participant-groups.import') }}"
-                              class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white uppercase tracking-wider transition-opacity hover:opacity-90"
-                              style="background: linear-gradient(135deg, #1d4ed8, #3b82f6); border-radius: 2px; letter-spacing: 0.08em;">
-                               Import CSV
-                           </a>
-                       </div>
-                   @endif
-               </div>
-           </div>
-       @else
-           {{-- ── FILTERS & SORT ── --}}
-           <div class="bg-white dark:bg-slate-900 overflow-hidden" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
+       {{-- ── FILTERS & SORT ── --}}
+       <div class="bg-white dark:bg-slate-900 overflow-hidden" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.04);">
                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
                    <form method="GET" class="flex flex-col gap-3">
                        {{-- Search --}}
@@ -225,8 +187,39 @@
 
                {{-- ── GROUPS GRID ── --}}
                <div class="p-5">
-                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       @foreach($groups as $group)
+                   @if($groups->isEmpty())
+                       <div class="text-center py-12">
+                           <div class="w-16 h-16 mx-auto flex items-center justify-center mb-4" style="background: linear-gradient(135deg, #7c3aed, #a78bfa); border-radius: 2px;">
+                               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                               </svg>
+                           </div>
+                           <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" style="letter-spacing: -0.02em;">No participant groups found</h3>
+                           <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                               @if(request()->hasAny(['search', 'subject_id']))
+                                   No groups match your current filters. Try adjusting your search or filter criteria.
+                               @else
+                                   Create your first group or import participants from a CSV file.
+                               @endif
+                           </p>
+                           @if(!request()->hasAny(['search', 'subject_id']))
+                               <div class="flex gap-3 justify-center">
+                                   <a href="{{ route('examination-hub.participant-groups.create') }}"
+                                      class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white uppercase tracking-wider transition-opacity hover:opacity-90"
+                                      style="background: linear-gradient(135deg, #065f46, #059669); border-radius: 2px; letter-spacing: 0.08em;">
+                                    Create Group
+                                   </a>
+                                   <a href="{{ route('examination-hub.participant-groups.import') }}"
+                                      class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white uppercase tracking-wider transition-opacity hover:opacity-90"
+                                      style="background: linear-gradient(135deg, #1d4ed8, #3b82f6); border-radius: 2px; letter-spacing: 0.08em;">
+                                    Import CSV
+                                   </a>
+                               </div>
+                           @endif
+                       </div>
+                   @else
+                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           @foreach($groups as $group)
                            <div class="group bg-slate-50 dark:bg-slate-800/50 overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5" style="border-radius: 2px; border: 1px solid rgba(0,0,0,0.04);">
                                <div class="p-5">
                                    {{-- Title & Subject Badge --}}
@@ -308,9 +301,10 @@
                                    </div>
                                </div>
                            </div>
-                       @endforeach
+                               @endforeach
+                           </div>
+                       @endif
                    </div>
-               </div>
 
                {{-- ── PAGINATION ── --}}
                @if($groups->hasPages())
@@ -318,7 +312,6 @@
                    </div>
                @endif
            </div>
-       @endif
 
     </div>
 </x-layouts.app>

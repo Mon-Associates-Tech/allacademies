@@ -281,7 +281,7 @@ public function importFromCsv($fileOrPath): array
             'errors' => ['Import failed: ' . $e->getMessage()],
         ];
     }
-}
+    }
 
     public function getAllGroups(?string $search = null, ?int $subjectId = null, string $sort = 'name_asc')
     {
