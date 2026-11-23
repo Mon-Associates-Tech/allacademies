@@ -66,7 +66,8 @@ class ModelSelectionService
     }
 
     /**
-     * Detect if the request is for image or text using a small LLM call.
+     * Detect if the request is for image, text, or mixed content using a small LLM call.
+     * Returns "image" for pure image generation, "text" for text-only, or "mixed" for text with illustrations.
      */
     public function detectModelType(ChatGPTService $chatGPT, array $parameters, array $conversationHistory): string
     {
@@ -76,7 +77,7 @@ class ModelSelectionService
         $prompt = [
             [
                 'role' => 'system',
-                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request involves generating, creating, drawing, or visualizing something graphical/diagrammatic, or "text" for all other requests.',
+                'content' => 'Analyze the user request and respond with exactly one word: "image" if the request is ONLY about generating, creating, drawing, or visualizing something graphical/diagrammatic with no explanatory text needed, "mixed" if the request asks for both explanatory text AND illustrations/images/diagrams, or "text" for all other requests that do not involve images.',
             ],
             [
                 'role' => 'user',
@@ -93,7 +94,11 @@ class ModelSelectionService
 
             Log::info('Model detection result', ['model' => $classificationModel, 'type' => $type]);
 
-            return $type === 'image' ? 'image' : 'text';
+            if (in_array($type, ['image', 'mixed', 'text'], true)) {
+                return $type;
+            }
+
+            return 'text';
         } catch (\Exception $e) {
             Log::error('Model detection failed', ['error' => $e->getMessage()]);
 

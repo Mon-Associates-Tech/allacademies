@@ -16,7 +16,7 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 300;
+    public int $timeout = 1000;
     public int $tries   = 1;
 
     public function __construct(
@@ -93,6 +93,7 @@ class ProcessResearchAssistantMessageJob implements ShouldQueue
                     'usage'              => $response['usage'] ?? null,
                     'model_used'         => $response['model_used'] ?? $response['model'] ?? null,
                     'images'             => $response['images'] ?? null,
+                    'incomplete'         => $response['incomplete'] ?? false,
                 ]);
             } else {
                 // Store the error as an assistant message so the UI can display it

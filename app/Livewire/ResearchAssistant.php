@@ -8,6 +8,7 @@ use App\Services\ResearchAssistantService;
 use App\Traits\ChecksTokenAvailability;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use League\CommonMark\CommonMarkConverter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Rule;
 use Livewire\Attributes\Url;
@@ -53,8 +54,8 @@ class ResearchAssistant extends Component
     #[Rule('nullable|numeric|min:1|max:2')]
     public $creativity_level = 1;
 
-    #[Rule('nullable|integer|min:100|max:2000')]
-    public $response_length = 1000;
+    #[Rule('nullable|integer|min:100|max:4000')]
+    public $response_length = 4000;
 
     #[Rule('nullable|file|max:10240')]
     public $uploadedFile;
@@ -96,8 +97,16 @@ class ResearchAssistant extends Component
     #[Rule('nullable|string|uuid')]
     public $urlConversationId;
 
+    // Streaming support
+    public $streamedAnswer = '';
+
+    // Track if current request is image generation (uses queue job + polling)
+    public $isImageRequest = false;
+
     // Timeout in seconds after which we give up waiting for a response
-    protected const RESPONSE_TIMEOUT_SECONDS = 300;
+    // ChatGPTService has 3 retries with 300s timeout each + exponential backoff (~10s + 20s)
+    // So max wait = 3 * 300 + 30 = 930s, but we set a reasonable limit
+    protected const RESPONSE_TIMEOUT_SECONDS = 1000;
 
     protected $chatService;
 
@@ -136,7 +145,7 @@ class ResearchAssistant extends Component
         $this->difficulty = 'medium';
         $this->response_format = 'detailed';
         $this->creativity_level = 1;
-        $this->response_length = 1000;
+        $this->response_length = 4000;
     }
 
     protected function loadChatHistory(): void
@@ -176,6 +185,7 @@ class ResearchAssistant extends Component
                 'usage' => $msg->usage,
                 'images' => $msg->images ?? null,
                 'model_used' => $msg->model_used ?? null,
+                'incomplete' => $msg->incomplete ?? false,
             ];
         }
 
@@ -319,15 +329,121 @@ class ResearchAssistant extends Component
         $this->fileContent = '';
         $this->fileName = '';
 
-        ProcessResearchAssistantMessageJob::dispatch(
-            $userRow->id,
-            Auth::id(),
-            $this->conversationId,
-            $title,
+        // Detect if this is a pure image request (no text explanation expected)
+        // Only route to queue job when the user clearly wants ONLY an image, not text+images
+        $input = $parameters['input'] ?? '';
+        $this->isImageRequest = (bool) preg_match('/^(draw|create|generate|make)\s+(an?\s+)?(image|picture|photo|illustration|drawing|sketch|render)/i', $input);
+
+        if ($this->isImageRequest) {
+            // Pure image generation uses queue job (can't stream images the same way)
+            ProcessResearchAssistantMessageJob::dispatch(
+                $userRow->id,
+                Auth::id(),
+                $this->conversationId,
+                $title,
+                $parameters,
+                $this->getConversationHistory(),
+            );
+        } else {
+            // Text (and mixed text+images) uses streaming — trigger via JS to keep the HTTP connection open
+            $this->streamedAnswer = '';
+            $this->js('$wire.ask()');
+            return; // Don't load conversation history yet; ask() will handle it
+        }
+
+        $this->loadConversationHistory();
+        $this->dispatch('scroll-to-bottom');
+    }
+
+    /**
+     * Stream a text response from the AI and save it when complete.
+     * Called via $this->js('$wire.ask()') from sendMessage() to keep the HTTP connection open.
+     */
+    public function ask(): void
+    {
+        $parameters = $this->getParameters();
+        // Restore the input from the user message we just saved
+        if ($this->pendingUserMessageId) {
+            $userRow = AcademicChatMessage::find($this->pendingUserMessageId);
+            if ($userRow) {
+                $parameters['input'] = $userRow->content;
+            }
+        }
+
+        $conversationHistory = $this->getConversationHistory();
+
+        // Stream the response, pushing each chunk to the browser
+        $firstChunk = true;
+        $result = $this->chatService->streamTextGeneration(
             $parameters,
-            $this->getConversationHistory(),
+            $conversationHistory,
+            function ($chunk) use (&$firstChunk) {
+                // Convert markdown to HTML for streaming display
+                $html = $this->markdownToHtml($chunk);
+                $this->stream(to: 'streamedAnswer', content: $html);
+                // Signal Alpine that streaming has started (only on first chunk)
+                if ($firstChunk) {
+                    $firstChunk = false;
+                    $this->dispatch('stream-started');
+                }
+            }
         );
 
+        if ($result['success']) {
+            // Check if the user asked for illustrations - if so, generate them after streaming
+            // Use the already-streamed text content instead of regenerating
+            $input = $parameters['input'] ?? '';
+            $hasIllustrationRequest = (bool) preg_match('/(illustrat|diagram|picture|image|drawing|sketch)/i', $input);
+
+            if ($hasIllustrationRequest) {
+                $result = $this->chatService->handleMixedGeneration($parameters, $conversationHistory, $result['content'] ?? '');
+            }
+
+            // Save the assistant message to the database
+            AcademicChatMessage::create([
+                'user_id'            => Auth::id(),
+                'conversation_id'    => $this->conversationId,
+                'conversation_title' => $this->conversationTitle,
+                'content'            => $result['content'],
+                'role'               => 'assistant',
+                'parameters'         => $parameters,
+                'usage'              => $result['usage'] ?? null,
+                'model_used'         => $result['model_used'] ?? $result['model'] ?? null,
+                'images'             => $result['images'] ?? null,
+                'incomplete'         => $result['incomplete'] ?? false,
+            ]);
+
+            // Add the final message to the messages array
+            $this->messages[] = [
+                'role'       => 'assistant',
+                'content'    => $result['content'],
+                'timestamp'  => now()->toISOString(),
+                'usage'      => $result['usage'] ?? null,
+                'images'     => $result['images'] ?? null,
+                'model_used' => $result['model_used'] ?? $result['model'] ?? null,
+                'incomplete' => $result['incomplete'] ?? false,
+            ];
+        } else {
+            // Handle error
+            $error = $result['error'] ?? 'Unknown error';
+            $this->errors[] = $error;
+
+            AcademicChatMessage::create([
+                'user_id'            => Auth::id(),
+                'conversation_id'    => $this->conversationId,
+                'conversation_title' => $this->conversationTitle,
+                'content'            => '__error__: '.$error,
+                'role'               => 'assistant',
+                'parameters'         => $parameters,
+            ]);
+        }
+
+        // Reset streaming state
+        $this->isLoading = false;
+        $this->pendingUserMessageId = null;
+        $this->pendingMessageSentAt = null;
+        $this->streamedAnswer = '';
+        $this->isImageRequest = false;
         $this->loadConversationHistory();
         $this->dispatch('scroll-to-bottom');
     }
@@ -381,12 +497,14 @@ class ResearchAssistant extends Component
                 'usage'      => $assistantRow->usage,
                 'images'     => $assistantRow->images,
                 'model_used' => $assistantRow->model_used,
+                'incomplete' => $assistantRow->incomplete ?? false,
             ];
         }
 
         $this->isLoading = false;
         $this->pendingUserMessageId = null;
         $this->pendingMessageSentAt = null;
+        $this->isImageRequest = false;
         $this->loadConversationHistory();
         $this->dispatch('scroll-to-bottom');
     }
@@ -571,7 +689,25 @@ class ResearchAssistant extends Component
         $this->difficulty = 'medium';
         $this->response_format = 'detailed';
         $this->creativity_level = 1;
-        $this->response_length = 1000;
+        $this->response_length = 4000;
+    }
+
+    /**
+     * Convert markdown text to HTML for streaming display.
+     * Uses a simple conversion to handle partial markdown chunks.
+     */
+    protected function markdownToHtml(string $text): string
+    {
+        try {
+            $converter = new CommonMarkConverter([
+                'html_input' => 'allow',
+                'allow_unsafe_links' => false,
+            ]);
+            return (string) $converter->convertToHtml($text);
+        } catch (\Throwable $e) {
+            // Fallback: escape and add basic line breaks
+            return nl2br(e($text));
+        }
     }
 
     public function render()

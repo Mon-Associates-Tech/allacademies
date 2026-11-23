@@ -41,11 +41,11 @@ class ResearchAssistantService
             return ['success' => false, 'error' => 'Insufficient tokens.'];
         }
 
-        // 1. Fast Regex Check for image intent to save classification tokens
+        // 1. Fast Regex Check for image/mixed intent to save classification tokens
         $input = $parameters['input'] ?? '';
         $modelType = 'text';
 
-        if (preg_match('/(draw|generate|create|visualize|image|picture|diagram|chart|graph)/i', $input)) {
+        if (preg_match('/(draw|create|generate|make)\s+(an?\s+)?(image|picture|photo|illustration|drawing|sketch|render)|illustration|diagram|chart|graph/i', $input)) {
             // 2. Delegate to ModelSelectionService for AI-based classification
             $modelType = $this->modelSelectionService->detectModelType(
                 $this->chatGPTService,
@@ -56,6 +56,10 @@ class ResearchAssistantService
 
         if ($modelType === 'image') {
             return $this->handleImageGeneration($parameters);
+        }
+
+        if ($modelType === 'mixed') {
+            return $this->handleMixedGeneration($parameters, $conversationHistory);
         }
 
         return $this->handleTextGeneration($parameters, $conversationHistory);
@@ -90,12 +94,188 @@ class ResearchAssistantService
             ];
         }
 
+        // Also scan the content for any inline image markdown links and extract them
+        $imageData = $this->extractInlineImagesFromContent($responseContent, $imageData);
+
         return [
             'success' => true,
             'content' => $responseContent,
             'model_used' => $model,
             'images' => $imageData,
         ];
+    }
+
+    /**
+     * Handle mixed content generation: text with illustrations.
+     * If $preGeneratedContent is provided, uses it directly instead of generating text again.
+     */
+    public function handleMixedGeneration($parameters, $conversationHistory, string $preGeneratedContent = ''): array
+    {
+        // Step 1: Use pre-generated content if available, otherwise generate text
+        if ($preGeneratedContent !== '') {
+            Log::info('ResearchAssistantService: Using pre-generated content for mixed generation');
+            $content = $preGeneratedContent;
+            $images = [];
+        } else {
+            $textResult = $this->handleTextGeneration($parameters, $conversationHistory);
+
+            if (! $textResult['success']) {
+                return $textResult;
+            }
+
+            $content = $textResult['content'] ?? '';
+            $images = $textResult['images'] ?? [];
+        }
+
+        // Step 2: Extract key concepts that need illustration
+        $illustrationPrompts = $this->extractIllustrationPrompts($parameters, $content);
+
+        if (empty($illustrationPrompts)) {
+            Log::info('ResearchAssistantService: No illustration concepts found for mixed generation');
+            return [
+                'success' => true,
+                'content' => $content,
+                'images' => $images,
+            ];
+        }
+
+        // Step 3: Generate images for each concept
+        $user = auth()->user();
+        $imageModel = $this->modelSelectionService->getImageModelForUser($user);
+
+        foreach ($illustrationPrompts as $index => $concept) {
+            try {
+                $imageResult = $this->chatGPTService->generateImage($concept, $imageModel);
+
+                if ($imageResult['success'] && ! empty($imageResult['images'])) {
+                    foreach ($imageResult['images'] as $image) {
+                        $url = $image['url'] ?? null;
+
+                        // Normalize base64 data URIs
+                        if ($url && str_starts_with($url, 'data:image')) {
+                            $url = $this->saveBase64Image($url);
+                        }
+
+                        if ($url) {
+                            $images[] = [
+                                'url' => $url,
+                                'alt' => $concept,
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('ResearchAssistantService: Failed to generate illustration', [
+                    'concept' => $concept,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Step 4: Scan content for any inline markdown image links
+        $images = $this->extractInlineImagesFromContent($content, $images);
+
+        return [
+            'success' => true,
+            'content' => $content,
+            'images' => $images,
+        ];
+    }
+
+    /**
+     * Use the LLM to extract key concepts from the content that should be illustrated.
+     * Returns an array of image generation prompts.
+     */
+    protected function extractIllustrationPrompts(array $parameters, string $content): array
+    {
+        $user = auth()->user();
+        $classificationModel = config('openai.openai.default_model', 'gpt-4.1-nano');
+
+        // Truncate content to avoid token limits on the classification call
+        $truncatedContent = mb_substr($content, 0, 3000);
+
+        try {
+            $result = $this->chatGPTService->chat([
+                [
+                    'role' => 'system',
+                    'content' => 'You are an illustration concept extractor. Given a user request and the generated text response, identify up to 3 key concepts that would benefit from visual illustration. Return ONLY a JSON array of short image generation prompts (one sentence each), nothing else. Example: ["A detailed diagram showing water molecule structure with hydrogen and oxygen atoms", "A cross-section illustration of plant cell mitosis"].',
+                ],
+                [
+                    'role' => 'user',
+                    'content' => "User request: {$parameters['input']}\n\nGenerated response:\n{$truncatedContent}",
+                ],
+            ], $classificationModel, []);
+
+            $responseContent = trim($result['content'] ?? '');
+
+            // Try to parse as JSON
+            $prompts = json_decode($responseContent, true);
+            if (is_array($prompts) && ! empty($prompts)) {
+                // Clean up prompts - remove any surrounding quotes or whitespace
+                return array_map(function ($p) {
+                    return trim($p, "\"' \t\n\r");
+                }, array_filter($prompts));
+            }
+        } catch (\Exception $e) {
+            Log::warning('ResearchAssistantService: Failed to extract illustration prompts', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Fallback: use the user's input as the image prompt
+        return [($parameters['input'] ?? 'Educational illustration')];
+    }
+
+    /**
+     * Scan response content for markdown image links and merge them into the images array.
+     * This ensures images embedded in text (e.g. from mixed responses) are captured.
+     * Returns the merged images array and strips the markdown image links from the content
+     * (passed by reference) to avoid duplicate rendering.
+     */
+    protected function extractInlineImagesFromContent(string &$content, array $existingImages): array
+    {
+        // Match markdown image syntax: ![alt](url)
+        preg_match_all('/!\[([^\]]*)\]\(([^)]+)\)/', $content, $matches, PREG_SET_ORDER);
+
+        if (empty($matches)) {
+            return $existingImages;
+        }
+
+        $urls = collect($existingImages)->pluck('url')->toArray();
+        $newImages = [];
+
+        foreach ($matches as $match) {
+            $alt = $match[1] ?? 'Generated image';
+            $url = $match[2];
+
+            // Skip if already in the images array
+            if (in_array($url, $urls, true)) {
+                // Still strip the markdown link from content to avoid duplicate rendering
+                $content = str_replace($match[0], '', $content);
+                continue;
+            }
+
+            // If it's a base64 data URI, save it to storage
+            if (str_starts_with($url, 'data:image')) {
+                $savedUrl = $this->saveBase64Image($url);
+                if ($savedUrl !== null) {
+                    $url = $savedUrl;
+                }
+            }
+
+            $newImages[] = [
+                'url' => $url,
+                'alt' => $alt,
+            ];
+            $urls[] = $url;
+        }
+
+        // Strip all remaining markdown image links from content to avoid duplicate rendering
+        $content = preg_replace('/!\[([^\]]*)\]\(([^)]+)\)/', '', $content);
+        // Clean up extra whitespace left by removal
+        $content = preg_replace("/\n{3,}/", "\n\n", trim($content));
+
+        return array_merge($existingImages, $newImages);
     }
 
     /**
@@ -190,11 +370,106 @@ class ResearchAssistantService
         $messages = array_merge($messages, $conversationHistory);
         $messages[] = ['role' => 'user', 'content' => $this->prepareTextPrompt($parameters)];
 
-        return $this->chatGPTService->chat($messages, $model, [
+        $result = $this->chatGPTService->chat($messages, $model, [
             'temperature' => (float) ($parameters['creativity_level'] ?? 1.0),
             'max_output_tokens' => (int) ($parameters['response_length'] ?? 1000000),
             //            'request_type' => $parameters['request_type'] ?? 'chat'
         ]);
+
+        // If the chat response includes images (e.g. from mixed text+image responses),
+        // normalize any base64 data URIs by saving them to storage
+        $images = $result['images'] ?? [];
+        if (!empty($images)) {
+            $normalizedImages = [];
+            foreach ($images as $image) {
+                $url = $image['url'] ?? null;
+                if ($url && str_starts_with($url, 'data:image')) {
+                    $savedUrl = $this->saveBase64Image($url);
+                    if ($savedUrl !== null) {
+                        $image['url'] = $savedUrl;
+                    }
+                }
+                $normalizedImages[] = $image;
+            }
+            $images = $normalizedImages;
+        }
+
+        // Also scan the text content for inline markdown image links
+        $content = $result['content'] ?? '';
+        if (!empty($content)) {
+            $images = $this->extractInlineImagesFromContent($content, $images);
+            $result['content'] = $content;
+        }
+
+        if (!empty($images)) {
+            $result['images'] = $images;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Stream text generation — calls the callback with each text delta chunk.
+     * Returns the final result array after streaming completes.
+     */
+    public function streamTextGeneration($parameters, $conversationHistory, callable $chunkCallback): array
+    {
+        $user = auth()->user();
+        $model = $this->modelSelectionService->getTextModelForUser($user);
+
+        // Build messages using existing educational prompt logic
+        $messages = [];
+        if (($parameters['request_type'] ?? '') !== 'quiz_generation') {
+            $messages[] = ['role' => 'system', 'content' => $this->buildEducationalSystemMessage($parameters)];
+        }
+
+        $messages = array_merge($messages, $conversationHistory);
+        $messages[] = ['role' => 'user', 'content' => $this->prepareTextPrompt($parameters)];
+
+        // Build request data for streaming
+        $requestData = [
+            'model' => $model,
+            'input' => $messages,
+        ];
+
+        if (isset($parameters['creativity_level'])) {
+            $requestData['temperature'] = (float) $parameters['creativity_level'];
+        }
+        if (isset($parameters['response_length'])) {
+            $requestData['max_output_tokens'] = (int) $parameters['response_length'];
+        }
+
+        $result = $this->chatGPTService->streamChat($requestData, $chunkCallback);
+
+        // Normalize images if any
+        $images = $result['images'] ?? [];
+        if (!empty($images)) {
+            $normalizedImages = [];
+            foreach ($images as $image) {
+                $url = $image['url'] ?? null;
+                if ($url && str_starts_with($url, 'data:image')) {
+                    $savedUrl = $this->saveBase64Image($url);
+                    if ($savedUrl !== null) {
+                        $image['url'] = $savedUrl;
+                    }
+                }
+                $normalizedImages[] = $image;
+            }
+            $images = $normalizedImages;
+        }
+
+        // Scan content for inline markdown image links
+        $content = $result['content'] ?? '';
+        if (!empty($content)) {
+            $images = $this->extractInlineImagesFromContent($content, $images);
+            $result['content'] = $content;
+        }
+
+        if (!empty($images)) {
+            $result['images'] = $images;
+        }
+
+        return $result;
     }
 
     /**

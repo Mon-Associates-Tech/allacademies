@@ -19,12 +19,14 @@ class AcademicChatMessage extends Model
         'usage',
         'model_used',
         'images',
+        'incomplete',
     ];
 
     protected $casts = [
         'parameters' => 'array',
         'usage' => 'array',
         'images' => 'array',
+        'incomplete' => 'boolean',
     ];
 
     public function user()

@@ -80,9 +80,9 @@ class ChatGPTService
     protected function sendChatRequest(array $requestData, array $options = []): array
     {
         $user = auth()->user();
-        $timeout = config('openai.openai.timeout', 60);
-        $maxRetries = 1;
-        $retryDelay = 2;
+        $timeout = config('openai.openai.timeout', 300);
+        $maxRetries = 3;
+        $retryDelay = 5;
 
         // Extract request_type before sending to API (it's for internal use only)
         $requestType = $options['request_type'] ?? 'chat';
@@ -118,10 +118,26 @@ class ChatGPTService
                     $responseData = $response->json();
                     $usage = $responseData['usage'] ?? null;
 
-                    $extractedContent = $this->extractContent($responseData);
+                    // Check if the response was incomplete (e.g., hit max_output_tokens)
+                    $responseStatus = $responseData['status'] ?? null;
+                    $incompleteDetails = $responseData['incomplete_details'] ?? null;
+                    $isIncomplete = ($responseStatus === 'incomplete') || !empty($incompleteDetails);
+
+                    if ($isIncomplete) {
+                        Log::warning('ChatGPTService: response incomplete', [
+                            'status' => $responseStatus,
+                            'incomplete_details' => $incompleteDetails,
+                            'model' => $requestData['model'] ?? 'default',
+                        ]);
+                    }
+
+                    // Extract both text and images from the response
+                    $extracted = $this->extractContentAndImages($responseData);
+                    $extractedContent = $extracted['text'];
+                    $extractedImages = $extracted['images'];
 
                     // If content extraction returned empty, log the raw response for debugging
-                    if (empty($extractedContent)) {
+                    if (empty($extractedContent) && empty($extractedImages)) {
                         Log::warning('ChatGPTService: empty content extracted from successful response', [
                             'response_keys' => array_keys($responseData),
                             'has_output' => isset($responseData['output']),
@@ -139,12 +155,25 @@ class ChatGPTService
                         );
                     }
 
-                    return [
+                    $result = [
                         'success' => true,
                         'content' => $extractedContent,
                         'usage' => $usage,
                         'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-5',
                     ];
+
+                    // Include images if any were extracted
+                    if (!empty($extractedImages)) {
+                        $result['images'] = $extractedImages;
+                    }
+
+                    // Flag if the response was truncated/incomplete
+                    if ($isIncomplete) {
+                        $result['incomplete'] = true;
+                        $result['incomplete_reason'] = $incompleteDetails['reason'] ?? 'unknown';
+                    }
+
+                    return $result;
                 }
 
                 if (in_array($response->status(), [429, 503, 502])) {
@@ -178,15 +207,23 @@ class ChatGPTService
                 return ['success' => false, 'error' => $error];
 
             } catch (ConnectionException $e) {
-                Log::error('OpenAI Connection Error', [
-                    'error' => $e->getMessage(),
+                $errorMessage = $e->getMessage();
+                $isTimeout = str_contains($errorMessage, 'timed out') || str_contains($errorMessage, 'Operation timed out');
+
+                Log::warning('OpenAI Connection Error', [
+                    'error' => $errorMessage,
                     'attempt' => $attempt,
+                    'max_retries' => $maxRetries,
+                    'is_timeout' => $isTimeout,
                 ]);
 
-                if ($attempt < $maxRetries) {
-                    $waitTime = $retryDelay * $attempt;
+                if ($isTimeout && $attempt < $maxRetries) {
+                    $waitTime = $retryDelay * ($attempt * 2); // Exponential backoff: 10s, 20s, 40s...
+                    Log::info('OpenAI timeout - retrying with exponential backoff', [
+                        'wait_seconds' => $waitTime,
+                        'next_attempt' => $attempt + 1,
+                    ]);
                     sleep($waitTime);
-
                     continue;
                 }
 
@@ -291,5 +328,286 @@ class ChatGPTService
     public function extractContent(array $responseData): string
     {
         return $this->extractContentFromResponsesAPI($responseData);
+    }
+
+    /**
+     * Extract both text content and images from response data.
+     * Returns ['text' => string, 'images' => array].
+     */
+    public function extractContentAndImages(array $responseData): array
+    {
+        return $this->extractContentAndImagesFromResponsesAPI($responseData);
+    }
+
+    /**
+     * Stream a chat request using OpenAI's SSE streaming API.
+     *
+     * Calls the callback with each text delta chunk as it arrives,
+     * then returns the final result array (content, usage, images, etc.).
+     *
+     * @param array $requestData The request payload (model, input, etc.)
+     * @param callable $chunkCallback Called with each text delta string
+     * @param array $options Internal options
+     * @return array Final result with 'success', 'content', 'usage', 'images', etc.
+     */
+    public function streamChat(array $requestData, callable $chunkCallback, array $options = []): array
+    {
+        return $this->sendStreamChatRequest($requestData, $chunkCallback, $options);
+    }
+
+    /**
+     * Send a streaming chat request to the OpenAI Responses API.
+     * Parses SSE events and calls the callback for each text delta.
+     */
+    protected function sendStreamChatRequest(array $requestData, callable $chunkCallback, array $options = []): array
+    {
+        $user = auth()->user();
+        $timeout = config('openai.openai.timeout', 300);
+        $requestType = $options['request_type'] ?? 'chat';
+
+        $apiKey = $this->resolveApiKey();
+        $verifySsl = config('openai.openai.verify_ssl', true);
+
+        // Enable streaming
+        $requestData['stream'] = true;
+
+        Log::info('ChatGPTService streamChatRequest', [
+            'model' => $requestData['model'] ?? 'default',
+            'api_key_present' => !empty($apiKey),
+            'endpoint' => $this->textEndpoint,
+        ]);
+
+        try {
+            // Use streamWith() to get a streaming response
+            $streamResponse = Http::withToken($apiKey)
+                ->timeout($timeout)
+                ->connectTimeout(10)
+                ->withOptions(['verify' => $verifySsl])
+                ->withHeaders(['Accept' => 'text/event-stream'])
+                ->asJson()
+                ->withBody('', 'application/json')
+                ->send('POST', $this->textEndpoint, [
+                    'json' => $requestData,
+                ]);
+
+            if (! $streamResponse->successful()) {
+                $errorBody = $streamResponse->body();
+                Log::error('ChatGPTService streaming API error', [
+                    'status' => $streamResponse->status(),
+                    'body' => $errorBody,
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'AI service error. Please try again.',
+                ];
+            }
+
+            // Read the SSE stream line by line
+            $content = '';
+            $images = [];
+            $usage = null;
+            $incomplete = false;
+            $incompleteReason = null;
+            $buffer = '';
+
+            // Get the raw body as a stream
+            $body = $streamResponse->body();
+
+            // Parse SSE events from the response body
+            // SSE format: "event: <type>\ndata: <json>\n\n"
+            $lines = explode("\n", $body);
+
+            $currentEventType = null;
+            $currentEventData = '';
+
+            foreach ($lines as $line) {
+                $line = trim($line);
+
+                if ($line === '') {
+                    // Empty line = end of SSE event, process it
+                    if ($currentEventType && $currentEventData) {
+                        $result = $this->processStreamEvent(
+                            $currentEventType,
+                            $currentEventData,
+                            $chunkCallback,
+                            $content,
+                            $images,
+                            $usage,
+                            $incomplete,
+                            $incompleteReason
+                        );
+
+                        $content = $result['content'];
+                        $images = $result['images'];
+                        $usage = $result['usage'];
+                        $incomplete = $result['incomplete'];
+                        $incompleteReason = $result['incompleteReason'];
+                    }
+
+                    $currentEventType = null;
+                    $currentEventData = '';
+                    continue;
+                }
+
+                if (str_starts_with($line, 'event:')) {
+                    $currentEventType = trim(substr($line, 6));
+                } elseif (str_starts_with($line, 'data:')) {
+                    $currentEventData = trim(substr($line, 5));
+                }
+            }
+
+            // Handle usage logging
+            if ($user && $usage) {
+                $this->tokenUsageService->logUsage(
+                    $user,
+                    $usage,
+                    $requestType,
+                    $requestData['model'] ?? 'gpt-4'
+                );
+            }
+
+            $result = [
+                'success' => true,
+                'content' => $content,
+                'usage' => $usage,
+                'model' => $requestData['model'] ?? 'gpt-5',
+            ];
+
+            if (!empty($images)) {
+                $result['images'] = $images;
+            }
+
+            if ($incomplete) {
+                $result['incomplete'] = true;
+                $result['incomplete_reason'] = $incompleteReason;
+            }
+
+            return $result;
+
+        } catch (ConnectionException $e) {
+            Log::error('ChatGPTService streaming connection error', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Connection timeout. Please try again.',
+            ];
+        } catch (\Exception $e) {
+            Log::error('ChatGPTService streaming error', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Service temporarily unavailable. Please try again.',
+            ];
+        }
+    }
+
+    /**
+     * Process a single SSE event from the streaming response.
+     *
+     * @param string $eventType The SSE event type
+     * @param string $eventData The JSON data string
+     * @param callable $chunkCallback Called with each text delta
+     * @param string $content Accumulated content (passed by reference via return)
+     * @param array $images Accumulated images
+     * @param mixed $usage Usage data
+     * @param bool $incomplete Whether response is incomplete
+     * @param string $incompleteReason Reason for incompleteness
+     * @return array Updated state
+     */
+    protected function processStreamEvent(
+        string $eventType,
+        string $eventData,
+        callable $chunkCallback,
+        string &$content,
+        array &$images,
+        &$usage,
+        bool &$incomplete,
+        ?string &$incompleteReason
+    ): array {
+        // Skip done events
+        if ($eventData === '[DONE]') {
+            return compact('content', 'images', 'usage', 'incomplete', 'incompleteReason');
+        }
+
+        $data = json_decode($eventData, true);
+        if (!is_array($data)) {
+            return compact('content', 'images', 'usage', 'incomplete', 'incompleteReason');
+        }
+
+        $type = $data['type'] ?? $eventType;
+
+        match ($type) {
+            'response.output_text.delta' => $this->handleTextDelta($data, $chunkCallback, $content),
+            'response.output_image.delta' => $this->handleImageDelta($data, $images),
+            'response.completed' => $this->handleResponseCompleted($data, $usage, $incomplete, $incompleteReason, $content, $images),
+            'error' => $this->handleStreamError($data),
+            default => null,
+        };
+
+        return compact('content', 'images', 'usage', 'incomplete', 'incompleteReason');
+    }
+
+    protected function handleTextDelta(array $data, callable $chunkCallback, string &$content): void
+    {
+        $delta = $data['delta'] ?? '';
+        if ($delta !== '') {
+            $content .= $delta;
+            $chunkCallback($delta);
+        }
+    }
+
+    protected function handleImageDelta(array $data, array &$images): void
+    {
+        // Collect image data from streaming events
+        $content = $data['content'] ?? null;
+        if (is_array($content) && isset($content['type'])) {
+            $images[] = $content;
+        }
+    }
+
+    protected function handleResponseCompleted(
+        array $data,
+        &$usage,
+        bool &$incomplete,
+        ?string &$incompleteReason,
+        string &$content,
+        array &$images
+    ): void {
+        $response = $data['response'] ?? [];
+
+        // Extract usage from completed response
+        if (isset($response['usage'])) {
+            $usage = $response['usage'];
+        }
+
+        // Check if response was incomplete
+        $status = $response['status'] ?? null;
+        $incompleteDetails = $response['incomplete_details'] ?? null;
+        if ($status === 'incomplete' || !empty($incompleteDetails)) {
+            $incomplete = true;
+            $incompleteReason = $incompleteDetails['reason'] ?? 'unknown';
+        }
+
+        // Extract any images from the completed response output
+        $output = $response['output'] ?? [];
+        if (!empty($output)) {
+            $extracted = $this->extractContentAndImagesFromResponsesAPI(['output' => $output]);
+            // Only update images if we found new ones
+            if (!empty($extracted['images'])) {
+                $images = array_merge($images, $extracted['images']);
+            }
+        }
+    }
+
+    protected function handleStreamError(array $data): void
+    {
+        $message = $data['message'] ?? 'Unknown streaming error';
+        Log::error('ChatGPTService streaming error event', ['error' => $message]);
+        throw new \RuntimeException('Streaming error: '.$message);
     }
 }

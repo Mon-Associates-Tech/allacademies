@@ -317,9 +317,22 @@
                                             <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                 @foreach ($message['images'] as $imageIndex => $image)
                                                     <img wire:key="image-{{ $index }}-{{ $imageIndex }}"
-                                                         src="{{ $image['url'] }}" alt="Generated image"
-                                                         class="rounded-xl border border-[var(--ra-border)] max-h-96 object-cover">
+                                                         src="{{ $image['url'] }}"
+                                                         alt="{{ $image['alt'] ?? 'Generated image' }}"
+                                                         class="rounded-xl border border-[var(--ra-border)] max-h-96 object-cover hover:shadow-lg transition-shadow cursor-pointer"
+                                                         @click="window.open('{{ $image['url'] }}', '_blank')">
                                                 @endforeach
+                                            </div>
+                                        @endif
+
+                                        @if (($message['incomplete'] ?? false) && $message['role'] === 'assistant')
+                                            <div class="mt-3 flex items-start gap-2 px-3 py-2 bg-[var(--ra-accent-soft)] rounded-xl">
+                                                <svg class="h-4 w-4 text-[var(--ra-accent)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"></path>
+                                                </svg>
+                                                <p class="text-xs text-[var(--ra-ink-soft)]">
+                                                    This response was truncated because it reached the maximum length limit. Try asking a more specific question or increasing the response length in settings.
+                                                </p>
                                             </div>
                                         @endif
                                     </div>
@@ -345,7 +358,8 @@
                     @endforeach
 
                     @if ($isLoading)
-                        <div class="flex justify-start animate-fade-in">
+                        <div class="flex justify-start animate-fade-in" x-data="{ hasStreamed: false }"
+                             @stream-started.window="hasStreamed = true">
                             <div class="flex flex-col items-start max-w-3xl w-full">
                                 <div class="flex items-center gap-2 mb-2 px-1">
                                     <div
@@ -360,7 +374,21 @@
                                     <p class="font-heading text-xs font-medium text-[var(--ra-ink-soft)]">Research
                                         Assistant</p>
                                 </div>
-                                <div class="flex gap-1.5 items-center h-5 px-1">
+
+                                <!-- Streaming text response area -->
+                                <div class="px-1">
+                                    <div
+                                         x-show="hasStreamed"
+                                         x-transition
+                                         class="ra-prose prose prose-lg max-w-none prose-slate dark:prose-invert"
+                                         wire:stream="streamedAnswer">
+                                    </div>
+                                    <!-- Cursor blink indicator while streaming -->
+                                    <span x-show="hasStreamed" class="inline-block w-2 h-5 bg-[var(--ra-accent)] ml-1 animate-pulse"></span>
+                                </div>
+
+                                <!-- Initial loading state — shown until first stream chunk arrives -->
+                                <div class="flex gap-1.5 items-center h-5 px-1" x-show="!hasStreamed" x-transition.opacity>
                                     <div
                                         class="w-1.5 h-1.5 bg-[var(--ra-muted)] rounded-full animate-bounce">
                                     </div>
@@ -554,14 +582,14 @@
                             class="w-full px-3 py-2 bg-[var(--ra-surface-2)] border border-[var(--ra-border)] rounded-xl focus:ring-2 focus:ring-[var(--ra-accent)]/20 focus:border-[var(--ra-accent)] text-[var(--ra-ink)] text-sm transition-colors">
                         <option value="500">Short</option>
                         <option value="1000">Medium</option>
-                        <option value="1500">Long</option>
-                        <option value="2000">Very Long</option>
+                        <option value="2000">Long</option>
+                        <option value="4000">Very Long</option>
                     </select>
                 </div>
             </div>
         </div>
     </div>
-    @if($isLoading)
+    @if($isLoading && $isImageRequest)
         <div wire:poll.2500ms="checkForResponse" class="hidden"></div>
     @endif
     <style>
