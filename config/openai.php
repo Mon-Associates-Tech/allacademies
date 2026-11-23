@@ -24,7 +24,7 @@ return [
         'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-4-turbo'),
         'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
         'default_image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-1-mini'),
-        'premium_image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-1'),
+        'premium_image_model' => env('OPENAI_PREMIUM_IMAGE_MODEL', 'gpt-image-1-mini'),
 
     ],
 

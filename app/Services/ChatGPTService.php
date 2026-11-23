@@ -224,8 +224,12 @@ class ChatGPTService
     /**
      * Unified Image Generation method
      */
-    public function generateImage($prompt, $model = 'dall-e-3', array $options = []): array
+    public function generateImage($prompt, $model = null, array $options = []): array
     {
+        if ($model === null) {
+            $model = config('openai.models.default_image_model', 'gpt-image-1-mini');
+        }
+
         $user = auth()->user();
 
         $apiKey = $this->resolveApiKey();
@@ -249,15 +253,29 @@ class ChatGPTService
             $responseData = $response->json();
             $images = $responseData['data'] ?? [];
 
+            // Normalize image data: gpt-image models return b64_json, DALL-E returns url
+            foreach ($images as &$image) {
+                if (isset($image['b64_json']) && !isset($image['url'])) {
+                    // Convert base64 to a data URL for consistent handling
+                    $image['url'] = 'data:image/png;base64,' . $image['b64_json'];
+                    $image['is_base64'] = true;
+                } else {
+                    $image['is_base64'] = false;
+                }
+            }
+            unset($image);
+
             // Log usage if present in the image response
-            if ($user && ! empty($images[0]['usage'])) {
-                $this->tokenUsageService->logUsage($user, $images[0]['usage'], 'image', $model);
+            $usage = $responseData['usage'] ?? ($images[0]['usage'] ?? null);
+            if ($user && $usage) {
+                $this->tokenUsageService->logUsage($user, $usage, 'image', $model);
             }
 
             return [
                 'success' => true,
                 'images' => $images,
                 'model' => $model,
+                'usage' => $usage,
             ];
         } catch (\Exception $e) {
             Log::error('Image Generation Error', ['error' => $e->getMessage()]);

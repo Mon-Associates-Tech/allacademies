@@ -76,8 +76,18 @@ class ResearchAssistantService
         $responseContent = "Here is the generated image:\n\n";
         $imageData = [];
         foreach ($result['images'] as $image) {
-            $responseContent .= "![Generated Image]({$image['url']})\n\n";
-            $imageData[] = ['url' => $image['url'], 'revised_prompt' => $image['revised_prompt'] ?? null];
+            $url = $image['url'] ?? null;
+
+            // If the image is base64-encoded, save it as a file to avoid storing large data in DB
+            if ($url && str_starts_with($url, 'data:image')) {
+                $url = $this->saveBase64Image($url);
+            }
+
+            $responseContent .= "![Generated Image]({$url})\n\n";
+            $imageData[] = [
+                'url' => $url,
+                'revised_prompt' => $image['revised_prompt'] ?? null,
+            ];
         }
 
         return [
@@ -86,6 +96,55 @@ class ResearchAssistantService
             'model_used' => $model,
             'images' => $imageData,
         ];
+    }
+
+    /**
+     * Save a base64 data URI image to storage and return the public URL.
+     */
+    protected function saveBase64Image(string $dataUri): ?string
+    {
+        try {
+            // Parse the data URI to extract the base64 content and MIME type
+            if (!preg_match('/^data:(image\/[a-zA-Z0-9+.\-]+);base64,(.+)$/', $dataUri, $matches)) {
+                Log::warning('ResearchAssistantService: Invalid base64 data URI');
+                return null;
+            }
+
+            $mimeType = $matches[1];
+            $base64Data = base64_decode($matches[2]);
+
+            if ($base64Data === false) {
+                Log::warning('ResearchAssistantService: Failed to decode base64 image data');
+                return null;
+            }
+
+            // Determine file extension from MIME type
+            $extension = match ($mimeType) {
+                'image/png' => 'png',
+                'image/jpeg', 'image/jpg' => 'jpg',
+                'image/webp' => 'webp',
+                'image/gif' => 'gif',
+                default => 'png',
+            };
+
+            // Generate a unique filename
+            $filename = 'images/ai-generated/' . uniqid('img_', true) . '.' . $extension;
+
+            // Save to public storage
+            $fullPath = storage_path('app/public/' . $filename);
+            if (!file_exists(dirname($fullPath))) {
+                mkdir(dirname($fullPath), 0755, true);
+            }
+            file_put_contents($fullPath, $base64Data);
+
+            // Return a relative URL so it works regardless of APP_URL
+            return '/storage/' . $filename;
+        } catch (\Exception $e) {
+            Log::error('ResearchAssistantService: Failed to save base64 image', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 
     protected function prepareImagePrompt($parameters): string

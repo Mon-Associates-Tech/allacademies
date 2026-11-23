@@ -14,10 +14,10 @@ class ModelSelectionService
     {
         // Image generation typically requires premium access
         if ($this->hasPremiumAccess($user)) {
-            return 'gpt-image-1';
+            return config('openai.models.premium_image_model', 'gpt-image-1-mini');
         }
 
-        return 'gpt-image-1'; // Fallback to standard image model
+        return config('openai.models.default_image_model', 'gpt-image-1-mini');
     }
 
     /**
