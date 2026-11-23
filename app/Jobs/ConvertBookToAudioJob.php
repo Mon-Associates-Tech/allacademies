@@ -196,10 +196,13 @@ class ConvertBookToAudioJob implements ShouldQueue
                         'format' => 'mp3',
                     ];
 
+                    $verifySsl = config('openai.openai.verify_ssl', true);
+
                     $response = Http::withHeaders([
                         'Authorization' => "Bearer {$apiKey}",
                         'Content-Type' => 'application/json',
                     ])->timeout(300)
+                        ->withOptions(['verify' => $verifySsl])
                         ->post('https://api.openai.com/v1/audio/speech', $payload);
 
                     if ($response->failed()) {

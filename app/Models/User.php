@@ -752,13 +752,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getOpenAiModel(): string
     {
         if ($this->role !== UserRole::GUEST) {
-            return config('openai.openai.premium_model', 'gpt-4');
+            return config('openai.openai.premium_model', 'gpt-5');
         }
 
         $cycle = $this->getCurrentActiveCycle();
 
         if (! $cycle || ! $cycle->pricingTier) {
-            return config('openai.openai.default_model', 'gpt-3.5-turbo');
+            return config('openai.openai.default_model', 'gpt-5');
         }
 
         if ($cycle->pricingTier->model) {
@@ -766,8 +766,8 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return ($cycle->current_price == 0)
-            ? config('openai.openai.default_model', 'gpt-3.5-turbo')
-            : config('openai.openai.premium_model', 'gpt-4');
+            ? config('openai.openai.default_model', 'gpt-5')
+            : config('openai.openai.premium_model', 'gpt-5');
     }
 
     public function shouldTrackTokenUsage(): bool

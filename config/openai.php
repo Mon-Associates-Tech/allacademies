@@ -16,6 +16,7 @@ return [
         'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-4-turbo'),
         'timeout' => env('OPENAI_TIMEOUT', 60),
         'max_tokens' => env('OPENAI_MAX_TOKENS', 20000),
+        'verify_ssl' => env('OPENAI_VERIFY_SSL', true),
     ],
 
     'models' => [

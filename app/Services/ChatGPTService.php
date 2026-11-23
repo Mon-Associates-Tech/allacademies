@@ -11,7 +11,7 @@ class ChatGPTService
 {
     use ResponseExtraction;
 
-    protected $model = 'gpt-4.1-nano';
+    protected $model = 'gpt-5';
 
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
 
@@ -22,7 +22,7 @@ class ChatGPTService
     public function __construct(TokenUsageService $tokenUsageService)
     {
         $this->tokenUsageService = $tokenUsageService;
-        $this->model = config('openai.openai.model') ?: config('openai.openai.default_model') ?: 'gpt-4.1-nano';
+        $this->model = config('openai.openai.model') ?: config('openai.openai.default_model') ?: 'gpt-5';
     }
 
     /**
@@ -98,11 +98,14 @@ class ChatGPTService
             'input_message_count' => is_array($requestData['input'] ?? null) ? count($requestData['input']) : 0,
         ]);
 
+        $verifySsl = config('openai.openai.verify_ssl', true);
+
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             try {
                 $response = Http::withToken($apiKey)
                     ->timeout($timeout)
                     ->connectTimeout(10)
+                    ->withOptions(['verify' => $verifySsl])
                     ->post($this->textEndpoint, $requestData);
 
                 Log::info('ChatGPTService HTTP response received', [
@@ -140,7 +143,7 @@ class ChatGPTService
                         'success' => true,
                         'content' => $extractedContent,
                         'usage' => $usage,
-                        'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-4',
+                        'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-5',
                     ];
                 }
 
@@ -227,8 +230,11 @@ class ChatGPTService
 
         $apiKey = $this->resolveApiKey();
 
+        $verifySsl = config('openai.openai.verify_ssl', true);
+
         try {
             $response = Http::withToken($apiKey)
+                ->withOptions(['verify' => $verifySsl])
                 ->post($this->imageEndpoint, array_merge([
                     'model' => $model,
                     'prompt' => $prompt,

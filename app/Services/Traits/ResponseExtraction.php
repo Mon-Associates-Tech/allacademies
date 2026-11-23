@@ -13,7 +13,9 @@ trait ResponseExtraction
     protected function extractContentFromResponsesAPI(array $responseData): string
     {
         if (! isset($responseData['output'])) {
-            Log::warning('No output field in response');
+            Log::warning('No output field in response', [
+                'response_keys' => array_keys($responseData),
+            ]);
 
             return '';
         }
@@ -25,46 +27,85 @@ trait ResponseExtraction
             return $output;
         }
 
-        // Handle array output - NEW APPROACH
+        // Handle array output
         if (is_array($output)) {
-            // PRIORITY 1: Look for content array in first output element
-            if (isset($output[0]['content'])) {
-                $fullText = '';
+            $fullText = '';
 
-                foreach ($output as $outputItem) {
-                    if (isset($outputItem['content']) && is_array($outputItem['content'])) {
-                        foreach ($outputItem['content'] as $contentPart) {
-                            // Extract text from various possible structures
-                            if (is_string($contentPart)) {
-                                $fullText .= $contentPart;
-                            } elseif (isset($contentPart['text'])) {
-                                $fullText .= $contentPart['text'];
-                            } elseif (isset($contentPart['type']) && $contentPart['type'] === 'output_text' && isset($contentPart['text'])) {
-                                $fullText .= $contentPart['text'];
+            foreach ($output as $outputItem) {
+                // Skip non-message items (e.g., function calls, file searches)
+                if (!isset($outputItem['type'])) {
+                    continue;
+                }
+
+                // Handle message type with content array
+                if ($outputItem['type'] === 'message' && isset($outputItem['content']) && is_array($outputItem['content'])) {
+                    foreach ($outputItem['content'] as $contentPart) {
+                        if (is_string($contentPart)) {
+                            $fullText .= $fullText ? "\n" . $contentPart : $contentPart;
+                        } elseif (is_array($contentPart)) {
+                            // Handle output_text type
+                            if (isset($contentPart['type']) && $contentPart['type'] === 'output_text' && isset($contentPart['text'])) {
+                                $fullText .= $fullText ? "\n" . $contentPart['text'] : $contentPart['text'];
+                            }
+                            // Handle text field directly
+                            elseif (isset($contentPart['text'])) {
+                                $fullText .= $fullText ? "\n" . $contentPart['text'] : $contentPart['text'];
                             }
                         }
                     }
                 }
-
-                if (! empty($fullText)) {
-                    return $fullText;
+                // Handle direct content field (array or string)
+                elseif (isset($outputItem['content'])) {
+                    if (is_string($outputItem['content'])) {
+                        $fullText .= $fullText ? "\n" . $outputItem['content'] : $outputItem['content'];
+                    } elseif (is_array($outputItem['content'])) {
+                        foreach ($outputItem['content'] as $contentPart) {
+                            if (is_string($contentPart)) {
+                                $fullText .= $fullText ? "\n" . $contentPart : $contentPart;
+                            } elseif (isset($contentPart['text'])) {
+                                $fullText .= $fullText ? "\n" . $contentPart['text'] : '';
+                            }
+                        }
+                    }
+                }
+                // Handle text field directly on output item
+                elseif (isset($outputItem['text'])) {
+                    $fullText .= $fullText ? "\n" . $outputItem['text'] : $outputItem['text'];
                 }
             }
 
-            // PRIORITY 2: Array of strings
-            if (isset($output[0]) && is_string($output[0])) {
-                return implode('', $output);
+            if (!empty(trim($fullText))) {
+                return trim($fullText);
             }
 
-            // PRIORITY 3: Direct text field
-            if (isset($output[0]['text'])) {
-                return $output[0]['text'];
+            // Fallback: try to extract from first item
+            if (isset($output[0])) {
+                $first = $output[0];
+                if (is_string($first)) {
+                    return $first;
+                }
+                if (is_array($first)) {
+                    // Try content[0].text pattern
+                    if (isset($first['content'][0]['text'])) {
+                        return $first['content'][0]['text'];
+                    }
+                    // Try content.text pattern
+                    if (isset($first['content']['text'])) {
+                        return $first['content']['text'];
+                    }
+                    // Try text field
+                    if (isset($first['text'])) {
+                        return $first['text'];
+                    }
+                }
             }
         }
 
-        // Final fallback
+        // Final fallback - log detailed structure for debugging
         Log::error('Could not extract content from response', [
-            'output_structure' => json_encode($output),
+            'output_structure' => json_encode($output, JSON_PRETTY_PRINT),
+            'output_type' => gettype($output),
+            'output_count' => is_array($output) ? count($output) : 'N/A',
         ]);
 
         return $this->extractTextFromResponse($responseData);
@@ -96,6 +137,9 @@ trait ResponseExtraction
                     ($response['content'][0]['text'] ?? json_encode($response['content'])) :
                     $response['content'];
             }
+
+            // Safe fallback: return JSON representation instead of forcing array-to-string
+            return json_encode($response, JSON_PRETTY_PRINT);
         }
 
         return (string) $response;
