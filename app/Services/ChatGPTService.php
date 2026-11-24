@@ -57,13 +57,15 @@ class ChatGPTService
         // Build proper responses API request
         $formattedMessages = is_string($messages) ? [['role' => 'user', 'content' => $messages]] : $messages;
 
+        $resolvedModel = $model ?: $this->model;
+
         $requestData = [
-            'model' => $model ?: $this->model,
+            'model' => $resolvedModel,
             'input' => $formattedMessages,
         ];
 
-        // Add supported parameters
-        if (isset($options['temperature'])) {
+        // Add supported parameters - some models (e.g. gpt-5) do not support temperature
+        if (isset($options['temperature']) && ! $this->modelDoesNotSupportTemperature($resolvedModel)) {
             $requestData['temperature'] = $options['temperature'];
         }
         if (isset($options['max_output_tokens'])) {
@@ -71,6 +73,16 @@ class ChatGPTService
         }
 
         return $this->sendChatRequest($requestData, ['request_type' => $requestType]);
+    }
+
+    /**
+     * Check if the given model does not support the temperature parameter.
+     * GPT-5 family models do not support temperature.
+     */
+    protected function modelDoesNotSupportTemperature(string $model): bool
+    {
+        // GPT-5 family models do not support temperature
+        return str_starts_with($model, 'gpt-5');
     }
 
     /**
@@ -370,6 +382,12 @@ class ChatGPTService
 
         // Enable streaming
         $requestData['stream'] = true;
+
+        // Remove temperature for models that don't support it (e.g. gpt-5)
+        $model = $requestData['model'] ?? '';
+        if ($this->modelDoesNotSupportTemperature($model)) {
+            unset($requestData['temperature']);
+        }
 
         Log::info('ChatGPTService streamChatRequest', [
             'model' => $requestData['model'] ?? 'default',
