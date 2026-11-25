@@ -19,7 +19,7 @@ return new class extends Migration
         DB::table('pricing_tiers')->insert([
             [
                 'name' => 'Basic',
-                'model' => 'gpt-4-nano',
+                'model' => 'gpt-6.2-sol',
                 'initial_price' => 10.00,
                 'subsequent_price' => 5.00,
                 'monthly_token_limit' => 50000, // Adjust as needed
@@ -31,7 +31,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Premium',
-                'model' => 'gpt-4-turbo',
+                'model' => 'gpt-6.2-astra',
                 'initial_price' => 15.00,
                 'subsequent_price' => 10.00,
                 'monthly_token_limit' => 70000, // Adjust as needed

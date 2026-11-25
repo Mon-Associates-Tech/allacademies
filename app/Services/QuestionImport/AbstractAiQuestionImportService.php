@@ -162,7 +162,7 @@ abstract class AbstractAiQuestionImportService
     protected function callAi(string $prompt): array
     {
         return $this->chatService->chat([
-            'model' => 'gpt-4.1-nano',
+            'model' => 'gpt-6.2-sol',
             'input' => $prompt,
             'request_type' => 'quiz_generation',
             'creativity_level' => 0.2,

@@ -34,7 +34,7 @@ class ExamPerformanceReportService
 
         $prompt = $this->buildReportPrompt($data, $startDate, $endDate);
 
-        $response = $this->chatGPTService->chat($prompt, 'gpt-4.1-nano', [
+        $response = $this->chatGPTService->chat($prompt, 'gpt-5', [
             'request_type' => 'performance_report',
             'temperature' => 0.7,
         ]);

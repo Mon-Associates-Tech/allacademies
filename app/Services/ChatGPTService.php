@@ -11,7 +11,7 @@ class ChatGPTService
 {
     use ResponseExtraction;
 
-    protected $model = 'gpt-5';
+    protected $model = 'gpt-6.2-sol';
 
     protected string $textEndpoint = 'https://api.openai.com/v1/responses';
 
@@ -22,7 +22,7 @@ class ChatGPTService
     public function __construct(TokenUsageService $tokenUsageService)
     {
         $this->tokenUsageService = $tokenUsageService;
-        $this->model = config('openai.openai.model') ?: config('openai.openai.default_model') ?: 'gpt-5';
+        $this->model = config('openai.openai.model') ?: config('openai.openai.default_model') ?: 'gpt-6.2-sol';
     }
 
     /**
@@ -48,7 +48,7 @@ class ChatGPTService
      * Unified Chat method with retry logic and usage logging
      * Supports both simple message arrays and complex request data
      */
-    public function chat($messages, $model = '', array $options = []): array
+    public function chat($messages, array $options = []): array
     {
         // Extract internal options
         $requestType = $options['request_type'] ?? 'chat';
@@ -57,7 +57,8 @@ class ChatGPTService
         // Build proper responses API request
         $formattedMessages = is_string($messages) ? [['role' => 'user', 'content' => $messages]] : $messages;
 
-        $resolvedModel = $model ?: $this->model;
+        $resolvedModel = $options['model'] ?? $this->model;
+        unset($options['model']);
 
         $requestData = [
             'model' => $resolvedModel,
@@ -163,7 +164,7 @@ class ChatGPTService
                             $user,
                             $usage,
                             $requestType,
-                            $requestData['model'] ?? 'gpt-4'
+                            $requestData['model'] ?? 'gpt-6.2-sol'
                         );
                     }
 
@@ -171,7 +172,7 @@ class ChatGPTService
                         'success' => true,
                         'content' => $extractedContent,
                         'usage' => $usage,
-                        'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-5',
+                        'model' => $responseData['model'] ?? $requestData['model'] ?? 'gpt-6.2-sol',
                     ];
 
                     // Include images if any were extracted
@@ -481,7 +482,7 @@ class ChatGPTService
                     $user,
                     $usage,
                     $requestType,
-                    $requestData['model'] ?? 'gpt-4'
+                    $requestData['model'] ?? 'gpt-6.2-sol'
                 );
             }
 
@@ -489,7 +490,7 @@ class ChatGPTService
                 'success' => true,
                 'content' => $content,
                 'usage' => $usage,
-                'model' => $requestData['model'] ?? 'gpt-5',
+                'model' => $requestData['model'] ?? 'gpt-6.2-sol',
             ];
 
             if (!empty($images)) {

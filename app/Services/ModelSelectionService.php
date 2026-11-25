@@ -14,10 +14,10 @@ class ModelSelectionService
     {
         // Image generation typically requires premium access
         if ($this->hasPremiumAccess($user)) {
-            return config('openai.models.premium_image_model', 'gpt-image-1-mini');
+            return config('openai.models.premium_image_model', 'gpt-image-2.5-sunburst-2026-09-08');
         }
 
-        return config('openai.models.default_image_model', 'gpt-image-1-mini');
+        return config('openai.models.default_image_model', 'gpt-image-2.5-sunburst-2026-09-08');
     }
 
     /**
@@ -26,7 +26,7 @@ class ModelSelectionService
     public function hasPremiumAccess(User $user): bool
     {
         $model = $this->getModelForUser($user);
-        $premiumModel = config('openai.openai.premium_model', 'gpt-4-turbo');
+        $premiumModel = config('openai.openai.premium_model', 'gpt-6.2-sol');
 
         return $model === $premiumModel;
     }
@@ -38,23 +38,23 @@ class ModelSelectionService
     {
         // Non-guests always get premium model
         if ($user->role !== \App\Enums\UserRole::GUEST) {
-            return config('openai.openai.premium_model', 'gpt-4-turbo');
+            return config('openai.openai.premium_model', 'gpt-6.2-sol');
         }
 
         // For guests, check their active subscription cycle
         $cycle = $user->getCurrentActiveCycle();
 
         if (! $cycle || ! $cycle->pricingTier) {
-            return config('openai.openai.default_model', 'gpt-4.1-nano');
+            return config('openai.openai.default_model', 'gpt-6.2-sol');
         }
 
         // Determine model based on pricing tier
         if ($cycle->pricingTier->name === 'Premium') {
-            return config('openai.openai.premium_model', 'gpt-4-turbo');
+            return config('openai.openai.premium_model', 'gpt-6.2-sol');
         }
 
         // Basic tier gets default model
-        return config('openai.openai.default_model', 'gpt-4.1-nano');
+        return config('openai.openai.default_model', 'gpt-6.2-sol');
     }
 
     /**
@@ -72,7 +72,10 @@ class ModelSelectionService
     public function detectModelType(ChatGPTService $chatGPT, array $parameters, array $conversationHistory): string
     {
         $user = auth()->user();
-        $classificationModel = config('openai.openai.default_model', 'gpt-4.1-nano');
+        $classificationModel = config('openai.openai.default_model', 'gpt-6.2-sol');
+
+        $rawInput = $parameters['input'] ?? '';
+        $inputText = is_string($rawInput) ? $rawInput : (is_array($rawInput) ? implode(' ', array_filter($rawInput, 'is_string')) : '');
 
         $prompt = [
             [
@@ -81,7 +84,7 @@ class ModelSelectionService
             ],
             [
                 'role' => 'user',
-                'content' => 'User request: '.($parameters['input'] ?? '').
+                'content' => 'User request: '.$inputText.
                     "\n\nContext: ".json_encode(array_slice($conversationHistory, -3)),
             ],
         ];

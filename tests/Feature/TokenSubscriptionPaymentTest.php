@@ -30,7 +30,7 @@ class TokenSubscriptionPaymentTest extends TestCase
 
         $this->pricingTier = PricingTier::create([
             'name' => 'Test Tier',
-            'model' => 'gpt-4',
+            'model' => 'gpt-6.2-sol',
             'base_price' => 10.00,
             'initial_price' => 15.00,
             'subsequent_price' => 12.00,
@@ -52,7 +52,7 @@ class TokenSubscriptionPaymentTest extends TestCase
 
         // Check cycles were created
         $cycles = SubscriptionCycle::where('user_id', $this->user->id)->get();
-        
+
         $this->assertGreaterThan(0, $cycles->count(), 'No cycles were created');
 
         // All cycles should be inactive with 0 tokens (pending payment)
@@ -61,7 +61,7 @@ class TokenSubscriptionPaymentTest extends TestCase
             $this->assertEquals(0, $cycle->tokens_allocated, 'Tokens should be 0 before payment');
             $this->assertNotNull($cycle->subscription_group_id);
         }
-        
+
         // User should not have tokens before payment
         $this->assertFalse($this->user->hasOpenAiTokens(1));
     }
@@ -97,7 +97,7 @@ class TokenSubscriptionPaymentTest extends TestCase
 
         $firstCycle = SubscriptionCycle::where('user_id', $this->user->id)->first();
         $this->assertNotNull($firstCycle, 'No cycle was created');
-        
+
         $groupId = $firstCycle->subscription_group_id;
         $this->assertNotNull($groupId, 'Subscription group ID is null');
 
@@ -141,7 +141,7 @@ class TokenSubscriptionPaymentTest extends TestCase
 
         $firstCycle = SubscriptionCycle::where('user_id', $this->user->id)->first();
         $this->assertNotNull($firstCycle);
-        
+
         $groupId = $firstCycle->subscription_group_id;
         $this->assertNotNull($groupId);
 
@@ -221,7 +221,7 @@ class TokenSubscriptionPaymentTest extends TestCase
 
         $firstCycle = SubscriptionCycle::where('user_id', $this->user->id)->first();
         $this->assertNotNull($firstCycle);
-        
+
         $groupId = $firstCycle->subscription_group_id;
         $this->assertNotNull($groupId);
 
