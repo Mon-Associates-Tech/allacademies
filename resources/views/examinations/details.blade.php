@@ -1,11 +1,11 @@
 <div x-data="{ format: 'lenticular' }"
-     class="overflow-y-visible rounded-lg bg-white shadow mx-auto print:shadow-none  print:rounded-none max-w-[60rem] print:max-w-full">
+     class="overflow-y-visible rounded-lg bg-white text-gray-900 shadow mx-auto print:shadow-none print:rounded-none max-w-[60rem] print:max-w-full dark:bg-gray-800 dark:text-gray-200">
 
     <div class="text-center print:hidden py-3 text-xl font-bold uppercase">{{$examination->title ?? $examination}}</div>
 
-    <div class="bg-gray-50 px-4 py-4 border-b border-t border-gray-200 sm:px-6 flex items-center justify-between print:hidden">
+    <div class="bg-gray-50 px-4 py-4 border-b border-t border-gray-200 sm:px-6 flex items-center justify-between print:hidden dark:bg-gray-900 dark:border-gray-700">
         <div>
-            <x-link.white :to="route('examinations.index', ['academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
+            <x-link.white :to="route('examinations.index', ['academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])" class="dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
@@ -15,11 +15,11 @@
 
             <span class="inline-flex rounded-md shadow-sm">
                 <span
-                    class="inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-sm sm:leading-6">
+                    class="inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-sm sm:leading-6 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                     Format
                 </span>
                 <select x-model="format" id="format" name="format"
-                        class="-ml-px block w-full rounded-l-none rounded-r-md border-0 bg-white py-1 pl-3 pr-9 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6">
+                        class="-ml-px block w-full rounded-l-none rounded-r-md border-0 bg-white py-1 pl-3 pr-9 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-gray-100 dark:ring-gray-600">
                     <option value="lenticular">Lenticular</option>
                     <option value="elliptical">Elliptical</option>
                 </select>

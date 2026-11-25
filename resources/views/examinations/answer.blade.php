@@ -5,10 +5,10 @@
 <x-print title="Examination Details" :has-action="false">
 
     <div x-data="{ format: 'lenticular' }"
-         class="overflow-hidden rounded-lg bg-white shadow print:shadow-none print:rounded-none max-w-4xl mx-auto">
+         class="overflow-hidden rounded-lg bg-white text-gray-900 shadow print:shadow-none print:rounded-none max-w-4xl mx-auto dark:bg-gray-800 dark:text-gray-200">
         <div class="text-center py-3 text-xl font-bold uppercase">{{$examination->title}}</div>
 
-        <div class="bg-gray-50 px-4 py-4 border-b border-t border-gray-200 sm:px-6 flex items-center justify-between print:hidden">
+        <div class="bg-gray-50 px-4 py-4 border-b border-t border-gray-200 sm:px-6 flex items-center justify-between print:hidden dark:bg-gray-900 dark:border-gray-700">
             <div>
                 <x-link.white :to="route('examinations.index', ['academic_subject' => $examination->academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
                     <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -20,11 +20,11 @@
 
             <span class="inline-flex rounded-md shadow-sm">
                 <span
-                    class="inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-sm sm:leading-6">
+                    class="inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-1 sm:text-sm sm:leading-6 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                     Format
                 </span>
                 <select x-model="format" id="format" name="format"
-                        class="-ml-px block w-full rounded-l-none rounded-r-md border-0 bg-white py-1 pl-3 pr-9 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6">
+                        class="-ml-px block w-full rounded-l-none rounded-r-md border-0 bg-white py-1 pl-3 pr-9 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-gray-100 dark:ring-gray-600">
                     <option value="lenticular">Lenticular</option>
                     <option value="elliptical">Elliptical</option>
                 </select>
@@ -72,14 +72,15 @@
                 @elseif ('essay_questions' === $section['type'])
                     <ol class="list-decimal px-4">
                         @foreach ($section['questions'] as $es)
-                            <li x-html="marked.parse(@js($es->answer->up, JSON_THROW_ON_ERROR))">
+                            <li class="mb-4">
+                                <x-prose-content :content="$es->answer" :inline="false" size="sm" />
                             </li>
                         @endforeach
                     </ol>
                 @endif
             @endforeach
         </div>
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden">
+        <div class="bg-gray-50 px-4 py-4 sm:px-6 flex items-center justify-end print:hidden dark:bg-gray-900">
             <x-button.primary x-on:click="window.print()">Print</x-button.primary>
         </div>
     </div>
