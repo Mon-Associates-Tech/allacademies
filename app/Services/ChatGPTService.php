@@ -401,7 +401,7 @@ class ChatGPTService
             $streamResponse = Http::withToken($apiKey)
                 ->timeout($timeout)
                 ->connectTimeout(10)
-                ->withOptions(['verify' => $verifySsl])
+                ->withOptions(['verify' => $verifySsl, 'stream' => true])
                 ->withHeaders(['Accept' => 'text/event-stream'])
                 ->asJson()
                 ->withBody('', 'application/json')
@@ -429,52 +429,54 @@ class ChatGPTService
             $incomplete = false;
             $incompleteReason = null;
             $buffer = '';
-
-            // Get the raw body as a stream
-            $body = $streamResponse->body();
-
-            // Parse SSE events from the response body
-            // SSE format: "event: <type>\ndata: <json>\n\n"
-            $lines = explode("\n", $body);
-
+            $body = $streamResponse->toPsrResponse()->getBody();
             $currentEventType = null;
             $currentEventData = '';
 
-            foreach ($lines as $line) {
-                $line = trim($line);
-
-                if ($line === '') {
-                    // Empty line = end of SSE event, process it
-                    if ($currentEventType && $currentEventData) {
-                        $result = $this->processStreamEvent(
-                            $currentEventType,
-                            $currentEventData,
-                            $chunkCallback,
-                            $content,
-                            $images,
-                            $usage,
-                            $incomplete,
-                            $incompleteReason
-                        );
-
-                        $content = $result['content'];
-                        $images = $result['images'];
-                        $usage = $result['usage'];
-                        $incomplete = $result['incomplete'];
-                        $incompleteReason = $result['incompleteReason'];
-                    }
-
-                    $currentEventType = null;
-                    $currentEventData = '';
-                    continue;
+            $processEvent = function () use (&$currentEventType, &$currentEventData, $chunkCallback, &$content, &$images, &$usage, &$incomplete, &$incompleteReason): void {
+                if ($currentEventType && $currentEventData) {
+                    $this->processStreamEvent(
+                        $currentEventType,
+                        $currentEventData,
+                        $chunkCallback,
+                        $content,
+                        $images,
+                        $usage,
+                        $incomplete,
+                        $incompleteReason
+                    );
                 }
 
-                if (str_starts_with($line, 'event:')) {
+                $currentEventType = null;
+                $currentEventData = '';
+            };
+
+            $processLine = function (string $line) use (&$currentEventType, &$currentEventData, $processEvent): void {
+                $line = rtrim($line, "\r");
+                if ($line === '') {
+                    $processEvent();
+                } elseif (str_starts_with($line, 'event:')) {
                     $currentEventType = trim(substr($line, 6));
                 } elseif (str_starts_with($line, 'data:')) {
-                    $currentEventData = trim(substr($line, 5));
+                    $data = trim(substr($line, 5));
+                    $currentEventData .= ($currentEventData === '' ? '' : "\n").$data;
+                }
+            };
+
+            while (! $body->eof()) {
+                $buffer .= $body->read(1024);
+
+                while (($newlinePosition = strpos($buffer, "\n")) !== false) {
+                    $line = substr($buffer, 0, $newlinePosition);
+                    $buffer = substr($buffer, $newlinePosition + 1);
+                    $processLine($line);
                 }
             }
+
+            if ($buffer !== '') {
+                $processLine($buffer);
+            }
+            $processEvent();
 
             // Handle usage logging
             if ($user && $usage) {

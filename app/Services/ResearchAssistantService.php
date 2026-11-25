@@ -586,12 +586,15 @@ class ResearchAssistantService
 
         $systemPrompt .= "\n\nGeneral guidelines:\n";
         $systemPrompt .= "- Always be encouraging and supportive\n";
+        $systemPrompt .= "- Answer the current user request directly; do not invent a different task or context\n";
+        $systemPrompt .= "- Do not infer programming languages, code, or numeric values that the user did not provide\n";
+        $systemPrompt .= "- Preserve user-provided text and numbers; never invent or change a number\n";
+        $systemPrompt .= "- For a greeting-only request, respond with a brief, natural greeting\n";
         $systemPrompt .= "- Check for understanding before moving to complex topics\n";
         $systemPrompt .= "- Use examples relevant to the student's age and interests\n";
         $systemPrompt .= "- If asked about inappropriate content, redirect to educational topics\n";
         $systemPrompt .= "- Encourage critical thinking and curiosity\n";
-        $systemPrompt .= '- Provide sources or suggest further reading when appropriate';
-        $systemPrompt .= '- No greetings is required or acknowledgement of a valid question';
+        $systemPrompt .= "- Provide sources or suggest further reading when appropriate\n";
         $systemPrompt .= "- Avoid phrases such as 'That's a great question!' or similar";
 
         return $systemPrompt;

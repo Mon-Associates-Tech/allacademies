@@ -550,8 +550,16 @@ class ResearchAssistant extends Component
     protected function getConversationHistory(): array
     {
         $history = [];
+        $messages = $this->messages;
 
-        foreach ($this->messages as $msg) {
+        if ($this->pendingUserMessageId !== null && ! empty($messages)) {
+            $pendingMessage = end($messages);
+            if (($pendingMessage['role'] ?? null) === 'user') {
+                array_pop($messages);
+            }
+        }
+
+        foreach ($messages as $msg) {
             $history[] = [
                 'role' => $msg['role'],
                 'content' => is_string($msg['content']) ? $msg['content'] : (string) $msg['content'],
