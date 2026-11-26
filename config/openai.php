@@ -12,19 +12,19 @@ return [
 
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
-        'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-4.1-nano'),
-        'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-4-turbo'),
+        'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-6.2-sol'),
+        'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-6.2-sol'),
         'timeout' => env('OPENAI_TIMEOUT', 300),
         'max_tokens' => env('OPENAI_MAX_TOKENS', 20000),
         'verify_ssl' => env('OPENAI_VERIFY_SSL', true),
     ],
 
     'models' => [
-        'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-4'),
-        'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-4-turbo'),
+        'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-6.2-sol'),
+        'premium_model' => env('OPENAI_PREMIUM_MODEL', 'gpt-6.2-sol'),
         'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
-        'default_image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-1-mini'),
-        'premium_image_model' => env('OPENAI_PREMIUM_IMAGE_MODEL', 'gpt-image-1-mini'),
+        'default_image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-2.5-sunburst-2026-09-08'),
+        'premium_image_model' => env('OPENAI_PREMIUM_IMAGE_MODEL', 'gpt-image-2.5-sunburst-2026-09-08'),
 
     ],
 

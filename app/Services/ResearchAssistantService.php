@@ -15,7 +15,7 @@ class ResearchAssistantService
 {
     use ResponseExtraction;
 
-    protected string $model = 'gpt-4.1-nano';
+    protected string $model = 'gpt-6.2-sol';
 
     protected ChatGPTService $chatGPTService;
 
@@ -42,7 +42,8 @@ class ResearchAssistantService
         }
 
         // 1. Fast Regex Check for image/mixed intent to save classification tokens
-        $input = $parameters['input'] ?? '';
+        $rawInput = $parameters['input'] ?? '';
+        $input = is_string($rawInput) ? $rawInput : (is_array($rawInput) ? implode(' ', array_filter($rawInput, 'is_string')) : '');
         $modelType = 'text';
 
         if (preg_match('/(draw|create|generate|make)\s+(an?\s+)?(image|picture|photo|illustration|drawing|sketch|render)|illustration|diagram|chart|graph/i', $input)) {
@@ -189,7 +190,7 @@ class ResearchAssistantService
     protected function extractIllustrationPrompts(array $parameters, string $content): array
     {
         $user = auth()->user();
-        $classificationModel = config('openai.openai.default_model', 'gpt-4.1-nano');
+        $classificationModel = config('openai.openai.default_model', 'gpt-6.2-sol');
 
         // Truncate content to avoid token limits on the classification call
         $truncatedContent = mb_substr($content, 0, 3000);
@@ -333,15 +334,15 @@ class ResearchAssistantService
         $description = $parameters['input'] ?? 'Generate an educational image';
 
         $details = [];
-        if (! empty($parameters['subject'])) {
+        if (! empty($parameters['subject']) && is_string($parameters['subject'])) {
             $details[] = 'Subject: ' . $parameters['subject'];
         }
 
         if (! empty($parameters['topics'])) {
-            $details[] = 'Topics: ' . (is_array($parameters['topics']) ? implode(', ', $parameters['topics']) : $parameters['topics']);
+            $details[] = 'Topics: ' . (is_array($parameters['topics']) ? implode(', ', array_filter($parameters['topics'], 'is_string')) : ($parameters['topics'] ?? ''));
         }
 
-        if (! empty($parameters['academic_level'])) {
+        if (! empty($parameters['academic_level']) && is_string($parameters['academic_level'])) {
             $details[] = 'Academic level: ' . $parameters['academic_level'];
         }
 
@@ -367,7 +368,15 @@ class ResearchAssistantService
             $messages[] = ['role' => 'system', 'content' => $this->buildEducationalSystemMessage($parameters)];
         }
 
-        $messages = array_merge($messages, $conversationHistory);
+        // Ensure conversation history content is always string
+        $safeHistory = [];
+        foreach ($conversationHistory as $msg) {
+            $safeHistory[] = [
+                'role' => $msg['role'] ?? 'user',
+                'content' => is_string($msg['content'] ?? '') ? $msg['content'] : (is_array($msg['content']) ? implode(', ', array_filter($msg['content'], 'is_string')) : ''),
+            ];
+        }
+        $messages = array_merge($messages, $safeHistory);
         $messages[] = ['role' => 'user', 'content' => $this->prepareTextPrompt($parameters)];
 
         $result = $this->chatGPTService->chat($messages, $model, [
@@ -494,18 +503,18 @@ class ResearchAssistantService
         }
 
         // Academic level
-        if (isset($parameters['academic_level'])) {
+        if (isset($parameters['academic_level']) && is_string($parameters['academic_level'])) {
             $level = strtolower($parameters['academic_level']);
             $systemPrompt .= "Tailor your responses for {$level} level understanding. ";
         }
 
         // Academic group/curriculum
-        if (isset($parameters['academic_group'])) {
+        if (isset($parameters['academic_group']) && is_string($parameters['academic_group'])) {
             $systemPrompt .= "Focus on the {$parameters['academic_group']} curriculum standards. ";
         }
 
         // Subject focus
-        if (isset($parameters['subject'])) {
+        if (isset($parameters['subject']) && is_string($parameters['subject'])) {
             $systemPrompt .= "You are specifically helping with {$parameters['subject']}. ";
         }
 
@@ -540,7 +549,7 @@ class ResearchAssistantService
         }
 
         // Difficulty preference
-        if (isset($parameters['difficulty'])) {
+        if (isset($parameters['difficulty']) && is_string($parameters['difficulty'])) {
             $difficulty = $parameters['difficulty'];
             $systemPrompt .= "Adjust the complexity to {$difficulty} level. ";
         }
@@ -560,7 +569,7 @@ class ResearchAssistantService
         }
 
         // Response format preference
-        if (isset($parameters['response_format'])) {
+        if (isset($parameters['response_format']) && is_string($parameters['response_format'])) {
             $format = $parameters['response_format'];
             switch ($format) {
                 case 'detailed':
@@ -577,12 +586,15 @@ class ResearchAssistantService
 
         $systemPrompt .= "\n\nGeneral guidelines:\n";
         $systemPrompt .= "- Always be encouraging and supportive\n";
+        $systemPrompt .= "- Answer the current user request directly; do not invent a different task or context\n";
+        $systemPrompt .= "- Do not infer programming languages, code, or numeric values that the user did not provide\n";
+        $systemPrompt .= "- Preserve user-provided text and numbers; never invent or change a number\n";
+        $systemPrompt .= "- For a greeting-only request, respond with a brief, natural greeting\n";
         $systemPrompt .= "- Check for understanding before moving to complex topics\n";
         $systemPrompt .= "- Use examples relevant to the student's age and interests\n";
         $systemPrompt .= "- If asked about inappropriate content, redirect to educational topics\n";
         $systemPrompt .= "- Encourage critical thinking and curiosity\n";
-        $systemPrompt .= '- Provide sources or suggest further reading when appropriate';
-        $systemPrompt .= '- No greetings is required or acknowledgement of a valid question';
+        $systemPrompt .= "- Provide sources or suggest further reading when appropriate\n";
         $systemPrompt .= "- Avoid phrases such as 'That's a great question!' or similar";
 
         return $systemPrompt;
@@ -590,17 +602,18 @@ class ResearchAssistantService
 
     protected function prepareTextPrompt($parameters): string
     {
-        $prompt = 'User request: ' . ($parameters['input'] ?? '');
+        $prompt = 'User request: ' . (is_string($parameters['input'] ?? '') ? $parameters['input'] : (is_array($parameters['input'] ?? null) ? implode(', ', array_filter($parameters['input'], 'is_string')) : ''));
 
         // Add context from parameters
         $context = [];
         foreach ($parameters as $key => $value) {
             if ($key !== 'input' && ! empty($value)) {
                 if (is_array($value)) {
-                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . implode(', ', $value);
-                } else {
+                    $context[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . implode(', ', array_filter($value, 'is_string'));
+                } elseif (is_string($value)) {
                     $context[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . $value;
                 }
+                // skip non-string, non-array values to avoid type conversion errors
             }
         }
 
@@ -641,7 +654,7 @@ class ResearchAssistantService
         // configured default so the API call doesn't receive an empty model string.
         $modelToUse = $user
             ? $user->getOpenAiModel()
-            : (config('openai.openai.model') ?: 'gpt-4.1-nano');
+            : (config('openai.openai.model') ?: 'gpt-6.2-sol');
 
         // Prepare messages array
         $formattedMessages = [];
@@ -651,9 +664,10 @@ class ResearchAssistantService
         if (isset($parameters['request_type']) && $parameters['request_type'] === 'quiz_generation') {
             // Use ONLY the provided prompt - don't add educational context
             if (isset($parameters['input'])) {
+                $inputContent = is_string($parameters['input']) ? $parameters['input'] : (is_array($parameters['input']) ? implode(', ', array_filter($parameters['input'], 'is_string')) : '');
                 $formattedMessages[] = [
                     'role' => 'user',
-                    'content' => $parameters['input'],
+                    'content' => $inputContent,
                 ];
             }
         } else {
@@ -661,16 +675,24 @@ class ResearchAssistantService
             $systemMessage = $this->buildEducationalSystemMessage($parameters);
             $formattedMessages[] = ['role' => 'system', 'content' => $systemMessage];
 
-            // Add conversation history if provided
+            // Add conversation history if provided, ensuring content is always string
             if (! empty($messages)) {
-                $formattedMessages = array_merge($formattedMessages, $messages);
+                $safeMessages = [];
+                foreach ($messages as $msg) {
+                    $safeMessages[] = [
+                        'role' => $msg['role'] ?? 'user',
+                        'content' => is_string($msg['content'] ?? '') ? $msg['content'] : (is_array($msg['content']) ? implode(', ', array_filter($msg['content'], 'is_string')) : ''),
+                    ];
+                }
+                $formattedMessages = array_merge($formattedMessages, $safeMessages);
             }
 
             // Add current user message if provided in parameters
             if (isset($parameters['input'])) {
+                $inputContent = is_string($parameters['input']) ? $parameters['input'] : (is_array($parameters['input']) ? implode(', ', array_filter($parameters['input'], 'is_string')) : '');
                 $formattedMessages[] = [
                     'role' => 'user',
-                    'content' => $parameters['input'],
+                    'content' => $inputContent,
                 ];
             }
         }

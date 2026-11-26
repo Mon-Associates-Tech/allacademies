@@ -6,18 +6,19 @@ use App\Http\Controllers\Controller;
 use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSubjectExam;
 use App\MockExam\Models\MockExamTemplate;
+use App\MockExam\Services\MockExamPdfRenderer;
 use App\MockExam\Services\MockExamPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Spatie\Browsershot\Browsershot;
+use Symfony\Component\HttpFoundation\Response;
 
 class MockExamPdfController extends Controller
 {
     public function __construct(
-        private readonly MockExamPdfService $viewService
+        private readonly MockExamPdfService $viewService,
+        private readonly MockExamPdfRenderer $pdfRenderer
     ) {}
 
     public function previewPage(MockExam $mockExam): View
@@ -62,26 +63,16 @@ class MockExamPdfController extends Controller
         $this->inlineImagesForAnswerKey($data);
         $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title) . '-answer-key.pdf';
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title).'-answer-key.pdf';
 
-        $pdf = Browsershot::html($html)
-            ->setIncludePath('$PATH:/usr/local/bin')
-            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
-            ->emulateMedia('print')
-            ->showBackground()
-            ->format('A4')
-            ->margins(15, 15, 15, 15)
-            ->noSandbox()
-            ->setOption('args', ['--disable-dev-shm-usage'])
-            ->timeout(120)
-            ->pdf();
+        $pdf = $this->pdfRenderer->render($html);
 
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdf));
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Content-Length: '.strlen($pdf));
         header('X-Accel-Buffering: no');
         echo $pdf;
         exit;
@@ -102,26 +93,16 @@ class MockExamPdfController extends Controller
         $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
         $subjectName = $subjectExam->getDisplayTitle();
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName) . '-answer-key.pdf';
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName).'-answer-key.pdf';
 
-        $pdf = Browsershot::html($html)
-            ->setIncludePath('$PATH:/usr/local/bin')
-            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
-            ->emulateMedia('print')
-            ->showBackground()
-            ->format('A4')
-            ->margins(15, 15, 15, 15)
-            ->noSandbox()
-            ->setOption('args', ['--disable-dev-shm-usage'])
-            ->timeout(120)
-            ->pdf();
+        $pdf = $this->pdfRenderer->render($html);
 
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdf));
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Content-Length: '.strlen($pdf));
         header('X-Accel-Buffering: no');
         echo $pdf;
         exit;
@@ -176,25 +157,16 @@ class MockExamPdfController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'subjectExam' => $subjectExam->id,
             ]);
-            return response('Error generating PDF: ' . $e->getMessage(), 500, [
+
+            return response('Error generating PDF: '.$e->getMessage(), 500, [
                 'Content-Type' => 'text/plain',
             ]);
         }
 
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectExam->getDisplayTitle()) . '.pdf';
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectExam->getDisplayTitle()).'.pdf';
 
         try {
-            $pdf = Browsershot::html($html)
-                ->setIncludePath('$PATH:/usr/local/bin')
-                ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
-                ->emulateMedia('print')
-                ->showBackground()
-                ->format('A4')
-                ->margins(15, 15, 15, 15)
-                ->noSandbox()
-                ->setOption('args', ['--disable-dev-shm-usage'])
-                ->timeout(120)
-                ->pdf();
+            $pdf = $this->pdfRenderer->render($html);
         } catch (\Throwable $e) {
             \Log::error('Browsershot PDF generation failed', [
                 'error' => $e->getMessage(),
@@ -204,7 +176,8 @@ class MockExamPdfController extends Controller
                 'subjectExam' => $subjectExam->id,
                 'htmlLength' => strlen($html),
             ]);
-            return response('Error generating PDF: ' . $e->getMessage(), 500, [
+
+            return response('Error generating PDF: '.$e->getMessage(), 500, [
                 'Content-Type' => 'text/plain',
             ]);
         }
@@ -214,6 +187,7 @@ class MockExamPdfController extends Controller
                 'subjectExam' => $subjectExam->id,
                 'htmlLength' => strlen($html),
             ]);
+
             return response('Error: PDF generation produced empty output', 500, [
                 'Content-Type' => 'text/plain',
             ]);
@@ -221,8 +195,8 @@ class MockExamPdfController extends Controller
 
         // Write PDF directly to response without buffering
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdf));
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Content-Length: '.strlen($pdf));
         header('X-Accel-Buffering: no');
         echo $pdf;
         exit;
@@ -237,7 +211,7 @@ class MockExamPdfController extends Controller
         // Front page PDF images (from template upload mode)
         if ($subjectExam->template !== null) {
             $frontPageConfig = $subjectExam->template->front_page_config ?? null;
-            if (!empty($frontPageConfig['attachment_pdf_images'])) {
+            if (! empty($frontPageConfig['attachment_pdf_images'])) {
                 $images = $frontPageConfig['attachment_pdf_images'];
                 foreach ($images as $i => $path) {
                     $images[$i] = $this->toBase64DataUri($path);
@@ -250,7 +224,7 @@ class MockExamPdfController extends Controller
         // Section attachment images
         foreach ($subjectExam->sections as $section) {
             // PDF attachment images (array)
-            if (!empty($section->attachment_pdf_images)) {
+            if (! empty($section->attachment_pdf_images)) {
                 $images = $section->attachment_pdf_images;
                 foreach ($images as $i => $path) {
                     $images[$i] = $this->toBase64DataUri($path);
@@ -259,16 +233,16 @@ class MockExamPdfController extends Controller
             }
 
             // Single image attachment
-            if (!empty($section->attachment_image_path)) {
+            if (! empty($section->attachment_image_path)) {
                 $section->attachment_image_path = $this->toBase64DataUri($section->attachment_image_path);
             }
         }
 
         // Identity section images (logos)
-        if (!empty($data['identity']['rows'])) {
+        if (! empty($data['identity']['rows'])) {
             foreach ($data['identity']['rows'] as &$row) {
                 foreach ($row as &$item) {
-                    if (isset($item['type']) && $item['type'] === 'image' && !empty($item['value'])) {
+                    if (isset($item['type']) && $item['type'] === 'image' && ! empty($item['value'])) {
                         $item['value'] = $this->toBase64DataUri($item['value']);
                     }
                 }
@@ -286,7 +260,7 @@ class MockExamPdfController extends Controller
         }
 
         $fullPath = Storage::disk('public')->path($path);
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             return ''; // return empty if file not found
         }
 
@@ -294,7 +268,7 @@ class MockExamPdfController extends Controller
         $mimeType = mime_content_type($fullPath);
         $base64 = base64_encode($content);
 
-        return 'data:' . $mimeType . ';base64,' . $base64;
+        return 'data:'.$mimeType.';base64,'.$base64;
     }
 
     /**
@@ -321,11 +295,11 @@ class MockExamPdfController extends Controller
             foreach ($se->sections as $section) {
                 foreach ($section->questions as $question) {
                     // Inline images in question_text
-                    if (!empty($question->question_text)) {
+                    if (! empty($question->question_text)) {
                         $question->question_text = $this->inlineStorageImagesInHtml($question->question_text);
                     }
                     // Inline images in answer_explanation
-                    if (!empty($question->answer_explanation)) {
+                    if (! empty($question->answer_explanation)) {
                         $question->answer_explanation = $this->inlineStorageImagesInHtml($question->answer_explanation);
                     }
                 }
@@ -355,13 +329,13 @@ class MockExamPdfController extends Controller
                 $path = ltrim($src, '/');
                 $fullPath = Storage::disk('public')->path($path);
 
-                if (!file_exists($fullPath)) {
+                if (! file_exists($fullPath)) {
                     return $matches[0]; // leave as-is if file not found
                 }
 
                 $dataUri = $this->toBase64DataUri($path);
                 if ($dataUri) {
-                    return '<img' . $beforeSrc . 'src="' . $dataUri . '"' . $afterSrc;
+                    return '<img'.$beforeSrc.'src="'.$dataUri.'"'.$afterSrc;
                 }
 
                 return $matches[0];
@@ -396,7 +370,7 @@ class MockExamPdfController extends Controller
 
         return view('mock-exam.pdf.subject-exam-editable', [
             'subjectExam' => $subjectExam,
-            'fontSize'    => $fontSize,
+            'fontSize' => $fontSize,
             'layoutConfig' => $subjectExam->layout_config ?? [],
         ]);
     }
@@ -464,6 +438,7 @@ class MockExamPdfController extends Controller
     public function previewPageFromSubscription(MockExam $mockExam)
     {
         $this->ensureSubscriptionAccess($mockExam);
+
         return redirect()->route('user.mock-exams.subscription.dashboard');
     }
 
@@ -508,26 +483,16 @@ class MockExamPdfController extends Controller
         $this->inlineImagesForAnswerKey($data);
         $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title) . '-answer-key.pdf';
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title).'-answer-key.pdf';
 
-        $pdf = Browsershot::html($html)
-            ->setIncludePath('$PATH:/usr/local/bin')
-            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
-            ->emulateMedia('print')
-            ->showBackground()
-            ->format('A4')
-            ->margins(15, 15, 15, 15)
-            ->noSandbox()
-            ->setOption('args', ['--disable-dev-shm-usage'])
-            ->timeout(120)
-            ->pdf();
+        $pdf = $this->pdfRenderer->render($html);
 
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdf));
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Content-Length: '.strlen($pdf));
         header('X-Accel-Buffering: no');
         echo $pdf;
         exit;
@@ -548,26 +513,16 @@ class MockExamPdfController extends Controller
         $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
 
         $subjectName = $subjectExam->getDisplayTitle();
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName) . '-answer-key.pdf';
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName).'-answer-key.pdf';
 
-        $pdf = Browsershot::html($html)
-            ->setIncludePath('$PATH:/usr/local/bin')
-            ->setNodeEnv(['PUPPETEER_CACHE_DIR' => config('app.puppeteer_cache_dir')])
-            ->emulateMedia('print')
-            ->showBackground()
-            ->format('A4')
-            ->margins(15, 15, 15, 15)
-            ->noSandbox()
-            ->setOption('args', ['--disable-dev-shm-usage'])
-            ->timeout(120)
-            ->pdf();
+        $pdf = $this->pdfRenderer->render($html);
 
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($pdf));
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Content-Length: '.strlen($pdf));
         header('X-Accel-Buffering: no');
         echo $pdf;
         exit;

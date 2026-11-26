@@ -48,7 +48,7 @@ class ResearchAssistantController extends Controller
             'conversation_history' => 'nullable|array',
             'conversation_history.*.role' => 'required|string|in:user,assistant',
             'conversation_history.*.content' => 'required|string',
-            'model' => 'nullable|string|in:gpt-3.5-turbo,gpt-4,gpt-4-turbo-preview',
+            'model' => 'nullable|string|in:gpt-5,gpt-6.2-sol',
         ]);
 
         // Validate educational parameters
@@ -67,7 +67,6 @@ class ResearchAssistantController extends Controller
         $result = $this->chatService->chat(
             $validated,
             $conversationHistory,
-            $validated['model'] ?? 'gpt-4'
         );
 
         return response()->json($result);

@@ -72,7 +72,7 @@ return new class extends Migration
         DB::table('openai_token_packages')->insert([
             [
                 'name' => 'Free Trial',
-                'model' => 'gpt-4-nano',
+                'model' => 'gpt-6.2-sol',
                 'token_limit' => 50000,
                 'price' => 0.00,
                 'description' => '7-day free trial with 5,000 tokens to get started',
@@ -83,7 +83,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Basic',
-                'model' => 'gpt-4-nano',
+                'model' => 'gpt-6.2-sol',
                 'token_limit' => 500000,
                 'price' => 20,
                 'description' => 'Perfect for regular usage with 100K tokens',
@@ -94,7 +94,7 @@ return new class extends Migration
             ],
             [
                 'name' => 'Premium',
-                'model' => 'gpt-5',
+                'model' => 'gpt-6.2-sol',
                 'token_limit' => 1000000,
                 'price' => 40,
                 'description' => 'Advanced usage with 100K tokens',

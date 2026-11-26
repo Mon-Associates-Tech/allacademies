@@ -92,7 +92,7 @@ class AcademicChatTest extends TestCase
                 'usage' => [
                     'total_tokens' => 100,
                 ],
-                'model' => 'gpt-4',
+                'model' => 'gpt-6.2-sol',
             ], 200),
         ]);
 
@@ -145,7 +145,7 @@ class AcademicChatTest extends TestCase
                     ],
                 ],
                 'usage' => ['total_tokens' => 50],
-                'model' => 'gpt-4',
+                'model' => 'gpt-6.2-sol',
             ], 200),
         ]);
 
@@ -216,7 +216,7 @@ class AcademicChatTest extends TestCase
                     ],
                 ],
                 'usage' => ['total_tokens' => 75],
-                'model' => 'gpt-4',
+                'model' => 'gpt-6.2-sol',
             ], 200),
         ]);
 
