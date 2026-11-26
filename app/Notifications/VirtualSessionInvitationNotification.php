@@ -30,7 +30,7 @@ class VirtualSessionInvitationNotification extends Notification implements Shoul
             ->greeting('Hello '.$notifiable->name.'!')
             ->line('You have been invited to join a virtual classroom session.')
             ->line('**Session:** '.$this->session->title)
-            ->line('**Teacher:** '.$this->session->teacher->user->name)
+            ->line('**Host:** '.($this->session->user?->name ?? 'Unknown host'))
             ->line('**Date:** '.$this->session->scheduled_start->format('l, F j, Y'))
             ->line('**Time:** '.$this->session->scheduled_start->format('g:i A').' - '.$this->session->scheduled_end->format('g:i A'))
             ->when($this->session->description, function ($mail) {
@@ -47,7 +47,7 @@ class VirtualSessionInvitationNotification extends Notification implements Shoul
             'session_id' => $this->session->id,
             'participant_id' => $this->participant->id,
             'session_title' => $this->session->title,
-            'teacher_name' => $this->session->teacher->user->name,
+            'teacher_name' => $this->session->user?->name ?? 'Unknown host',
             'scheduled_start' => $this->session->scheduled_start,
             'scheduled_end' => $this->session->scheduled_end,
         ];

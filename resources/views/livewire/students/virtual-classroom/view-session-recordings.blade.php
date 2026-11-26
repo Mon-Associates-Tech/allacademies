@@ -74,7 +74,7 @@
                         </h3>
 
                         <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                            {{ $session->teacher->user->name }}
+                            {{ $session->user?->name ?? 'Unknown host' }}
                         </p>
 
                         <!-- Info -->

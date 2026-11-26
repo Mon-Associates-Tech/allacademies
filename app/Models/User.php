@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Models\Classroom\VirtualSession;
 use App\Models\Chat\OpenAiTokenUsageLog;
 use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
@@ -317,6 +318,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function teacher(): HasOne
     {
         return $this->hasOne(Teacher::class, 'user_id');
+    }
+
+    public function virtualSessions(): HasMany
+    {
+        return $this->hasMany(VirtualSession::class);
     }
 
     public function author(): HasOne

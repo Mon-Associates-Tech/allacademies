@@ -69,7 +69,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 w-10 h-10">
-                                    @if($participant->user->avatar)
+                                    @if($participant->user?->avatar)
                                         <img class="w-10 h-10 rounded-full" src="{{ $participant->user->avatar }}" alt="">
                                     @else
                                         <div class="flex items-center justify-center w-10 h-10 text-white rounded-full bg-violet-600">
@@ -82,7 +82,7 @@
                                         {{ $participant->full_name }}
                                     </div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $participant->user->email }}
+                                        {{ $participant->user?->email ?? 'Guest participant' }}
                                     </div>
                                 </div>
                             </div>
@@ -107,7 +107,7 @@
                         </td>
                         <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-2">
-                                @if($participant->status === 'invited')
+                                @if($participant->status === 'invited' && $participant->user_id)
                                     <button wire:click="resendInvitation({{ $participant->id }})"
                                             class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                                         Resend

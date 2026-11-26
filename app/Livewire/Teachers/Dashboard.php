@@ -206,25 +206,16 @@ class Dashboard extends Component
      */
     public function virtualClassroomStats(): array
     {
-        if (! $this->teacher) {
-            return [
-                'total_sessions' => 0,
-                'upcoming_sessions' => 0,
-                'completed_sessions' => 0,
-                'total_participants' => 0,
-            ];
-        }
-
-        $totalSessions = VirtualSession::where('teacher_id', $this->teacher->id)->count();
-        $upcomingSessions = VirtualSession::where('teacher_id', $this->teacher->id)
+        $totalSessions = VirtualSession::where('user_id', Auth::id())->count();
+        $upcomingSessions = VirtualSession::where('user_id', Auth::id())
             ->where('scheduled_start', '>', now())
             ->count();
-        $completedSessions = VirtualSession::where('teacher_id', $this->teacher->id)
+        $completedSessions = VirtualSession::where('user_id', Auth::id())
             ->where('status', 'completed')
             ->count();
 
         // Get total participants across all sessions
-        $totalParticipants = VirtualSession::where('teacher_id', $this->teacher->id)
+        $totalParticipants = VirtualSession::where('user_id', Auth::id())
             ->withCount('participants')
             ->get()
             ->sum('participants_count');

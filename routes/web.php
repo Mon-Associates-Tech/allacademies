@@ -21,6 +21,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PublicVirtualSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
@@ -98,6 +99,14 @@ Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('
 
 // Public Financial Aid
 Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
+
+// Public virtual-classroom invitations
+Route::get('/classroom/join/{joinToken}', [PublicVirtualSessionController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('classroom.join');
+Route::post('/classroom/join/{joinToken}', [PublicVirtualSessionController::class, 'join'])
+    ->middleware('throttle:10,1')
+    ->name('classroom.join.submit');
 
 // Calendar (Public)
 Route::get('/calendar', function () {

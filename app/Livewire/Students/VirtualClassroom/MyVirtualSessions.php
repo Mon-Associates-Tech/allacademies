@@ -56,7 +56,8 @@ class MyVirtualSessions extends Component
     public function render()
     {
         $query = SessionParticipant::where('user_id', Auth::id())
-            ->with(['virtualSession.teacher.user', 'virtualSession.academicSubject']);
+            ->whereHas('virtualSession', fn ($session) => $session->whereNull('parent_session_id')->orWhereDoesntHave('parentSession'))
+            ->with(['virtualSession.user', 'virtualSession.academicSubject']);
 
         if ($this->search) {
             $query->whereHas('virtualSession', function ($q) {
@@ -67,24 +68,53 @@ class MyVirtualSessions extends Component
 
         switch ($this->view) {
             case 'upcoming':
-                $query->whereHas('virtualSession', function ($q) {
-                    $q->where('status', 'scheduled')
-                        ->where('scheduled_start', '>', now());
-                })
-                    ->whereIn('status', ['invited', 'joined'])
-                    ->orderBy('created_at', 'desc');
+                $query->where(function ($participants) {
+                    $participants->where(function ($parent) {
+                        $parent->whereIn('status', ['invited', 'joined'])
+                            ->whereHas('virtualSession', function ($session) {
+                                $session->where('status', 'scheduled')
+                                    ->where('scheduled_start', '>', now());
+                            });
+                    })->orWhereHas('virtualSession.childSessions', function ($occurrences) {
+                        $occurrences->where('status', 'scheduled')
+                            ->where('scheduled_start', '>', now())
+                            ->whereHas('participants', function ($participant) {
+                                $participant->where('user_id', Auth::id())
+                                    ->whereIn('status', ['invited', 'joined']);
+                            });
+                    });
+                })->orderBy('created_at', 'desc');
                 break;
             case 'past':
-                $query->whereHas('virtualSession', function ($q) {
-                    $q->whereIn('status', ['ended', 'cancelled']);
-                })
-                    ->orderBy('created_at', 'desc');
+                $query->where(function ($participants) {
+                    $participants->whereHas('virtualSession', function ($session) {
+                        $session->whereIn('status', ['ended', 'cancelled']);
+                    })->orWhereHas('virtualSession.childSessions', function ($occurrences) {
+                        $occurrences->whereIn('status', ['ended', 'cancelled'])
+                            ->whereHas('participants', fn ($participant) => $participant->where('user_id', Auth::id()));
+                    });
+                })->orderBy('created_at', 'desc');
                 break;
             default:
                 $query->orderBy('created_at', 'desc');
         }
 
-        $participants = $query->paginate(10);
+        $participants = $query->with([
+            'virtualSession.childSessions' => function ($occurrences) {
+                $occurrences->whereHas('participants', fn ($participant) => $participant->where('user_id', Auth::id()));
+
+                if ($this->view === 'upcoming') {
+                    $occurrences->where('status', 'scheduled')
+                        ->where('scheduled_start', '>', now());
+                } elseif ($this->view === 'past') {
+                    $occurrences->whereIn('status', ['ended', 'cancelled']);
+                }
+
+                $occurrences->with([
+                    'participants' => fn ($participant) => $participant->where('user_id', Auth::id()),
+                ])->orderBy('scheduled_start');
+            },
+        ])->paginate(10);
 
         return view('livewire.students.virtual-classroom.my-virtual-sessions', [
             'participants' => $participants,

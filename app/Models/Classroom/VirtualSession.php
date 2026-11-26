@@ -6,7 +6,8 @@ use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\School;
-use App\Models\Teacher;
+use App\Models\User;
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,11 +17,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VirtualSession extends Model
 {
-    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
+    use ActivityLoggable, BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'school_id',
-        'teacher_id',
+        'user_id',
         'academic_level_id',
         'academic_group_id',
         'academic_subject_id',
@@ -45,6 +46,7 @@ class VirtualSession extends Model
         'max_participants',
         'guest_policy',
         'join_url',
+        'join_token',
         'moderator_url',
         'settings',
         'metadata',
@@ -81,9 +83,9 @@ class VirtualSession extends Model
         return $this->belongsTo(School::class);
     }
 
-    public function teacher(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(User::class);
     }
 
     public function academicLevel(): BelongsTo
@@ -144,9 +146,9 @@ class VirtualSession extends Model
             ->where('scheduled_start', '>', now());
     }
 
-    public function scopeByTeacher($query, $teacherId)
+    public function scopeByUser($query, $userId)
     {
-        return $query->where('teacher_id', $teacherId);
+        return $query->where('user_id', $userId);
     }
 
     public function scopeRecurring($query)

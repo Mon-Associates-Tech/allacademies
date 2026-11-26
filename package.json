@@ -40,6 +40,7 @@
         "chart.js": "^4.4.9",
         "dompurify": "^3.2.6",
         "flatpickr": "^4.6.13",
+        "foliate-js": "^1.0.1",
         "gsap": "^3.12.5",
         "intl-tel-input": "^25.12.5",
         "markdown-it": "^15.0.2",

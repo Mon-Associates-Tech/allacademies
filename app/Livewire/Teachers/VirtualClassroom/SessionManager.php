@@ -27,7 +27,7 @@ class SessionManager extends Component
         $session = VirtualSession::findOrFail($sessionId);
 
         // Authorize
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             $this->dispatch('error', 'Unauthorized action.');
 
             return;
@@ -46,7 +46,7 @@ class SessionManager extends Component
     {
         $session = VirtualSession::findOrFail($sessionId);
 
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             $this->dispatch('error', 'Unauthorized action.');
 
             return;
@@ -61,7 +61,7 @@ class SessionManager extends Component
     {
         $session = VirtualSession::findOrFail($sessionId);
 
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             $this->dispatch('error', 'Unauthorized action.');
 
             return;
@@ -84,9 +84,11 @@ class SessionManager extends Component
 
     public function render()
     {
-        $teacher = Auth::user()->teacher;
-
-        $query = VirtualSession::where('teacher_id', $teacher->id);
+        $query = VirtualSession::where('user_id', Auth::id())
+            ->where(function ($sessions) {
+                $sessions->whereNull('parent_session_id')
+                    ->orWhereDoesntHave('parentSession');
+            });
 
         if ($this->search) {
             $query->where(function ($q) {
@@ -97,13 +99,25 @@ class SessionManager extends Component
 
         switch ($this->view) {
             case 'upcoming':
-                $query->where('status', 'scheduled')
-                    ->where('scheduled_start', '>', now())
-                    ->orderBy('scheduled_start');
+                $upcomingOccurrences = fn ($occurrences) => $occurrences
+                    ->where('status', 'scheduled')
+                    ->where('scheduled_start', '>', now());
+
+                $query->where(function ($sessions) use ($upcomingOccurrences) {
+                    $sessions->where(function ($session) {
+                        $session->where('status', 'scheduled')
+                            ->where('scheduled_start', '>', now());
+                    })->orWhereHas('childSessions', $upcomingOccurrences);
+                })->orderBy('scheduled_start');
                 break;
             case 'past':
-                $query->whereIn('status', ['ended', 'cancelled'])
-                    ->orderBy('scheduled_start', 'desc');
+                $pastOccurrences = fn ($occurrences) => $occurrences
+                    ->whereIn('status', ['ended', 'cancelled']);
+
+                $query->where(function ($sessions) use ($pastOccurrences) {
+                    $sessions->whereIn('status', ['ended', 'cancelled'])
+                        ->orWhereHas('childSessions', $pastOccurrences);
+                })->orderBy('scheduled_start', 'desc');
                 break;
             default:
                 $query->orderBy('scheduled_start', 'desc');
@@ -114,6 +128,16 @@ class SessionManager extends Component
             'academicGroup',
             'academicSubject',
             'participants',
+            'childSessions' => function ($occurrences) {
+                if ($this->view === 'upcoming') {
+                    $occurrences->where('status', 'scheduled')
+                        ->where('scheduled_start', '>', now());
+                } elseif ($this->view === 'past') {
+                    $occurrences->whereIn('status', ['ended', 'cancelled']);
+                }
+
+                $occurrences->orderBy('scheduled_start');
+            },
         ])->paginate(10);
 
         return view('livewire.teachers.virtual-classroom.session-manager', [

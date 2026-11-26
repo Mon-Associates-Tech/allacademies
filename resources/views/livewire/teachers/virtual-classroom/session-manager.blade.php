@@ -104,12 +104,24 @@
                                         </svg>
                                         {{ $session->scheduled_start->format('g:i A') }} - {{ $session->scheduled_end->format('g:i A') }}
                                     </div>
-                                    @if($session->academicSubject)
+                                    @if($session->academicGroup || $session->academicLevel || $session->academicSubject)
                                         <div class="flex items-center">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                             </svg>
-                                            {{ $session->academicSubject->name }}
+                                            <span>
+                                                @if($session->academicGroup)
+                                                    Group: {{ $session->academicGroup->name }}
+                                                @endif
+                                                @if($session->academicLevel)
+                                                    @if($session->academicGroup)<span class="mx-1">·</span>@endif
+                                                    Level: {{ $session->academicLevel->name }}
+                                                @endif
+                                                @if($session->academicSubject)
+                                                    @if($session->academicGroup || $session->academicLevel)<span class="mx-1">·</span>@endif
+                                                    Subject: {{ $session->academicSubject->name }}
+                                                @endif
+                                            </span>
                                         </div>
                                     @endif
                                     <div class="flex items-center">
@@ -119,6 +131,31 @@
                                         {{ $session->participants->count() }} Participants
                                     </div>
                                 </div>
+
+                                @if($session->isParentSession())
+                                    <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Recurring series: {{ $session->getRecurrenceSummary() }}
+                                        </p>
+                                        @if($session->childSessions->isNotEmpty())
+                                            <div class="mt-3 space-y-2">
+                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Other occurrences</p>
+                                                @foreach($session->childSessions as $occurrence)
+                                                    <div wire:key="occurrence-{{ $occurrence->id }}" class="flex items-center justify-between gap-3 text-sm">
+                                                        <span class="text-gray-600 dark:text-gray-400">
+                                                            {{ $occurrence->scheduled_start->format('M d, Y g:i A') }}
+                                                            <span class="ml-1">({{ ucfirst($occurrence->status) }})</span>
+                                                        </span>
+                                                        <a href="{{ route('teachers.classroom.show', $occurrence) }}"
+                                                           class="text-violet-600 hover:text-violet-700 dark:text-violet-400">
+                                                            View occurrence
+                                                        </a>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Actions -->

@@ -26,6 +26,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show')->middleware('token.subscription');
     Route::post('/books/{book}/request-borrow', [BookController::class, 'requestBorrow'])->name('books.request-borrow');
     Route::post('/books/{book}/progress', [BookController::class, 'saveProgress'])->name('books.progress');
+    // Format-aware reader: PDF.js for PDF, browser reader for EPUB/MOBI.
     Route::get('books/{book}/read', [BookController::class, 'read'])->name('books.read');
     Route::get('books/{book}/preview', [BookController::class, 'preview'])->name('books.preview');
     Route::get('books/{book}/file', [BookController::class, 'streamFile'])->name('books.file.stream');
@@ -79,6 +80,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::middleware(['auth'])->group(function () {
+    // Keep the PDF.js route for PDF books and existing signed links.
     Route::get('books/{book}/pdf-read', [BookPdfViewerController::class, 'read'])
         ->name('books.pdf.read');
 

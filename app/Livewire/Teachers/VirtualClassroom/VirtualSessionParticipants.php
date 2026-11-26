@@ -27,7 +27,7 @@ class VirtualSessionParticipants extends Component
     public function mount(VirtualSession $session)
     {
         // Authorize
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
@@ -98,6 +98,12 @@ class VirtualSessionParticipants extends Component
 
         if ($participant->virtual_session_id !== $this->session->id) {
             $this->dispatch('error', 'Invalid participant.');
+
+            return;
+        }
+
+        if (! $participant->user) {
+            $this->dispatch('error', 'Guest participants do not have an email invitation to resend.');
 
             return;
         }

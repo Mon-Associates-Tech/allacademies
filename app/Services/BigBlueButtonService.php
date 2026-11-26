@@ -57,7 +57,7 @@ class BigBlueButtonService
             // Set meeting metadata
             $createParams->addMeta('session-id', $session->id);
             $createParams->addMeta('school-id', $session->school_id);
-            $createParams->addMeta('teacher-id', $session->teacher_id);
+            $createParams->addMeta('user-id', $session->user_id);
             $createParams->addMeta('subject', $session->academicSubject?->name ?? 'N/A');
 
             // Set logo and branding (optional)
@@ -109,12 +109,16 @@ class BigBlueButtonService
             $participant->isModerator() ? $session->moderator_password : $session->attendee_password
         );
 
-        $joinParams->setUserId($participant->user_id);
+        if ($participant->user_id) {
+            $joinParams->setUserId((string) $participant->user_id);
+        }
         $joinParams->setRedirect(true);
 
         // Set user metadata
         $joinParams->addUserData('participant-id', $participant->id);
-        $joinParams->addUserData('user-id', $participant->user_id);
+        if ($participant->user_id) {
+            $joinParams->addUserData('user-id', (string) $participant->user_id);
+        }
         $joinParams->addUserData('role', $participant->role);
 
         return $this->bbb->getJoinMeetingURL($joinParams);
@@ -350,12 +354,12 @@ class BigBlueButtonService
      */
     protected function getWelcomeMessage(VirtualSession $session): string
     {
-        $teacher = $session->teacher->user->name;
+        $host = $session->user?->name ?? 'Unknown host';
         $subject = $session->academicSubject?->name ?? 'Virtual Classroom';
 
         return <<<HTML
         <br>Welcome to <b>{$session->title}</b>!<br><br>
-        <b>Teacher:</b> {$teacher}<br>
+        <b>Host:</b> {$host}<br>
         <b>Subject:</b> {$subject}<br><br>
         For help on using BigBlueButton see these (short) <a href="https://bigbluebutton.org/html5"><u>tutorial videos</u></a>.<br><br>
         To join the audio bridge click the phone button. Use a headset to avoid causing background noise for others.
@@ -369,14 +373,14 @@ class BigBlueButtonService
     {
         $joinParams = new JoinMeetingParameters(
             $session->meeting_id,
-            $session->teacher->user->name,
+            $session->user?->name ?? 'Unknown host',
             $session->moderator_password
         );
 
-        $joinParams->setUserId($session->teacher->user_id);
+        $joinParams->setUserId($session->user_id);
         $joinParams->setRedirect(true);
         $joinParams->addUserData('role', 'moderator');
-        $joinParams->addUserData('teacher-id', $session->teacher_id);
+        $joinParams->addUserData('user-id', $session->user_id);
 
         return $this->bbb->getJoinMeetingURL($joinParams);
     }

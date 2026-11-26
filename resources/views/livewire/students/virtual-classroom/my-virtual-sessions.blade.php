@@ -58,7 +58,7 @@
                                     {{ $session->title }}
                                 </h3>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $session->teacher->user->name }}
+                                    {{ $session->user?->name ?? 'Unknown host' }}
                                 </p>
                             </div>
 
@@ -100,6 +100,35 @@
                                 </div>
                             @endif
                         </div>
+
+                        @if($session->isParentSession())
+                            <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Recurring series: {{ $session->getRecurrenceSummary() }}
+                                </p>
+                                @if($session->childSessions->isNotEmpty())
+                                    <div class="mt-3 space-y-3">
+                                        @foreach($session->childSessions as $occurrence)
+                                            @php $occurrenceParticipant = $occurrence->participants->first(); @endphp
+                                            @if($occurrenceParticipant)
+                                                <div wire:key="student-occurrence-{{ $occurrence->id }}" class="flex items-center justify-between gap-3 text-sm">
+                                                    <div class="text-gray-600 dark:text-gray-400">
+                                                        <p>{{ $occurrence->scheduled_start->format('M d, Y g:i A') }}</p>
+                                                        <p class="text-xs">{{ ucfirst($occurrence->status) }}</p>
+                                                    </div>
+                                                    @if($occurrence->status === 'live')
+                                                        <button wire:click="joinSession({{ $occurrenceParticipant->id }})"
+                                                                class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                                                            Join
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
 
                         <!-- Participant Status -->
                         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">

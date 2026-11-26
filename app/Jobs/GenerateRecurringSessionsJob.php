@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class GenerateRecurringSessionsJob implements ShouldQueue
 {
@@ -148,7 +149,7 @@ class GenerateRecurringSessionsJob implements ShouldQueue
 
             $childSession = VirtualSession::create([
                 'school_id' => $parent->school_id,
-                'teacher_id' => $parent->teacher_id,
+                'user_id' => $parent->user_id,
                 'academic_level_id' => $parent->academic_level_id,
                 'academic_group_id' => $parent->academic_group_id,
                 'academic_subject_id' => $parent->academic_subject_id,
@@ -166,6 +167,7 @@ class GenerateRecurringSessionsJob implements ShouldQueue
                 'max_participants' => $parent->max_participants,
                 'guest_policy' => $parent->guest_policy,
                 'meeting_id' => 'session-'.time().'-'.rand(1000, 9999),
+                'join_token' => Str::random(64),
                 'attendee_password' => $parent->attendee_password,
                 'moderator_password' => $parent->moderator_password,
                 'parent_session_id' => $parent->id,
@@ -186,7 +188,7 @@ class GenerateRecurringSessionsJob implements ShouldQueue
 
                 // Send notification only if session is within 2 weeks
                 if ($scheduledStart->lte(now()->addWeeks(2)) && $scheduledStart->isFuture()) {
-                    $participant->user->notify(new VirtualSessionInvitationNotification($childSession, $participant));
+                    $participant->user?->notify(new VirtualSessionInvitationNotification($childSession, $participant));
                 }
             }
         });

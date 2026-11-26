@@ -5,7 +5,7 @@
             <span class="flex items-center justify-center w-8 h-8 bg-primary text-on-primary rounded-full text-sm font-bold shrink-0">4</span>
             <div>
                 <h3 class="font-bold text-ink">Media & Files</h3>
-                <p class="text-sm text-ink-soft">Upload cover image, PDF file, and additional media</p>
+                <p class="text-sm text-ink-soft">Upload a cover image, book file, and additional media</p>
             </div>
         </div>
     </x-exam.callout>
@@ -48,33 +48,33 @@
             @endif
         </x-exam.field>
 
-        <!-- PDF Upload -->
-        <x-exam.field label="PDF File" tag="REQUIRED FOR SOFTCOPY">
+        <!-- Book File Upload -->
+        <x-exam.field label="Book File" tag="REQUIRED FOR SOFTCOPY">
             @if($existingPdfFile && !$removePdfFile && !$pdfFileUploaded)
                 <x-exam.callout tone="primary" class="mb-3">
                     <p class="text-sm font-medium mb-2 flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                         </svg>
-                        Current PDF File: <span class="ml-1">{{ basename($existingPdfFile) }}</span>
+                        Current Book File: <span class="ml-1">{{ basename($existingPdfFile) }}</span>
                     </p>
-                    <x-exam.button variant="danger" wire:click="removeExistingPdfFile">Remove Current PDF</x-exam.button>
+                    <x-exam.button variant="danger" wire:click="removeExistingPdfFile">Remove Current File</x-exam.button>
                 </x-exam.callout>
             @endif
 
-            <x-exam.file-upload id="pdfFile" model="pdfFile" accept=".pdf" icon="pdf"
+            <x-exam.file-upload id="pdfFile" model="pdfFile" accept=".pdf,.epub,.mobi,.azw3" icon="file"
                 :current="$existingPdfFile && !$removePdfFile && !$pdfFileUploaded ? $existingPdfFile : null"
                 :pending="(bool)$pdfFile" :uploaded="$pdfFileUploaded"
-                remove-action="removeExistingPdfFile" tag="PDF FILE" error-key="pdfFile" />
+                remove-action="removeExistingPdfFile" tag="BOOK FILE" error-key="pdfFile" />
             <p class="mt-1 font-mono text-[11px] text-muted">
-                Upload the full PDF of the book (max 100MB). Required for softcopy books.
+                PDF, EPUB, MOBI, or AZW3 up to 100MB. MOBI/AZW3 files with DRM may not open in the browser.
             </p>
 
             @if ($pdfFile)
                 <x-exam.callout tone="primary" class="mt-3">
                     <div class="flex items-center space-x-3">
                         <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        <span class="text-sm text-muted">Processing PDF...</span>
+                        <span class="text-sm text-muted">Processing book file...</span>
                     </div>
                 </x-exam.callout>
             @endif
@@ -84,7 +84,7 @@
                         <svg class="w-5 h-5 text-ok" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        <span class="text-sm font-medium">PDF uploaded successfully</span>
+                        <span class="text-sm font-medium">Book file uploaded successfully</span>
                     </div>
                 </x-exam.callout>
             @endif

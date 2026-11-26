@@ -22,7 +22,7 @@ class StartSession extends Component
     public function mount(VirtualSession $session)
     {
         // Authorize
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 

@@ -29,7 +29,7 @@ class VirtualSessionReminderNotification extends Notification implements ShouldQ
             ->greeting('Hello '.$notifiable->name.'!')
             ->line('This is a reminder that your virtual classroom session is starting soon.')
             ->line('**Session:** '.$this->session->title)
-            ->line('**Teacher:** '.$this->session->teacher->user->name)
+            ->line('**Host:** '.($this->session->user?->name ?? 'Unknown host'))
             ->line('**Starts at:** '.$this->session->scheduled_start->format('g:i A'))
             ->action('Join Session', route('students.classroom.sessions'))
             ->line('See you there!');
@@ -41,7 +41,7 @@ class VirtualSessionReminderNotification extends Notification implements ShouldQ
             'type' => 'virtual_session_reminder',
             'session_id' => $this->session->id,
             'session_title' => $this->session->title,
-            'teacher_name' => $this->session->teacher->user->name,
+            'teacher_name' => $this->session->user?->name ?? 'Unknown host',
             'scheduled_start' => $this->session->scheduled_start,
             'minutes_before' => $this->minutesBefore,
         ];

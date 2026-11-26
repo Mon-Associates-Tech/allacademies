@@ -1,105 +1,94 @@
 <x-layouts.app title="New Academic Subject" :has-action="false">
-                    <x-slot name="breadcrumb">
-                        <x-breadcrumb :paths="[
-                            'Academic Groups' => route('academic-groups.index'),
-                            $academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicLevel->academicGroup]),
-                            'Academic Levels' => route('academic-levels.index', ['academic_group' => $academicLevel->academicGroup]),
-                            $academicLevel->name => route('academic-levels.show', ['academic_level' => $academicLevel, 'academic_group' => $academicLevel->academicGroup]),
-                            'Academic Subjects' => route('academic-subjects.index', ['academic_level' => $academicLevel, 'academic_group' => $academicLevel->academicGroup]),
-                            'New' => null,
-                        ]" />
-                    </x-slot>
+    <x-exam.page>
+        @php
+            $subjectLevel = $academicLevel;
+            $subjectGroup = $academicLevel->academicGroup;
+        @endphp
 
-                    <div class="max-w-2xl mx-auto space-y-6">
-                        <!-- Header Section -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex items-center space-x-4">
-                                <div class="p-3 bg-blue-100 rounded-full">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h1 class="text-2xl font-bold text-gray-900">New Academic Subject</h1>
-                                    <p class="text-gray-600">Create a new subject for {{ $academicLevel->name }}</p>
-                                </div>
-                            </div>
-                        </div>
+        {{-- Breadcrumb --}}
+        <x-exam.crumbs :items="[
+            ['label' => 'Academic Groups', 'href' => route('academic-groups.index')],
+            ['label' => $subjectGroup->name, 'href' => route('academic-groups.show', ['academic_group' => $subjectGroup])],
+            ['label' => 'Academic Levels', 'href' => route('academic-levels.index', ['academic_group' => $subjectGroup])],
+            ['label' => $subjectLevel->name, 'href' => route('academic-levels.show', ['academic_level' => $subjectLevel, 'academic_group' => $subjectGroup])],
+            ['label' => 'Subjects', 'href' => route('academic-subjects.index', ['academic_level' => $subjectLevel, 'academic_group' => $subjectGroup])],
+            ['label' => 'New Subject'],
+        ]" />
 
-                        <!-- Context Information -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-blue-700">
-                                        This subject will be added to <strong>{{ $academicLevel->name }}</strong> in
-                                        <strong>{{ $academicLevel->academicGroup->name }}</strong>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+        {{-- ============ Header ============ --}}
+        <div class="mb-6 mx-auto max-w-2xl">
+            <h1 class="font-display text-2xl font-bold text-ink md:text-3xl">New Academic Subject</h1>
+            <p class="mt-1 text-sm text-ink-soft">
+                Create a new subject for <span class="font-semibold text-ink">{{ $subjectLevel->name }}</span>.
+            </p>
+        </div>
 
-                        <!-- Create Form -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                            <div class="px-6 py-4 border-b border-gray-200">
-                                <h2 class="text-lg font-semibold text-gray-900">Subject Information</h2>
-                                <p class="text-sm text-gray-600 mt-1">Enter the basic information for this academic subject.</p>
-                            </div>
+        <x-exam.flash />
 
-                            <form method="POST" action="{{ route('academic-subjects.store', ['academic_level' => $academicLevel, 'academic_group' => getRouteParameter('academic_group')]) }}" class="p-6 space-y-6">
-                                @csrf
+        {{-- ============ Context ============ --}}
+        <x-exam.callout tone="primary" class="mb-6 mx-auto max-w-2xl">
+            <div class="flex items-start gap-3">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm leading-relaxed text-ink-soft">
+                    This subject will be added to
+                    <a href="{{ route('academic-levels.show', ['academic_level' => $subjectLevel, 'academic_group' => $subjectGroup]) }}"
+                       class="font-semibold text-primary transition hover:text-primary-hi">{{ $subjectLevel->name }}</a>
+                    in <b class="font-semibold text-ink">{{ $subjectGroup->name }}</b>.
+                </p>
+            </div>
+        </x-exam.callout>
 
-                                <!-- Name Field -->
-                                <div class="space-y-2">
+        {{-- ============ Form ============ --}}
+        <div class="mx-auto max-w-2xl">
+            <x-exam.card :padded="false">
+                <x-slot:header>
+                    <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">SUBJECT INFORMATION</p>
+                    <p class="font-mono text-[10px] tracking-wider text-muted"><span class="font-bold text-accent">*</span> REQUIRED</p>
+                </x-slot:header>
 
-                                    <x-form.input
-                                        name="name"
-                                        type="text"
-                                        placeholder="e.g., Mathematics, English Literature"
-                                        class="w-full" label="Subject Name"
-                                        info="The full name of the subject as it will appear across the system."
-                                        info-position="bottom"
-                                        required
-                                    />
-                                </div>
+                <form method="POST" action="{{ route('academic-subjects.store', ['academic_level' => $subjectLevel, 'academic_group' => $subjectGroup]) }}">
+                    @csrf
 
-                                <!-- Code Field -->
-                                <div class="space-y-2">
-                                    <x-form.input
-                                        name="code"
-                                        type="text"
-                                        placeholder="e.g., MATH101, ENG201"
-                                        class="w-full"
-                                        label="Subject Code"
-                                        info-position="bottom"
-                                        info="A unique identifier for this subject. Usually a short code."
-                                        required
-                                    />
-                                </div>
+                    <div class="space-y-5 p-5">
+                        {{-- Subject Name --}}
+                        <x-exam.field label="Subject Name" required>
+                            <x-exam.input type="text" name="name" :value="old('name')"
+                                          placeholder="e.g., Mathematics, English Literature" required />
+                            @error('name')
+                            <p class="mt-2 font-mono text-[11.5px] text-accent">▲ {{ $message }}</p>
+                            @enderror
+                            <p class="mt-1.5 text-xs text-muted">The full name of the subject as it will appear across the system.</p>
+                        </x-exam.field>
 
-                                <!-- Action Buttons -->
-                                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                                    <div class="flex items-center space-x-4">
-                                        <x-link.secondary :to="route('academic-subjects.index', ['academic_level' => $academicLevel, 'academic_group' => getRouteParameter('academic_group')])" class="inline-flex items-center">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                            </svg>
-                                            Cancel
-                                        </x-link.secondary>
-                                    </div>
-
-                                    <x-button.primary type="submit" class="inline-flex items-center">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        Create Subject
-                                    </x-button.primary>
-                                </div>
-                            </form>
-                        </div>
+                        {{-- Subject Code --}}
+                        <x-exam.field label="Subject Code" required>
+                            <x-exam.input type="text" name="code" :value="old('code')"
+                                          placeholder="e.g., MATH101, ENG201" required />
+                            @error('code')
+                            <p class="mt-2 font-mono text-[11.5px] text-accent">▲ {{ $message }}</p>
+                            @enderror
+                            <p class="mt-1.5 text-xs text-muted">A unique identifier for this subject. Usually a short code.</p>
+                        </x-exam.field>
                     </div>
-                </x-layouts.app>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center justify-between gap-2 border-t border-line bg-surface-2 px-5 py-4">
+                        <a href="{{ route('academic-subjects.index', ['academic_level' => $subjectLevel, 'academic_group' => $subjectGroup]) }}"
+                           class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-line-strong px-4 py-2.5 text-[13px] font-semibold text-ink-soft transition hover:bg-surface hover:text-ink">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                            Cancel
+                        </a>
+                        <button type="submit"
+                                class="inline-flex items-center gap-1.5 whitespace-nowrap rounded bg-primary px-5 py-2.5 text-[13.5px] font-semibold tracking-wide text-on-primary transition hover:-translate-y-px hover:bg-primary-hi motion-reduce:transition-none">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>
+                            Create Subject
+                        </button>
+                    </div>
+                </form>
+            </x-exam.card>
+        </div>
+
+    </x-exam.page>
+</x-layouts.app>

@@ -5,7 +5,7 @@
     .crumbs-nav { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 
-<div class="mb-6 flex items-center gap-2"
+<div class="flex my-4 items-center gap-2"
      x-data="{
          nav: null,
          scroll: 0,

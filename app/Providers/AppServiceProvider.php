@@ -23,6 +23,7 @@ use App\Services\QuestionImportService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Observers\TrueOrFalseQuestionObserver;
 use App\Observers\MultipleChoiceQuestionObserver;
@@ -87,6 +88,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (request()->isSecure() || parse_url(config('app.url'), PHP_URL_SCHEME) === 'https') {
+            URL::forceScheme('https');
+        }
+
         Route::resourceVerbs([
             'create' => 'new',
         ]);
@@ -100,7 +105,7 @@ class AppServiceProvider extends ServiceProvider
         TrueOrFalseQuestion::observe(TrueOrFalseQuestionObserver::class);
         MultipleChoiceQuestion::observe(MultipleChoiceQuestionObserver::class);
         EssayQuestion::observe(EssayQuestionObserver::class);
-        
+
         // Register MockExam observer
         MockExam::observe(MockExamObserver::class);
 
@@ -177,7 +182,9 @@ class AppServiceProvider extends ServiceProvider
             'customer' => \App\BookShop\Models\Customer::class,
             'timeslot' => \App\Timetable\Models\Timeslot::class,
             'room' => \App\Timetable\Models\Room::class,
-            'timetable_entry' => \App\Timetable\Models\TimetableEntry::class
+            'timetable_entry' => \App\Timetable\Models\TimetableEntry::class,
+            'virtual_classroom' => \App\Models\Classroom\VirtualSession::class,
+            'session_recording' => \App\Models\Classroom\SessionRecording::class,
         ]);
     }
 }

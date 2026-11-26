@@ -30,7 +30,7 @@ class ViewSessionRecordings extends Component
                     $q->where('academic_subject_id', $this->subject_filter);
                 });
             })
-            ->with(['virtualSession.teacher.user', 'virtualSession.academicSubject'])
+            ->with(['virtualSession.user', 'virtualSession.academicSubject'])
             ->orderBy('recorded_at', 'desc')
             ->paginate(12);
 

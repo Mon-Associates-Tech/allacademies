@@ -190,7 +190,7 @@
                     @endif
                 </div>
                 <div class="text-center">
-                    <div class="text-muted font-medium text-sm mb-2">Book PDF</div>
+                    <div class="text-muted font-medium text-sm mb-2">Book File</div>
                     @if($pdfFile || $existingPdfFile || $pdfFileUploaded)
                         <x-exam.badge tone="ok">✓ Uploaded</x-exam.badge>
                     @else

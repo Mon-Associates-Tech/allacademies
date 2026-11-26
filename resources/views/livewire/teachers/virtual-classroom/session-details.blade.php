@@ -127,6 +127,15 @@
                                 </p>
                             </div>
 
+                            @if($session->academicGroup)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Academic Group</label>
+                                    <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                                        {{ $session->academicGroup->name }}
+                                    </p>
+                                </div>
+                            @endif
+
                             @if($session->academicLevel)
                                 <div>
                                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Academic Level</label>
@@ -163,6 +172,29 @@
                                 </div>
                             @endif
                         </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow dark:bg-gray-800">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Participant invitation link</h2>
+                        @if($session->allow_guest_login)
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Share this link with participants. They can join without a school account once the session is live.
+                            </p>
+                            <div class="flex mt-4 gap-3">
+                                <input type="text" readonly value="{{ route('classroom.join', $session->join_token) }}"
+                                       class="block w-full rounded-lg border-gray-300 bg-gray-50 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                                <button type="button" wire:click="copyJoinLink"
+                                        class="shrink-0 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700">
+                                    Copy link
+                                </button>
+                            </div>
+                        @else
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Guest access is disabled. Enable it in Settings to share an invitation link.
+                            </p>
+                        @endif
                     </div>
                 </div>
 
@@ -296,9 +328,13 @@
 
     @script
     <script>
-        $wire.on('link-copied', (message) => {
-            // Show toast notification
-            alert(message);
+        $wire.on('copy-join-link', async (event) => {
+            try {
+                await navigator.clipboard.writeText(event.url);
+                alert('Join link copied to clipboard!');
+            } catch (error) {
+                window.prompt('Copy this invitation link:', event.url);
+            }
         });
     </script>
     @endscript

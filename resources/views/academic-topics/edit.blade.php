@@ -1,112 +1,95 @@
-<x-layouts.app title="Edit Academic Topic" :has-action="false" :show-title-area="false">
-    <x-slot name="breadcrumb">
-        <x-breadcrumb :paths="[
-                        'Academic Groups' => route('academic-groups.index'),
-                        $academicTopic->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        'Academic Levels' => route('academic-levels.index', ['academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        $academicTopic->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        'Academic Subjects' => route('academic-subjects.index', ['academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        $academicTopic->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        'Academic Topics' => route('academic-topics.index', ['academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        $academicTopic->name => route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => $academicTopic->academicSubject, 'academic_level' => $academicTopic->academicSubject->academicLevel, 'academic_group' => $academicTopic->academicSubject->academicLevel->academicGroup]),
-                        'Edit' => null,
-                    ]"/>
-    </x-slot>
+<x-layouts.app title="Edit Academic Topic" :has-action="false">
+    <x-exam.page>
+        @php
+            $topicSubject = $academicTopic->academicSubject;
+            $topicLevel   = $topicSubject->academicLevel;
+            $topicGroup   = $topicLevel->academicGroup;
+        @endphp
 
-    <div class="max-w-2xl mx-auto space-y-6">
-        <!-- Header Section -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center space-x-4">
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Edit Academic Topic</h1>
-                    <p class="text-gray-600">Update the details for {{ $academicTopic->name }}</p>
-                </div>
-            </div>
+        {{-- Breadcrumb --}}
+        <x-exam.crumbs :items="[
+            ['label' => 'Academic Groups', 'href' => route('academic-groups.index')],
+            ['label' => $topicGroup->name, 'href' => route('academic-groups.show', ['academic_group' => $topicGroup])],
+            ['label' => 'Academic Levels', 'href' => route('academic-levels.index', ['academic_group' => $topicGroup])],
+            ['label' => $topicLevel->name, 'href' => route('academic-levels.show', ['academic_level' => $topicLevel, 'academic_group' => $topicGroup])],
+            ['label' => 'Subjects', 'href' => route('academic-subjects.index', ['academic_level' => $topicLevel, 'academic_group' => $topicGroup])],
+            ['label' => $topicSubject->name, 'href' => route('academic-subjects.show', ['academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup])],
+            ['label' => 'Topics', 'href' => route('academic-topics.index', ['academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup])],
+            ['label' => $academicTopic->name, 'href' => route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup])],
+            ['label' => 'Edit'],
+        ]" />
+
+        {{-- ============ Header ============ --}}
+        <div class="mb-6 max-w-2xl mx-auto">
+            <h1 class="font-display text-2xl font-bold text-ink md:text-3xl">Edit Academic Topic</h1>
+            <p class="mt-1 text-sm text-ink-soft">Update the details for <span class="font-semibold text-ink">{{ $academicTopic->name }}</span>.</p>
         </div>
 
-        <!-- Context Information -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm text-blue-700">
-                        This topic belongs to <strong>{{ $academicTopic->academicSubject->name }}</strong> subject in
-                        <strong>{{ $academicTopic->academicSubject->academicLevel->name }}</strong>
+        <x-exam.flash />
+
+        {{-- ============ Context ============ --}}
+        <x-exam.callout tone="primary" class="mb-6 max-w-2xl mx-auto">
+            <div class="flex items-start gap-3">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm leading-relaxed text-ink-soft">
+                    This topic belongs to
+                    <a href="{{ route('academic-subjects.show', ['academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup]) }}"
+                       class="font-semibold text-primary transition hover:text-primary-hi">{{ $topicSubject->name }}</a>
+                    under <b class="font-semibold text-ink">{{ $topicLevel->name }}</b>.
+                </p>
+            </div>
+        </x-exam.callout>
+
+        {{-- ============ Edit Form ============ --}}
+        <div class="mx-auto max-w-2xl">
+            <x-exam.card :padded="false">
+                <x-slot:header>
+                    <p class="font-mono text-[10.5px] tracking-[0.14em] text-muted">TOPIC INFORMATION</p>
+                    <p class="font-mono text-[10px] tracking-wider text-muted">
+                        LAST UPDATED {{ strtoupper($academicTopic->updated_at->diffForHumans()) }}
                     </p>
-                </div>
-            </div>
-        </div>
+                </x-slot:header>
 
-        <!-- Edit Form -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Topic Information</h2>
-                <p class="text-sm text-gray-600 mt-1">Update the basic information for this academic topic.</p>
-            </div>
+                <form method="POST" action="{{ route('academic-topics.update', ['academic_topic' => $academicTopic, 'academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup]) }}">
+                    @csrf
+                    @method('PATCH')
 
-            <form method="POST" action="{{ route('academic-topics.update', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                  class="p-6 space-y-6">
-                @csrf
-                @method('PATCH')
-
-                <div class="space-y-2">
-                    <x-form.input
-                        name="name"
-                        type="text"
-                        :value="$academicTopic->name"
-                        placeholder="Enter topic name"
-                        class="w-full"
-                        label="Topic Name"
-                        info="The name used to identify this academic topic."
-                        info-position="bottom"
-                        required
-                    />
-                    @error('name')
-                    <p class="text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                    <div class="flex items-center space-x-4">
-                        <x-link.secondary :to="route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                            </svg>
-                            Cancel
-                        </x-link.secondary>
-
-                        <x-link.secondary
-                            :to="route('academic-topics.index', ['academic_topic' => $academicTopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                            </svg>
-                            View All Topics
-                        </x-link.secondary>
+                    <div class="space-y-5 p-5">
+                        {{-- Topic Name --}}
+                        <x-exam.field label="Topic Name" required>
+                            <x-exam.input type="text" name="name" :value="old('name', $academicTopic->name)"
+                                          placeholder="e.g., Algebra Basics, Photosynthesis" required />
+                            @error('name')
+                            <p class="mt-2 font-mono text-[11.5px] text-accent">▲ {{ $message }}</p>
+                            @enderror
+                            <p class="mt-1.5 text-xs text-muted">The name of this topic as it appears in the subject's curriculum.</p>
+                        </x-exam.field>
                     </div>
 
-                    <x-button.primary type="submit" class="inline-flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Update Academic Topic
-                    </x-button.primary>
-                </div>
-            </form>
+                    {{-- Actions --}}
+                    <div class="flex flex-col gap-3 border-t border-line bg-surface-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('academic-topics.show', ['academic_topic' => $academicTopic, 'academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup]) }}"
+                               class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-line-strong px-4 py-2.5 text-[13px] font-semibold text-ink-soft transition hover:bg-surface hover:text-ink">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                                Cancel
+                            </a>
+                            <a href="{{ route('academic-topics.index', ['academic_subject' => $topicSubject, 'academic_level' => $topicLevel, 'academic_group' => $topicGroup]) }}"
+                               class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-line-strong px-4 py-2.5 text-[13px] font-semibold text-ink-soft transition hover:bg-surface hover:text-ink">
+                                All Topics
+                            </a>
+                        </div>
+                        <button type="submit"
+                                class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded bg-primary px-5 py-2.5 text-[13.5px] font-semibold tracking-wide text-on-primary transition hover:-translate-y-px hover:bg-primary-hi motion-reduce:transition-none">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"/></svg>
+                            Update Topic
+                        </button>
+                    </div>
+                </form>
+            </x-exam.card>
         </div>
-    </div>
+
+    </x-exam.page>
 </x-layouts.app>

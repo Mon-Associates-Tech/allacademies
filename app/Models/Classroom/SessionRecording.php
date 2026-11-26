@@ -4,6 +4,7 @@ namespace App\Models\Classroom;
 
 use App\Models\School;
 use App\Models\User;
+use App\Traits\ActivityLoggable;
 use App\Traits\BelongsToSchoolEnhanced;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SessionRecording extends Model
 {
-    use BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
+    use ActivityLoggable, BelongsToSchoolEnhanced, HasFactory, SoftDeletes;
 
     protected $table = 'virtual_session_recordings';
 
@@ -102,8 +103,8 @@ class SessionRecording extends Model
             return true;
         }
 
-        // Check if user is the session teacher
-        if ($this->virtualSession->teacher_id === $user->teacher?->id) {
+        // Check if user owns the session
+        if ($this->virtualSession->user_id === $user->id) {
             return true;
         }
 

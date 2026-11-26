@@ -10,6 +10,7 @@ use App\Models\AcademicSubject;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCategory;
+use App\Support\BookFileFormat;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -388,7 +389,20 @@ class BookForm extends Component
     public function updatedPdfFile(): void
     {
         if ($this->pdfFile) {
-            $path = $this->pdfFile->store('book-pdfs', 'public');
+            $this->validateOnly('pdfFile', [
+                'pdfFile' => [
+                    'required',
+                    'file',
+                    'max:102400',
+                    function ($attribute, $file, $fail): void {
+                        if (! BookFileFormat::isValidUpload($file)) {
+                            $fail('Upload a valid PDF, EPUB, MOBI, or AZW3 book file.');
+                        }
+                    },
+                ],
+            ]);
+
+            $path = $this->pdfFile->store('book-files', 'public');
             $this->existingPdfFile = $path;
             $this->pdfFileUploaded = true;
             $this->reset('pdfFile');
@@ -650,8 +664,8 @@ class BookForm extends Component
             return;
         }
 
-        if ($this->hasSoftcopy && !$this->pdfFile && !$this->existingPdfFile) {
-            $this->addError('pdfFile', 'PDF file is required for softcopy books.');
+        if ($this->hasSoftcopy && (! $this->existingPdfFile || ! BookFileFormat::fromPath($this->existingPdfFile))) {
+            $this->addError('pdfFile', 'A PDF, EPUB, MOBI, or AZW3 file is required for softcopy books.');
             $this->currentStep = 4;
 
             return;
@@ -692,6 +706,8 @@ class BookForm extends Component
 
             if ($pdfPath !== null) {
                 $bookData['content_url'] = $pdfPath;
+            } elseif ($this->removePdfFile) {
+                $bookData['content_url'] = null;
             }
 
             if ($samplePdfPath !== null) {
@@ -761,7 +777,7 @@ class BookForm extends Component
                 Storage::disk('public')->delete($this->existingPdfFile);
             }
 
-            $path = $this->pdfFile->store('book-pdfs', 'public');
+            $path = $this->pdfFile->store('book-files', 'public');
             $this->existingPdfFile = $path;
             $this->pdfFileUploaded = true;
             return $path;

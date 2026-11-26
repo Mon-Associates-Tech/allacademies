@@ -15,7 +15,7 @@ class SessionDetails extends Component
     public function mount(VirtualSession $session)
     {
         // Authorize
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
@@ -35,8 +35,7 @@ class SessionDetails extends Component
 
     public function copyJoinLink()
     {
-        // This will be handled by JavaScript
-        $this->dispatch('link-copied', 'Join link copied to clipboard!');
+        $this->dispatch('copy-join-link', url: route('classroom.join', $this->session->join_token));
     }
 
     public function deleteSession()
@@ -46,7 +45,7 @@ class SessionDetails extends Component
         $this->session->delete();
 
         // Log activity
-        VirtualSession::logActivityForModel('delete', 'Virtual Session Deleted', 'virtual_session', [
+        $this->session->logActivity('delete', 'Virtual Session Deleted', 'virtual_session', [
             'session_title' => $sessionTitle,
             'session_id' => $sessionId,
             'deleted_by' => auth()->user()?->name ?? 'Unknown',
@@ -97,7 +96,7 @@ class SessionDetails extends Component
         $parent->delete();
 
         // Log activity
-        VirtualSession::logActivityForModel('delete', 'Recurring Session Series Deleted', 'virtual_session', [
+        $parent->logActivity('delete', 'Recurring Session Series Deleted', 'virtual_session', [
             'series_title' => $seriesTitle,
             'series_id' => $seriesId,
             'deleted_child_sessions' => $childCount,

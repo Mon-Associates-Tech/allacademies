@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Teachers\VirtualClassroom;
 
+use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
 use App\Models\Classroom\SessionParticipant;
@@ -11,6 +12,7 @@ use App\Notifications\VirtualSessionInvitationNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class CreateVirtualSession extends Component
@@ -52,7 +54,7 @@ class CreateVirtualSession extends Component
     public $academic_subject_id = null;
 
     // Settings
-    public $allow_guest_login = false;
+    public $allow_guest_login = true;
 
     public $auto_record = false;
 
@@ -190,17 +192,15 @@ class CreateVirtualSession extends Component
         DB::beginTransaction();
 
         try {
-            $teacher = Auth::user()->teacher;
-
             if ($this->is_recurring) {
-                $this->createRecurringSessions($teacher);
+                $session = $this->createRecurringSessions();
             } else {
-                $session = $this->createSingleSession($teacher);
+                $session = $this->createSingleSession();
             }
 
             // Log activity
             if ($this->is_recurring) {
-                VirtualSession::logActivityForModel('create', 'Recurring Virtual Sessions Created', 'virtual_session', [
+                $session->logActivity('create', 'Recurring Virtual Sessions Created', 'virtual_session', [
                     'session_title' => $this->title,
                     'recurrence_pattern' => $this->recurrence_pattern,
                     'recurrence_interval' => $this->recurrence_interval,
@@ -223,7 +223,7 @@ class CreateVirtualSession extends Component
 
             session()->flash('success', $message);
 
-            return redirect()->route('teachers.classroom.index');
+            return redirect()->route('teachers.classroom.show', $session);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -232,7 +232,7 @@ class CreateVirtualSession extends Component
         }
     }
 
-    protected function createSingleSession($teacher, $scheduledStart = null, $parentSessionId = null)
+    protected function createSingleSession($scheduledStart = null, $parentSessionId = null)
     {
         if (! $scheduledStart) {
             $scheduledStart = $this->scheduled_date.' '.$this->scheduled_time;
@@ -242,7 +242,7 @@ class CreateVirtualSession extends Component
 
         $session = VirtualSession::create([
             'school_id' => Auth::user()->school_id,
-            'teacher_id' => $teacher->id,
+            'user_id' => Auth::id(),
             'academic_level_id' => $this->academic_level_id,
             'academic_group_id' => $this->academic_group_id,
             'academic_subject_id' => $this->academic_subject_id,
@@ -260,6 +260,7 @@ class CreateVirtualSession extends Component
             'max_participants' => $this->max_participants,
             'guest_policy' => $this->guest_policy,
             'meeting_id' => 'session-'.time().'-'.rand(1000, 9999),
+            'join_token' => Str::random(64),
             'attendee_password' => bin2hex(random_bytes(6)),
             'moderator_password' => bin2hex(random_bytes(6)),
             'parent_session_id' => $parentSessionId,
@@ -272,7 +273,7 @@ class CreateVirtualSession extends Component
         return $session;
     }
 
-    protected function createRecurringSessions($teacher)
+    protected function createRecurringSessions()
     {
         $scheduledStart = Carbon::parse($this->scheduled_date.' '.$this->scheduled_time);
 
@@ -282,7 +283,7 @@ class CreateVirtualSession extends Component
         // Create parent session
         $parentSession = VirtualSession::create([
             'school_id' => Auth::user()->school_id,
-            'teacher_id' => $teacher->id,
+            'user_id' => Auth::id(),
             'academic_level_id' => $this->academic_level_id,
             'academic_group_id' => $this->academic_group_id,
             'academic_subject_id' => $this->academic_subject_id,
@@ -300,6 +301,7 @@ class CreateVirtualSession extends Component
             'max_participants' => $this->max_participants,
             'guest_policy' => $this->guest_policy,
             'meeting_id' => 'session-'.time().'-'.rand(1000, 9999),
+            'join_token' => Str::random(64),
             'attendee_password' => bin2hex(random_bytes(6)),
             'moderator_password' => bin2hex(random_bytes(6)),
             'is_recurring' => true,
@@ -315,6 +317,8 @@ class CreateVirtualSession extends Component
 
         // Generate child sessions (up to next 8 weeks to avoid too many at once)
         $this->generateChildSessions($parentSession, min($endDate, now()->addWeeks(8)));
+
+        return $parentSession;
     }
 
     protected function getRecurrenceEndDate(Carbon $startDate): ?Carbon
@@ -354,7 +358,6 @@ class CreateVirtualSession extends Component
 
             // Create child session
             $this->createSingleSession(
-                $parent->teacher,
                 $currentDate->format('Y-m-d H:i:s'),
                 $parent->id
             );
@@ -449,9 +452,11 @@ class CreateVirtualSession extends Component
 
         if (! $this->academic_level_id && ! $this->academic_group_id) {
             $teacher = Auth::user()->teacher;
-            $query->whereHas('teachers', function ($q) use ($teacher) {
-                $q->where('teachers.id', $teacher->id);
-            });
+            if ($teacher) {
+                $query->whereHas('teachers', function ($q) use ($teacher) {
+                    $q->where('teachers.id', $teacher->id);
+                });
+            }
         }
 
         return $query->get();
@@ -459,46 +464,20 @@ class CreateVirtualSession extends Component
 
     public function render()
     {
-        $teacher = Auth::user()->teacher;
-        $schoolId = Auth::user()->school_id;
-
-        $academicGroups = $teacher->academicGroups()
-            ->whereHas('schools', function ($query) use ($schoolId) {
-                $query->where('school_id', $schoolId)
-                    ->where('is_active', true);
-            })
+        $academicGroups = AcademicGroup::query()
             ->orderBy('name')
             ->get();
 
-        $academicLevels = collect();
-        if ($this->academic_group_id) {
-            $academicLevels = AcademicLevel::where('academic_group_id', $this->academic_group_id)
-                ->whereHas('schools', function ($query) use ($schoolId) {
-                    $query->where('school_id', $schoolId)
-                        ->where('is_active', true);
-                })
-                ->orderBy('name')
-                ->get();
-        } else {
-            $academicLevels = $teacher->academicLevels()
-                ->whereHas('schools', function ($query) use ($schoolId) {
-                    $query->where('school_id', $schoolId)
-                        ->where('is_active', true);
-                })
-                ->orderBy('name')
-                ->get();
-        }
+        $academicLevels = AcademicLevel::query()
+            ->when($this->academic_group_id, fn ($query) => $query->where('academic_group_id', $this->academic_group_id))
+            ->orderBy('name')
+            ->get();
 
-        $academicSubjects = collect();
-        if ($this->academic_level_id) {
-            $academicSubjects = AcademicSubject::where('academic_level_id', $this->academic_level_id)
-                ->orderBy('name')
-                ->get();
-        } else {
-            $academicSubjects = $teacher->subjects()
-                ->orderBy('name')
-                ->get();
-        }
+        $academicSubjects = AcademicSubject::query()
+            ->whereHas('academicLevel', fn ($query) => $query->when($this->academic_group_id, fn ($levelQuery) => $levelQuery->where('academic_group_id', $this->academic_group_id)))
+            ->when($this->academic_level_id, fn ($query) => $query->where('academic_level_id', $this->academic_level_id))
+            ->orderBy('name')
+            ->get();
 
         $students = [];
         if (! $this->inviteAllStudents) {

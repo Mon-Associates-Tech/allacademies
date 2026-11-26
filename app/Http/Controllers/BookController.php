@@ -10,6 +10,7 @@ use App\Models\BookBorrowing;
 use App\Models\BookCategory;
 use App\Models\BookReadingProgress;
 use App\Models\BookSubscription;
+use App\Support\BookFileFormat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -383,6 +384,9 @@ class BookController extends Controller
             ! $book->has_softcopy ||
             $book->author->user?->id === $user->id;
 
+        $contentPath = $book->getRawOriginal('content_url');
+        $bookFormat = $contentPath ? BookFileFormat::fromPath($contentPath) : 'pdf';
+
         return view(
             'books.show',
             compact(
@@ -395,6 +399,7 @@ class BookController extends Controller
                 'recentReviews',
                 'userReadingProgress',
                 'readingProgressPercentage',
+                'bookFormat',
             ),
         );
     }
@@ -520,6 +525,43 @@ class BookController extends Controller
                 ->with('error', 'Subscription required to read this book');
         }
 
+        $contentPath = $book->getRawOriginal('content_url');
+        $bookFormat = $contentPath ? BookFileFormat::fromPath($contentPath) : 'pdf';
+        $canDownload = $this->canDownloadBook($user, $book);
+        $signedDownloadUrl = $canDownload
+            ? URL::temporarySignedRoute('books.file.download', now()->addMinutes(10), ['book' => $book->id])
+            : null;
+
+        if (in_array($bookFormat, ['epub', 'mobi', 'azw3'], true)) {
+            $progress = BookReadingProgress::query()
+                ->where('book_id', $book->id)
+                ->where('user_id', $user->id)
+                ->first();
+            $initialProgress = $progress && $progress->total_pages > 0
+                ? max(0, min(1, $progress->current_page / $progress->total_pages))
+                : 0;
+
+            return response()
+                ->view('books.ebook-read', [
+                    'book' => $book,
+                    'bookFormat' => $bookFormat,
+                    'streamUrl' => route('books.file.stream', $book),
+                    'progressUrl' => route('books.progress.update'),
+                    'initialProgress' => $initialProgress,
+                    'signedDownloadUrl' => $signedDownloadUrl,
+                ])
+                ->header('Content-Security-Policy', $this->ebookReaderContentSecurityPolicy())
+                ->header('X-Content-Type-Options', 'nosniff');
+        }
+
+        if ($bookFormat !== 'pdf') {
+            return view('books.unsupported-reader', [
+                'book' => $book,
+                'format' => strtoupper(pathinfo($contentPath ?? '', PATHINFO_EXTENSION) ?: 'unknown'),
+                'signedDownloadUrl' => $signedDownloadUrl,
+            ]);
+        }
+
         $annotations = BookAnnotation::query()
             ->where('book_id', $book->id)
             ->withCount('comments')
@@ -549,12 +591,6 @@ class BookController extends Controller
                 'comments_count' => $annotation->comments_count,
             ]);
 
-        $canDownload = $this->canDownloadBook($user, $book);
-
-        $signedDownloadUrl = $canDownload
-            ? URL::temporarySignedRoute('books.file.download', now()->addMinutes(10), ['book' => $book->id])
-            : null;
-
         return view('books.read', [
             'book' => $book,
             'streamUrl' => route('books.file.stream', $book),
@@ -572,13 +608,13 @@ class BookController extends Controller
         $path = $book->getRawOriginal('content_url');
         if (! $path) {
             $samplePath = public_path('sample.pdf');
-            abort_unless(file_exists($samplePath), 404, 'PDF file not found');
+            abort_unless(file_exists($samplePath), 404, 'Book file not found');
 
             return $this->streamWithRangeSupport($samplePath, 'sample.pdf');
         }
 
         if (! Storage::disk('public')->exists($path)) {
-            abort(404, 'PDF file not found');
+            abort(404, 'Book file not found');
         }
 
         $fullPath = Storage::disk('public')->path($path);
@@ -586,13 +622,13 @@ class BookController extends Controller
     }
 
     /**
-     * Stream a PDF file with HTTP Range request support (required by PDF.js).
+     * Stream a book file with HTTP Range request support (required by PDF.js and the ebook reader).
      */
     protected function streamWithRangeSupport(string $filePath, string $filename)
     {
         $fileSize = filesize($filePath);
         $headers = [
-            'Content-Type' => 'application/pdf',
+            'Content-Type' => BookFileFormat::contentType($filename),
             'Content-Disposition' => 'inline; filename="'.htmlspecialchars($filename).'"',
             'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'private, max-age=0, must-revalidate',
@@ -640,7 +676,7 @@ class BookController extends Controller
         $path = $book->getRawOriginal('content_url');
         if (! $path) {
             $samplePath = public_path('sample.pdf');
-            abort_unless(file_exists($samplePath), 404, 'PDF file not found');
+            abort_unless(file_exists($samplePath), 404, 'Book file not found');
 
             return response()->streamDownload(function () use ($samplePath): void {
                 $stream = fopen($samplePath, 'rb');
@@ -652,10 +688,12 @@ class BookController extends Controller
         }
 
         if (! Storage::disk('public')->exists($path)) {
-            abort(404, 'PDF file not found');
+            abort(404, 'Book file not found');
         }
 
-        return Storage::disk('public')->download($path, basename($path));
+        return Storage::disk('public')->download($path, basename($path), [
+            'Content-Type' => BookFileFormat::contentType($path),
+        ]);
     }
 
     public function preview(Book $book): \Illuminate\View\View
@@ -829,6 +867,46 @@ class BookController extends Controller
             ->get();
 
         return view('books.public-show', compact('book', 'recentReviews'));
+    }
+
+    private function ebookReaderContentSecurityPolicy(): string
+    {
+        $scriptSources = ["'self'"];
+        $styleSources = ["'self'", "'unsafe-inline'", 'blob:'];
+        $assetSources = ["'self'", 'data:', 'blob:'];
+        $connectSources = ["'self'"];
+
+        $hotFile = public_path('hot');
+        if (is_file($hotFile)) {
+            $viteUrl = trim((string) file_get_contents($hotFile));
+            $vite = parse_url($viteUrl);
+
+            if (is_array($vite) && isset($vite['scheme'], $vite['host'])) {
+                $port = isset($vite['port']) ? ':'.$vite['port'] : '';
+                $origin = $vite['scheme'].'://'.$vite['host'].$port;
+                $webSocketScheme = $vite['scheme'] === 'https' ? 'wss' : 'ws';
+
+                $scriptSources[] = $origin;
+                $styleSources[] = $origin;
+                $assetSources[] = $origin;
+                $connectSources[] = $origin;
+                $connectSources[] = $webSocketScheme.'://'.$vite['host'].$port;
+            }
+        }
+
+        return implode('; ', [
+            "default-src 'self'",
+            'script-src '.implode(' ', $scriptSources),
+            'style-src '.implode(' ', $styleSources),
+            'img-src '.implode(' ', $assetSources),
+            'font-src '.implode(' ', $assetSources),
+            "media-src 'self' blob:",
+            "frame-src 'self' blob:",
+            'connect-src '.implode(' ', $connectSources),
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+        ]);
     }
 
     private function canReadBook($user, Book $book): bool

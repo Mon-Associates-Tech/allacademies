@@ -1,151 +1,271 @@
 <x-layouts.app
     :main-only="true"
-    title="Subtopics - {{ $academic_topic->name }}"
+    title="Subtopics · {{ $academic_topic->name }}"
     page-name="Academic Subtopics"
-    :has-action="true"
-    action-link-text="Add Subtopic"
-    :action_link="route('subtopics.create', ['academic_topic' => $academic_topic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')])"
->
-    <x-slot name="breadcrumb">
-        <x-breadcrumb :paths="[
-            'Academic Groups' => route('academic-groups.index'),
-            $academic_topic?->academicSubject->academicLevel->academicGroup->name => route('academic-groups.show', ['academic_group' => $academicSubject->academicLevel->academicGroup]),
-            'Academic Levels' => route('academic-levels.index', ['academic_group' => $academicSubject->academicLevel->academicGroup]),
-            $academic_topic?->academicSubject->academicLevel->name => route('academic-levels.show', ['academic_level' => $academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]),
-            'Academic Subjects' => route('academic-subjects.index', ['academic_level' => $academicSubject->academicLevel, 'academic_group' => getRouteParameter('academic_group')]),
-            $academic_topic?->academicSubject->name => route('academic-subjects.show', ['academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]),
-            $academic_topic->name => route('academic-topics.show', ['academic_topic' => $academic_topic, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group') ]),
-            'Subtopics' => null,
-        ]" />
-    </x-slot>
+    :has-action="false">
+    <x-exam.page>
+        @php
+            $leafTopic   = $academic_topic;
+            $leafSubject = $academicSubject;
+            $leafLevel   = $academicSubject->academicLevel;
+            $leafGroup   = $academicSubject->academicLevel->academicGroup;
 
-    <!-- Unified container for header and content -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- Header Section using academic-header component -->
-        <x-academic-header>
-            <x-slot name="headerContent">
-                <div class="flex items-center space-x-4">
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{{ $academic_topic->name }}</h1>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                            Subject: {{ $academic_topic->academicSubject->name }}
-                        </p>
+            $routeParams = [
+                'academic_topic'   => $academic_topic,
+                'academic_subject' => getRouteParameter('academic_subject'),
+                'academic_level'   => getRouteParameter('academic_level'),
+                'academic_group'   => getRouteParameter('academic_group'),
+            ];
+
+            $topicUrl  = route('academic-topics.show', $routeParams);
+            $createUrl = route('subtopics.create', $routeParams);
+
+            $subtopicUrl = fn ($subtopic, $verb) => route("subtopics.{$verb}", array_merge($routeParams, ['subtopic' => $subtopic]));
+
+            $seed = $subtopics->getCollection()->map(fn ($s, $i) => [
+                'i'       => $i,
+                'name'    => $s->name,
+                'created' => $s->created_at->timestamp,
+            ])->values();
+        @endphp
+
+        {{-- Breadcrumb --}}
+        <x-exam.crumbs :items="[
+            ['label' => 'Academic Groups', 'href' => route('academic-groups.index')],
+            ['label' => $leafGroup->name, 'href' => route('academic-groups.show', ['academic_group' => $leafGroup])],
+            ['label' => 'Academic Levels', 'href' => route('academic-levels.index', ['academic_group' => $leafGroup])],
+            ['label' => $leafLevel->name, 'href' => route('academic-levels.show', ['academic_level' => $leafLevel, 'academic_group' => $leafGroup])],
+            ['label' => 'Subjects', 'href' => route('academic-subjects.index', ['academic_level' => $leafLevel, 'academic_group' => $leafGroup])],
+            ['label' => $leafSubject->name, 'href' => route('academic-subjects.show', ['academic_subject' => $leafSubject, 'academic_level' => $leafLevel, 'academic_group' => $leafGroup])],
+            ['label' => 'Topics', 'href' => route('academic-topics.index', ['academic_subject' => $leafSubject, 'academic_level' => $leafLevel, 'academic_group' => $leafGroup])],
+            ['label' => $leafTopic->name, 'href' => $topicUrl],
+            ['label' => 'Subtopics'],
+        ]" />
+
+        <div x-data="{
+                 q: '',
+                 sort: 'order',
+                 items: @js($seed),
+                 get matches() {
+                     const needle = this.q.trim().toLowerCase();
+                     let rows = this.items.filter(r => !needle || r.name.toLowerCase().includes(needle));
+                     if (this.sort === 'az') rows = [...rows].sort((a, b) => a.name.localeCompare(b.name));
+                     if (this.sort === 'za') rows = [...rows].sort((a, b) => b.name.localeCompare(a.name));
+                     if (this.sort === 'new') rows = [...rows].sort((a, b) => b.created - a.created);
+                     if (this.sort === 'old') rows = [...rows].sort((a, b) => a.created - b.created);
+                     return rows.map(r => r.i);
+                 },
+                 reorder() {
+                     const box = this.$refs.register;
+                     if (!box) return;
+                     this.matches.forEach((idx, position) => {
+                         const node = box.querySelector(`[data-idx='${idx}']`);
+                         if (node) node.style.order = position;
+                     });
+                 }
+             }"
+             x-effect="reorder()">
+
+            {{-- ============ Header ============ --}}
+            <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="mb-2 flex items-center gap-2 font-mono text-[11px] tracking-[0.14em] text-ink-soft">
+                        <span class="h-2 w-2 bg-accent"></span>CURRICULUM REGISTER · LEAF RECORDS
+                    </p>
+                    <h1 class="font-display text-2xl font-bold leading-tight text-ink md:text-3xl">{{ $leafTopic->name }}</h1>
+                    <div class="mt-2 flex flex-wrap items-center gap-3 font-mono text-[10.5px] tracking-wide text-muted">
+                        <a href="{{ route('academic-subjects.show', ['academic_subject' => $leafSubject, 'academic_level' => $leafLevel, 'academic_group' => $leafGroup]) }}"
+                           class="transition hover:text-ink">{{ strtoupper($leafSubject->name) }}</a>
+                        <span class="text-line-strong">|</span>
+                        <a href="{{ route('academic-levels.show', ['academic_level' => $leafLevel, 'academic_group' => $leafGroup]) }}"
+                           class="transition hover:text-ink">{{ strtoupper($leafLevel->name) }}</a>
+                        <span class="text-line-strong">|</span>
+                        <span>{{ $subtopics->total() }} {{ Str::plural('SUBTOPIC', $subtopics->total()) }}</span>
                     </div>
                 </div>
-            </x-slot>
 
-            <x-slot name="headerActions">
-                <a href="{{ route('academic-topics.show', ['academic_topic' => $academic_topic, 'academic_subject' => $academicSubject, 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                   class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150">
-                    View Topic Details
-                    <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </a>
-            </x-slot>
-        </x-academic-header>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ $topicUrl }}"
+                       class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-line-strong px-4 py-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-ink-soft transition hover:bg-surface-2 hover:text-ink">
+                        Topic Details
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                    @can('administrate')
+                        <a href="{{ $createUrl }}"
+                           class="inline-flex items-center gap-1.5 whitespace-nowrap rounded bg-primary px-5 py-2.5 text-[13.5px] font-semibold tracking-wide text-on-primary shadow-[0_1px_0_rgba(20,24,34,0.2),0_8px_18px_-10px_rgba(20,24,34,0.5)] transition hover:-translate-y-px hover:bg-primary-hi motion-reduce:transition-none">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>
+                            Add Subtopic
+                        </a>
+                    @endcan
+                </div>
+            </div>
 
-        <div class="border-t border-gray-200 dark:border-gray-700">
-            @if ($subtopics->count())
-                <div class="overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700/50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtopic Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach ($subtopics as $subtopic)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ strtoupper(substr($subtopic->name, 0, 1)) }}</span>
-                                            </div>
-                                            <div class="ml-4">
-                                                <a href="{{ route('subtopics.show', ['academic_topic' => $academic_topic, 'subtopic' => $subtopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                                                   class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">
-                                                    {{ $subtopic->name }}
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900 dark:text-white">{{ $subtopic->created_at->format('M d, Y') }}</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $subtopic->created_at->diffForHumans() }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            <a href="{{ route('subtopics.show', ['academic_topic' => $academic_topic, 'subtopic' => $subtopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                                               class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                                </svg>
-                                                View
-                                            </a>
-                                            @can('administrate')
-                                                <a href="{{ route('subtopics.edit', ['academic_topic' => $academic_topic, 'subtopic' => $subtopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                                                   class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                    </svg>
-                                                    Edit
-                                                </a>
-                                                <button type="button"
-                                                        x-data="{}"
-                                                        x-on:click="$store.deleteForm.show('Delete Subtopic', 'Are you sure you want to delete {{ $subtopic->name }}?', '{{ route('subtopics.destroy', ['academic_topic' => $academic_topic, 'subtopic' => $subtopic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}')"
-                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-200">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                    Delete
-                                                </button>
-                                            @endcan
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+            <x-exam.flash />
+
+            @if($subtopics->count())
+                {{-- ============ Stats strip ============ --}}
+                <div class="mb-5 grid grid-cols-2 divide-x divide-y divide-line rounded-md border border-line bg-surface sm:grid-cols-4 sm:divide-y-0">
+                    <div class="px-4 py-3.5 text-center">
+                        <p class="font-display text-xl font-bold text-ink sm:text-2xl">{{ $subtopics->total() }}</p>
+                        <p class="mt-0.5 font-mono text-[9px] tracking-[0.18em] text-muted sm:text-[9.5px]">SUBTOPICS</p>
+                    </div>
+                    <div class="px-4 py-3.5 text-center">
+                        <p class="font-display text-xl font-bold text-primary sm:text-2xl">{{ $subtopics->count() }}</p>
+                        <p class="mt-0.5 font-mono text-[9px] tracking-[0.18em] text-muted sm:text-[9.5px]">ON THIS PAGE</p>
+                    </div>
+                    <div class="px-4 py-3.5 text-center">
+                        <p class="font-display text-xl font-bold text-ok sm:text-2xl">{{ $subtopics->currentPage() }}</p>
+                        <p class="mt-0.5 font-mono text-[9px] tracking-[0.18em] text-muted sm:text-[9.5px]">PAGE</p>
+                    </div>
+                    <div class="px-4 py-3.5 text-center">
+                        <p class="font-display text-xl font-bold sm:text-2xl"
+                           :class="matches.length === items.length ? 'text-ink' : 'text-accent'"
+                           x-text="matches.length">{{ $subtopics->count() }}</p>
+                        <p class="mt-0.5 font-mono text-[9px] tracking-[0.18em] text-muted sm:text-[9.5px]">MATCHING</p>
+                    </div>
                 </div>
 
+                {{-- ============ Toolbar ============ --}}
+                <div class="mb-5 flex flex-col gap-3 rounded-md border border-line bg-surface p-3 sm:flex-row sm:items-center">
+                    <div class="relative flex-1">
+                        <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="search" x-model="q" placeholder="Filter subtopics on this page…"
+                               class="w-full rounded border border-line-strong bg-surface py-2.5 pl-10 pr-3 text-sm text-ink placeholder:text-muted transition hover:border-ink-soft focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20">
+                    </div>
+
+                    <div class="relative shrink-0">
+                        <select x-model="sort"
+                                class="w-full appearance-none rounded border border-line-strong bg-surface py-2.5 pl-3 pr-9 font-mono text-[11px] tracking-wide text-ink-soft transition hover:border-ink-soft focus:border-primary focus:outline-none sm:w-auto">
+                            <option value="order">REGISTER ORDER</option>
+                            <option value="az">NAME A → Z</option>
+                            <option value="za">NAME Z → A</option>
+                            <option value="new">NEWEST FIRST</option>
+                            <option value="old">OLDEST FIRST</option>
+                        </select>
+                        <svg class="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+
+                    <button type="button" x-show="q.length > 0" x-cloak @click="q = ''"
+                            class="shrink-0 whitespace-nowrap font-mono text-[10.5px] font-semibold uppercase tracking-wider text-accent transition hover:opacity-75">
+                        Clear ✕
+                    </button>
+                </div>
+
+                {{-- ============ Register ============ --}}
+                <div x-ref="register" class="flex flex-col gap-3">
+                    @foreach($subtopics as $subtopic)
+                        <article data-idx="{{ $loop->index }}"
+                                 x-show="matches.includes({{ $loop->index }})"
+                                 class="group rounded-md border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(20,24,34,0.04)] transition hover:border-primary/40 hover:shadow-[0_10px_30px_-12px_rgba(20,24,34,0.30)] motion-reduce:transition-none">
+
+                            <div class="flex flex-wrap items-start justify-between gap-4">
+                                {{-- Identity --}}
+                                <div class="flex min-w-0 flex-1 items-start gap-4">
+                                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-accent/10 font-mono text-sm font-bold text-accent">
+                                        {{ str_pad($subtopics->firstItem() + $loop->index, 2, '0', STR_PAD_LEFT) }}
+                                    </span>
+
+                                    <div class="min-w-0 flex-1">
+                                        <a href="{{ $subtopicUrl($subtopic, 'show') }}"
+                                           class="block truncate font-display text-base font-bold text-ink transition hover:text-primary">
+                                            {{ $subtopic->name }}
+                                        </a>
+
+                                        @if(!empty($subtopic->description))
+                                            <p class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-soft">
+                                                {{ Str::limit($subtopic->description, 150) }}
+                                            </p>
+                                        @endif
+
+                                        <div class="mt-3 max-w-xs space-y-1.5">
+                                            <div class="flex items-baseline gap-2 font-mono text-[11px] tracking-wide text-muted">
+                                                <span>FILED</span>
+                                                <span class="flex-1 -translate-y-[3px] border-b border-dotted border-line-strong"></span>
+                                                <span class="font-semibold text-ink">{{ $subtopic->created_at->format('M d, Y') }}</span>
+                                            </div>
+                                            <div class="flex items-baseline gap-2 font-mono text-[11px] tracking-wide text-muted">
+                                                <span>AGE</span>
+                                                <span class="flex-1 -translate-y-[3px] border-b border-dotted border-line-strong"></span>
+                                                <span class="font-semibold text-ink">{{ strtoupper($subtopic->created_at->diffForHumans()) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Actions --}}
+                                <div class="flex shrink-0 items-center gap-2">
+                                    <a href="{{ $subtopicUrl($subtopic, 'show') }}"
+                                       class="inline-flex items-center justify-center rounded border border-line-strong px-3 py-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-ink-soft transition hover:bg-surface-2 hover:text-ink">
+                                        View
+                                    </a>
+                                    @can('administrate')
+                                        <a href="{{ $subtopicUrl($subtopic, 'edit') }}"
+                                           class="inline-flex items-center justify-center rounded border border-warn/40 px-3 py-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-warn transition hover:bg-warn/10">
+                                            Edit
+                                        </a>
+                                        <button type="button"
+                                                x-data="{}"
+                                                x-on:click="$store.deleteForm.show('Delete Subtopic', 'Are you sure you want to delete {{ $subtopic->name }}? This action cannot be undone.', '{{ $subtopicUrl($subtopic, 'destroy') }}')"
+                                                class="inline-flex items-center justify-center rounded border border-accent/40 px-3 py-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-accent transition hover:bg-accent/10">
+                                            Delete
+                                        </button>
+                                    @endcan
+                                </div>
+                            </div>
+
+                            <div class="mt-3 flex items-center justify-between border-t border-dashed border-line pt-3 font-mono text-[10px] tracking-wider text-muted">
+                                <span>ID #{{ $subtopic->id }}</span>
+                                <span class="truncate pl-3">{{ strtoupper($leafTopic->name) }}</span>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                {{-- No matches for the live filter --}}
+                <div x-show="matches.length === 0" x-cloak class="mt-3">
+                    <x-exam.empty compact
+                                  title="No subtopics match that filter"
+                                  description="Nothing on this page matches your search. Clear the filter or check another page of the register.">
+                        <button type="button" @click="q = ''"
+                                class="mt-5 inline-flex items-center justify-center whitespace-nowrap rounded border border-line-strong px-5 py-2.5 text-[13.5px] font-semibold text-ink-soft transition hover:bg-surface-2 hover:text-ink">
+                            Clear Filter
+                        </button>
+                    </x-exam.empty>
+                </div>
+
+                {{-- Pagination --}}
                 @if($subtopics->hasPages())
-                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                        <div class="flex justify-center">
-                            {{ $subtopics->links() }}
-                        </div>
+                    <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+                        <p class="font-mono text-[10.5px] tracking-wider text-muted">
+                            SHOWING {{ $subtopics->firstItem() }}–{{ $subtopics->lastItem() }} OF {{ $subtopics->total() }}
+                        </p>
+                        {{ $subtopics->appends(request()->query())->links() }}
                     </div>
                 @endif
             @else
-                <div class="text-center py-16 px-6">
-                    <div class="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                        <svg class="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No subtopics found</h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                        Get started by creating your first subtopic for <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ $academic_topic->name }}</span>.
-                    </p>
-                    @can('administrate')
-                        <div class="space-y-4">
-                            <a href="{{ route('subtopics.create', ['academic_topic' => $academic_topic, 'academic_subject' => getRouteParameter('academic_subject'), 'academic_level' => getRouteParameter('academic_level'), 'academic_group' => getRouteParameter('academic_group')]) }}"
-                               class="inline-flex items-center px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors duration-150">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+                {{-- ============ Empty register ============ --}}
+                <x-exam.empty
+                    title="No subtopics filed yet"
+                    description="{{ $leafTopic->name }} has no subtopics. Subtopics are the smallest teachable units — the level at which questions and lesson notes are authored.">
+                    <div class="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+                        @can('administrate')
+                            <a href="{{ $createUrl }}"
+                               class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded bg-primary px-5 py-2.5 text-[13.5px] font-semibold tracking-wide text-on-primary transition hover:-translate-y-px hover:bg-primary-hi motion-reduce:transition-none">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/></svg>
                                 Create First Subtopic
                             </a>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                <p>✨ Start organizing your topic content</p>
-                            </div>
-                        </div>
-                    @endcan
-                </div>
+                        @endcan
+                        <a href="{{ $topicUrl }}"
+                           class="inline-flex items-center justify-center whitespace-nowrap rounded border border-line-strong px-5 py-2.5 text-[13.5px] font-semibold text-ink-soft transition hover:bg-surface-2 hover:text-ink">
+                            Back to Topic
+                        </a>
+                    </div>
+                </x-exam.empty>
             @endif
         </div>
-    </div>
+
+        <style>
+            [x-cloak] { display: none !important; }
+        </style>
+    </x-exam.page>
 </x-layouts.app>

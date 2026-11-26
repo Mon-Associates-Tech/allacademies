@@ -22,7 +22,7 @@ class VirtualSessionRecordings extends Component
     public function mount(VirtualSession $session)
     {
         // Authorize
-        if ($session->teacher_id !== Auth::user()->teacher->id) {
+        if ($session->user_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
@@ -107,7 +107,7 @@ class VirtualSessionRecordings extends Component
                 $recording->delete();
 
                 // Log activity
-                SessionRecording::logActivityForModel('delete', 'Session Recording Deleted', 'session_recording', [
+                $recording->logActivity('delete', 'Session Recording Deleted', 'session_recording', [
                     'recording_name' => $recordingName,
                     'session_title' => $sessionTitle,
                     'recording_id' => $recordingId,
