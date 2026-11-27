@@ -22,6 +22,21 @@
             </a>
         </li>
 
+        <!-- Payroll -->
+        <li class="mb-0.5 last:mb-0" title="Payroll">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('accountant.payroll*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('accountant.payroll.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('accountant.payroll*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H4v-3h16v3zm0-5H4V6h16v7zM7 8h4v2H7z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">Payroll</span>
+                </div>
+            </a>
+        </li>
+
         <!-- Transactions -->
         <li class="mb-0.5 last:mb-0" title="Payment Transactions">
             <a :class="sidebarExpanded ? 'py-2' : ''"

@@ -53,6 +53,7 @@ class UserSchoolAssignmentTest extends TestCase
         $this->actingAs($superadmin)
             ->get(route('users.index'))
             ->assertOk()
+            ->assertSee('name="school"')
             ->assertSee('Change School');
 
         $this->post(route('users.change-school'), [
@@ -66,11 +67,68 @@ class UserSchoolAssignmentTest extends TestCase
         ]);
     }
 
+    public function test_owner_can_filter_users_by_school(): void
+    {
+        $selectedSchool = School::factory()->create(['name' => 'Selected School']);
+        $otherSchool = School::factory()->create(['name' => 'Other School']);
+        $owner = User::factory()->create(['role' => 'owner']);
+        User::factory()->create([
+            'name' => 'Selected School User',
+            'role' => 'guest',
+            'school_id' => $selectedSchool->id,
+        ]);
+        User::factory()->create([
+            'name' => 'Other School User',
+            'role' => 'guest',
+            'school_id' => $otherSchool->id,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('users.index', ['school' => $selectedSchool->id]))
+            ->assertOk()
+            ->assertSee('Selected School User')
+            ->assertDontSee('Other School User')
+            ->assertSee('name="school"')
+            ->assertSee('Selected School');
+    }
+
+    public function test_overseer_can_filter_users_by_an_accessible_school_only(): void
+    {
+        $accessibleSchool = School::factory()->create(['name' => 'Accessible School']);
+        $otherSchool = School::factory()->create(['name' => 'Other School']);
+        $overseer = User::factory()->create(['role' => 'overseer']);
+        $overseer->overseenSchools()->attach($accessibleSchool);
+        User::factory()->create([
+            'name' => 'Accessible School User',
+            'role' => 'guest',
+            'school_id' => $accessibleSchool->id,
+        ]);
+        User::factory()->create([
+            'name' => 'Other School User',
+            'role' => 'guest',
+            'school_id' => $otherSchool->id,
+        ]);
+
+        $this->actingAs($overseer)
+            ->get(route('users.index', ['school' => $accessibleSchool->id]))
+            ->assertOk()
+            ->assertSee('Accessible School User')
+            ->assertDontSee('Other School User')
+            ->assertSee('name="school"')
+            ->assertSee('Accessible School')
+            ->assertDontSee('Other School');
+    }
+
     public function test_admin_cannot_change_a_user_school(): void
     {
         $school = School::factory()->create();
         $admin = User::factory()->create(['role' => 'admin']);
         $user = User::factory()->create(['role' => 'guest']);
+
+        $this->actingAs($admin)
+            ->get(route('users.index'))
+            ->assertOk()
+            ->assertDontSee('name="school"');
 
         $this->actingAs($admin)
             ->post(route('users.change-school'), [

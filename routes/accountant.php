@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Accountants\AccountantDashboardController;
 use App\Http\Controllers\Accountants\FinancialAidController;
+use App\Http\Controllers\Accountants\PayrollController;
 use App\Http\Controllers\Accountants\ReportController;
 use App\Http\Controllers\Accountants\StudentController;
 use App\Http\Controllers\Accountants\TransactionController;
+use App\Models\Message;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 
@@ -17,11 +19,21 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->n
     Route::get('/transactions/{payment}', [TransactionController::class, 'show'])->name('transactions.show');
     Route::post('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
 
+    // Payroll
+    Route::prefix('payroll')->name('payroll.')->middleware('role:accountant')->group(function () {
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::post('/', [PayrollController::class, 'store'])->name('store');
+        Route::get('/{payrollRun}', [PayrollController::class, 'show'])->name('show');
+        Route::put('/{payrollRun}/items/{payrollItem}', [PayrollController::class, 'updateItem'])->name('items.update');
+        Route::post('/{payrollRun}/approve', [PayrollController::class, 'approve'])->name('approve');
+        Route::post('/{payrollRun}/paid', [PayrollController::class, 'markPaid'])->name('paid');
+    });
+
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
     Route::post('/reports/export', [ReportController::class, 'export'])->name('reports.export');
-    
+
     // Receipts
     Route::get('/receipts/{payment}', [TransactionController::class, 'receipt'])->name('receipts.show');
     Route::get('/receipts/{payment}/pdf', [TransactionController::class, 'receiptPdf'])->name('receipts.pdf');
@@ -48,5 +60,5 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->n
     Route::get('/notifications', fn () => view('accountant.notifications.index'))->name('notifications.index');
     Route::get('/notifications/compose', fn () => view('accountant.notifications.compose'))->name('notifications.compose');
     Route::get('/notifications/templates', fn () => view('accountant.notifications.templates'))->name('notifications.templates');
-    Route::get('/notifications/{message}', fn (\App\Models\Message $message) => view('accountant.notifications.show', compact('message')))->name('notifications.show');
+    Route::get('/notifications/{message}', fn (Message $message) => view('accountant.notifications.show', compact('message')))->name('notifications.show');
 });

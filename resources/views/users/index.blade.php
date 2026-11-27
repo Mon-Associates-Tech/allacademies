@@ -1,4 +1,5 @@
 @php
+    $canFilterBySchool = auth()->user()->canAccessCrossSchool() || auth()->user()->isOverseer();
     $activeFilterCount = collect([
         request('verified'),
         request('unverified'),
@@ -9,6 +10,7 @@
         request('academic_level'),
         request('subject'),
         request('status'),
+        $canFilterBySchool ? request('school') : null,
     ])->filter()->count();
 
     $total = $users->total();
@@ -83,12 +85,14 @@
                         :academicGroups="$academicGroups"
                         :academicLevels="$academicLevels"
                         :subjects="$subjects"
+                        :schools="$schools"
+                        :canFilterBySchool="$canFilterBySchool"
                     />
                 </div>
             </div>
 
             <!-- Active Filters Display -->
-            @if(request()->hasAny(['gender', 'academic_group', 'academic_level', 'subject', 'status', 'role', 'verified', 'unverified', 'online']))
+            @if(request()->hasAny(['gender', 'academic_group', 'academic_level', 'subject', 'status', 'role', 'verified', 'unverified', 'online']) || ($canFilterBySchool && request()->filled('school')))
                 <div class="mt-3 pt-3 border-t border-line flex flex-wrap items-center gap-2">
                     <span class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">Active:</span>
 
@@ -96,6 +100,15 @@
                         <x-exam.badge tone="primary">
                             Role: {{ ucfirst(request('role')) }}
                             <a href="{{ route('users.index', array_diff_key(request()->all(), ['role' => ''])) }}" class="ml-1 hover:text-accent">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </a>
+                        </x-exam.badge>
+                    @endif
+
+                    @if($canFilterBySchool && request('school'))
+                        <x-exam.badge tone="primary">
+                            School: {{ $schools->find(request('school'))->name ?? 'School' }}
+                            <a href="{{ route('users.index', array_diff_key(request()->all(), ['school' => ''])) }}" class="ml-1 hover:text-accent">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </a>
                         </x-exam.badge>

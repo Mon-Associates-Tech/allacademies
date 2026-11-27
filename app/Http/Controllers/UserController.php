@@ -28,12 +28,25 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        if (! auth()->user()->isReadOnlyOverseer() && ! auth()->user()->isSuperAdmin()) {
+        $user = $request->user();
+
+        if (! $user->isReadOnlyOverseer() && ! $user->isSuperAdmin()) {
             $this->authorize('administrate');
         }
 
-        $users = User::query()
-            ->forCurrentSchool()
+        $canFilterBySchool = $user->canAccessCrossSchool() || $user->isOverseer();
+        $selectedSchool = $canFilterBySchool && $request->filled('school')
+            ? $request->input('school')
+            : null;
+
+        $usersQuery = User::query();
+        if ($selectedSchool !== null) {
+            $usersQuery->forSchool($selectedSchool);
+        } else {
+            $usersQuery->forCurrentSchool();
+        }
+
+        $users = $usersQuery
             ->with(['school', 'student.academicGroup', 'student.academicLevel', 'teacher'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->input('search');
@@ -127,9 +140,24 @@ class UserController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'academic_level_id']);
 
-        $schools = auth()->user()->isOwner() || auth()->user()->isSuperAdmin()
-            ? School::orderBy('name')->get(['id', 'name', 'city'])
-            : collect();
+        if ($user->canAccessCrossSchool()) {
+            $schools = School::orderBy('name')->get(['id', 'name', 'city']);
+        } elseif ($user->isOverseer()) {
+            $schools = $user->overseenSchools()
+                ->orderBy('name')
+                ->get(['schools.id', 'schools.name', 'schools.city']);
+
+            if ($user->school_id && ! $schools->contains('id', (int) $user->school_id)) {
+                $ownSchool = School::find($user->school_id);
+                if ($ownSchool) {
+                    $schools->push($ownSchool);
+                }
+            }
+
+            $schools = $schools->sortBy('name')->values();
+        } else {
+            $schools = collect();
+        }
 
         return view('users.index', [
             'users' => $users,
@@ -137,6 +165,7 @@ class UserController extends Controller
             'academicLevels' => $academicLevels,
             'subjects' => $subjects,
             'schools' => $schools,
+            'canFilterBySchool' => $canFilterBySchool,
             'schoolOptions' => $schools->map(fn (School $school) => [
                 'id' => $school->id,
                 'name' => $school->name,
