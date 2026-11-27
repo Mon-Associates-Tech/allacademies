@@ -119,7 +119,7 @@ AWS_DEFAULT_REGION=your_region
 AWS_BUCKET=your_bucket
 
 # BigBlueButton
-BBB_SERVER_BASE_URL=your_bbb_url
+BBB_SERVER_URL=https://bbb.example.com/bigbluebutton/
 BBB_SECRET=your_bbb_secret
 ```
 

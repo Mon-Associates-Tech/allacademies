@@ -463,8 +463,7 @@
             padding-bottom: 1mm;
         }
 
-        +
-            /* Uploaded PDF front page (mode: upload) — each source page rendered as-is */
+        /* Uploaded PDF front page (mode: upload) — each source page rendered as-is */
         .front-page-pdf {
             page-break-after: always;
             page-break-inside: avoid;
@@ -633,9 +632,12 @@
         $frontPageConfig = $subjectExam->template->front_page_config ?? null;
         $frontPageMode = $frontPageConfig['mode'] ?? (!empty($frontPageConfig['content']) ? 'editor' : null);
         $frontPagePdfImages = $frontPageMode === 'upload' ? $frontPageConfig['attachment_pdf_images'] ?? [] : [];
+        $hasEditorFrontPage = $frontPageMode === 'editor' && !empty($frontPageConfig['content']);
     @endphp
 
-    @include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11])
+    @if (!$hasEditorFrontPage)
+        @include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11])
+    @endif
 
     @if ($frontPageMode === 'upload' && !empty($frontPagePdfImages))
         @foreach ($frontPagePdfImages as $imagePath)
@@ -643,10 +645,11 @@
                 <img src="{{ asset('storage/' . $imagePath) }}" class="front-page-pdf-img">
             </div>
         @endforeach
-    @elseif($frontPageMode === 'editor' && !empty($frontPageConfig['content']))
+    @elseif($hasEditorFrontPage)
         <div class="front-page">
             <div class="front-page-frame">
                 <div class="front-page-content">
+                    @include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11])
                     <div class="fp-block fp-richtext">
                         {!! $frontPageConfig['content'] !!}
                     </div>
@@ -670,7 +673,7 @@
                 $attachmentLayout = $sectionLayout['attachment'] ?? [];
                 $blankPageLayout = $sectionLayout['blankPage'] ?? [];
             @endphp
-            <div class="section-wrap {{ $sectionIndex >= 0 ? 'page-break' : '' }}">
+            <div class="section-wrap {{ $sectionIndex > 0 ? 'page-break' : '' }}">
                 <div class="section-header"
                      @if($headerLayout) style="@php $s = ''; $s .= isset($headerLayout['textAlign']) ? 'text-align: ' . $headerLayout['textAlign'] . ';' : ''; $s .= isset($headerLayout['fontSize']) ? 'font-size: ' . $headerLayout['fontSize'] . ';' : ''; echo $s; @endphp" @endif>
                     <div class="section-title">
@@ -956,17 +959,7 @@
             overflow: visible !important;
         }
 
-        /* 3. Reset all page breaks to auto (prevents accidental forced breaks) */
-        * {
-            page-break-after: auto !important;
-            break-after: auto !important;
-            page-break-before: auto !important;
-            break-before: auto !important;
-            page-break-inside: auto !important;
-            break-inside: auto !important;
-        }
-
-        /* 4. Hide UI chrome */
+        /* 3. Hide UI chrome */
         nav,
         aside,
         .sidebar,
@@ -977,7 +970,7 @@
             display: none !important;
         }
 
-        /* 5. FIX HUGE GAP: Remove top margins/padding from the very first content elements */
+        /* 4. FIX HUGE GAP: Remove top margins/padding from the very first content elements */
         body > div:first-child,
         main > div:first-child,
         .print-content > *:first-child {
@@ -985,7 +978,7 @@
             padding-top: 0 !important;
         }
 
-        /* 6. FIX HUGE GAP: Collapse empty paragraphs and line breaks often left by Rich Text Editors */
+        /* 5. FIX HUGE GAP: Collapse empty paragraphs and line breaks often left by Rich Text Editors */
         p:empty,
         div:empty,
         br {
@@ -996,7 +989,7 @@
             line-height: 0 !important;
         }
 
-        /* 7. FIX HUGE GAP: Ensure the first heading/section doesn't have a massive top margin */
+        /* 6. FIX HUGE GAP: Ensure the first heading/section doesn't have a massive top margin */
         h1:first-of-type,
         h2:first-of-type,
         h3:first-of-type,

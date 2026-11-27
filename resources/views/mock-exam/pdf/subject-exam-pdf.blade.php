@@ -555,9 +555,12 @@
         $frontPageConfig = ($subjectExam->template !== null) ? ($subjectExam->template->front_page_config ?? null) : null;
         $frontPageMode = $frontPageConfig['mode'] ?? (!empty($frontPageConfig['content']) ? 'editor' : null);
         $frontPagePdfImages = $frontPageMode === 'upload' ? $frontPageConfig['attachment_pdf_images'] ?? [] : [];
+        $hasEditorFrontPage = $frontPageMode === 'editor' && !empty($frontPageConfig['content']);
     @endphp
 
-    @include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11])
+    @if (!$hasEditorFrontPage)
+        @include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11])
+    @endif
 
     @if ($frontPageMode === 'upload' && !empty($frontPagePdfImages))
         @foreach ($frontPagePdfImages as $imagePath)
@@ -565,10 +568,11 @@
                 <img src="{{ $imagePath }}" class="front-page-pdf-img">
             </div>
         @endforeach
-    @elseif($frontPageMode === 'editor' && !empty($frontPageConfig['content']))
+    @elseif($hasEditorFrontPage)
         <div class="front-page">
             <div class="front-page-frame">
                 <div class="front-page-content">
+                    @include('mock-exam.pdf.partials.identity-section', ['identity' => $identity, 'fontSize' => $fontSize ?? 11])
                     <div class="fp-block fp-richtext">
                         {!! $frontPageConfig['content'] !!}
                     </div>
@@ -592,7 +596,7 @@
                 $attachmentLayout = $sectionLayout['attachment'] ?? [];
                 $blankPageLayout = $sectionLayout['blankPage'] ?? [];
             @endphp
-            <div class="section-wrap {{ $sectionIndex >= 0 ? 'page-break' : '' }}">
+            <div class="section-wrap {{ $sectionIndex > 0 ? 'page-break' : '' }}">
                 <div class="section-header"
                      @if($headerLayout) style="@php $s = ''; $s .= isset($headerLayout['textAlign']) ? 'text-align: ' . $headerLayout['textAlign'] . ';' : ''; $s .= isset($headerLayout['fontSize']) ? 'font-size: ' . $headerLayout['fontSize'] . ';' : ''; echo $s; @endphp" @endif>
                     <div class="section-title">
