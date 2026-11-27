@@ -34,12 +34,14 @@
             color="ok"
         >
             <x-slot:actions>
-                <x-exam.button variant="primary" type="button" onclick="window.Modal.open('add-user-form')">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add User
-                </x-exam.button>
+                @can('administrate')
+                    <x-exam.button variant="primary" type="button" onclick="window.Modal.open('add-user-form')">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add User
+                    </x-exam.button>
+                @endcan
             </x-slot:actions>
         </x-exam.header>
 
@@ -196,6 +198,7 @@
                         'guest' => 'text-muted',
                         'moderator' => 'text-warn',
                         'owner' => 'text-primary',
+                        'overseer' => 'text-violet-600',
                     ];
                     $roleColorClass = $roleColors[$roleValue] ?? 'text-muted';
                 @endphp
@@ -220,6 +223,9 @@
                                     <x-exam.badge tone="warn">Unverified</x-exam.badge>
                                 @endif
                             </div>
+                            @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin())
+                                <p class="text-xs text-muted truncate mt-0.5">{{ $user->school?->name ?? 'No school assigned' }}</p>
+                            @endif
                         </div>
                     </div>
                     <!-- User Meta -->
@@ -235,6 +241,11 @@
                     </div>
                     <!-- Actions -->
                     <div class="mt-4 flex flex-wrap items-center gap-4 border-t border-line pt-4">
+                        @if((auth()->user()->isOwner() || auth()->user()->isSuperAdmin()) && ! $user->isOwner() && ! $user->isSuperAdmin())
+                            <x-exam.link-button onclick="window.Modal.open('change-school-form', { userId: {{ (int) $user->id }}, schoolId: {{ $user->school_id ? (int) $user->school_id : 'null' }} })">
+                                Change School
+                            </x-exam.link-button>
+                        @endif
                         <a href="{{ route('users.show', ['user' => $user]) }}" class="inline-flex items-center whitespace-nowrap border-b border-dashed border-transparent font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-current text-primary hover:text-primary-hi focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             View
@@ -247,10 +258,10 @@
                                 </x-exam.link-button>
                             @endif
                         @endcan
-                        @if(!$user->email_verified_at)
+                        @if(!$user->email_verified_at && !auth()->user()->isOverseer())
                             <form method="POST" action="{{ route('users.mark-as-verified', $user) }}" class="inline">
                                 @csrf
-                                <x-exam.link-button onclick="return confirm('Are you sure you want to mark this user as verified?')">
+                                <x-exam.link-button type="submit" onclick="return confirm('Are you sure you want to mark this user as verified?')">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
@@ -258,7 +269,7 @@
                                 </x-exam.link-button>
                             </form>
                         @endif
-                        @if($user->canBeImpersonated())
+                        @if(auth()->user()->canImpersonate() && $user->canBeImpersonated())
                             <a href="{{ route('impersonate', $user->id) }}" class="inline-flex items-center whitespace-nowrap border-b border-dashed border-transparent font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-current text-warn hover:text-warn focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warn">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                                 Troubleshoot
@@ -327,6 +338,7 @@
                         'guest' => 'text-muted',
                         'moderator' => 'text-warn',
                         'owner' => 'text-primary',
+                        'overseer' => 'text-violet-600',
                     ];
                     $roleColorClass = $roleColors[$roleValue] ?? 'text-muted';
                 @endphp
@@ -352,8 +364,8 @@
                                         <x-exam.badge tone="warn">Unverified</x-exam.badge>
                                     @endif
                                 </div>
-                                @if(Auth::user()->hasRole('owner'))
-                                    <p class="text-xs text-muted truncate mt-0.5">{{ $user->school?->name }}</p>
+                                @if(Auth::user()->isOwner() || Auth::user()->isSuperAdmin())
+                                    <p class="text-xs text-muted truncate mt-0.5">{{ $user->school?->name ?? 'No school assigned' }}</p>
                                 @endif
                             </div>
                         </div>
@@ -377,6 +389,12 @@
 
                     <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
                         <div class="flex items-center justify-end gap-3">
+                            @if((auth()->user()->isOwner() || auth()->user()->isSuperAdmin()) && ! $user->isOwner() && ! $user->isSuperAdmin())
+                                <x-exam.link-button onclick="window.Modal.open('change-school-form', { userId: {{ (int) $user->id }}, schoolId: {{ $user->school_id ? (int) $user->school_id : 'null' }} })" title="Change School">
+                                    <span class="hidden sm:inline">School</span>
+                                </x-exam.link-button>
+                            @endif
+
                             <!-- View Button -->
                             <a href="{{ route('users.show', ['user' => $user]) }}" class="inline-flex items-center whitespace-nowrap border-b border-dashed border-transparent font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-current text-primary hover:text-primary-hi focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" title="View Details">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,10 +417,10 @@
                             @endcan
 
                             <!-- Mark as Verified Button -->
-                            @if(!$user->email_verified_at)
+                            @if(!$user->email_verified_at && !auth()->user()->isReadOnlyOverseer())
                                 <form method="POST" action="{{ route('users.mark-as-verified', $user) }}" class="inline">
                                     @csrf
-                                    <x-exam.link-button onclick="return confirm('Are you sure you want to mark this user as verified?')" title="Mark as Verified">
+                                    <x-exam.link-button type="submit" onclick="return confirm('Are you sure you want to mark this user as verified?')" title="Mark as Verified">
                                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -412,7 +430,7 @@
                             @endif
 
                             <!-- Impersonate/Troubleshoot Button -->
-                            @if($user->canBeImpersonated())
+                            @if(auth()->user()->canImpersonate() && $user->canBeImpersonated())
                                 <a href="{{ route('impersonate', $user->id) }}" class="inline-flex items-center whitespace-nowrap border-b border-dashed border-transparent font-mono text-[11px] font-semibold uppercase tracking-wider transition hover:border-current text-warn hover:text-warn focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warn" title="Login as this user to troubleshoot">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
@@ -422,6 +440,7 @@
                             @endif
 
                             <!-- More Actions Dropdown -->
+                            @if(!auth()->user()->isReadOnlyOverseer())
                             <x-dropdown>
                                 <button
                                     class="inline-flex items-center p-1.5 text-muted hover:text-ink hover:bg-surface-2 rounded-md transition-colors"
@@ -452,6 +471,7 @@
                                     </x-dropdown.item>
                                 </x-slot>
                             </x-dropdown>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -476,6 +496,50 @@
         <x-exam.empty title="No users found" description="Try adjusting your search or filters to find what you're looking for." />
     @endif
 
+    @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin())
+        <x-modal-component name="change-school-form">
+            <x-slot:header>
+                <h3 class="text-lg leading-6 font-medium text-ink">Change User School</h3>
+            </x-slot:header>
+
+            <form method="POST" action="{{ route('users.change-school') }}" id="change-school-form">
+                @csrf
+                <input type="hidden" name="user_id" x-model="modalData.userId">
+
+                <div class="space-y-4">
+                    <p class="text-sm text-ink-soft">Choose the school this user and their linked role profiles should belong to.</p>
+                    <div x-data="{ schoolSearch: '', schoolOptions: @js($schoolOptions) }" @modal-opened.window="if ($event.detail.name === 'change-school-form') schoolSearch = ''">
+                        @if($schools->count() > 10)
+                            <x-exam.field bare label="Search schools">
+                                <x-exam.input type="search" x-model="schoolSearch" placeholder="Search by school name or city" />
+                            </x-exam.field>
+                        @endif
+
+                        <x-exam.field bare label="School" :required="true">
+                            <x-exam.select name="new_school_id" x-model="modalData.schoolId" :placeholder="'Select a school'" required>
+                                <template x-for="school in schoolOptions.filter((school) => school.name.toLowerCase().includes(schoolSearch.toLowerCase()) || (school.city || '').toLowerCase().includes(schoolSearch.toLowerCase()))" :key="school.id">
+                                    <option :value="school.id" x-text="school.name"></option>
+                                </template>
+                            </x-exam.select>
+                        </x-exam.field>
+                    </div>
+                </div>
+            </form>
+
+            <x-slot:footer>
+                <div class="flex items-center justify-end gap-3">
+                    <x-exam.button variant="ghost" type="button" onclick="window.Modal.close('change-school-form')">
+                        Cancel
+                    </x-exam.button>
+                    <x-exam.button variant="primary" type="submit" form="change-school-form">
+                        Change School
+                    </x-exam.button>
+                </div>
+            </x-slot:footer>
+        </x-modal-component>
+    @endif
+
+    @can('own')
     <!-- Change Role Modal -->
     <x-modal-component name="change-role-form">
         <x-slot:header>
@@ -544,7 +608,9 @@
             </div>
         </x-slot:footer>
     </x-modal-component>
+    @endcan
 
+    @can('administrate')
     <!-- Add User Modal -->
     <x-modal-component name="add-user-form" height="h-96">
         <x-slot:header>
@@ -594,6 +660,7 @@
             </div>
         </x-slot:footer>
     </x-modal-component>
+    @endcan
 
     @livewire('users.delete-user-modal')
 

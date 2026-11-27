@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ResearchAssistantController;
 use App\Http\Controllers\Admin\PricingSettingsController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\AssessmentController;
@@ -8,21 +7,25 @@ use App\Http\Controllers\AuditTeamController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookCategoryController;
 use App\Http\Controllers\BookController;
-use App\Http\Controllers\BookProgressController;
 use App\Http\Controllers\CalendarEventsController;
 use App\Http\Controllers\Company\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EducationalResourceController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JoinTeamController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonNoteController;
 use App\Http\Controllers\LibrarianController;
+use App\Http\Controllers\LibraryShowcaseController;
+use App\Http\Controllers\LogViewerController;
+use App\Http\Controllers\Media\MediaController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\NotesController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PublicVirtualSessionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPaymentController;
+use App\Http\Controllers\PublicVirtualSessionController;
+use App\Http\Controllers\ResearchAssistantController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SettingsController;
@@ -32,12 +35,18 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
+use App\Http\Middleware\ValidateLicense;
+use App\Livewire\Activities\ActivityTracker;
+use App\Livewire\Auth\ChangeDefaultPassword;
 use App\Livewire\Chats\ChatInterface;
+use App\Livewire\FinancialAidManager;
 use App\Livewire\Forums\ForumManagement;
+use App\Livewire\Learning\QuizPerformanceDashboard;
+use App\Livewire\PublicFinancialAidList;
+use App\Livewire\StatusPage;
+use App\Livewire\UnifiedNotifications;
 use App\Services\LocationService;
 use Illuminate\Support\Facades\Route;
-
-use App\Livewire\StatusPage;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,7 +71,7 @@ Route::view('/privacy', 'branding.privacy')->name('branding.privacy');
 Route::view('/terms', 'branding.terms')->name('branding.terms');
 Route::view('/features', 'branding.features')->name('branding.features');
 Route::view('/pricing', 'branding.pricing')->name('branding.pricing');
-Route::get('/library', [\App\Http\Controllers\LibraryShowcaseController::class, 'index'])->name('library.showcase');
+Route::get('/library', [LibraryShowcaseController::class, 'index'])->name('library.showcase');
 Route::view('/contact', 'branding.contact')->name('branding.contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 Route::view('/landing', 'landing')->name('landing');
@@ -78,7 +87,7 @@ Route::view('/solutions/students', 'branding.solutions.students')->name('solutio
 
 // Test Error Notification Route
 Route::get('/test-error-notification', function () {
-    throw new \Exception('This is a test error notification with stack trace');
+    throw new Exception('This is a test error notification with stack trace');
 })->name('test.error');
 
 // Newsletter Routes
@@ -87,18 +96,18 @@ Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'uns
 
 // Public Payment Routes
 Route::prefix('general/pay')->name('payments.public.')->group(function () {
-    Route::get('/init', [App\Http\Controllers\PublicPaymentController::class, 'showLookupForm'])->name('lookup');
-    Route::post('/lookup', [App\Http\Controllers\PublicPaymentController::class, 'lookupStudent'])->name('lookup.post');
-    Route::post('/initialize', [App\Http\Controllers\PublicPaymentController::class, 'initializePayment'])->name('initialize');
-    Route::get('/callback', [App\Http\Controllers\PublicPaymentController::class, 'paymentCallback'])->name('callback');
-    Route::get('/success/{payment}', [App\Http\Controllers\PublicPaymentController::class, 'success'])->name('success');
+    Route::get('/init', [PublicPaymentController::class, 'showLookupForm'])->name('lookup');
+    Route::post('/lookup', [PublicPaymentController::class, 'lookupStudent'])->name('lookup.post');
+    Route::post('/initialize', [PublicPaymentController::class, 'initializePayment'])->name('initialize');
+    Route::get('/callback', [PublicPaymentController::class, 'paymentCallback'])->name('callback');
+    Route::get('/success/{payment}', [PublicPaymentController::class, 'success'])->name('success');
 });
 
 // Public Book Routes
 Route::get('shared/books/{book}', [BookController::class, 'publicShow'])->name('books.public');
 
 // Public Financial Aid
-Route::get('/financial-aid-programs', \App\Livewire\PublicFinancialAidList::class)->name('public.financial-aid');
+Route::get('/financial-aid-programs', PublicFinancialAidList::class)->name('public.financial-aid');
 
 // Public virtual-classroom invitations
 Route::get('/classroom/join/{joinToken}', [PublicVirtualSessionController::class, 'show'])
@@ -121,7 +130,7 @@ Route::get('/calendar', function () {
 
 Route::middleware(['auth'])->group(function () {
     // Password Change for Default Password
-    Route::get('/password/change', \App\Livewire\Auth\ChangeDefaultPassword::class)->name('password.change');
+    Route::get('/password/change', ChangeDefaultPassword::class)->name('password.change');
 
     // Ping Route (Keep-alive)
     Route::post('/ping', static function () {
@@ -175,8 +184,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('admin/pricing-settings/audits', [PricingSettingsController::class, 'audits'])->name('admin.pricing-settings.audits');
     Route::put('admin/pricing-settings', [PricingSettingsController::class, 'update'])->name('admin.pricing-settings.update');
 
-    Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
+    Route::middleware('school.scope')->group(function () {
+        Route::resource('users', UserController::class)->only(['index', 'show', 'store']);
+    });
     Route::post('/users/change-role', [UserController::class, 'changeRole'])->name('users.change-role');
+    Route::post('/users/change-school', [UserController::class, 'changeSchool'])->name('users.change-school');
     Route::post('/users/{user}/mark-as-verified', [UserController::class, 'markAsVerified'])->name('users.mark-as-verified');
 
     /*
@@ -184,7 +196,7 @@ Route::middleware(['auth'])->group(function () {
     | Notifications (Unified)
     |--------------------------------------------------------------------------
     */
-    Route::get('/notifications', \App\Livewire\UnifiedNotifications::class)->name('notifications.index');
+    Route::get('/notifications', UnifiedNotifications::class)->name('notifications.index');
 
     /*
     |--------------------------------------------------------------------------
@@ -331,9 +343,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('assessments', AssessmentController::class);
 
-
     // Activity Tracker Routes
-    Route::get('/activities', \App\Livewire\Activities\ActivityTracker::class)->name('activities.index');
+    Route::get('/activities', ActivityTracker::class)->name('activities.index');
 
     // Academic Content Routes
     Route::get('/course-outlines', fn () => view('course-outlines'))->name('course-outlines');
@@ -345,12 +356,12 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('resources')->name('educational-resources.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\EducationalResourceController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\EducationalResourceController::class, 'create'])->name('create');
-        Route::get('/{educationalResource}/edit', [\App\Http\Controllers\EducationalResourceController::class, 'edit'])->name('edit');
-        Route::get('/{educationalResource}', [\App\Http\Controllers\EducationalResourceController::class, 'show'])->name('show');
-        Route::get('/{educationalResource}/download', [\App\Http\Controllers\EducationalResourceController::class, 'download'])->name('download');
-        Route::get('/{educationalResource}/stream', [\App\Http\Controllers\EducationalResourceController::class, 'stream'])->name('stream');
+        Route::get('/', [EducationalResourceController::class, 'index'])->name('index');
+        Route::get('/create', [EducationalResourceController::class, 'create'])->name('create');
+        Route::get('/{educationalResource}/edit', [EducationalResourceController::class, 'edit'])->name('edit');
+        Route::get('/{educationalResource}', [EducationalResourceController::class, 'show'])->name('show');
+        Route::get('/{educationalResource}/download', [EducationalResourceController::class, 'download'])->name('download');
+        Route::get('/{educationalResource}/stream', [EducationalResourceController::class, 'stream'])->name('stream');
     });
 
     /*
@@ -358,8 +369,8 @@ Route::middleware(['auth'])->group(function () {
     | Media
     |--------------------------------------------------------------------------
     */
-    Route::get('/mediapage', [\App\Http\Controllers\Media\MediaController::class, 'index'])->name('media.index');
-    Route::get('/media/download', [\App\Http\Controllers\Media\MediaController::class, 'download'])->name('media.download');
+    Route::get('/mediapage', [MediaController::class, 'index'])->name('media.index');
+    Route::get('/media/download', [MediaController::class, 'download'])->name('media.download');
 
     /*
     |--------------------------------------------------------------------------
@@ -391,8 +402,8 @@ Route::middleware(['auth'])->group(function () {
     | Quiz Performance
     |--------------------------------------------------------------------------
     */
-    Route::get('/quiz-performance', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance');
-    Route::get('/quiz-performance/{userId}', \App\Livewire\Learning\QuizPerformanceDashboard::class)->name('quiz.performance.user');
+    Route::get('/quiz-performance', QuizPerformanceDashboard::class)->name('quiz.performance');
+    Route::get('/quiz-performance/{userId}', QuizPerformanceDashboard::class)->name('quiz.performance.user');
 
     /*
     |--------------------------------------------------------------------------
@@ -407,7 +418,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/notes/{note}/attachments/{attachment}/download', [NotesController::class, 'downloadAttachment'])->name('notes.attachments.download');
         Route::get('/notes/{note}/attachments/{attachment}/view', [NotesController::class, 'viewAttachment'])->name('notes.attachments.view');
 
-        Route::resource('calendar-events', \App\Http\Controllers\CalendarEventsController::class);
+        Route::resource('calendar-events', CalendarEventsController::class);
         Route::post('/calendar-events/{event}/create-note', [CalendarEventsController::class, 'createNoteFromEvent'])
             ->name('calendar-events.create-note');
     });
@@ -417,14 +428,15 @@ Route::middleware(['auth'])->group(function () {
     | Financial Aid
     |--------------------------------------------------------------------------
     */
-    Route::get('financial-aid', \App\Livewire\FinancialAidManager::class)->name('financial-aid');
+    Route::get('financial-aid', FinancialAidManager::class)->name('financial-aid');
 });
 
-Route::get('/clear-cache', function() {
+Route::get('/clear-cache', function () {
     Artisan::call('cache:clear');
     Artisan::call('config:clear');
     Artisan::call('route:clear');
     Artisan::call('view:clear');
+
     return 'Cache cleared!';
 })->name('cache.clear');
 
@@ -432,10 +444,9 @@ Route::get('/components', function () {
     return view('components');
 })->name('components');
 
-Route::get('/license-expired', fn() => view('license.expired'))
+Route::get('/license-expired', fn () => view('license.expired'))
     ->name('license.expired')
-    ->withoutMiddleware([\App\Http\Middleware\ValidateLicense::class]);
-
+    ->withoutMiddleware([ValidateLicense::class]);
 
 Route::get('/status', StatusPage::class)->name('status');
 
@@ -444,7 +455,6 @@ Route::redirect('/volta', '/volta/');
 Route::get('/volta/{any?}', function () {
     return response()->file(public_path('volta/index.html'));
 })->where('any', '.*')->name('volta');
-
 
 Route::get('/playground', function () {
     return view('playground');
@@ -501,7 +511,7 @@ include_once 'mock-exams.php';
 
 // Log Viewer (owner only)
 Route::middleware(['auth', 'verified', 'role:owner'])->prefix('system')->name('log-viewer.')->group(function () {
-    Route::get('/logs', [\App\Http\Controllers\LogViewerController::class, 'index'])->name('index');
-    Route::post('/logs/clear', [\App\Http\Controllers\LogViewerController::class, 'clear'])->name('clear');
-    Route::get('/logs/download', [\App\Http\Controllers\LogViewerController::class, 'download'])->name('download');
+    Route::get('/logs', [LogViewerController::class, 'index'])->name('index');
+    Route::post('/logs/clear', [LogViewerController::class, 'clear'])->name('clear');
+    Route::get('/logs/download', [LogViewerController::class, 'download'])->name('download');
 });

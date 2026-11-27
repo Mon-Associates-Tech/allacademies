@@ -24,11 +24,7 @@ class SchoolContextServiceProvider extends ServiceProvider
 
         // Gate for school access control
         Gate::define('access-school', function (User $user, $schoolId) {
-            if ($user->isSuperAdmin() || $user->hasRole('owner')) {
-                return true;
-            }
-
-            return $user->school_id == $schoolId;
+            return $user->canAccessSchool($schoolId);
         });
 
         // Gate for cross-school operations

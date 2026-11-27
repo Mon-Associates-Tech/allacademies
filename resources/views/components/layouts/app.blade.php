@@ -74,8 +74,18 @@
             height: 100%;
         }
     </style>
+    @if(auth()->check() && auth()->user()->isReadOnlyOverseer())
+        <style>
+            .overseer-read-only [wire\:click]:not([wire\:click^="setActiveTab"]):not([wire\:click^="switchToSchool"]):not([wire\:click^="viewSchoolDetails"]):not([wire\:click^="gotoPage"]):not([wire\:click^="nextPage"]):not([wire\:click^="previousPage"]):not([wire\:click^="resetPage"]):not([wire\:click^="setPage"]):not([wire\:click^="dismissMessage"]),
+            .overseer-read-only [wire\:submit] button[type="submit"] {
+                cursor: not-allowed;
+                opacity: 0.55;
+                pointer-events: none;
+            }
+        </style>
+    @endif
 </head>
-<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ $background ? $background : 'bg-[radial-gradient(73%_147%_at_center,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%_at_center,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
+<body class="font-sans antialiased text-gray-600 dark:text-gray-400 thin-scrollbar {{ auth()->check() && auth()->user()->isReadOnlyOverseer() ? 'overseer-read-only' : '' }} {{ $background ? $background : 'bg-[radial-gradient(73%_147%_at_center,#EADFDF_59%,#ECE2DF_100%),radial-gradient(91%_146%_at_center,rgba(255,255,255,0.50)_47%,rgba(0,0,0,0.50)_100%)]
     dark:bg-gradient-to-tr dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
     bg-blend-screen' }}"
             :class="{ 'sidebar-expanded': $store.sidebar.expanded }"
@@ -115,6 +125,12 @@
 
         <!-- Main content -->
         <main class="flex-1 animate-fade-in">
+            @if(auth()->check() && auth()->user()->isReadOnlyOverseer())
+                <div class="mx-auto mb-4 max-w-5xl rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200" role="status">
+                    Read-only access: you can view assigned school information but cannot make changes.
+                </div>
+            @endif
+
             <!-- Breadcrumb -->
             @if($breadcrumb)
                 <div class="max-w-7xl px-4 lg:px-6 w-full py-1 mx-auto print:hidden">{{ $breadcrumb }}</div>

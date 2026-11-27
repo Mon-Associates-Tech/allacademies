@@ -12,7 +12,6 @@ use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Exception\CommonMarkException;
 use Symfony\Component\Process\Process;
 
-
 if (! function_exists('fisher_yates_shuffle')) {
     function fisher_yates_shuffle($array, $seed)
     {
@@ -199,34 +198,38 @@ if (! function_exists('renderMarkdownForPdf')) {
         $placeholderIndex = 0;
 
         // Protect display math: $$...$$
-        $text = preg_replace_callback('/\$\$(.+?)\$\$/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+        $text = preg_replace_callback('/\$\$(.+?)\$\$/s', function ($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_DISPLAY_{$placeholderIndex}__";
-            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">'.htmlspecialchars(trim($matches[1])).'</span>';
             $placeholderIndex++;
+
             return $placeholder;
         }, $text);
 
         // Protect display math: \[...\]
-        $text = preg_replace_callback('/\\\\\[(.+?)\\\\\]/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+        $text = preg_replace_callback('/\\\\\[(.+?)\\\\\]/s', function ($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_DISPLAY_{$placeholderIndex}__";
-            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">'.htmlspecialchars(trim($matches[1])).'</span>';
             $placeholderIndex++;
+
             return $placeholder;
         }, $text);
 
         // Protect inline math: $...$
-        $text = preg_replace_callback('/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+        $text = preg_replace_callback('/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/s', function ($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_INLINE_{$placeholderIndex}__";
-            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">'.htmlspecialchars(trim($matches[1])).'</span>';
             $placeholderIndex++;
+
             return $placeholder;
         }, $text);
 
         // Protect inline math: \(...\)
-        $text = preg_replace_callback('/\\\\\((.+?)\\\\\)/s', function($matches) use (&$mathExpressions, &$placeholderIndex) {
+        $text = preg_replace_callback('/\\\\\((.+?)\\\\\)/s', function ($matches) use (&$mathExpressions, &$placeholderIndex) {
             $placeholder = "__MATH_INLINE_{$placeholderIndex}__";
-            $mathExpressions[$placeholder] = '<span style="font-style: italic;">' . htmlspecialchars(trim($matches[1])) . '</span>';
+            $mathExpressions[$placeholder] = '<span style="font-style: italic;">'.htmlspecialchars(trim($matches[1])).'</span>';
             $placeholderIndex++;
+
             return $placeholder;
         }, $text);
 
@@ -238,11 +241,11 @@ if (! function_exists('renderMarkdownForPdf')) {
             'renderer' => [
                 'block_separator' => "\n",
                 'inner_separator' => "\n",
-                'soft_break' => " ",  // Use space instead of newline for inline flow
+                'soft_break' => ' ',  // Use space instead of newline for inline flow
             ],
         ];
 
-        $converter = new \League\CommonMark\CommonMarkConverter($config);
+        $converter = new CommonMarkConverter($config);
         try {
             $html = $converter->convertToHtml($text);
 
@@ -256,7 +259,7 @@ if (! function_exists('renderMarkdownForPdf')) {
             }
 
             return $html;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Fallback to plain text with math
             return stripMarkdownForPdf($text);
         }
@@ -271,7 +274,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * @throws Throwable
- * @throws \PhpOffice\PhpWord\Exception\Exception
+ * @throws PhpOffice\PhpWord\Exception\Exception
  */
 function exportToWord(): BinaryFileResponse
 {
@@ -294,7 +297,7 @@ function exportToWord(): BinaryFileResponse
     return response()->download($filePath)->deleteFileAfterSend();
 }
 
-function exportToPdf(): \Illuminate\Http\Response
+function exportToPdf(): Response
 {
     $examination = Examination::find(request()->examination_id);
     $sections = Examiner::createSections($examination);
@@ -331,7 +334,10 @@ function logError(string $message, array $context = []): void
     Log::error($message, $context);
 }
 
+use App\Models\School;
 use App\Models\SchoolSetting;
+use App\Services\DocumentQuestionExtractionService;
+use Illuminate\Http\Response;
 
 if (! function_exists('school_setting')) {
     function school_setting($key, $default = null)
@@ -381,7 +387,7 @@ if (! function_exists('getTimeRemaining')) {
     /**
      * Calculates the remaining days, hours, and minutes from now until a future timestamp.
      *
-     * @param  string|Carbon|\DateTimeInterface  $futureTimestamp  The future date.
+     * @param  string|Carbon|DateTimeInterface  $futureTimestamp  The future date.
      */
     function getTimeRemaining($futureTimestamp): string
     {
@@ -495,6 +501,18 @@ if (! function_exists('getTimeRemaining')) {
             return null;
         }
 
+        if ($user->isOverseer()) {
+            if (session()->has('current_school_id')) {
+                $schoolId = session('current_school_id');
+            } elseif (app()->bound('current_school_id')) {
+                $schoolId = app('current_school_id');
+            } else {
+                $schoolId = $user->school_id;
+            }
+
+            return $schoolId && $user->canAccessSchool($schoolId) ? (int) $schoolId : null;
+        }
+
         // For regular users, use their school_id
         return $user->school_id;
     }
@@ -506,12 +524,18 @@ if (! function_exists('getTimeRemaining')) {
          * Handles school switching for owners/super admins
          * Returns the user's school for regular users
          */
-        function getCurrentSchoolContext(): ?\App\Models\School
+        function getCurrentSchoolContext(): ?School
         {
             $user = Auth::user();
 
             if (! $user) {
                 return null;
+            }
+
+            if ($user->isOverseer()) {
+                $schoolId = getSchoolId();
+
+                return $schoolId ? School::find($schoolId) : null;
             }
 
             // For owners/super admins, check for switched school context
@@ -520,10 +544,10 @@ if (! function_exists('getTimeRemaining')) {
                 if (app()->bound('current_school')) {
                     try {
                         $school = app('current_school');
-                        if ($school instanceof \App\Models\School) {
+                        if ($school instanceof School) {
                             return $school;
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // Fall through to next check
                     }
                 }
@@ -532,11 +556,11 @@ if (! function_exists('getTimeRemaining')) {
                 $sessionSchoolId = session('current_school_id');
                 if ($sessionSchoolId) {
                     try {
-                        $school = \App\Models\School::find($sessionSchoolId);
+                        $school = School::find($sessionSchoolId);
                         if ($school) {
                             return $school;
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // Fall through to user's default school
                     }
                 }
@@ -591,8 +615,8 @@ if (! function_exists('getTimeRemaining')) {
     {
         // Start with the base query
         $query = $withoutScopes
-            ? \App\Models\Student::withoutGlobalScopes()
-            : \App\Models\Student::query();
+            ? Student::withoutGlobalScopes()
+            : Student::query();
 
         // If specific student_id provided, search by that first (highest priority)
         if ($student_id !== null) {
@@ -629,7 +653,7 @@ if (! function_exists('getTimeRemaining')) {
 
             // If student not found via relationship, try direct query
             if (! $student) {
-                $student = \App\Models\Student::withoutGlobalScopes()
+                $student = Student::withoutGlobalScopes()
                     ->where('user_id', Auth::id())
                     ->first();
             }
@@ -643,22 +667,22 @@ if (! function_exists('getTimeRemaining')) {
 
 }
 
-if (!function_exists('extractQuestionsFromDocument')) {
+if (! function_exists('extractQuestionsFromDocument')) {
     /**
      * Extract or generate questions from document content
      * Intelligently detects if content contains pre-formatted questions or needs generation
      *
-     * @param string $content The document content
-     * @param string $questionType Type of questions (multiple_choice, true_false, essay, short_answer)
-     * @param int $count Number of questions to extract/generate
+     * @param  string  $content  The document content
+     * @param  string  $questionType  Type of questions (multiple_choice, true_false, essay, short_answer)
+     * @param  int  $count  Number of questions to extract/generate
      * @return array Array of structured questions
      */
     function extractQuestionsFromDocument(string $content, string $questionType = 'multiple_choice', int $count = 10): array
     {
-        $service = app(\App\Services\DocumentQuestionExtractionService::class);
+        $service = app(DocumentQuestionExtractionService::class);
+
         return $service->extractFromText($content, $questionType, $count);
     }
-
 
     function latexToSvg(string $latex): string
     {
@@ -667,7 +691,7 @@ if (!function_exists('extractQuestionsFromDocument')) {
         $process->setTimeout(10); // Prevent infinite hanging
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             // Fallback to raw text if it fails
             return '<span style="color:red;">[Math Error]</span>';
         }
@@ -677,6 +701,6 @@ if (!function_exists('extractQuestionsFromDocument')) {
 
     function carbon(): Carbon
     {
-        return new Carbon();
+        return new Carbon;
     }
 }

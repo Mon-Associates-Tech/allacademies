@@ -27,7 +27,7 @@ class SchoolContextMiddleware
         $user = Auth::user();
 
         // Set school context for users who can access cross-school data
-        if ($user->canAccessCrossSchool()) {
+        if ($user->canAccessCrossSchool() || $user->isOverseer()) {
             $this->setSchoolContext($request, $user);
         } else {
             // For regular users, ensure their school context is set
@@ -56,6 +56,8 @@ class SchoolContextMiddleware
                 $schoolId = $requestSchoolId;
                 // Store in session for subsequent requests
                 session(['current_school_id' => $schoolId]);
+            } elseif ($user->isOverseer()) {
+                abort(403, 'Unauthorized school access');
             }
         }
 
@@ -98,12 +100,6 @@ class SchoolContextMiddleware
             return false;
         }
 
-        // Super admins and owners can access any school
-        if ($user->isSuperAdmin() || $user->hasRole('owner')) {
-            return School::where('id', $schoolId)->exists();
-        }
-
-        // Regular users can only access their own school
-        return $user->school_id == $schoolId;
+        return School::whereKey($schoolId)->exists() && $user->canAccessSchool($schoolId);
     }
 }

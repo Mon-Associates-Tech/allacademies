@@ -146,6 +146,12 @@ class School extends Model
         return $this->hasMany(User::class);
     }
 
+    public function overseers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'overseer_school', 'school_id', 'user_id')
+            ->withTimestamps();
+    }
+
     public function isUserAdmin(User $user): bool
     {
         return $user->school_id === $this->id && $user->hasRole('admin');

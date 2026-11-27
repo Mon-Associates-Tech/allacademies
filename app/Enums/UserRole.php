@@ -5,6 +5,7 @@ namespace App\Enums;
 enum UserRole: string
 {
     case OWNER = 'owner';
+    case OVERSEER = 'overseer';
     case ADMIN = 'admin';
     case MODERATOR = 'moderator';
     case GUEST = 'guest';
@@ -24,6 +25,7 @@ enum UserRole: string
     {
         return [
             self::OWNER,
+            self::OVERSEER,
             self::ADMIN,
             self::MODERATOR,
             self::GUEST,

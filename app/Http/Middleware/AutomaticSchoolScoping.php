@@ -65,6 +65,30 @@ class AutomaticSchoolScoping
             return $next($request);
         }
 
+        if ($user->isOverseer()) {
+            $schoolId = null;
+
+            if ($request->has('school_id')) {
+                $schoolId = $request->input('school_id');
+                abort_unless($user->canAccessSchool($schoolId), 403, 'Unauthorized school access');
+            } elseif (session()->has('current_school_id')) {
+                $schoolId = session('current_school_id');
+
+                if ($schoolId && ! $user->canAccessSchool($schoolId)) {
+                    session()->forget('current_school_id');
+                    $schoolId = null;
+                }
+            } elseif ($user->school_id) {
+                $schoolId = $user->school_id;
+            }
+
+            $school = $schoolId ? School::find($schoolId) : null;
+            app()->instance('current_school', $school);
+            app()->instance('current_school_id', $school ? $school->id : 0);
+
+            return $next($request);
+        }
+
         // For regular users and admins, apply school scoping
         if ($user->school_id) {
             app()->instance('current_school', $user->school);

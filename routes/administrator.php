@@ -11,6 +11,7 @@ use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
 use App\Livewire\Administrators\LibrarianManagement;
 use App\Livewire\Administrators\ParentManagement;
+use App\Livewire\Administrators\OverseerSchoolManagement;
 use App\Livewire\Administrators\PaymentManagement;
 use App\Livewire\Administrators\PaymentSetup;
 use App\Livewire\Administrators\ReportCardManagement;
@@ -97,11 +98,15 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
 
     Route::get('/admin/school-switcher', SchoolSwitcherPage::class)
         ->name('school-switcher');
+    Route::get('/admin/overseer-schools', OverseerSchoolManagement::class)
+        ->name('overseer-schools')
+        ->middleware('manage.overseer-schools');
     Route::get('/school/configuration', \App\Livewire\School\SchoolConfigurationManager::class)
         ->name('school.configuration');
 
     Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
-        ->name('school-details');
+        ->name('school-details')
+        ->middleware('school.access:schoolId');
 
     Route::get('/artisan-commands', \App\Livewire\Owner\ArtisanCommands::class)
         ->name('artisan-commands')

@@ -54,6 +54,8 @@
             @livewire('authors.dashboard')
         @elseif($primaryRole === 'parent')
             @livewire('parent.dashboard')
+        @elseif($primaryRole === 'overseer')
+            @livewire('administrators.school-switcher-page')
         @elseif($primaryRole === 'guest')
             @livewire('guests.guest-dashboard')
         @else

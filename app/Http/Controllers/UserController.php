@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\AcademicGroup;
 use App\Models\AcademicLevel;
 use App\Models\AcademicSubject;
-use App\Enums\UserRole;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -23,14 +26,15 @@ class UserController extends Controller
      *
      * @return Application|Factory|\Illuminate\View\View|object|View
      */
-
     public function index(Request $request)
     {
-        $this->authorize('administrate');
+        if (! auth()->user()->isReadOnlyOverseer() && ! auth()->user()->isSuperAdmin()) {
+            $this->authorize('administrate');
+        }
 
         $users = User::query()
             ->forCurrentSchool()
-            ->with(['student.academicGroup', 'student.academicLevel', 'teacher'])
+            ->with(['school', 'student.academicGroup', 'student.academicLevel', 'teacher'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
@@ -108,8 +112,14 @@ class UserController extends Controller
 
         $subjects = AcademicSubject::whereHas('academicLevel.schools', function ($q) {
             $user = auth()->user();
-            if ($user->canAccessCrossSchool() && app()->has('current_school')) {
-                $q->where('school_id', app('current_school')->id);
+            $schoolId = getSchoolId();
+
+            if ($user->isOverseer()) {
+                $q->where('school_id', $schoolId ?? 0);
+            } elseif ($user->canAccessCrossSchool()) {
+                if ($schoolId) {
+                    $q->where('school_id', $schoolId);
+                }
             } else {
                 $q->where('school_id', $user->school_id);
             }
@@ -117,18 +127,28 @@ class UserController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'academic_level_id']);
 
+        $schools = auth()->user()->isOwner() || auth()->user()->isSuperAdmin()
+            ? School::orderBy('name')->get(['id', 'name', 'city'])
+            : collect();
+
         return view('users.index', [
             'users' => $users,
             'academicGroups' => $academicGroups,
             'academicLevels' => $academicLevels,
             'subjects' => $subjects,
+            'schools' => $schools,
+            'schoolOptions' => $schools->map(fn (School $school) => [
+                'id' => $school->id,
+                'name' => $school->name,
+                'city' => $school->city,
+            ])->values(),
         ]);
     }
 
     /**
      * Store a newly created user in storage.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -196,7 +216,16 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $this->authorize('administrate');
+        $viewer = auth()->user();
+
+        if ($viewer->isOverseer()) {
+            abort_unless(
+                $user->school_id && (int) $user->school_id === getSchoolId() && $viewer->canAccessSchool($user->school_id),
+                403
+            );
+        } elseif (! $viewer->isSuperAdmin()) {
+            $this->authorize('administrate');
+        }
 
         // Load all relationship counts for comprehensive display
         $user->loadCount([
@@ -275,7 +304,7 @@ class UserController extends Controller
     /**
      * Change the role of a user.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function changeRole(Request $request)
     {
@@ -312,7 +341,7 @@ class UserController extends Controller
 
         // Create student record if role is changed to student
         if ($request->role === 'student' && ! $user->student) {
-            \App\Models\Student::create([
+            Student::create([
                 'user_id' => $user->id,
                 'student_group_id' => null, // You might want to assign to a default group
             ]);
@@ -328,11 +357,49 @@ class UserController extends Controller
         );
     }
 
+    public function changeSchool(Request $request): RedirectResponse
+    {
+        $actor = $request->user();
+        abort_unless($actor && ($actor->isOwner() || $actor->isSuperAdmin()), 403);
+
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+            'new_school_id' => 'required|integer|exists:schools,id',
+        ]);
+
+        $user = User::forCurrentSchool()->findOrFail($validated['user_id']);
+        abort_if($user->isOwner() || $user->isSuperAdmin(), 403, 'Owner and superadmin accounts cannot be moved between schools.');
+
+        $oldSchool = $user->school;
+        $newSchool = School::findOrFail($validated['new_school_id']);
+
+        if ((int) $user->school_id !== (int) $newSchool->id) {
+            DB::transaction(function () use ($user, $newSchool) {
+                $user->school_id = $newSchool->id;
+                $user->save();
+
+                foreach (['students', 'teachers', 'accountants', 'parents', 'librarians', 'authors'] as $table) {
+                    DB::table($table)
+                        ->where('user_id', $user->id)
+                        ->update(['school_id' => $newSchool->id]);
+                }
+            });
+
+            $user->logActivity('update', 'User School Changed', 'user', [
+                'user_name' => $user->name,
+                'previous_school' => $oldSchool?->name,
+                'new_school' => $newSchool->name,
+                'changed_by' => $actor->name,
+            ]);
+        }
+
+        return redirect()->route('users.index')->with('success', "Successfully moved {$user->name} to {$newSchool->name}.");
+    }
+
     /**
      * Mark a user's email as verified.
      *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function markAsVerified(User $user)
     {

@@ -12,12 +12,21 @@
     >Dashboard
     </x-app.nav-item>
 
-    @if(auth()->user()->role === UserRole::OWNER)
+    @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin() || auth()->user()->isOverseer())
         <x-app.nav-item
             href="{{ route('admin.school-switcher') }}"
             :active="Route::is('admin.school-switcher')"
             icon="heroicon-o-building-office-2"
         >School Switcher
+        </x-app.nav-item>
+    @endif
+
+    @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin() || auth()->user()->hasRole('admin'))
+        <x-app.nav-item
+            href="{{ route('admin.overseer-schools') }}"
+            :active="Route::is('admin.overseer-schools')"
+            icon="heroicon-o-building-library"
+        >Overseer Schools
         </x-app.nav-item>
     @endif
 
@@ -36,7 +45,7 @@
         >User Management
         </x-app.nav-item>
 
-        @if(auth()->user()->role === UserRole::OWNER)
+        @if(auth()->user()->isOwner() || auth()->user()->isOverseer())
             <x-app.nav-item
                 href="{{ route('admin.student-management') }}"
                 :active="Route::is('admin.student-management')"
@@ -71,7 +80,9 @@
                 icon="heroicon-o-calculator"
             >Accountants
             </x-app.nav-item>
+        @endif
 
+        @if(auth()->user()->isOwner())
             <x-app.nav-item
                 href="{{ route('admin.author-management') }}"
                 :active="Route::is('admin.author-management')"

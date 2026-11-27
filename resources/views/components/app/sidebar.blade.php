@@ -110,10 +110,31 @@ if ($hasSchoolSwitcher && $hasImpersonationBanner) {
 
                 <div class="mb-4">
                     @auth
-                        @if ($userRole === UserRole::ADMIN || $userRole === UserRole::OWNER || in_array($roleValue, ['admin', 'owner']))
+                        @if (auth()->user()->hasRole(UserRole::ADMIN->value) || auth()->user()->isOwner() || auth()->user()->isOverseer())
                             @livewire('administrators.admin-navigation', [
                                 'activeTab' => Route::is('admin.dashboard') ? request()->query('activeTab', 'overview') : 'overview',
                             ])
+                        @elseif($userRole === UserRole::OVERSEER || $userRole === UserRole::SUPER_ADMIN || in_array($roleValue, ['overseer', 'superadmin'], true))
+                            <x-app.nav-item
+                                href="{{ route('dashboard') }}"
+                                :active="Route::is('dashboard')"
+                                icon="heroicon-o-home"
+                            >Dashboard
+                            </x-app.nav-item>
+                            <x-app.nav-item
+                                href="{{ route('admin.school-switcher') }}"
+                                :active="Route::is('admin.school-switcher')"
+                                icon="heroicon-o-building-office-2"
+                            >School Switcher
+                            </x-app.nav-item>
+                            @if ($roleValue === 'superadmin')
+                                <x-app.nav-item
+                                    href="{{ route('admin.overseer-schools') }}"
+                                    :active="Route::is('admin.overseer-schools')"
+                                    icon="heroicon-o-building-library"
+                                >Overseer Schools
+                                </x-app.nav-item>
+                            @endif
                         @elseif($userRole === UserRole::STUDENT || $roleValue === 'student')
                             @livewire('students.student-navigation', [
                                 'activeTab' => Route::is('dashboard') ? request()->query('activeTab', 'overview') : 'overview',

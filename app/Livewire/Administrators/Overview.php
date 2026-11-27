@@ -48,9 +48,9 @@ class Overview extends Component
         $user = auth()->user();
 
         // Owners and super admins can see all schools (no filtering)
-        if ($user->canAccessCrossSchool()) {
+        if ($user->canAccessCrossSchool() || $user->isOverseer()) {
             // Check if they have selected a specific school context
-            return getSchoolId();
+            return getSchoolId() ?? ($user->isOverseer() ? -1 : null);
         }
 
         // Admins and other school-bound users: restrict to their school
@@ -619,7 +619,7 @@ class Overview extends Component
             'user_growth' => $this->getUserGrowthTrend($startDate),
             'borrowing_trend' => $this->getBorrowingTrend($startDate),
             'popular_categories' => $this->getPopularBookCategories(),
-            'active_teams' => Team::when($schoolId, fn($q) => $q->where('school_id', $schoolId))->whereHas('members')->count(),
+            'active_teams' => Team::when($schoolId, fn ($q) => $q->where('school_id', $schoolId))->whereHas('members')->count(),
             'payment_trend' => $this->getPaymentTrend($startDate),
             'login_trend' => $this->getLoginTrend($startDate),
         ];
@@ -645,8 +645,7 @@ class Overview extends Component
             });
         }
 
-
-        $actions =  [
+        $actions = [
             [
                 'title' => 'Add New Student',
                 'description' => 'Register a new student in the system',
@@ -661,7 +660,6 @@ class Overview extends Component
                 'route' => 'admin.teacher-management',
                 'color' => 'indigo',
             ],
-
 
             [
                 'title' => 'View Payments',
@@ -763,7 +761,7 @@ class Overview extends Component
         return [
             'students' => [
                 'total' => $studentQuery->count(),
-                'active' => $studentQuery->whereHas('user', fn($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
+                'active' => $studentQuery->whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
                 'new_this_period' => (clone $studentQuery)->where('created_at', '>=', $this->getPeriodStartDate())->count(),
                 'route' => 'admin.student-management',
                 'icon' => 'academic-cap',
@@ -771,7 +769,7 @@ class Overview extends Component
             ],
             'teachers' => [
                 'total' => $teacherQuery->count(),
-                'active' => $teacherQuery->whereHas('user', fn($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
+                'active' => $teacherQuery->whereHas('user', fn ($q) => $q->where('last_seen_at', '>=', now()->subDays(7)))->count(),
                 'new_this_period' => (clone $teacherQuery)->where('created_at', '>=', $this->getPeriodStartDate())->count(),
                 'route' => 'admin.teacher-management',
                 'icon' => 'briefcase',
@@ -820,7 +818,7 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -835,7 +833,7 @@ class Overview extends Component
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -852,7 +850,7 @@ class Overview extends Component
             DB::raw('COUNT(*) as count')
         )
             ->where('status', 'succeeded')
-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
             ->where('created_at', '>=', $startDate)
             ->groupBy('date')
             ->orderBy('date')
@@ -888,7 +886,7 @@ class Overview extends Component
             ->join('book_category', 'book_categories.id', '=', 'book_category.category_id')
             ->join('books', 'book_category.book_id', '=', 'books.id')
             ->join('book_borrowings', 'books.id', '=', 'book_borrowings.book_id')
-            ->when($schoolId, fn($q) => $q->where('book_borrowings.school_id', $schoolId))
+            ->when($schoolId, fn ($q) => $q->where('book_borrowings.school_id', $schoolId))
             ->where('book_borrowings.created_at', '>=', $this->getPeriodStartDate())
             ->groupBy('book_categories.id', 'book_categories.name')
             ->orderBy('borrowings_count', 'desc')

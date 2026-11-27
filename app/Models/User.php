@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
-use App\Models\Classroom\VirtualSession;
 use App\Models\Chat\OpenAiTokenUsageLog;
+use App\Models\Chat\PricingTier;
 use App\Models\Chat\SubscriptionCycle;
 use App\Models\Chat\UserTokenSubscription;
+use App\Models\Classroom\VirtualSession;
 use App\Models\Media\MediaFile;
 use App\Notifications\VerifyEmailNotification;
 use App\Support\TokenSubscriptionStatus;
@@ -21,6 +22,7 @@ use Exception;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -124,8 +126,8 @@ class User extends Authenticatable implements MustVerifyEmail
         parent::booted();
 
         static::created(static function ($user) {
-            if(!$user->role === UserRole::ACCOUNTANT){
-            $user->handleRoleChange();
+            if (! $user->role === UserRole::ACCOUNTANT) {
+                $user->handleRoleChange();
             }
             $user->createFreeTrialSubscription();
         });
@@ -166,7 +168,7 @@ class User extends Authenticatable implements MustVerifyEmail
         try {
             $modelClass::firstOrCreate(['user_id' => $this->id], $data);
         } catch (Exception $e) {
-            \Log::error('Failed to create role model', [
+            Log::error('Failed to create role model', [
                 'user_id' => $this->id,
                 'role' => $role,
                 'error' => $e->getMessage(),
@@ -216,7 +218,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function activateBasicTier(): void
     {
-        $basicTier = \App\Models\Chat\PricingTier::where('name', 'Basic')
+        $basicTier = PricingTier::where('name', 'Basic')
             ->where('is_active', true)
             ->first();
 
@@ -232,7 +234,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         // Create trial cycle with tokens allocated immediately (no payment required)
-        \App\Models\Chat\SubscriptionCycle::create([
+        SubscriptionCycle::create([
             'user_id' => $this->id,
             'pricing_tier_id' => $basicTier->id,
             'cycle_number' => 1,
@@ -307,6 +309,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function overseenSchools(): BelongsToMany
+    {
+        return $this->belongsToMany(School::class, 'overseer_school', 'user_id', 'school_id')
+            ->withTimestamps();
     }
 
     // Role-specific Relationships
@@ -479,6 +487,20 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole(UserRole::OWNER->value);
     }
 
+    public function isOverseer(): bool
+    {
+        return $this->hasRole(UserRole::OVERSEER->value);
+    }
+
+    public function isReadOnlyOverseer(): bool
+    {
+        return $this->isOverseer() && ! $this->hasAnyRole([
+            UserRole::OWNER->value,
+            UserRole::ADMIN->value,
+            UserRole::SUPER_ADMIN->value,
+        ]);
+    }
+
     public function isAccountant(): bool
     {
         return $this->hasRole(UserRole::ACCOUNTANT->value);
@@ -594,7 +616,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canAccessSchool($schoolId): bool
     {
-        return $this->canAccessCrossSchool() || $this->school_id == $schoolId;
+        if ((! is_int($schoolId) && ! (is_string($schoolId) && ctype_digit($schoolId))) || (int) $schoolId < 1) {
+            return false;
+        }
+
+        if ($this->canAccessCrossSchool() || $this->school_id == $schoolId) {
+            return true;
+        }
+
+        return $this->isOverseer() && $this->overseenSchools()->whereKey($schoolId)->exists();
     }
 
     public function canAccessCrossSchool(): bool
@@ -606,6 +636,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if ($this->canAccessCrossSchool()) {
             return app('current_school') ?: $this->school;
+        }
+
+        if ($this->isOverseer()) {
+            $schoolId = getSchoolId();
+
+            return $schoolId ? School::find($schoolId) : null;
         }
 
         return $this->school;
@@ -639,18 +675,35 @@ class User extends Authenticatable implements MustVerifyEmail
             return $schoolId !== null ? $query->where('school_id', $schoolId) : $query;
         }
 
+        if ($user->isOverseer()) {
+            $schoolId = getSchoolId();
+
+            return $schoolId ? $query->where('school_id', $schoolId) : $query->whereRaw('0=1');
+        }
+
         return $query->where('school_id', $user->school_id);
     }
 
     public function scopeForSchool($query, $schoolId = null)
     {
-        if ($schoolId) {
+        $user = auth()->user();
+
+        if (! $user) {
+            return $query->whereRaw('0=1');
+        }
+
+        if ($user->isOverseer()) {
+            $schoolId = $schoolId ?: getSchoolId();
+
+            if (! $schoolId || ! $user->canAccessSchool($schoolId)) {
+                return $query->whereRaw('0=1');
+            }
+
             return $query->where('school_id', $schoolId);
         }
 
-        $user = auth()->user();
-        if (! $user) {
-            return $query->whereRaw('0=1');
+        if ($schoolId) {
+            return $query->where('school_id', $schoolId);
         }
 
         if ($user->canAccessCrossSchool()) {
@@ -820,7 +873,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function activeSponsorshipPrograms(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipProject::class)
+        return $this->hasMany(SponsorshipProject::class)
             ->where('status', 'active');
     }
 
@@ -829,7 +882,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function activeSponsorOffers(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipOffer::class)
+        return $this->hasMany(SponsorshipOffer::class)
             ->where('status', 'open');
     }
 
@@ -838,7 +891,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sponsorshipBids(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipBid::class);
+        return $this->hasMany(SponsorshipBid::class);
     }
 
     /**
@@ -846,7 +899,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function pendingSponsorshipBids(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipBid::class)
+        return $this->hasMany(SponsorshipBid::class)
             ->where('status', 'pending');
     }
 
@@ -855,7 +908,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sponsorshipContributions(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipContribution::class);
+        return $this->hasMany(SponsorshipContribution::class);
     }
 
     /**
@@ -863,7 +916,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function verifiedPrograms(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipProject::class, 'verified_by');
+        return $this->hasMany(SponsorshipProject::class, 'verified_by');
     }
 
     /**
@@ -871,7 +924,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isBenefactor(): bool
     {
-        return $this->role === \App\Enums\UserRole::BENEFACTOR || $this->hasRole('benefactor');
+        return $this->role === UserRole::BENEFACTOR || $this->hasRole('benefactor');
     }
 
     /**
@@ -879,7 +932,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isSponsor(): bool
     {
-        return $this->role === \App\Enums\UserRole::SPONSOR || $this->hasRole('sponsor');
+        return $this->role === UserRole::SPONSOR || $this->hasRole('sponsor');
     }
 
     /**
@@ -887,7 +940,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isReviewer(): bool
     {
-        return $this->role === \App\Enums\UserRole::REVIEWER || $this->hasRole('reviewer') || $this->hasRole('owner');
+        return $this->role === UserRole::REVIEWER || $this->hasRole('reviewer') || $this->hasRole('owner');
     }
 
     /**
@@ -904,7 +957,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sponsorshipPrograms(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipProject::class);
+        return $this->hasMany(SponsorshipProject::class);
     }
 
     /**
@@ -921,7 +974,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function successfulSponsorshipContributions(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipContribution::class)
+        return $this->hasMany(SponsorshipContribution::class)
             ->where('status', 'completed');
     }
 
@@ -939,6 +992,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sponsorOffers(): HasMany
     {
-        return $this->hasMany(\App\Models\SponsorshipOffer::class);
+        return $this->hasMany(SponsorshipOffer::class);
     }
 }
