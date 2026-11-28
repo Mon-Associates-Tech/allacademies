@@ -54,10 +54,28 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From Date</label>
+                    <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To Date</label>
+                    <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
                 <div class="flex items-end gap-2 md:col-span-2">
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Filter</button>
                     <a href="{{ route('accountant.transactions.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Reset</a>
                 </div>
+            </form>
+        </div>
+
+        <div class="flex justify-end">
+            <form method="POST" action="{{ route('accountant.transactions.export') }}">
+                @csrf
+                @foreach(request()->only(['search', 'status', 'academic_group_id', 'academic_level_id', 'school_payment_structure_id', 'student_id', 'start_date', 'end_date']) as $name => $value)
+                    <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                @endforeach
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export CSV</button>
             </form>
         </div>
 
@@ -122,7 +140,7 @@
                 </table>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                {{ $transactions->links() }}
+                {{ $transactions->withQueryString()->links() }}
             </div>
         </div>
     </div>

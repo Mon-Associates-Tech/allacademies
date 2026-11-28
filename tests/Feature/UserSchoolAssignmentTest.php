@@ -119,6 +119,48 @@ class UserSchoolAssignmentTest extends TestCase
             ->assertDontSee('Other School');
     }
 
+    public function test_overseer_sees_users_from_all_assigned_schools_by_default_after_stale_school_context(): void
+    {
+        $firstSchool = School::factory()->create(['name' => 'First Assigned School']);
+        $secondSchool = School::factory()->create(['name' => 'Second Assigned School']);
+        $unassignedSchool = School::factory()->create();
+        $owner = User::factory()->create(['role' => 'owner']);
+        $overseer = User::factory()->create(['role' => 'overseer']);
+        $overseer->overseenSchools()->attach([$firstSchool->id, $secondSchool->id]);
+
+        $firstSchoolUser = User::factory()->create([
+            'name' => 'First School User',
+            'role' => 'guest',
+            'school_id' => $firstSchool->id,
+        ]);
+        User::factory()->create([
+            'name' => 'Second School User',
+            'role' => 'guest',
+            'school_id' => $secondSchool->id,
+        ]);
+        User::factory()->create([
+            'name' => 'Unassigned School User',
+            'role' => 'guest',
+            'school_id' => $unassignedSchool->id,
+        ]);
+
+        $this->actingAs($overseer)
+            ->withSession([
+                'current_school_id' => $unassignedSchool->id,
+                'impersonated_by' => $owner->id,
+            ])
+            ->get(route('users.index'))
+            ->assertOk()
+            ->assertSee('First School User')
+            ->assertSee('Second School User')
+            ->assertDontSee('Unassigned School User')
+            ->assertSee('All Assigned Schools')
+            ->assertSee('First Assigned School')
+            ->assertSee('Second Assigned School');
+
+        $this->get(route('users.show', $firstSchoolUser))->assertOk();
+    }
+
     public function test_admin_cannot_change_a_user_school(): void
     {
         $school = School::factory()->create();

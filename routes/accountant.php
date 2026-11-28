@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Accountants\AccountantDashboardController;
+use App\Http\Controllers\Accountants\FinanceController;
 use App\Http\Controllers\Accountants\FinancialAidController;
 use App\Http\Controllers\Accountants\PayrollController;
 use App\Http\Controllers\Accountants\ReportController;
@@ -18,6 +19,14 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('accountant')->n
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{payment}', [TransactionController::class, 'show'])->name('transactions.show');
     Route::post('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
+
+    // General ledger, expenses, and reconciliation
+    Route::get('/ledger', [FinanceController::class, 'ledger'])->name('ledger.index');
+    Route::post('/ledger/reconcile', [FinanceController::class, 'reconcile'])->name('ledger.reconcile');
+    Route::delete('/ledger/reconcile/{sourceType}/{sourceId}', [FinanceController::class, 'unreconcile'])->name('ledger.unreconcile');
+    Route::get('/expenses', [FinanceController::class, 'expenses'])->name('expenses.index');
+    Route::post('/expenses', [FinanceController::class, 'storeExpense'])->name('expenses.store');
+    Route::patch('/expenses/{expense}/paid', [FinanceController::class, 'markExpensePaid'])->name('expenses.paid');
 
     // Payroll
     Route::prefix('payroll')->name('payroll.')->middleware('role:accountant')->group(function () {

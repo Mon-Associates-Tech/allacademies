@@ -52,6 +52,21 @@
             </a>
         </li>
 
+        <!-- General Ledger -->
+        <li class="mb-0.5 last:mb-0" title="General Ledger">
+            <a :class="sidebarExpanded ? 'py-2' : ''"
+               class="block pl-3 rounded-lg transition {{ Route::is('accountant.ledger*') || Route::is('accountant.expenses*') ? 'bg-violet-500 text-white font-bold' : 'text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+               href="{{ route('accountant.ledger.index') }}">
+                <div class="flex items-center">
+                    <svg class="shrink-0 fill-current {{ Route::is('accountant.ledger*') || Route::is('accountant.expenses*') ? 'text-white' : 'text-gray-400 dark:text-gray-500' }}"
+                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M3 3h18v2H3zm0 6h18v2H3zm0 6h12v2H3zm0 6h18v2H3z"/>
+                    </svg>
+                    <span class="text-sm ml-2 sidebar-text duration-200">General Ledger</span>
+                </div>
+            </a>
+        </li>
+
         <!-- Financial Reports -->
         <li class="mb-0.5 last:mb-0" title="Financial Reports & Analytics">
             <a :class="sidebarExpanded ? 'py-2' : ''"

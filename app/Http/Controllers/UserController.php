@@ -42,6 +42,14 @@ class UserController extends Controller
         $usersQuery = User::query();
         if ($selectedSchool !== null) {
             $usersQuery->forSchool($selectedSchool);
+        } elseif ($user->isReadOnlyOverseer()) {
+            $usersQuery->where(function ($query) use ($user) {
+                $query->whereIn('school_id', $user->overseenSchools()->select('schools.id'));
+
+                if ($user->school_id) {
+                    $query->orWhere('school_id', $user->school_id);
+                }
+            });
         } else {
             $usersQuery->forCurrentSchool();
         }
@@ -247,9 +255,9 @@ class UserController extends Controller
     {
         $viewer = auth()->user();
 
-        if ($viewer->isOverseer()) {
+        if ($viewer->isReadOnlyOverseer()) {
             abort_unless(
-                $user->school_id && (int) $user->school_id === getSchoolId() && $viewer->canAccessSchool($user->school_id),
+                $user->school_id && $viewer->canAccessSchool($user->school_id),
                 403
             );
         } elseif (! $viewer->isSuperAdmin()) {

@@ -1,21 +1,24 @@
 <?php
 
 use App\Http\Controllers\ActivityTrailController;
+use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\SchoolPaymentController;
 use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\Student\StudentManagementController;
+use App\Http\Controllers\UserLoginActivityController;
 use App\Livewire\Administrators\AccountantManagement;
 use App\Livewire\Administrators\AuthorManagement;
 use App\Livewire\Administrators\BookApprovalManagement;
 use App\Livewire\Administrators\BookManagement;
 use App\Livewire\Administrators\LibrarianManagement;
-use App\Livewire\Administrators\ParentManagement;
 use App\Livewire\Administrators\OverseerSchoolManagement;
+use App\Livewire\Administrators\ParentManagement;
 use App\Livewire\Administrators\PaymentManagement;
 use App\Livewire\Administrators\PaymentSetup;
 use App\Livewire\Administrators\ReportCardManagement;
 use App\Livewire\Administrators\SchoolSwitcherPage;
+use App\Livewire\Administrators\SelectiveBackup;
 use App\Livewire\Administrators\StudentGroupManagement;
 use App\Livewire\Administrators\StudentManagement;
 use App\Livewire\Administrators\StudentPaymentDetails;
@@ -30,8 +33,13 @@ use App\Livewire\Common\Messages\ComposeMessage;
 use App\Livewire\Common\Messages\MessageEdit;
 use App\Livewire\Common\Messages\MessageIndex;
 use App\Livewire\Common\Messages\MessageShow;
+use App\Livewire\GenerateExamination;
+use App\Livewire\Owner\ArtisanCommands;
+use App\Livewire\QuestionAvailabilityChecker;
+use App\Livewire\School\SchoolConfigurationManager;
 use App\Livewire\School\SchoolDetails;
 use App\Livewire\SchoolSettings\LetterheadSettings;
+use App\Livewire\Students\DocumentGenerator;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin.')->group(function () {
@@ -40,6 +48,7 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/students/{student}/edit', StudentManagement::class)->name('students.edit');
     Route::get('/student-groups', StudentGroupManagement::class)->name('student-groups');
     Route::get('/teacher-management', TeacherManagement::class)->name('teacher-management');
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/book-management', BookManagement::class)->name('book-management');
     Route::get('/book-management/create', [BookController::class, 'create'])->name('books.create');
     Route::get('/book-management/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
@@ -81,7 +90,7 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
         ->name('activity-trail.show');
 
     // Login Activity Details
-    Route::get('/users/{user}/login-activities', [App\Http\Controllers\UserLoginActivityController::class, 'show'])
+    Route::get('/users/{user}/login-activities', [UserLoginActivityController::class, 'show'])
         ->name('login-activities.show');
 
     // Messages routes
@@ -101,21 +110,21 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::get('/admin/overseer-schools', OverseerSchoolManagement::class)
         ->name('overseer-schools')
         ->middleware('manage.overseer-schools');
-    Route::get('/school/configuration', \App\Livewire\School\SchoolConfigurationManager::class)
+    Route::get('/school/configuration', SchoolConfigurationManager::class)
         ->name('school.configuration');
 
     Route::get('/admin/schools/{schoolId}', SchoolDetails::class)
         ->name('school-details')
         ->middleware('school.access:schoolId');
 
-    Route::get('/artisan-commands', \App\Livewire\Owner\ArtisanCommands::class)
+    Route::get('/artisan-commands', ArtisanCommands::class)
         ->name('artisan-commands')
         ->middleware('can:access-artisan-commands');
 
     Route::get('/change-log', CreateChangelog::class)->name('change-log');
     Route::get('/changelog', ChangelogList::class)->name('change-log.index');
 
-    Route::get('students/{student}/documents', \App\Livewire\Students\DocumentGenerator::class)
+    Route::get('students/{student}/documents', DocumentGenerator::class)
         ->name('students.documents');
 
     Route::get('/school-settings/letterhead', LetterheadSettings::class)
@@ -130,26 +139,27 @@ Route::middleware(['auth', 'verified', 'school.scope'])->prefix('')->name('admin
     Route::post('/transactions/export', [SchoolPaymentController::class, 'export'])->name('transactions.export');
 
     // Question Availability Checker
-    Route::get('/question-availability', \App\Livewire\QuestionAvailabilityChecker::class)
+    Route::get('/question-availability', QuestionAvailabilityChecker::class)
         ->name('question-availability')
         ->middleware('can:access-question-availability');
 
     // Generate Examination
-    Route::get('/generate-examination', \App\Livewire\GenerateExamination::class)
+    Route::get('/generate-examination', GenerateExamination::class)
         ->name('generate-examination')
         ->middleware('can:access-question-availability');
 
     // Academic ID Map Download
     Route::get('/academic-id-map/download', function () {
         $path = storage_path('app/academic_id_map.json');
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             abort(404, 'ID Map not found. Please generate it first.');
         }
-        return response()->download($path, 'academic_id_map_' . date('Y-m-d') . '.json');
+
+        return response()->download($path, 'academic_id_map_'.date('Y-m-d').'.json');
     })->name('academic.id-map.download');
 
     // Selective Database Backup (BACKUP_USERS only)
-    Route::get('/selective-backup', \App\Livewire\Administrators\SelectiveBackup::class)
+    Route::get('/selective-backup', SelectiveBackup::class)
         ->name('selective-backup')
         ->middleware('backup.users');
 });

@@ -12,6 +12,13 @@
     >Dashboard
     </x-app.nav-item>
 
+    <x-app.nav-item
+        href="{{ route('admin.attendance.index') }}"
+        :active="Route::is('admin.attendance*')"
+        icon="heroicon-o-clipboard-document-check"
+    >Attendance
+    </x-app.nav-item>
+
     @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin() || auth()->user()->isOverseer())
         <x-app.nav-item
             href="{{ route('admin.school-switcher') }}"

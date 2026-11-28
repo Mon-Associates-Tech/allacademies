@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\Student\StudentManagementController;
+use App\Http\Controllers\Student\StudentPortalController;
+use App\Http\Controllers\StudentFeeController;
 use App\Livewire\Authors\BookDetails;
+use App\Livewire\Common\UserPreferences;
 use App\Livewire\Learning\BookQuizInterface;
 use App\Livewire\Students\ActivityLogs;
 use App\Livewire\Students\Assignments;
@@ -14,28 +17,29 @@ use App\Livewire\Students\Messages\ComposeMessage;
 use App\Livewire\Students\Messages\MessageIndex;
 use App\Livewire\Students\Messages\MessageShow;
 use App\Livewire\Students\MyReportCards;
-use App\Livewire\Students\Notifications;
 use App\Livewire\Students\PerformanceOverview;
+use App\Livewire\Students\PublicProfile;
 use App\Livewire\Students\StudentProfile;
 use App\Livewire\Students\StudentSchedule;
 use App\Livewire\Students\VirtualClassroom\MyVirtualSessions;
 use App\Livewire\Students\VirtualClassroom\ViewSessionRecordings;
+use App\Livewire\UnifiedNotifications;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->group(function () {
 
     Route::prefix('fees')->name('fees.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('index');
-        Route::get('/payment', [\App\Http\Controllers\StudentFeeController::class, 'payment'])->name('payment');
-        Route::post('/initialize', [\App\Http\Controllers\StudentFeeController::class, 'initializePayment'])->name('initialize');
-        Route::get('/callback', [\App\Http\Controllers\StudentFeeController::class, 'callback'])->name('callback');
-        Route::get('/receipt/{payment}', [\App\Http\Controllers\StudentFeeController::class, 'receipt'])->name('receipt');
+        Route::get('/', [StudentFeeController::class, 'index'])->name('index');
+        Route::get('/payment', [StudentFeeController::class, 'payment'])->name('payment');
+        Route::post('/initialize', [StudentFeeController::class, 'initializePayment'])->name('initialize');
+        Route::get('/callback', [StudentFeeController::class, 'callback'])->name('callback');
+        Route::get('/receipt/{payment}', [StudentFeeController::class, 'receipt'])->name('receipt');
         // Receipt for portal/one-off SchoolPayment entries
-        Route::get('/receipt/payment/{payment}', [\App\Http\Controllers\StudentFeeController::class, 'receiptPayment'])->name('receipt.payment');
+        Route::get('/receipt/payment/{payment}', [StudentFeeController::class, 'receiptPayment'])->name('receipt.payment');
     });
 
     // Alias route for convenience
-    Route::get('payments', [\App\Http\Controllers\StudentFeeController::class, 'index'])->name('payments.index');
+    Route::get('payments', [StudentFeeController::class, 'index'])->name('payments.index');
 
     // Report Cards
     Route::get('/report-cards', MyReportCards::class)->name('report-cards');
@@ -44,24 +48,23 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     Route::get('performance', PerformanceOverview::class)->name('performance');
     Route::get('account', StudentProfile::class)->name('account');
     Route::get('activities', ActivityLogs::class)->name('activities');
-    Route::get('notifications', \App\Livewire\UnifiedNotifications::class)->name('notifications');
+    Route::get('notifications', UnifiedNotifications::class)->name('notifications');
     Route::get('schedules', StudentSchedule::class)->name('schedules');
     Route::get('courses', Courses::class)->name('courses');
     Route::get('courses/{courseId}', CourseDetails::class)->name('course.details');
     Route::get('books', [BookController::class, 'index'])->name('books');
     Route::get('books/{book}', BookDetails::class)->name('books.show');
-    Route::get('lessons', Books::class)->name('lessons');
-    Route::get('quizzes', Books::class)->name('quizzes');
+    Route::get('lessons', Courses::class)->name('lessons');
+    Route::get('quizzes', BookQuizInterface::class)->name('quizzes');
     Route::get('library', Books::class)->name('library');
     Route::get('materials', Books::class)->name('materials');
-    Route::get('schedule', Books::class)->name('schedule');
+    Route::get('schedule', StudentSchedule::class)->name('schedule');
     Route::get('assignments', Assignments::class)->name('assignments');
-    Route::get('achievements', Books::class)->name('achievements');
-    Route::get('messages', Books::class)->name('messages');
-    Route::get('teachers', Books::class)->name('teachers');
-    Route::get('profile', Books::class)->name('profile');
-    Route::get('settings', Books::class)->name('settings');
-    Route::get('help', Books::class)->name('help');
+    Route::get('achievements', PerformanceOverview::class)->name('achievements');
+    Route::get('teachers', [StudentPortalController::class, 'teachers'])->name('teachers');
+    Route::get('profile', StudentProfile::class)->name('profile');
+    Route::get('settings', UserPreferences::class)->name('settings');
+    Route::view('help', 'students.help')->name('help');
 
     Route::get('assignments/{assignment}/take', AssignmentTakingComponent::class)
         ->name('assignment.take')
@@ -87,4 +90,4 @@ Route::middleware(['auth'])->prefix('dashboard/students')->name('students.')->gr
     });
 });
 
-Route::get('students/{user}/profile', \App\Livewire\Students\PublicProfile::class)->name('students.profile.public');
+Route::get('students/{user}/profile', PublicProfile::class)->name('students.profile.public');

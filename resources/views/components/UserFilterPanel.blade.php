@@ -167,7 +167,7 @@ x-on:keydown.escape.window="closeFilters()"
                         <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">School</label>
                         <select name="school"
                                 class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">{{ auth()->user()->isOverseer() && ! auth()->user()->canAccessCrossSchool() ? 'Select a School' : 'All Schools' }}</option>
+                            <option value="">{{ auth()->user()->isOverseer() && ! auth()->user()->canAccessCrossSchool() ? 'All Assigned Schools' : 'All Schools' }}</option>
                             @foreach($schools as $school)
                                 <option value="{{ $school->id }}" {{ request('school') == $school->id ? 'selected' : '' }}>
                                     {{ $school->name }}

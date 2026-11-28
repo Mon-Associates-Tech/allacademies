@@ -236,7 +236,7 @@
                                     <x-exam.badge tone="warn">Unverified</x-exam.badge>
                                 @endif
                             </div>
-                            @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin())
+                            @if(auth()->user()->isOwner() || auth()->user()->isSuperAdmin() || auth()->user()->isOverseer())
                                 <p class="text-xs text-muted truncate mt-0.5">{{ $user->school?->name ?? 'No school assigned' }}</p>
                             @endif
                         </div>
@@ -377,7 +377,7 @@
                                         <x-exam.badge tone="warn">Unverified</x-exam.badge>
                                     @endif
                                 </div>
-                                @if(Auth::user()->isOwner() || Auth::user()->isSuperAdmin())
+                                @if(Auth::user()->isOwner() || Auth::user()->isSuperAdmin() || Auth::user()->isOverseer())
                                     <p class="text-xs text-muted truncate mt-0.5">{{ $user->school?->name ?? 'No school assigned' }}</p>
                                 @endif
                             </div>
