@@ -303,23 +303,30 @@
         /* ─── Front Page (Cover) ─── */
         .front-page {
             page-break-after: always;
-            page-break-inside: avoid;
+            page-break-inside: auto;
             font-family: 'Georgia', 'Times New Roman', serif;
             color: #1a1a1a;
         }
 
         .front-page-frame {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
+            display: block;
             width: 100%;
-            min-height: 267mm;
+            min-height: 0;
             height: auto;
-            padding: 10mm 16mm;
+            padding: 0 16mm;
         }
 
         .front-page-content {
             text-align: center;
+        }
+
+        .front-page-content .identity-section {
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .front-page-content .identity-section + .fp-richtext {
+            margin-top: 20px;
         }
 
         .fp-block {

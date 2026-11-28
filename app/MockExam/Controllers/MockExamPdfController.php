@@ -5,7 +5,6 @@ namespace App\MockExam\Controllers;
 use App\Http\Controllers\Controller;
 use App\MockExam\Models\MockExam;
 use App\MockExam\Models\MockExamSubjectExam;
-use App\MockExam\Models\MockExamTemplate;
 use App\MockExam\Services\MockExamPdfRenderer;
 use App\MockExam\Services\MockExamPdfService;
 use Illuminate\Http\JsonResponse;
@@ -37,21 +36,12 @@ class MockExamPdfController extends Controller
         $fontSize = max(8, min(14, (float) request()->input('font_size', 10.5)));
 
         return view(
-            'mock-exam.pdf.mock-exam-preview',  // Changed to the correct view
+            'mock-exam.pdf.mock-exam-preview',
             $this->viewService->mockExamOverviewData($mockExam, $fontSize)
         );
     }
 
-    public function answerKey(MockExam $mockExam): View
-    {
-        $this->ensureOwner($mockExam);
-
-        return view(
-            'mock-exam.pdf.answer-key',
-            $this->viewService->answerKeyData($mockExam)
-        );
-    }
-
+    // Full-exam and subject-level answer-key downloads.
     /**
      * Generate and download the answer key / marking scheme as a PDF file.
      */
@@ -59,23 +49,7 @@ class MockExamPdfController extends Controller
     {
         $this->ensureOwner($mockExam);
 
-        $data = $this->viewService->answerKeyData($mockExam);
-        $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
-
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title).'-answer-key.pdf';
-
-        $pdf = $this->pdfRenderer->render($html);
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="'.$filename.'"');
-        header('Content-Length: '.strlen($pdf));
-        header('X-Accel-Buffering: no');
-        echo $pdf;
-        exit;
+        return $this->downloadAnswerKeyPdf($mockExam);
     }
 
     /**
@@ -86,28 +60,10 @@ class MockExamPdfController extends Controller
         $this->ensureOwner($mockExam);
         $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
 
-        // Load sections, questions, template, and academic subject
-        $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
-        $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
-        $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
-
-        $subjectName = $subjectExam->getDisplayTitle();
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName).'-answer-key.pdf';
-
-        $pdf = $this->pdfRenderer->render($html);
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="'.$filename.'"');
-        header('Content-Length: '.strlen($pdf));
-        header('X-Accel-Buffering: no');
-        echo $pdf;
-        exit;
+        return $this->downloadAnswerKeyPdf($mockExam, $subjectExam);
     }
 
+    // Subject-exam preview and download actions.
     public function subjectExam(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
     {
         $this->ensureOwner($mockExam);
@@ -193,7 +149,34 @@ class MockExamPdfController extends Controller
             ]);
         }
 
-        // Write PDF directly to response without buffering
+        return $this->sendPdfDownload($pdf, $filename);
+    }
+
+    // Shared answer-key generation and PDF response helpers.
+    private function downloadAnswerKeyPdf(
+        MockExam $mockExam,
+        ?MockExamSubjectExam $subjectExam = null
+    ): Response {
+        if ($subjectExam !== null) {
+            $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
+        }
+
+        $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
+        $this->inlineImagesForAnswerKey($data);
+        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
+
+        $title = $subjectExam?->getDisplayTitle() ?? $mockExam->title;
+        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $title).'-answer-key.pdf';
+        $pdf = $this->pdfRenderer->render($html);
+
+        return $this->sendPdfDownload($pdf, $filename);
+    }
+
+    private function sendPdfDownload(string $pdf, string $filename): Response
+    {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="'.$filename.'"');
         header('Content-Length: '.strlen($pdf));
@@ -202,6 +185,7 @@ class MockExamPdfController extends Controller
         exit;
     }
 
+    // Image inlining for Browsershot-rendered PDFs.
     /**
      * Convert all image storage paths to base64 data URIs so Browsershot
      * can render the PDF without fetching external resources.
@@ -344,6 +328,7 @@ class MockExamPdfController extends Controller
         );
     }
 
+    // Subject-exam preview editor actions.
     public function previewSubjectExamPage(MockExam $mockExam, MockExamSubjectExam $subjectExam): View
     {
         $this->ensureOwner($mockExam);
@@ -459,43 +444,13 @@ class MockExamPdfController extends Controller
     }
 
     /**
-     * Answer key / marking scheme for users coming from subscription dashboard
-     */
-    public function answerKeyFromSubscription(MockExam $mockExam): View
-    {
-        // Check if user has access through subscription
-        $this->ensureSubscriptionAccess($mockExam);
-
-        return view(
-            'mock-exam.pdf.answer-key',
-            $this->viewService->answerKeyData($mockExam)
-        )->with('fromSubscription', true);
-    }
-
-    /**
      * Download answer key / marking scheme as PDF for subscription users.
      */
     public function answerKeyDownloadFromSubscription(MockExam $mockExam): Response
     {
         $this->ensureSubscriptionAccess($mockExam);
 
-        $data = $this->viewService->answerKeyData($mockExam);
-        $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
-
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $mockExam->title).'-answer-key.pdf';
-
-        $pdf = $this->pdfRenderer->render($html);
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="'.$filename.'"');
-        header('Content-Length: '.strlen($pdf));
-        header('X-Accel-Buffering: no');
-        echo $pdf;
-        exit;
+        return $this->downloadAnswerKeyPdf($mockExam);
     }
 
     /**
@@ -506,56 +461,10 @@ class MockExamPdfController extends Controller
         $this->ensureSubscriptionAccess($mockExam);
         $this->ensureSubjectExamBelongsToMockExam($mockExam, $subjectExam);
 
-        // Load sections, questions, template, and academic subject
-        $subjectExam->load(['sections.questions', 'template', 'academicSubject']);
-        $data = $this->viewService->answerKeyData($mockExam, $subjectExam);
-        $this->inlineImagesForAnswerKey($data);
-        $html = view('mock-exam.pdf.answer-key-pdf', $data)->render();
-
-        $subjectName = $subjectExam->getDisplayTitle();
-        $filename = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $subjectName).'-answer-key.pdf';
-
-        $pdf = $this->pdfRenderer->render($html);
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="'.$filename.'"');
-        header('Content-Length: '.strlen($pdf));
-        header('X-Accel-Buffering: no');
-        echo $pdf;
-        exit;
+        return $this->downloadAnswerKeyPdf($mockExam, $subjectExam);
     }
 
-    public function previewTemplateFrontPage(MockExamTemplate $template): View
-    {
-        abort_unless($template->user_id === auth()->id(), 403);
-
-        $fontSize = max(8, min(14, (float) request()->input('font_size', 11)));
-
-        $blocks = $template->front_page_config['blocks'] ?? [];
-
-        /*
-         * If this route is being opened inside a modal or Livewire preview area,
-         * you may return the partial directly instead:
-         *
-         * return view('livewire.mock-exam.partials.front-page-preview', [
-         *     'template' => $template,
-         *     'blocks' => $blocks,
-         *     'fontSize' => $fontSize,
-         *     'isPdf' => false,
-         * ]);
-         */
-
-        return view('mock-exam.pdf.template-front-page-preview', [
-            'template' => $template,
-            'blocks' => $blocks,
-            'fontSize' => $fontSize,
-            'isPdf' => false,
-        ]);
-    }
-
+    // Authorization helpers shared by the route actions above.
     private function ensureOwner(MockExam $exam): void
     {
         abort_unless($exam->user_id === auth()->id(), 403);

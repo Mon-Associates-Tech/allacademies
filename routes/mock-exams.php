@@ -72,9 +72,8 @@ Route::middleware(['web', 'auth'])
         // Live monitoring
         Route::get('/{mockExam}/monitor', [MockExamMonitoringController::class, 'index'])->name('monitor');
 
-// HTML exam views.
-// Route names still contain "pdf" for backwards compatibility,
-// but they now render normal Blade views instead of PDF files.
+        // Full-exam preview and download routes. The legacy "pdf" route names
+        // remain available for backwards compatibility.
         Route::get('/{mockExam}/pdf', [MockExamPdfController::class, 'previewPage'])
             ->name('pdf');
 
@@ -84,17 +83,10 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/pdf/preview', [MockExamPdfController::class, 'exam'])
             ->name('pdf.preview');
 
-        Route::get('/{mockExam}/pdf/answer-key', [MockExamPdfController::class, 'answerKey'])
-            ->name('pdf.answer-key');
-
         Route::get('/{mockExam}/pdf/answer-key/download', [MockExamPdfController::class, 'answerKeyDownload'])
             ->name('pdf.answer-key.download');
 
-        // Subject-level answer key PDF download (single subject only)
-        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/answer-key/download', [MockExamPdfController::class, 'subjectAnswerKeyDownload'])
-            ->name('subject-exams.pdf.answer-key.download');
-
-// Subject exam HTML views.
+        // Subject-exam preview, editor, and PDF downloads.
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf', [MockExamPdfController::class, 'subjectExam'])
             ->name('subject-exams.pdf.preview');
 
@@ -104,15 +96,16 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/preview-page', [MockExamPdfController::class, 'previewSubjectExamPage'])
             ->name('subject-exams.pdf.page');
 
-        // Editable preview (layout editor)
         Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/edit', [MockExamPdfController::class, 'editableSubjectExam'])
             ->name('subject-exams.pdf.edit');
 
-        // Save layout config
         Route::post('/{mockExam}/subject-exams/{subjectExam}/layout', [MockExamPdfController::class, 'saveLayout'])
             ->name('subject-exams.layout.save');
 
-        // Subscription-based preview routes
+        Route::get('/{mockExam}/subject-exams/{subjectExam}/pdf/answer-key/download', [MockExamPdfController::class, 'subjectAnswerKeyDownload'])
+            ->name('subject-exams.pdf.answer-key.download');
+
+        // Subscription-based previews and downloads.
         Route::get('/{mockExam}/subscription-preview', [MockExamPdfController::class, 'previewPageFromSubscription'])
             ->name('subscription-preview');
 
@@ -127,11 +120,6 @@ Route::middleware(['web', 'auth'])
         Route::get('/{mockExam}/subscription-preview/download', [MockExamPdfController::class, 'examFromSubscription'])
             ->name('subscription-preview.download');
 
-        // Subscription-based answer key / marking scheme route
-        Route::get('/{mockExam}/subscription-preview/answer-key', [MockExamPdfController::class, 'answerKeyFromSubscription'])
-            ->name('subscription-preview.answer-key');
-
-        // Subscription-based answer key PDF download
         Route::get('/{mockExam}/subscription-preview/answer-key/download', [MockExamPdfController::class, 'answerKeyDownloadFromSubscription'])
             ->name('subscription-preview.answer-key.download');
 
@@ -194,7 +182,6 @@ Route::middleware(['web', 'auth'])
 
         // ── Step 2 – Template Details (Alpine.js form) ────────────────────
         Route::get('/{template}/front-page', [MockExamTemplateController::class, 'editFrontPage'])->name('front-page.edit');
-        Route::get('/{template}/preview-front-page', [MockExamPdfController::class, 'previewTemplateFrontPage'])->name('preview-front-page');
         Route::get('/{template}/edit', [MockExamTemplateController::class, 'configureEdit'])->name('edit');
 
         // ── CRUD ──────────────────────────────────────────────────────────

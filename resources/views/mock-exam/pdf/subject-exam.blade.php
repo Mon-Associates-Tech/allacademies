@@ -331,9 +331,9 @@
         /* ─── Front Page (Cover) ─── */
         .front-page {
             page-break-after: always;
-            page-break-inside: avoid;
+            page-break-inside: auto;
             break-after: page;
-            break-inside: avoid;
+            break-inside: auto;
             font-family: 'Georgia', 'Times New Roman', serif;
             color: #1a1a1a;
         }
@@ -996,6 +996,32 @@
         h4:first-of-type {
             margin-top: 0 !important;
             padding-top: 0 !important;
+        }
+
+        /* Let the identity fields and editor front-page content flow together. */
+        .front-page {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
+
+        .front-page-frame {
+            display: block !important;
+            height: auto !important;
+            padding: 0 16mm !important;
+        }
+
+        .front-page-content {
+            display: block !important;
+            vertical-align: top !important;
+        }
+
+        .front-page-content .identity-section {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .front-page-content .identity-section + .fp-richtext {
+            margin-top: 20px !important;
         }
     }
 </style>
